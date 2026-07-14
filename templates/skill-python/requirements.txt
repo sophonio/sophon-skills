@@ -1,0 +1,6 @@
+# {{name}} - Python dependencies
+#
+# Add your skill's dependencies here.  The Sophon sandbox installs them
+# before running main.py.
+
+requests>=2.31,<3

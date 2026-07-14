@@ -1,0 +1,28 @@
+{
+  "name": "{{name}}",
+  "version": "1.0.0",
+  "description": "{{description}}",
+  "author": "{{author}}",
+  "license": "MIT",
+  "type": "plugin",
+  "pluginInterface": "IVaultBackend",
+  "entrypoint": "{{Name}}.dll",
+  "settings": [
+    {
+      "key": "connectionString",
+      "displayName": "Connection String",
+      "description": "Connection string or endpoint for the vault backend.",
+      "type": "secret",
+      "required": true
+    },
+    {
+      "key": "keyPrefix",
+      "displayName": "Key Prefix",
+      "description": "Optional prefix applied to all stored keys for namespace isolation.",
+      "type": "string",
+      "required": false,
+      "default": "sophon/"
+    }
+  ],
+  "platforms": ["windows", "macos", "linux"]
+}

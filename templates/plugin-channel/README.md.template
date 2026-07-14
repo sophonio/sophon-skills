@@ -1,0 +1,68 @@
+# {{name}}
+
+{{description}}
+
+A Sophon channel adapter plugin that enables sending and receiving messages
+through the {{Name}} platform.
+
+## Implemented Interface
+
+`IChannelAdapter` from `Sophon.Plugin.Abstractions`
+
+### Methods
+
+| Method | Description |
+|--------|-------------|
+| `ConnectAsync` | Establishes connection to {{Name}} |
+| `DisconnectAsync` | Gracefully closes the connection |
+| `SendAsync` | Sends a message through {{Name}} |
+| `TestConnectionAsync` | Performs a lightweight health check |
+| `GetHealth` | Returns current connection status |
+| `ExtractChatId` | Extracts chat identifier from inbound messages |
+| `ValidateRecipient` | Validates recipient ID format |
+
+## Getting Started
+
+### Prerequisites
+
+- .NET 10 SDK
+- `Sophon.Plugin.Abstractions` NuGet package
+
+### Build
+
+```bash
+dotnet build
+```
+
+### Configuration
+
+When adding this channel in the Sophon Dashboard, you will need:
+
+| Setting | Type | Required | Description |
+|---------|------|----------|-------------|
+| `apiToken` | Secret | Yes | Authentication token for {{Name}} |
+| `endpoint` | String | No | Base URL for the {{Name}} API |
+
+### Install
+
+```bash
+sophon plugins install ./{{Name}}.dll
+```
+
+Or copy the built DLL to the Sophon plugins directory.
+
+## Development Guide
+
+1. Implement the connection logic in `ConnectAsync`
+2. Implement message sending in `SendAsync`
+3. Wire up inbound message handling (see the commented `HandleIncomingMessage` example)
+4. Implement `TestConnectionAsync` with a real health check
+5. Test the full send/receive lifecycle
+
+## License
+
+MIT -- see [LICENSE](LICENSE) for details.
+
+---
+
+*Created with [Sophon DevStudio](https://sophon.ai)*

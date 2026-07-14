@@ -1,0 +1,132 @@
+// Tests for {{name}} skill.
+
+using System.Text.Json;
+using Xunit;
+
+namespace Sophon.Skills.{{ClassName}}.Tests;
+
+/// <summary>
+/// Tests for the hello.greet tool handler.
+/// </summary>
+public sealed class SkillTests
+{
+    // -----------------------------------------------------------------------
+    // hello.greet tests
+    // -----------------------------------------------------------------------
+
+    [Fact]
+    public void HelloGreet_ValidName_ReturnsGreeting()
+    {
+        // Arrange
+        var input = CreateRequest("hello.greet", new { name = "Alice" });
+
+        // Act
+        var output = ExecuteSkill(input);
+
+        // Assert
+        Assert.True(output.Success);
+        Assert.Contains("Alice", output.Result);
+    }
+
+    [Fact]
+    public void HelloGreet_NameWithWhitespace_TrimsAndGreets()
+    {
+        // Arrange
+        var input = CreateRequest("hello.greet", new { name = "  Bob  " });
+
+        // Act
+        var output = ExecuteSkill(input);
+
+        // Assert
+        Assert.True(output.Success);
+        Assert.Contains("Bob", output.Result);
+    }
+
+    [Fact]
+    public void HelloGreet_MissingName_ReturnsError()
+    {
+        // Arrange
+        var input = CreateRequest("hello.greet", new { });
+
+        // Act
+        var output = ExecuteSkill(input);
+
+        // Assert
+        Assert.False(output.Success);
+        Assert.Contains("required", output.Error, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void HelloGreet_EmptyName_ReturnsError()
+    {
+        // Arrange
+        var input = CreateRequest("hello.greet", new { name = "   " });
+
+        // Act
+        var output = ExecuteSkill(input);
+
+        // Assert
+        Assert.False(output.Success);
+        Assert.Contains("empty", output.Error, StringComparison.OrdinalIgnoreCase);
+    }
+
+    // -----------------------------------------------------------------------
+    // Unknown tool tests
+    // -----------------------------------------------------------------------
+
+    [Fact]
+    public void UnknownTool_ReturnsError()
+    {
+        // Arrange
+        var input = CreateRequest("nonexistent.tool", new { });
+
+        // Act
+        var output = ExecuteSkill(input);
+
+        // Assert
+        Assert.False(output.Success);
+        Assert.Contains("Unknown tool", output.Error);
+    }
+
+    // -----------------------------------------------------------------------
+    // Helpers
+    // -----------------------------------------------------------------------
+
+    private static string CreateRequest(string tool, object parameters) =>
+        JsonSerializer.Serialize(new { tool, parameters });
+
+    /// <summary>
+    /// Captures stdout from <see cref="Skill.Run"/> and parses the JSON response.
+    /// </summary>
+    private static SkillOutput ExecuteSkill(string jsonInput)
+    {
+        var originalIn = Console.In;
+        var originalOut = Console.Out;
+
+        try
+        {
+            Console.SetIn(new StringReader(jsonInput));
+            var writer = new StringWriter();
+            Console.SetOut(writer);
+
+            Skill.Run([]);
+
+            var json = writer.ToString().Trim();
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+
+            return new SkillOutput(
+                Success: root.GetProperty("success").GetBoolean(),
+                Result: root.TryGetProperty("result", out var r) ? r.ToString() : null,
+                Error: root.TryGetProperty("error", out var e) ? e.GetString() : null
+            );
+        }
+        finally
+        {
+            Console.SetIn(originalIn);
+            Console.SetOut(originalOut);
+        }
+    }
+
+    private sealed record SkillOutput(bool Success, string? Result, string? Error);
+}

@@ -1,0 +1,71 @@
+# {{name}}
+
+{{description}}
+
+## Tools
+
+| Tool | Description | Risk |
+|------|-------------|------|
+| `hello.greet` | Greets a person by name with a friendly message. | None |
+
+## Getting Started
+
+### Prerequisites
+
+- .NET 10 SDK
+
+### Build
+
+```bash
+dotnet build
+```
+
+### Run Tests
+
+```bash
+dotnet test
+```
+
+### Local Development
+
+You can test the skill manually by piping JSON to stdin:
+
+```bash
+echo '{"tool": "hello.greet", "parameters": {"name": "World"}}' | dotnet run
+```
+
+Expected output:
+```json
+{"success":true,"result":"Hello, World! Welcome to {{name}}."}
+```
+
+## Project Structure
+
+```
+{{name}}/
+  manifest.json      # Skill manifest (tools, permissions, metadata)
+  Skill.cs           # Tool handler implementations
+  {{Name}}.csproj    # .NET project file
+  tests/
+    SkillTests.cs    # xUnit tests
+  README.md          # This file
+  LICENSE            # MIT License
+```
+
+## Packaging
+
+To package this skill for the Sophon Marketplace:
+
+```bash
+sophon dev package
+```
+
+This creates a `.sophon-skill` archive ready for upload.
+
+## License
+
+MIT -- see [LICENSE](LICENSE) for details.
+
+---
+
+*Created with [Sophon DevStudio](https://sophon.ai)*

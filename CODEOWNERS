@@ -1,0 +1,9 @@
+# Code owners for sophon-skills.
+# Adjust the team/handles below to match your GitHub org before relying on required reviews.
+
+# Default owner for everything in the repo
+*                       @buildersoft-llc/skills-maintainers
+
+# Build & release tooling
+/build/                 @buildersoft-llc/skills-maintainers
+/.github/               @buildersoft-llc/skills-maintainers

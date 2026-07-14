@@ -1,0 +1,104 @@
+// {{name}} - {{description}}
+//
+// Sophon Vault Backend Plugin
+// Author: {{author}}
+// Created: {{date}}
+//
+// Implements IVaultBackend to provide encrypted credential storage
+// using a custom backend.
+
+using Sophon.Core.Credentials;
+
+namespace Sophon.Plugins.{{ClassName}};
+
+/// <summary>
+/// Vault backend for {{Name}}.
+/// Implements <see cref="IVaultBackend"/> to provide encrypted
+/// key-value storage for Sophon credentials and secrets.
+///
+/// <para>
+/// The vault backend is the lowest layer in the credential management stack.
+/// It handles encryption at rest and secure storage. Higher layers
+/// (<see cref="ICredentialVault"/>) manage token lifecycle, scoping,
+/// and access control on top of this backend.
+/// </para>
+/// </summary>
+public sealed class {{ClassName}}VaultBackend : IVaultBackend
+{
+    private readonly string _connectionString;
+    private readonly string _keyPrefix;
+
+    /// <summary>
+    /// Initializes the vault backend with connection settings.
+    /// </summary>
+    /// <param name="connectionString">Connection string or endpoint for the backend.</param>
+    /// <param name="keyPrefix">Optional prefix for key namespace isolation.</param>
+    public {{ClassName}}VaultBackend(string connectionString, string keyPrefix = "sophon/")
+    {
+        _connectionString = connectionString;
+        _keyPrefix = keyPrefix;
+    }
+
+    /// <inheritdoc />
+    public async Task<string?> GetAsync(string key, CancellationToken ct = default)
+    {
+        var fullKey = _keyPrefix + key;
+
+        // TODO: Retrieve the encrypted value from your backend.
+        // Examples:
+        //   HashiCorp Vault:  var secret = await _client.V1.Secrets.KeyValue.V2.ReadSecretAsync(fullKey);
+        //   AWS Secrets Mgr:  var response = await _client.GetSecretValueAsync(new GetSecretValueRequest { SecretId = fullKey }, ct);
+        //   Azure Key Vault:  var secret = await _client.GetSecretAsync(fullKey, cancellationToken: ct);
+        //   Custom DB:        var row = await _db.Secrets.FindAsync(fullKey, ct);
+
+        await Task.CompletedTask;
+        throw new NotImplementedException("Implement GetAsync to retrieve secrets from your vault backend.");
+    }
+
+    /// <inheritdoc />
+    public async Task SetAsync(string key, string value, CancellationToken ct = default)
+    {
+        var fullKey = _keyPrefix + key;
+
+        // TODO: Store the value in your backend (encrypted at rest).
+        // The value is already a string -- your backend should store it securely.
+        // Examples:
+        //   HashiCorp Vault:  await _client.V1.Secrets.KeyValue.V2.WriteSecretAsync(fullKey, new { data = new { value } });
+        //   AWS Secrets Mgr:  await _client.PutSecretValueAsync(new PutSecretValueRequest { SecretId = fullKey, SecretString = value }, ct);
+        //   Azure Key Vault:  await _client.SetSecretAsync(fullKey, value, ct);
+        //   Custom DB:        await _db.Secrets.UpsertAsync(fullKey, Encrypt(value), ct);
+
+        await Task.CompletedTask;
+        throw new NotImplementedException("Implement SetAsync to store secrets in your vault backend.");
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> DeleteAsync(string key, CancellationToken ct = default)
+    {
+        var fullKey = _keyPrefix + key;
+
+        // TODO: Delete the key from your backend.
+        // Return true if the key existed and was deleted, false if it didn't exist.
+        // Examples:
+        //   HashiCorp Vault:  await _client.V1.Secrets.KeyValue.V2.DeleteSecretAsync(fullKey);
+        //   AWS Secrets Mgr:  await _client.DeleteSecretAsync(new DeleteSecretRequest { SecretId = fullKey }, ct);
+        //   Azure Key Vault:  await _client.StartDeleteSecretAsync(fullKey, ct);
+
+        await Task.CompletedTask;
+        throw new NotImplementedException("Implement DeleteAsync to remove secrets from your vault backend.");
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<string>> ListKeysAsync(CancellationToken ct = default)
+    {
+        // TODO: List all keys stored under the prefix.
+        // Strip the prefix before returning so callers see logical keys.
+        // Examples:
+        //   HashiCorp Vault:  var keys = await _client.V1.Secrets.KeyValue.V2.ReadSecretPathsAsync(_keyPrefix);
+        //   AWS Secrets Mgr:  var response = await _client.ListSecretsAsync(new ListSecretsRequest(), ct);
+        //   Azure Key Vault:  await foreach (var sp in _client.GetPropertiesOfSecretsAsync(ct)) { ... }
+
+        await Task.CompletedTask;
+        throw new NotImplementedException("Implement ListKeysAsync to enumerate secrets in your vault backend.");
+    }
+}

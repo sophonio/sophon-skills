@@ -1,0 +1,25 @@
+# Build output — artifacts are build products, not checked in
+dist/
+packages/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# .NET (future plugins)
+bin/
+obj/
+
+# Editors / OS
+.vs/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Local env / secrets — never commit an smk_ key
+.env
+*.local

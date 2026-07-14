@@ -1,0 +1,131 @@
+{
+  "name": "confluence",
+  "version": "1.0.0",
+  "description": "Confluence integration — search pages, manage content and spaces",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "integration",
+  "tags": ["confluence", "atlassian", "wiki", "documentation", "knowledge-base", "pages"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "atlassian-confluence",
+    "displayName": "Confluence",
+    "description": "Atlassian Confluence wiki and knowledge base",
+    "icon": "book-open",
+    "authType": "custom",
+    "category": "developer",
+    "fields": [
+      {
+        "key": "baseUrl",
+        "label": "Confluence URL",
+        "type": "url",
+        "required": true,
+        "placeholder": "https://yourorg.atlassian.net",
+        "pattern": "^https://[a-zA-Z0-9-]+\\.atlassian\\.net$",
+        "patternMessage": "Must be a valid Atlassian URL (e.g. https://yourorg.atlassian.net)"
+      },
+      {
+        "key": "email",
+        "label": "Email",
+        "type": "email",
+        "required": true,
+        "placeholder": "you@company.com"
+      },
+      {
+        "key": "apiKey",
+        "label": "API Token",
+        "type": "secret",
+        "required": true,
+        "helpText": "Generate at Atlassian API tokens page",
+        "helpUrl": "https://id.atlassian.com/manage-profile/security/api-tokens"
+      }
+    ],
+    "testEndpoint": "/wiki/api/v2/spaces?limit=1"
+  },
+  "tools": [
+    {
+      "name": "confluence.search",
+      "description": "Search Confluence pages and content using CQL",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "cql": { "type": "string", "description": "CQL query string (e.g. 'type=page AND text~\"search term\"')" },
+          "limit": { "type": "integer", "description": "Max results to return (default 20)" }
+        },
+        "required": ["cql"]
+      }
+    },
+    {
+      "name": "confluence.get_page",
+      "description": "Get a specific Confluence page by ID with its content",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "pageId": { "type": "string", "description": "Page ID" }
+        },
+        "required": ["pageId"]
+      }
+    },
+    {
+      "name": "confluence.create_page",
+      "description": "Create a new Confluence page",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "spaceId": { "type": "string", "description": "Space ID to create the page in" },
+          "title": { "type": "string", "description": "Page title" },
+          "body": { "type": "string", "description": "Page body in Confluence storage format (XHTML)" },
+          "parentId": { "type": "string", "description": "Parent page ID (optional)" }
+        },
+        "required": ["spaceId", "title", "body"]
+      }
+    },
+    {
+      "name": "confluence.update_page",
+      "description": "Update an existing Confluence page (auto-fetches current version)",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "pageId": { "type": "string", "description": "Page ID to update" },
+          "title": { "type": "string", "description": "New page title" },
+          "body": { "type": "string", "description": "New page body in Confluence storage format (XHTML)" }
+        },
+        "required": ["pageId", "title", "body"]
+      }
+    },
+    {
+      "name": "confluence.list_spaces",
+      "description": "List all accessible Confluence spaces",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "limit": { "type": "integer", "description": "Max spaces to return (default 25)" }
+        }
+      }
+    },
+    {
+      "name": "confluence.add_comment",
+      "description": "Add a footer comment to a Confluence page",
+      "riskLevel": "low",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "pageId": { "type": "string", "description": "Page ID to comment on" },
+          "body": { "type": "string", "description": "Comment body in Confluence storage format (XHTML)" }
+        },
+        "required": ["pageId", "body"]
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "atlassian-confluence", "scopes": ["read", "write"], "required": true, "access": "proxy" }
+  ],
+  "platforms": []
+}

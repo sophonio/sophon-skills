@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Sophon.Plugins.{{ClassName}}</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Reference the Sophon plugin abstractions package.
+         This provides IChannelAdapter, SophonMessage, ChannelConfig, etc. -->
+    <PackageReference Include="Sophon.Plugin.Abstractions" Version="1.*" />
+  </ItemGroup>
+
+</Project>

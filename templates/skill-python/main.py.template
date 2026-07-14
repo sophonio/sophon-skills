@@ -1,0 +1,109 @@
+"""
+{{name}} - {{description}}
+
+Sophon Skill (Python)
+Author: {{author}}
+Created: {{date}}
+
+This module implements the tool handlers defined in manifest.json.
+Each tool is dispatched by name; the handler receives a dictionary
+of parameters and must return a JSON-serialisable result.
+"""
+
+from __future__ import annotations
+
+import json
+import sys
+from typing import Any
+
+
+# ---------------------------------------------------------------------------
+# Tool handlers
+# ---------------------------------------------------------------------------
+
+def handle_hello_greet(params: dict[str, Any]) -> str:
+    """Greet a person by name.
+
+    Parameters
+    ----------
+    params : dict
+        Must contain a ``name`` key (str).
+
+    Returns
+    -------
+    str
+        A friendly greeting message.
+
+    Raises
+    ------
+    ValueError
+        If ``name`` is missing or empty.
+    """
+    name = params.get("name", "").strip()
+    if not name:
+        raise ValueError("The 'name' parameter is required and must not be empty.")
+    return f"Hello, {name}! Welcome to {{name}}."
+
+
+# ---------------------------------------------------------------------------
+# Tool dispatch registry
+# ---------------------------------------------------------------------------
+
+TOOL_HANDLERS: dict[str, Any] = {
+    "hello.greet": handle_hello_greet,
+}
+
+
+# ---------------------------------------------------------------------------
+# Entrypoint — Sophon sandbox protocol
+# ---------------------------------------------------------------------------
+
+def main() -> None:
+    """Read a tool invocation from stdin, dispatch it, and write the result
+    to stdout.
+
+    The Sophon sandbox sends a JSON object on stdin:
+        { "tool": "<tool-name>", "parameters": { ... } }
+
+    The skill must write a JSON response to stdout:
+        { "success": true, "result": <value> }
+    or on error:
+        { "success": false, "error": "<message>" }
+    """
+    try:
+        raw = sys.stdin.read()
+        request = json.loads(raw)
+
+        tool_name: str = request.get("tool", "")
+        parameters: dict[str, Any] = request.get("parameters", {})
+
+        handler = TOOL_HANDLERS.get(tool_name)
+        if handler is None:
+            _write_error(f"Unknown tool: {tool_name}")
+            return
+
+        result = handler(parameters)
+        _write_result(result)
+
+    except json.JSONDecodeError as exc:
+        _write_error(f"Invalid JSON input: {exc}")
+    except ValueError as exc:
+        _write_error(str(exc))
+    except Exception as exc:  # noqa: BLE001
+        _write_error(f"Unexpected error: {exc}")
+
+
+def _write_result(result: Any) -> None:
+    json.dump({"success": True, "result": result}, sys.stdout)
+    sys.stdout.write("\n")
+    sys.stdout.flush()
+
+
+def _write_error(message: str) -> None:
+    json.dump({"success": False, "error": message}, sys.stdout)
+    sys.stdout.write("\n")
+    sys.stdout.flush()
+
+
+if __name__ == "__main__":
+    main()

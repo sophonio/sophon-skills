@@ -1,0 +1,86 @@
+# {{name}}
+
+{{description}}
+
+A Sophon document extractor plugin that extracts text from custom file
+formats for the document processing pipeline.
+
+## Implemented Interface
+
+`IDocumentExtractor` from `Sophon.Plugin.Abstractions`
+
+### Methods
+
+| Method | Description |
+|--------|-------------|
+| `ExtractAsync` | Extracts text, page count, and metadata from a file stream |
+
+### Properties
+
+| Property | Description |
+|----------|-------------|
+| `SupportedExtensions` | Array of file extensions this extractor handles |
+
+## Architecture
+
+The document extractor sits in Sophon's document processing pipeline:
+
+```
+File Upload --> Type Detection --> IDocumentExtractor.ExtractAsync()
+                                         |
+                                   ExtractedDocument
+                                    (text, pages, metadata)
+                                         |
+                              Chunking --> Embedding --> Index
+                                         |
+                              Summarization, Q&A, Search
+```
+
+## Getting Started
+
+### Prerequisites
+
+- .NET 10 SDK
+- `Sophon.Plugin.Abstractions` NuGet package
+
+### Build
+
+```bash
+dotnet build
+```
+
+### Configuration
+
+| Setting | Type | Required | Description |
+|---------|------|----------|-------------|
+| `maxFileSizeMb` | Number | No | Max file size in MB (default: 50) |
+
+### Install
+
+```bash
+sophon plugins install ./{{Name}}.dll
+```
+
+## Development Guide
+
+1. Update `SupportedExtensions` with the file extensions you want to handle
+2. Implement the parsing logic in `ExtractAsync`
+3. Extract all readable text content from the file format
+4. Populate metadata (title, author, word count, etc.)
+5. Test with various file sizes and edge cases (empty files, corrupted files)
+
+### ExtractedDocument Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `Text` | `string` | All extracted text content |
+| `PageCount` | `int` | Number of pages (1 for non-paginated formats) |
+| `Metadata` | `Dictionary<string, string>` | Key-value metadata pairs |
+
+## License
+
+MIT -- see [LICENSE](LICENSE) for details.
+
+---
+
+*Created with [Sophon DevStudio](https://sophon.ai)*

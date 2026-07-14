@@ -1,0 +1,159 @@
+// {{name}} - {{description}}
+//
+// Sophon Model Provider Plugin
+// Author: {{author}}
+// Created: {{date}}
+//
+// Implements IModelProvider to connect Sophon to the {{Name}} LLM service.
+
+using System.Net.Http.Json;
+using System.Runtime.CompilerServices;
+using System.Text.Json;
+using Sophon.Core.Models;
+
+namespace Sophon.Plugins.{{ClassName}};
+
+/// <summary>
+/// LLM provider for the {{Name}} service.
+/// Implements <see cref="IModelProvider"/> to allow Sophon to send
+/// completion requests to {{Name}}'s API.
+/// </summary>
+public sealed class {{ClassName}}Provider : IModelProvider, IDisposable
+{
+    private readonly HttpClient _http;
+    private readonly string _endpoint;
+    private readonly string _defaultModel;
+
+    /// <summary>
+    /// Initializes the provider with connection settings.
+    /// </summary>
+    /// <param name="apiKey">API key for authentication.</param>
+    /// <param name="endpoint">Base URL for the API (default: https://api.example.com/v1).</param>
+    /// <param name="defaultModel">Default model ID (default: "default").</param>
+    public {{ClassName}}Provider(string apiKey, string endpoint = "https://api.example.com/v1", string defaultModel = "default")
+    {
+        _endpoint = endpoint.TrimEnd('/');
+        _defaultModel = defaultModel;
+
+        _http = new HttpClient();
+        _http.BaseAddress = new Uri(_endpoint);
+        _http.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
+    }
+
+    /// <inheritdoc />
+    public string ProviderType => "{{name}}";
+
+    /// <inheritdoc />
+    public async Task<bool> HealthCheckAsync(CancellationToken ct = default)
+    {
+        try
+        {
+            // TODO: Implement a lightweight health check.
+            // Most providers expose a /models or /health endpoint.
+            // Example:
+            //   var response = await _http.GetAsync("/models", ct);
+            //   return response.IsSuccessStatusCode;
+
+            var response = await _http.GetAsync("/models", ct);
+            return response.IsSuccessStatusCode;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<LlmResponse> CompleteAsync(LlmRequest request, CancellationToken ct = default)
+    {
+        var modelId = string.IsNullOrEmpty(request.ModelId) ? _defaultModel : request.ModelId;
+
+        // TODO: Build the request body for your provider's API format.
+        // This example follows the OpenAI-compatible format used by many providers.
+        var messages = new List<object>();
+
+        if (!string.IsNullOrEmpty(request.SystemPrompt))
+            messages.Add(new { role = "system", content = request.SystemPrompt });
+
+        foreach (var msg in request.Messages)
+            messages.Add(new { role = msg.Role, content = msg.Content });
+
+        var body = new
+        {
+            model = modelId,
+            messages,
+            max_tokens = request.MaxTokens,
+            temperature = request.Temperature,
+            stream = false
+        };
+
+        // TODO: Add tool definitions if the provider supports function calling.
+        // if (request.Tools is { Count: > 0 })
+        //     body.tools = request.Tools.Select(MapTool).ToList();
+
+        var response = await _http.PostAsJsonAsync("/chat/completions", body, ct);
+        response.EnsureSuccessStatusCode();
+
+        var json = await response.Content.ReadFromJsonAsync<JsonElement>(ct);
+
+        // TODO: Parse the response according to your provider's format.
+        // This example follows the OpenAI-compatible response format.
+        var choice = json.GetProperty("choices")[0];
+        var message = choice.GetProperty("message");
+        var content = message.GetProperty("content").GetString() ?? "";
+        var finishReason = choice.TryGetProperty("finish_reason", out var fr) ? fr.GetString() : null;
+
+        var usage = json.GetProperty("usage");
+        var inputTokens = usage.GetProperty("prompt_tokens").GetInt32();
+        var outputTokens = usage.GetProperty("completion_tokens").GetInt32();
+
+        return new LlmResponse
+        {
+            Content = content,
+            ModelId = modelId,
+            Usage = new UsageInfo(inputTokens, outputTokens),
+            FinishReason = finishReason,
+            ToolCalls = null,  // TODO: Parse tool calls if supported
+            RoutedTo = ProviderType
+        };
+    }
+
+    /// <inheritdoc />
+    public async IAsyncEnumerable<LlmStreamChunk> StreamCompleteAsync(
+        LlmRequest request,
+        [EnumeratorCancellation] CancellationToken ct = default)
+    {
+        // TODO: Implement streaming if the provider supports Server-Sent Events.
+        // Default fallback: complete the request and yield a single chunk.
+
+        var response = await CompleteAsync(request, ct);
+        yield return new LlmStreamChunk
+        {
+            Content = response.Content,
+            IsComplete = true,
+            Usage = response.Usage,
+            ToolCalls = response.ToolCalls,
+            FinishReason = response.FinishReason
+        };
+    }
+
+    /// <inheritdoc />
+    public ModelCapabilities GetCapabilities(string modelId)
+    {
+        // TODO: Return actual capabilities for each model.
+        // You can hard-code these or fetch them from the provider's API.
+        return new ModelCapabilities
+        {
+            SupportsVision = false,
+            SupportsFunctionCalling = true,
+            SupportsStreaming = true,
+            MaxContextTokens = 8192
+        };
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        _http.Dispose();
+    }
+}

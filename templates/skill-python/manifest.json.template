@@ -1,0 +1,38 @@
+{
+  "name": "{{name}}",
+  "version": "1.0.0",
+  "description": "{{description}}",
+  "author": "{{author}}",
+  "license": "MIT",
+  "runtime": "python",
+  "entrypoint": "main.py",
+  "category": "utility",
+  "tags": [],
+  "tools": [
+    {
+      "name": "hello.greet",
+      "description": "Greets a person by name with a friendly message.",
+      "riskLevel": "none",
+      "parameters": [
+        {
+          "name": "name",
+          "type": "string",
+          "description": "The name of the person to greet.",
+          "required": true
+        }
+      ],
+      "returns": {
+        "type": "string",
+        "description": "A greeting message."
+      }
+    }
+  ],
+  "credentials": [],
+  "permissions": {
+    "network": [],
+    "filesystem": [],
+    "maxMemoryMb": 256,
+    "maxCpuSeconds": 30
+  },
+  "platforms": ["windows", "macos", "linux"]
+}

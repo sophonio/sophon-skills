@@ -1,0 +1,73 @@
+# {{name}}
+
+{{description}}
+
+A Sophon vault backend plugin that provides encrypted credential storage
+using a custom backend implementation.
+
+## Implemented Interface
+
+`IVaultBackend` from `Sophon.Plugin.Abstractions`
+
+### Methods
+
+| Method | Description |
+|--------|-------------|
+| `GetAsync` | Retrieve a secret by key |
+| `SetAsync` | Store a secret (encrypted at rest) |
+| `DeleteAsync` | Delete a secret by key |
+| `ListKeysAsync` | List all stored secret keys |
+
+## Architecture
+
+The vault backend is the lowest layer in Sophon's credential management stack:
+
+```
+ICredentialVault  (high-level: token lifecycle, scoping, access control)
+       |
+  IVaultBackend   (low-level: encrypted key-value storage) <-- this plugin
+       |
+  [Your backend]  (HashiCorp Vault, AWS KMS, Azure KV, custom DB, etc.)
+```
+
+## Getting Started
+
+### Prerequisites
+
+- .NET 10 SDK
+- `Sophon.Plugin.Abstractions` NuGet package
+- Access credentials for your vault backend
+
+### Build
+
+```bash
+dotnet build
+```
+
+### Configuration
+
+| Setting | Type | Required | Description |
+|---------|------|----------|-------------|
+| `connectionString` | Secret | Yes | Connection string or endpoint |
+| `keyPrefix` | String | No | Key prefix for namespace isolation (default: `sophon/`) |
+
+### Install
+
+```bash
+sophon plugins install ./{{Name}}.dll
+```
+
+## Security Considerations
+
+- All values stored through `SetAsync` should be encrypted at rest by the backend
+- Key prefixing prevents collisions with other applications sharing the same backend
+- The backend should support access control and audit logging
+- Consider key rotation support for compliance requirements
+
+## License
+
+MIT -- see [LICENSE](LICENSE) for details.
+
+---
+
+*Created with [Sophon DevStudio](https://sophon.ai)*

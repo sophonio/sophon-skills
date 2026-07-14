@@ -1,0 +1,47 @@
+{
+  "name": "{{name}}",
+  "version": "1.0.0",
+  "description": "{{description}}",
+  "author": "{{author}}",
+  "license": "MIT",
+  "type": "plugin",
+  "pluginInterface": "IModelProvider",
+  "entrypoint": "{{Name}}.dll",
+  "providerType": "{{name}}",
+  "settings": [
+    {
+      "key": "apiKey",
+      "displayName": "API Key",
+      "description": "API key for authenticating with the {{Name}} service.",
+      "type": "secret",
+      "required": true
+    },
+    {
+      "key": "endpoint",
+      "displayName": "API Endpoint",
+      "description": "Base URL for the {{Name}} API.",
+      "type": "string",
+      "required": false,
+      "default": "https://api.example.com/v1"
+    },
+    {
+      "key": "defaultModel",
+      "displayName": "Default Model",
+      "description": "The default model ID to use for completions.",
+      "type": "string",
+      "required": false,
+      "default": "default"
+    }
+  ],
+  "models": [
+    {
+      "id": "default",
+      "displayName": "{{Name}} Default",
+      "contextWindow": 8192,
+      "supportsVision": false,
+      "supportsFunctionCalling": true,
+      "supportsStreaming": true
+    }
+  ],
+  "platforms": ["windows", "macos", "linux"]
+}

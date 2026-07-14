@@ -1,0 +1,41 @@
+name: publish
+
+# Manual-only publish to the Sophon Marketplace. Publishing is a deliberate action — this workflow
+# never runs on push/PR. Requires the SOPHON_MARKETPLACE_API_KEY repository secret (an smk_ key).
+# New versions land in `pendingReview` and require super-admin approval before going live.
+
+on:
+  workflow_dispatch:
+    inputs:
+      skills:
+        description: 'Comma-separated skill names to publish (blank = all built artifacts)'
+        required: false
+        default: ''
+      dry_run:
+        description: 'Preview only — build and list, do not upload'
+        type: boolean
+        required: false
+        default: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: marketplace
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build artifacts
+        shell: pwsh
+        run: pwsh -File build/Build-MarketplacePackages.ps1
+
+      - name: Publish artifacts
+        shell: pwsh
+        env:
+          SOPHON_MARKETPLACE_API_KEY: ${{ secrets.SOPHON_MARKETPLACE_API_KEY }}
+          SOPHON_MARKETPLACE_URL: ${{ vars.SOPHON_MARKETPLACE_URL }}
+        run: |
+          $skills = "${{ github.event.inputs.skills }}".Split(',', [StringSplitOptions]::RemoveEmptyEntries).Trim()
+          $args = @{}
+          if ($skills.Count -gt 0) { $args.Skills = $skills }
+          if ("${{ github.event.inputs.dry_run }}" -eq 'true') { $args.DryRun = $true }
+          pwsh -File build/Publish-MarketplacePackages.ps1 @args

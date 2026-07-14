@@ -1,0 +1,166 @@
+// {{name}} - {{description}}
+//
+// Sophon Channel Adapter Plugin
+// Author: {{author}}
+// Created: {{date}}
+//
+// Implements IChannelAdapter to connect Sophon to {{Name}}.
+
+using Sophon.Channels;
+using Sophon.Core.Messages;
+
+namespace Sophon.Plugins.{{ClassName}};
+
+/// <summary>
+/// Channel adapter for {{Name}}.
+/// Implements the full <see cref="IChannelAdapter"/> contract to allow
+/// Sophon to send and receive messages through the {{Name}} platform.
+/// </summary>
+public sealed class {{ClassName}}ChannelAdapter : IChannelAdapter
+{
+    private ChannelConfig? _config;
+    private HealthStatus _health = HealthStatus.Disconnected;
+
+    /// <inheritdoc />
+    public string ChannelType => "{{name}}";
+
+    /// <inheritdoc />
+    public string? CurrentConfigId => _config?.Id;
+
+    /// <inheritdoc />
+    public string RecipientMetadataKey => "chatId";
+
+    /// <inheritdoc />
+    public event Func<SophonMessage, Task>? OnMessageReceived;
+
+    /// <inheritdoc />
+    public async Task ConnectAsync(ChannelConfig config, CancellationToken ct = default)
+    {
+        _config = config;
+
+        // TODO: Initialize your connection to the {{Name}} platform.
+        // Example:
+        //   var token = config.Settings.GetValueOrDefault("apiToken");
+        //   var endpoint = config.Settings.GetValueOrDefault("endpoint", "https://api.example.com");
+        //   _client = new {{ClassName}}Client(endpoint, token);
+        //   await _client.ConnectAsync(ct);
+        //   _client.OnMessage += HandleIncomingMessage;
+
+        _health = HealthStatus.Connected;
+        await Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public async Task DisconnectAsync(CancellationToken ct = default)
+    {
+        // TODO: Gracefully close your connection.
+        // Example:
+        //   _client.OnMessage -= HandleIncomingMessage;
+        //   await _client.DisconnectAsync(ct);
+        //   _client.Dispose();
+
+        _config = null;
+        _health = HealthStatus.Disconnected;
+        await Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public async Task SendAsync(SophonMessage message, CancellationToken ct = default)
+    {
+        if (_health != HealthStatus.Connected)
+            throw new InvalidOperationException("Channel is not connected.");
+
+        var recipientId = message.Metadata.GetValueOrDefault(RecipientMetadataKey)
+            ?? throw new ArgumentException($"Message metadata must include '{RecipientMetadataKey}'.");
+
+        // TODO: Send the message through the {{Name}} platform.
+        // Example:
+        //   await _client.SendMessageAsync(recipientId, message.Content.Text, ct);
+        //
+        // Handle attachments if the platform supports them:
+        //   if (message.Attachments is { Count: > 0 })
+        //       foreach (var attachment in message.Attachments)
+        //           await _client.SendFileAsync(recipientId, attachment.Stream, attachment.FileName, ct);
+
+        await Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public async Task<(bool Success, string? Error)> TestConnectionAsync(CancellationToken ct = default)
+    {
+        try
+        {
+            // TODO: Perform a lightweight health check.
+            // Example:
+            //   var result = await _client.PingAsync(ct);
+            //   return (result.IsSuccess, null);
+
+            return (true, null);
+        }
+        catch (Exception ex)
+        {
+            return (false, ex.Message);
+        }
+    }
+
+    /// <inheritdoc />
+    public HealthStatus GetHealth() => _health;
+
+    /// <inheritdoc />
+    public string? ExtractChatId(SophonMessage message)
+    {
+        // TODO: Extract the unique chat/conversation identifier from an inbound message.
+        // This is used by Sophon to record the default recipient for outbound replies.
+        // Example:
+        //   return message.Metadata.GetValueOrDefault("chatId");
+
+        return message.Metadata.GetValueOrDefault("chatId");
+    }
+
+    /// <inheritdoc />
+    public string? ValidateRecipient(string recipient)
+    {
+        // TODO: Validate the recipient identifier format for this channel.
+        // Return null if valid, or an error message if invalid.
+        // Example:
+        //   if (string.IsNullOrWhiteSpace(recipient))
+        //       return "Recipient ID must not be empty.";
+        //   if (!long.TryParse(recipient, out _))
+        //       return "Recipient ID must be a numeric chat ID.";
+
+        if (string.IsNullOrWhiteSpace(recipient))
+            return "Recipient ID must not be empty.";
+
+        return null; // Valid
+    }
+
+    // -----------------------------------------------------------------------
+    // Private helpers
+    // -----------------------------------------------------------------------
+
+    /// <summary>
+    /// Converts an inbound platform message to a <see cref="SophonMessage"/>
+    /// and raises the <see cref="OnMessageReceived"/> event.
+    /// </summary>
+    // private async Task HandleIncomingMessage(PlatformMessage platformMsg)
+    // {
+    //     var sophonMessage = new SophonMessage
+    //     {
+    //         Id = Guid.NewGuid().ToString(),
+    //         ChannelType = ChannelType,
+    //         ChannelId = CurrentConfigId ?? "",
+    //         SenderId = platformMsg.SenderId,
+    //         GroupId = platformMsg.GroupId,
+    //         Content = new MessageContent { Text = platformMsg.Text },
+    //         Attachments = null,
+    //         Timestamp = DateTimeOffset.UtcNow,
+    //         Metadata = new Dictionary<string, string>
+    //         {
+    //             ["chatId"] = platformMsg.ChatId
+    //         }
+    //     };
+    //
+    //     if (OnMessageReceived is { } handler)
+    //         await handler(sophonMessage);
+    // }
+}

@@ -1,0 +1,12 @@
+{
+  "name": "my-model-provider",
+  "version": "1.0.0",
+  "description": "A custom LLM model provider plugin for Sophon.",
+  "author": "Your Name",
+  "pluginInterface": "ModelProvider",
+  "providerType": "my-llm",
+  "metadata": {
+    "homepage": "https://github.com/your-org/my-model-provider",
+    "license": "MIT"
+  }
+}

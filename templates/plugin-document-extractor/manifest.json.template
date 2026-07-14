@@ -1,0 +1,22 @@
+{
+  "name": "{{name}}",
+  "version": "1.0.0",
+  "description": "{{description}}",
+  "author": "{{author}}",
+  "license": "MIT",
+  "type": "plugin",
+  "pluginInterface": "IDocumentExtractor",
+  "entrypoint": "{{Name}}.dll",
+  "supportedExtensions": [".custom"],
+  "settings": [
+    {
+      "key": "maxFileSizeMb",
+      "displayName": "Max File Size (MB)",
+      "description": "Maximum allowed file size in megabytes for processing.",
+      "type": "number",
+      "required": false,
+      "default": "50"
+    }
+  ],
+  "platforms": ["windows", "macos", "linux"]
+}

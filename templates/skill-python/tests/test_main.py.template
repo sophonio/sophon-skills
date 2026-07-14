@@ -1,0 +1,56 @@
+"""Tests for {{name}} skill."""
+
+from __future__ import annotations
+
+import json
+import pytest
+
+# Import handlers from the skill entrypoint.
+# Adjust the import path if you rename main.py.
+from main import handle_hello_greet, TOOL_HANDLERS
+
+
+# ---------------------------------------------------------------------------
+# hello.greet tests
+# ---------------------------------------------------------------------------
+
+class TestHelloGreet:
+    """Tests for the hello.greet tool handler."""
+
+    def test_greet_returns_message(self) -> None:
+        """A valid name should produce a greeting string."""
+        result = handle_hello_greet({"name": "Alice"})
+        assert "Alice" in result
+        assert isinstance(result, str)
+
+    def test_greet_strips_whitespace(self) -> None:
+        """Leading/trailing whitespace in the name should be stripped."""
+        result = handle_hello_greet({"name": "  Bob  "})
+        assert "Bob" in result
+
+    def test_greet_missing_name_raises(self) -> None:
+        """An empty or missing name should raise ValueError."""
+        with pytest.raises(ValueError, match="required"):
+            handle_hello_greet({})
+
+    def test_greet_empty_name_raises(self) -> None:
+        """A blank string should raise ValueError."""
+        with pytest.raises(ValueError, match="required"):
+            handle_hello_greet({"name": "   "})
+
+
+# ---------------------------------------------------------------------------
+# Tool registry tests
+# ---------------------------------------------------------------------------
+
+class TestToolRegistry:
+    """Verify that the tool dispatch registry is wired correctly."""
+
+    def test_hello_greet_registered(self) -> None:
+        """hello.greet should appear in the handler map."""
+        assert "hello.greet" in TOOL_HANDLERS
+
+    def test_handler_callable(self) -> None:
+        """Every registered handler must be callable."""
+        for name, handler in TOOL_HANDLERS.items():
+            assert callable(handler), f"Handler for {name} is not callable"

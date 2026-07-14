@@ -1,0 +1,72 @@
+# {{name}}
+
+{{description}}
+
+## Tools
+
+| Tool | Description | Risk |
+|------|-------------|------|
+| `hello.greet` | Greets a person by name with a friendly message. | None |
+
+## Getting Started
+
+### Prerequisites
+
+- Python 3.11+
+- pip
+
+### Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### Run Tests
+
+```bash
+pytest tests/
+```
+
+### Local Development
+
+You can test the skill manually by piping JSON to stdin:
+
+```bash
+echo '{"tool": "hello.greet", "parameters": {"name": "World"}}' | python main.py
+```
+
+Expected output:
+```json
+{"success": true, "result": "Hello, World! Welcome to {{name}}."}
+```
+
+## Project Structure
+
+```
+{{name}}/
+  manifest.json      # Skill manifest (tools, permissions, metadata)
+  main.py            # Tool handler implementations
+  requirements.txt   # Python dependencies
+  tests/
+    test_main.py     # pytest tests
+  README.md          # This file
+  LICENSE            # MIT License
+```
+
+## Packaging
+
+To package this skill for the Sophon Marketplace:
+
+```bash
+sophon dev package
+```
+
+This creates a `.sophon-skill` archive ready for upload.
+
+## License
+
+MIT -- see [LICENSE](LICENSE) for details.
+
+---
+
+*Created with [Sophon DevStudio](https://sophon.ai)*

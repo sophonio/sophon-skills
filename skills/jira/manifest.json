@@ -1,0 +1,103 @@
+{
+  "name": "jira",
+  "version": "1.0.0",
+  "description": "Jira integration — search issues, manage projects",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "integration",
+  "tags": ["jira", "atlassian", "issues", "tickets", "project-management", "agile", "jql"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "atlassian-jira",
+    "displayName": "Jira",
+    "description": "Atlassian Jira project tracking",
+    "icon": "jira",
+    "authType": "custom",
+    "category": "developer",
+    "fields": [
+      {
+        "key": "baseUrl",
+        "label": "Jira URL",
+        "type": "url",
+        "required": true,
+        "placeholder": "https://yourorg.atlassian.net",
+        "pattern": "^https://[a-zA-Z0-9-]+\\.atlassian\\.net$",
+        "patternMessage": "Must be a valid Atlassian URL (e.g. https://yourorg.atlassian.net)"
+      },
+      {
+        "key": "email",
+        "label": "Email",
+        "type": "email",
+        "required": true,
+        "placeholder": "you@company.com"
+      },
+      {
+        "key": "apiKey",
+        "label": "API Token",
+        "type": "secret",
+        "required": true,
+        "helpText": "Generate at Atlassian API tokens page",
+        "helpUrl": "https://id.atlassian.com/manage-profile/security/api-tokens"
+      }
+    ],
+    "testEndpoint": "/rest/api/3/myself"
+  },
+  "tools": [
+    {
+      "name": "jira.search",
+      "description": "Search Jira issues using JQL",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "jql": { "type": "string", "description": "JQL query string" },
+          "maxResults": { "type": "integer", "description": "Max results to return (default 20)" }
+        },
+        "required": ["jql"]
+      }
+    },
+    {
+      "name": "jira.get_issue",
+      "description": "Get details of a specific Jira issue",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "issueKey": { "type": "string", "description": "Issue key (e.g. PROJ-123)" }
+        },
+        "required": ["issueKey"]
+      }
+    },
+    {
+      "name": "jira.create_issue",
+      "description": "Create a new Jira issue",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "projectKey": { "type": "string", "description": "Project key (e.g. PROJ)" },
+          "summary": { "type": "string", "description": "Issue summary/title" },
+          "issueType": { "type": "string", "description": "Issue type (Task, Bug, Story, Epic)", "enum": ["Task", "Bug", "Story", "Epic"] },
+          "description": { "type": "string", "description": "Issue description" },
+          "priority": { "type": "string", "description": "Priority (Highest, High, Medium, Low, Lowest)" }
+        },
+        "required": ["projectKey", "summary", "issueType"]
+      }
+    },
+    {
+      "name": "jira.list_projects",
+      "description": "List all accessible Jira projects",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "atlassian-jira", "scopes": ["read", "write"], "required": true, "access": "proxy" }
+  ],
+  "platforms": []
+}

@@ -1,0 +1,12 @@
+{
+  "name": "my-document-extractor",
+  "version": "1.0.0",
+  "description": "A custom document extractor plugin for Sophon.",
+  "author": "Your Name",
+  "pluginInterface": "DocumentExtractor",
+  "supportedExtensions": [".xyz", ".custom"],
+  "metadata": {
+    "homepage": "https://github.com/your-org/my-document-extractor",
+    "license": "MIT"
+  }
+}

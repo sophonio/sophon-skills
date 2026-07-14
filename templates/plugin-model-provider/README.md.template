@@ -1,0 +1,71 @@
+# {{name}}
+
+{{description}}
+
+A Sophon model provider plugin that connects to the {{Name}} LLM API
+for text generation and chat completions.
+
+## Implemented Interface
+
+`IModelProvider` from `Sophon.Plugin.Abstractions`
+
+### Methods
+
+| Method | Description |
+|--------|-------------|
+| `HealthCheckAsync` | Checks if the {{Name}} API is reachable |
+| `CompleteAsync` | Sends a chat completion request and returns the response |
+| `StreamCompleteAsync` | Streams completion chunks (SSE) |
+| `GetCapabilities` | Returns model capabilities (vision, tools, context window) |
+
+## Getting Started
+
+### Prerequisites
+
+- .NET 10 SDK
+- `Sophon.Plugin.Abstractions` NuGet package
+- A {{Name}} API key
+
+### Build
+
+```bash
+dotnet build
+```
+
+### Configuration
+
+When adding this provider in the Sophon Dashboard (Settings > Models), configure:
+
+| Setting | Type | Required | Description |
+|---------|------|----------|-------------|
+| `apiKey` | Secret | Yes | API key for {{Name}} |
+| `endpoint` | String | No | Base URL (default: `https://api.example.com/v1`) |
+| `defaultModel` | String | No | Default model ID |
+
+### Install
+
+```bash
+sophon plugins install ./{{Name}}.dll
+```
+
+## Development Guide
+
+1. Update the API endpoint and authentication in the constructor
+2. Implement `CompleteAsync` with your provider's request/response format
+3. Implement `StreamCompleteAsync` if the provider supports SSE streaming
+4. Update `GetCapabilities` with accurate model information
+5. Test the health check, completion, and streaming flows
+
+## Supported Models
+
+| Model ID | Context Window | Vision | Function Calling | Streaming |
+|----------|---------------|--------|-----------------|-----------|
+| `default` | 8,192 | No | Yes | Yes |
+
+## License
+
+MIT -- see [LICENSE](LICENSE) for details.
+
+---
+
+*Created with [Sophon DevStudio](https://sophon.ai)*

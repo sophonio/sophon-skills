@@ -1,0 +1,13 @@
+{
+  "name": "my-channel-plugin",
+  "version": "1.0.0",
+  "description": "A custom channel adapter plugin for Sophon.",
+  "author": "Your Name",
+  "pluginInterface": "ChannelAdapter",
+  "channelType": "my-channel",
+  "recipientMetadataKey": "chatId",
+  "metadata": {
+    "homepage": "https://github.com/your-org/my-channel-plugin",
+    "license": "MIT"
+  }
+}

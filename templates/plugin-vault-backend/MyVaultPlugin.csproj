@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Replace with NuGet package reference when published:
+    <PackageReference Include="Sophon.Plugin.Sdk" Version="1.0.0" />
+    -->
+    <ProjectReference Include="..\..\src\Sophon.Plugin.Sdk\Sophon.Plugin.Sdk.csproj" />
+  </ItemGroup>
+
+</Project>

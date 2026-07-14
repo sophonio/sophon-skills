@@ -1,0 +1,119 @@
+// {{name}} - {{description}}
+//
+// Sophon Skill (C#)
+// Author: {{author}}
+// Created: {{date}}
+//
+// This class implements the tool handlers defined in manifest.json.
+// Each tool is dispatched by name; the handler receives a dictionary
+// of parameters and must return a JSON-serialisable result.
+
+using System.Text.Json;
+
+namespace Sophon.Skills.{{ClassName}};
+
+/// <summary>
+/// Entry point for the {{name}} skill.
+/// The Sophon sandbox invokes <see cref="Run"/> with a JSON payload
+/// containing the tool name and parameters.
+/// </summary>
+public sealed class Skill
+{
+    /// <summary>
+    /// Tool dispatch registry — maps tool names to handler methods.
+    /// </summary>
+    private static readonly Dictionary<string, Func<Dictionary<string, JsonElement>, object>> Handlers = new()
+    {
+        ["hello.greet"] = HandleHelloGreet,
+    };
+
+    /// <summary>
+    /// Main entry point called by the Sophon sandbox.
+    /// Reads a JSON request from stdin, dispatches to the appropriate handler,
+    /// and writes the JSON response to stdout.
+    /// </summary>
+    public static void Run(string[] args)
+    {
+        try
+        {
+            var input = Console.In.ReadToEnd();
+            var request = JsonSerializer.Deserialize<ToolRequest>(input)
+                ?? throw new InvalidOperationException("Failed to parse tool request.");
+
+            if (!Handlers.TryGetValue(request.Tool, out var handler))
+            {
+                WriteError($"Unknown tool: {request.Tool}");
+                return;
+            }
+
+            var result = handler(request.Parameters);
+            WriteResult(result);
+        }
+        catch (JsonException ex)
+        {
+            WriteError($"Invalid JSON input: {ex.Message}");
+        }
+        catch (ArgumentException ex)
+        {
+            WriteError(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            WriteError($"Unexpected error: {ex.Message}");
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // Tool handlers
+    // -----------------------------------------------------------------------
+
+    /// <summary>
+    /// Greets a person by name.
+    /// </summary>
+    /// <param name="parameters">Must contain a "name" key (string).</param>
+    /// <returns>A friendly greeting message.</returns>
+    /// <exception cref="ArgumentException">If the name is missing or blank.</exception>
+    private static object HandleHelloGreet(Dictionary<string, JsonElement> parameters)
+    {
+        var name = GetRequiredString(parameters, "name");
+        return $"Hello, {name}! Welcome to {{name}}.";
+    }
+
+    // -----------------------------------------------------------------------
+    // Helpers
+    // -----------------------------------------------------------------------
+
+    private static string GetRequiredString(Dictionary<string, JsonElement> parameters, string key)
+    {
+        if (!parameters.TryGetValue(key, out var element))
+            throw new ArgumentException($"The '{key}' parameter is required.");
+
+        var value = element.GetString()?.Trim();
+        if (string.IsNullOrWhiteSpace(value))
+            throw new ArgumentException($"The '{key}' parameter must not be empty.");
+
+        return value;
+    }
+
+    private static void WriteResult(object result)
+    {
+        var response = new { success = true, result };
+        Console.WriteLine(JsonSerializer.Serialize(response));
+    }
+
+    private static void WriteError(string message)
+    {
+        var response = new { success = false, error = message };
+        Console.WriteLine(JsonSerializer.Serialize(response));
+    }
+
+    // -----------------------------------------------------------------------
+    // Request model
+    // -----------------------------------------------------------------------
+
+    private sealed record ToolRequest
+    {
+        public string Tool { get; init; } = "";
+        public Dictionary<string, JsonElement> Parameters { get; init; } = [];
+    }
+}

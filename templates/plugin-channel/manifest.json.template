@@ -1,0 +1,29 @@
+{
+  "name": "{{name}}",
+  "version": "1.0.0",
+  "description": "{{description}}",
+  "author": "{{author}}",
+  "license": "MIT",
+  "type": "plugin",
+  "pluginInterface": "IChannelAdapter",
+  "entrypoint": "{{Name}}.dll",
+  "channelType": "{{name}}",
+  "settings": [
+    {
+      "key": "apiToken",
+      "displayName": "API Token",
+      "description": "Authentication token for the {{Name}} service.",
+      "type": "secret",
+      "required": true
+    },
+    {
+      "key": "endpoint",
+      "displayName": "Endpoint URL",
+      "description": "Base URL for the {{Name}} API.",
+      "type": "string",
+      "required": false,
+      "default": "https://api.example.com"
+    }
+  ],
+  "platforms": ["windows", "macos", "linux"]
+}

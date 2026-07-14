@@ -1,0 +1,105 @@
+// {{name}} - {{description}}
+//
+// Sophon Document Extractor Plugin
+// Author: {{author}}
+// Created: {{date}}
+//
+// Implements IDocumentExtractor to extract text from custom file formats.
+
+using System.Text;
+using Sophon.Core.Documents;
+
+namespace Sophon.Plugins.{{ClassName}};
+
+/// <summary>
+/// Document extractor for custom file types.
+/// Implements <see cref="IDocumentExtractor"/> to allow Sophon to
+/// process and extract text from files with supported extensions.
+///
+/// <para>
+/// Extracted text is fed into the document processing pipeline:
+/// chunking, embedding, and indexing for semantic search and
+/// LLM-powered summarization / Q&amp;A.
+/// </para>
+/// </summary>
+public sealed class {{ClassName}}Extractor : IDocumentExtractor
+{
+    /// <inheritdoc />
+    public string[] SupportedExtensions => [".custom"];
+    // TODO: Replace ".custom" with the actual file extensions this extractor supports.
+    // Examples: [".rtf"], [".epub"], [".odt"], [".xml", ".xhtml"]
+
+    /// <inheritdoc />
+    public async Task<ExtractedDocument> ExtractAsync(
+        Stream fileStream,
+        string fileName,
+        CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(fileStream);
+        ArgumentException.ThrowIfNullOrWhiteSpace(fileName);
+
+        // TODO: Implement text extraction for your file format.
+        //
+        // Guidelines:
+        // - Read the stream and parse the file format
+        // - Extract all readable text content
+        // - Determine page count (if applicable; use 1 for non-paginated formats)
+        // - Collect metadata (title, author, creation date, word count, etc.)
+        // - Return an ExtractedDocument with the results
+        //
+        // Example for a simple text-based format:
+
+        using var reader = new StreamReader(fileStream, Encoding.UTF8, leaveOpen: true);
+        var text = await reader.ReadToEndAsync(ct);
+
+        // Count "pages" -- for non-paginated formats, estimate based on content
+        var pageCount = Math.Max(1, text.Length / 3000); // ~3000 chars per page
+
+        // Collect metadata
+        var metadata = new Dictionary<string, string>
+        {
+            ["fileName"] = fileName,
+            ["fileExtension"] = Path.GetExtension(fileName).ToLowerInvariant(),
+            ["characterCount"] = text.Length.ToString(),
+            ["wordCount"] = CountWords(text).ToString(),
+            ["extractedBy"] = "{{name}}"
+        };
+
+        return new ExtractedDocument(
+            Text: text,
+            PageCount: pageCount,
+            Metadata: metadata
+        );
+    }
+
+    // -----------------------------------------------------------------------
+    // Helpers
+    // -----------------------------------------------------------------------
+
+    /// <summary>
+    /// Counts the approximate number of words in the extracted text.
+    /// </summary>
+    private static int CountWords(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+            return 0;
+
+        var wordCount = 0;
+        var inWord = false;
+
+        foreach (var ch in text)
+        {
+            if (char.IsWhiteSpace(ch))
+            {
+                inWord = false;
+            }
+            else if (!inWord)
+            {
+                inWord = true;
+                wordCount++;
+            }
+        }
+
+        return wordCount;
+    }
+}

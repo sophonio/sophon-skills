@@ -1,0 +1,11 @@
+{
+  "name": "my-vault-plugin",
+  "version": "1.0.0",
+  "description": "A custom vault backend plugin for Sophon.",
+  "author": "Your Name",
+  "pluginInterface": "VaultBackend",
+  "metadata": {
+    "homepage": "https://github.com/your-org/my-vault-plugin",
+    "license": "MIT"
+  }
+}
