@@ -1,0 +1,133 @@
+{
+  "name": "outlook-calendar",
+  "version": "1.0.0",
+  "description": "Microsoft 365 (Outlook) calendar integration via Microsoft Graph — list, create, update, and delete calendar events and list calendars for a mailbox. Uses app-only (client-credentials) auth and works with Microsoft 365 work/school accounts.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "integration",
+  "tags": ["outlook", "calendar", "microsoft365", "microsoft-graph", "events", "scheduling", "office365"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "microsoft-graph",
+    "displayName": "Outlook Calendar",
+    "description": "Microsoft 365 calendar events via Microsoft Graph (app-only)",
+    "icon": "outlook",
+    "authType": "custom",
+    "category": "integration",
+    "fields": [
+      {
+        "key": "tenantId",
+        "label": "Directory (Tenant) ID",
+        "type": "text",
+        "required": true,
+        "helpText": "The Azure AD tenant ID (GUID) of your Microsoft 365 organization."
+      },
+      {
+        "key": "clientId",
+        "label": "Application (Client) ID",
+        "type": "text",
+        "required": true,
+        "helpText": "The Application (client) ID of the app registration."
+      },
+      {
+        "key": "clientSecret",
+        "label": "Client Secret",
+        "type": "secret",
+        "required": true,
+        "helpText": "A client secret for the app registration. Requires the Calendars.ReadWrite application permission with admin consent."
+      },
+      {
+        "key": "userId",
+        "label": "User (UPN/email)",
+        "type": "text",
+        "required": true,
+        "helpText": "The mailbox to operate on (app-only requires an explicit user)."
+      }
+    ],
+    "testEndpoint": "/calendars"
+  },
+  "tools": [
+    {
+      "name": "outlook.list_events",
+      "description": "List calendar events for the user. If start and end are given, returns events in that window (calendar view, expanding recurrences); otherwise returns upcoming events.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "start": { "type": "string", "description": "Start of window (ISO 8601, e.g. 2026-07-15T00:00:00Z). Requires end." },
+          "end": { "type": "string", "description": "End of window (ISO 8601, e.g. 2026-07-16T00:00:00Z). Requires start." },
+          "limit": { "type": "integer", "description": "Max events to return (default 25, max 100)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "outlook.create_event",
+      "description": "Create a new calendar event in the user's default calendar.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "subject": { "type": "string", "description": "Event title/subject" },
+          "start": { "type": "string", "description": "Start date-time (ISO 8601, e.g. 2026-07-15T14:00:00)" },
+          "end": { "type": "string", "description": "End date-time (ISO 8601, e.g. 2026-07-15T15:00:00)" },
+          "timeZone": { "type": "string", "description": "IANA/Windows time zone for start and end (default UTC)" },
+          "attendees": { "type": "array", "items": { "type": "string" }, "description": "Attendee email addresses" },
+          "body": { "type": "string", "description": "Event body/description (plain text)" },
+          "location": { "type": "string", "description": "Location display name" }
+        },
+        "required": ["subject", "start", "end"]
+      }
+    },
+    {
+      "name": "outlook.update_event",
+      "description": "Update fields of an existing calendar event.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "eventId": { "type": "string", "description": "The event id to update" },
+          "subject": { "type": "string", "description": "New subject" },
+          "start": { "type": "string", "description": "New start date-time (ISO 8601)" },
+          "end": { "type": "string", "description": "New end date-time (ISO 8601)" },
+          "timeZone": { "type": "string", "description": "Time zone for start/end (default UTC)" }
+        },
+        "required": ["eventId"]
+      }
+    },
+    {
+      "name": "outlook.delete_event",
+      "description": "Delete a calendar event. This is not easily reversible.",
+      "riskLevel": "high",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "eventId": { "type": "string", "description": "The event id to delete" }
+        },
+        "required": ["eventId"]
+      }
+    },
+    {
+      "name": "outlook.list_calendars",
+      "description": "List the calendars in the user's mailbox.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "microsoft-graph", "scopes": ["Calendars.ReadWrite"], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

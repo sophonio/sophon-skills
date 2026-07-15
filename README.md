@@ -23,6 +23,9 @@ into `.sophon-skill` artifacts, and the docs for publishing them.
 | [`linear`](skills/linear) | integration | Linear issues, projects, cycles, and comments (GraphQL) |
 | [`sentry`](skills/sentry) | development | Triage Sentry issues — search, inspect events, resolve/assign |
 | [`dependency-audit`](skills/dependency-audit) | development | Scan lockfiles for known CVEs via the OSV.dev API |
+| [`package-registry`](skills/package-registry) | development | Look up npm & PyPI package metadata and versions (keyless) |
+| [`code-search`](skills/code-search) | development | Search GitHub code, repositories, and commits |
+| [`github-projects`](skills/github-projects) | development | Manage GitHub Projects v2 boards and items (GraphQL) |
 
 **Observability & incident**
 
@@ -32,6 +35,9 @@ into `.sophon-skill` artifacts, and the docs for publishing them.
 | [`grafana`](skills/grafana) | integration | Search dashboards, list datasources/alert rules, create annotations |
 | [`datadog`](skills/datadog) | integration | Query metrics and list/mute monitors |
 | [`pagerduty`](skills/pagerduty) | integration | List/ack/resolve/create incidents and look up on-call |
+| [`opsgenie`](skills/opsgenie) | integration | List/ack/close/create Opsgenie alerts and on-call lookup |
+| [`alertmanager`](skills/alertmanager) | data | Inspect Prometheus Alertmanager alerts and manage silences |
+| [`loki-logs`](skills/loki-logs) | data | Query and tail logs from Grafana Loki with LogQL |
 
 **Productivity, docs & calendar**
 
@@ -42,13 +48,17 @@ into `.sophon-skill` artifacts, and the docs for publishing them.
 | [`caldav-calendar`](skills/caldav-calendar) | integration | Event CRUD on any CalDAV server (iCloud, Fastmail, Nextcloud) |
 | [`confluence`](skills/confluence) | integration | Confluence — search pages, manage content and spaces |
 | [`google-gmail`](skills/google-gmail) | integration | Google personal email & calendar (Gmail IMAP/SMTP, Calendar CalDAV) |
+| [`outlook-calendar`](skills/outlook-calendar) | integration | Microsoft 365 calendar events via Graph (app-only) |
 
-**Cloud, data & business**
+**Cloud, infra & business**
 
 | Skill | Category | Description |
 |-------|----------|-------------|
 | [`cloudflare`](skills/cloudflare) | integration | Manage DNS records, purge cache, and list zones |
 | [`vercel`](skills/vercel) | integration | Inspect deployments, projects, and environment variables |
+| [`kubernetes`](skills/kubernetes) | development | Inspect and operate clusters — pods, deployments, logs, scale |
+| [`fly-io`](skills/fly-io) | integration | Manage Fly.io Machines (list, start/stop/restart/destroy) |
+| [`home-assistant`](skills/home-assistant) | integration | Read entity states and call services on Home Assistant |
 | [`sql-query`](skills/sql-query) | data | Query PostgreSQL / MySQL / SQLite with schema introspection |
 | [`airtable`](skills/airtable) | data | Read/write Airtable base records |
 | [`stripe-read`](skills/stripe-read) | data | Read-only Stripe reporting (balance, charges, customers, invoices) |
@@ -118,4 +128,4 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the full contract and PR checklist,
 
 ## License
 
-MIT © 2026 Buildersoft LLC. Each skill also carries its own `LICENSE`.
+Licensed under the MIT License. © 2026 Buildersoft LLC. Each skill also carries its own LICENSE.

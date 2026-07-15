@@ -1,0 +1,108 @@
+{
+  "name": "home-assistant",
+  "version": "1.0.0",
+  "description": "Home Assistant integration — read entity states and history, list services, and call services to control devices via the Home Assistant REST API, authenticated with a Long-Lived Access Token.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "integration",
+  "tags": ["home-assistant", "smart-home", "iot", "automation", "home", "rest"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "home-assistant",
+    "displayName": "Home Assistant",
+    "description": "Home Assistant entity states, history, and service calls",
+    "icon": "home-assistant",
+    "authType": "custom",
+    "category": "integration",
+    "fields": [
+      {
+        "key": "host",
+        "label": "Base URL",
+        "type": "url",
+        "required": true,
+        "placeholder": "http://homeassistant.local:8123",
+        "helpText": "Base URL of your Home Assistant instance (the /api path is appended automatically)."
+      },
+      {
+        "key": "token",
+        "label": "Long-Lived Access Token",
+        "type": "secret",
+        "required": true,
+        "helpText": "Long-Lived Access Token (profile > security)"
+      }
+    ],
+    "testEndpoint": "/api/"
+  },
+  "tools": [
+    {
+      "name": "ha.list_states",
+      "description": "List all entities with their current state and friendly name.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "ha.get_state",
+      "description": "Get the full state object for a single entity.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "entityId": { "type": "string", "description": "Entity id, e.g. light.living_room" }
+        },
+        "required": ["entityId"]
+      }
+    },
+    {
+      "name": "ha.list_services",
+      "description": "List the available service domains and the services each exposes.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "ha.call_service",
+      "description": "Call a Home Assistant service to control a device or entity (e.g. turn on a light, unlock a door). Can perform real-world actions and is not always reversible.",
+      "riskLevel": "high",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "domain": { "type": "string", "description": "Service domain, e.g. light, switch, lock" },
+          "service": { "type": "string", "description": "Service name within the domain, e.g. turn_on, unlock" },
+          "entityId": { "type": "string", "description": "Optional target entity id, e.g. light.living_room" },
+          "data": { "type": "object", "description": "Optional extra service data merged into the request body, e.g. {\"brightness\": 128}" }
+        },
+        "required": ["domain", "service"]
+      }
+    },
+    {
+      "name": "ha.get_history",
+      "description": "Get recent state history for an entity over the past N hours.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "entityId": { "type": "string", "description": "Entity id, e.g. sensor.temperature" },
+          "hours": { "type": "integer", "description": "How many hours of history to fetch (default 24)" }
+        },
+        "required": ["entityId"]
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "home-assistant", "scopes": [], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

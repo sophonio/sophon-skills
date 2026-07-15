@@ -1,0 +1,128 @@
+{
+  "name": "loki-logs",
+  "version": "1.0.0",
+  "description": "Grafana Loki integration — query logs with LogQL, run instant and range queries, and inspect label names and values via the Loki HTTP API. Works with a plain Loki server or a token/basic-auth setup, and supports multi-tenant Loki via X-Scope-OrgID.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "data",
+  "tags": ["loki", "logql", "logs", "grafana", "observability", "monitoring", "devops"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "loki",
+    "displayName": "Grafana Loki",
+    "description": "Grafana Loki log aggregation — LogQL queries, labels, and label values",
+    "icon": "loki",
+    "authType": "custom",
+    "category": "developer",
+    "fields": [
+      {
+        "key": "host",
+        "label": "Server URL",
+        "type": "url",
+        "required": true,
+        "placeholder": "http://loki:3100",
+        "helpText": "Base URL of the Loki server (the /loki/api/v1 paths are appended automatically)."
+      },
+      {
+        "key": "token",
+        "label": "Bearer Token",
+        "type": "secret",
+        "required": false,
+        "helpText": "Optional bearer token for proxied/authenticated setups such as Grafana Cloud."
+      },
+      {
+        "key": "username",
+        "label": "Basic Auth Username",
+        "type": "text",
+        "required": false,
+        "helpText": "Optional username for HTTP basic auth (used only when no bearer token is set)."
+      },
+      {
+        "key": "password",
+        "label": "Basic Auth Password",
+        "type": "secret",
+        "required": false,
+        "helpText": "Optional password for HTTP basic auth."
+      },
+      {
+        "key": "orgId",
+        "label": "Tenant / Org ID",
+        "type": "text",
+        "required": false,
+        "helpText": "X-Scope-OrgID for multi-tenant Loki."
+      }
+    ],
+    "testEndpoint": "/loki/api/v1/labels"
+  },
+  "tools": [
+    {
+      "name": "loki.query",
+      "description": "Run an instant LogQL query and return matching log streams or metric values at a single point in time.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string", "description": "LogQL expression, e.g. {app=\"api\"} |= \"error\"" },
+          "limit": { "type": "integer", "description": "Max entries to return (default 100)" },
+          "time": { "type": "string", "description": "Optional evaluation timestamp (RFC3339 or Unix nanoseconds); defaults to now" }
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "loki.query_range",
+      "description": "Run a LogQL query over a time range and return matching log streams or metric series.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string", "description": "LogQL expression to evaluate over the range" },
+          "start": { "type": "string", "description": "Range start (RFC3339 or Unix nanoseconds)" },
+          "end": { "type": "string", "description": "Range end (RFC3339 or Unix nanoseconds)" },
+          "limit": { "type": "integer", "description": "Max entries to return (default 100)" },
+          "step": { "type": "string", "description": "Query resolution step for metric queries, e.g. 15s, 1m, 1h" },
+          "direction": { "type": "string", "enum": ["forward", "backward"], "description": "Sort order of returned entries (default backward)" }
+        },
+        "required": ["query", "start", "end"]
+      }
+    },
+    {
+      "name": "loki.list_labels",
+      "description": "List all label names present within an optional time range.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "start": { "type": "string", "description": "Optional range start (RFC3339 or Unix nanoseconds)" },
+          "end": { "type": "string", "description": "Optional range end (RFC3339 or Unix nanoseconds)" }
+        }
+      }
+    },
+    {
+      "name": "loki.label_values",
+      "description": "List all values for a given label name within an optional time range.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "label": { "type": "string", "description": "Label name, e.g. app, namespace, or job" },
+          "start": { "type": "string", "description": "Optional range start (RFC3339 or Unix nanoseconds)" },
+          "end": { "type": "string", "description": "Optional range end (RFC3339 or Unix nanoseconds)" }
+        },
+        "required": ["label"]
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "loki", "scopes": [], "required": false, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

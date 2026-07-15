@@ -1,0 +1,100 @@
+{
+  "name": "github-projects",
+  "version": "1.0.0",
+  "description": "GitHub Projects (v2) integration — list projects, inspect project items, add draft issues, and update item status via the GitHub GraphQL API.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "development",
+  "tags": ["github", "projects", "graphql", "planning", "kanban", "issues", "devops"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "github",
+    "displayName": "GitHub Projects",
+    "description": "GitHub Projects (v2) boards, items, and status fields",
+    "icon": "github",
+    "authType": "custom",
+    "category": "developer",
+    "fields": [
+      {
+        "key": "token",
+        "label": "Personal Access Token",
+        "type": "secret",
+        "required": true,
+        "helpText": "GitHub PAT with project (and repo) scope.",
+        "helpUrl": "https://github.com/settings/tokens"
+      }
+    ]
+  },
+  "tools": [
+    {
+      "name": "projects.list",
+      "description": "List GitHub Projects (v2) owned by an organization or user.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "owner": { "type": "string", "description": "Organization or user login that owns the projects" },
+          "ownerType": { "type": "string", "enum": ["organization", "user"], "description": "Whether owner is an organization or a user (default organization)" },
+          "limit": { "type": "integer", "description": "Max projects to return (default 20, max 100)" }
+        },
+        "required": ["owner"]
+      }
+    },
+    {
+      "name": "projects.get_items",
+      "description": "List items in a project (v2), including the linked issue/PR title and state.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "owner": { "type": "string", "description": "Organization or user login that owns the project" },
+          "ownerType": { "type": "string", "enum": ["organization", "user"], "description": "Whether owner is an organization or a user (default organization)" },
+          "number": { "type": "integer", "description": "Project number (as shown in the project URL)" },
+          "limit": { "type": "integer", "description": "Max items to return (default 30, max 100)" }
+        },
+        "required": ["owner", "number"]
+      }
+    },
+    {
+      "name": "projects.add_draft_issue",
+      "description": "Add a draft issue to a project (v2).",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "projectId": { "type": "string", "description": "Project (v2) node id, e.g. PVT_xxx" },
+          "title": { "type": "string", "description": "Draft issue title" },
+          "body": { "type": "string", "description": "Draft issue body (Markdown)" }
+        },
+        "required": ["projectId", "title"]
+      }
+    },
+    {
+      "name": "projects.update_item_status",
+      "description": "Set a single-select field value (e.g. Status) on a project item.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "projectId": { "type": "string", "description": "Project (v2) node id, e.g. PVT_xxx" },
+          "itemId": { "type": "string", "description": "Project item node id, e.g. PVTI_xxx" },
+          "fieldId": { "type": "string", "description": "Single-select field node id, e.g. PVTSSF_xxx" },
+          "optionId": { "type": "string", "description": "Single-select option id to set" }
+        },
+        "required": ["projectId", "itemId", "fieldId", "optionId"]
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "github", "scopes": ["project", "repo"], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

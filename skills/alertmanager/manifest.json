@@ -1,0 +1,135 @@
+{
+  "name": "alertmanager",
+  "version": "1.0.0",
+  "description": "Prometheus Alertmanager integration — list active alerts and silences, inspect cluster status, and create or expire silences via the Alertmanager v2 REST API. Works with a plain Alertmanager or a token/basic-auth proxied setup.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "data",
+  "tags": ["alertmanager", "prometheus", "alerts", "silences", "monitoring", "observability", "devops"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "alertmanager",
+    "displayName": "Alertmanager",
+    "description": "Prometheus Alertmanager alerts, silences, and status",
+    "icon": "prometheus",
+    "authType": "custom",
+    "category": "developer",
+    "fields": [
+      {
+        "key": "host",
+        "label": "Server URL",
+        "type": "url",
+        "required": true,
+        "placeholder": "http://alertmanager:9093",
+        "helpText": "Base URL of the Alertmanager server (the /api/v2 path is appended automatically)."
+      },
+      {
+        "key": "token",
+        "label": "Bearer Token",
+        "type": "secret",
+        "required": false,
+        "helpText": "Optional bearer token for proxied/authenticated setups."
+      },
+      {
+        "key": "username",
+        "label": "Basic Auth Username",
+        "type": "text",
+        "required": false,
+        "helpText": "Optional username for HTTP basic auth (used only when no bearer token is set)."
+      },
+      {
+        "key": "password",
+        "label": "Basic Auth Password",
+        "type": "secret",
+        "required": false,
+        "helpText": "Optional password for HTTP basic auth."
+      }
+    ],
+    "testEndpoint": "/api/v2/status"
+  },
+  "tools": [
+    {
+      "name": "alertmanager.list_alerts",
+      "description": "List alerts currently known to Alertmanager, optionally filtered by active, silenced, or inhibited state.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "active": { "type": "boolean", "description": "Include active (firing) alerts (default true)" },
+          "silenced": { "type": "boolean", "description": "Include alerts that are silenced (default false)" },
+          "inhibited": { "type": "boolean", "description": "Include alerts that are inhibited (default false)" }
+        }
+      }
+    },
+    {
+      "name": "alertmanager.list_silences",
+      "description": "List all silences configured in Alertmanager (active, pending, and expired).",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "alertmanager.get_status",
+      "description": "Get Alertmanager cluster status, version, and current configuration metadata.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "alertmanager.create_silence",
+      "description": "Create a silence that suppresses alerts matching the given matchers for a time window.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "matchers": {
+            "type": "array",
+            "description": "Matchers selecting which alerts to silence.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string", "description": "Label name to match, e.g. alertname" },
+                "value": { "type": "string", "description": "Label value (or regex pattern when isRegex is true)" },
+                "isRegex": { "type": "boolean", "description": "Treat value as a regular expression (default false)" }
+              },
+              "required": ["name", "value"]
+            }
+          },
+          "startsAt": { "type": "string", "description": "Silence start time (RFC3339, e.g. 2026-07-15T00:00:00Z)" },
+          "endsAt": { "type": "string", "description": "Silence end time (RFC3339)" },
+          "createdBy": { "type": "string", "description": "Author of the silence" },
+          "comment": { "type": "string", "description": "Reason for the silence" }
+        },
+        "required": ["matchers", "startsAt", "endsAt", "createdBy", "comment"]
+      }
+    },
+    {
+      "name": "alertmanager.expire_silence",
+      "description": "Expire (delete) an existing silence by its id, so its alerts can fire again.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "silenceId": { "type": "string", "description": "The id of the silence to expire" }
+        },
+        "required": ["silenceId"]
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "alertmanager", "scopes": [], "required": false, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

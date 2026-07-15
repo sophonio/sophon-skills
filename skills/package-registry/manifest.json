@@ -1,0 +1,71 @@
+{
+  "name": "package-registry",
+  "version": "1.0.0",
+  "description": "Query npm and PyPI package metadata. Look up the latest version, description, license, and homepage of a package, or list its published versions. Keyless — no credentials required.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "development",
+  "tags": ["npm", "pypi", "packages", "registry", "dependencies", "versions", "metadata"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "tools": [
+    {
+      "name": "pkg.npm_info",
+      "description": "Get metadata for an npm package: latest version, description, license, homepage, deprecation status, and maintainer count.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "description": "npm package name, e.g. express or @scope/pkg" }
+        },
+        "required": ["name"]
+      }
+    },
+    {
+      "name": "pkg.npm_versions",
+      "description": "List published versions of an npm package, sorted oldest to newest, returning the most recent N.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "description": "npm package name, e.g. express or @scope/pkg" },
+          "limit": { "type": "integer", "description": "Max recent versions to return (default 20, max 100)" }
+        },
+        "required": ["name"]
+      }
+    },
+    {
+      "name": "pkg.pypi_info",
+      "description": "Get metadata for a PyPI package: latest version, summary, license, homepage, required Python version, and yanked status.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "description": "PyPI package name, e.g. requests" }
+        },
+        "required": ["name"]
+      }
+    },
+    {
+      "name": "pkg.pypi_versions",
+      "description": "List released versions of a PyPI package (only those with published files), sorted oldest to newest, returning the most recent N.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "description": "PyPI package name, e.g. requests" },
+          "limit": { "type": "integer", "description": "Max recent versions to return (default 20, max 100)" }
+        },
+        "required": ["name"]
+      }
+    }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

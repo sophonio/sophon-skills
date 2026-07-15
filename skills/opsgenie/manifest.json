@@ -1,0 +1,128 @@
+{
+  "name": "opsgenie",
+  "version": "1.0.0",
+  "description": "Opsgenie integration — list, inspect, acknowledge, and close alerts, create new alerts that page on-call responders, and see who is on call for a schedule. Talks to the Opsgenie Alert API v2.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "integration",
+  "tags": ["opsgenie", "alerts", "on-call", "incident", "paging", "ops", "monitoring"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "opsgenie",
+    "displayName": "Opsgenie",
+    "description": "Opsgenie alerts, on-call schedules, and incident response",
+    "icon": "opsgenie",
+    "authType": "custom",
+    "category": "integration",
+    "fields": [
+      {
+        "key": "apiKey",
+        "label": "API Key",
+        "type": "secret",
+        "required": true,
+        "helpText": "Opsgenie API integration key",
+        "helpUrl": "https://support.atlassian.com/opsgenie/docs/api-key-management/"
+      },
+      {
+        "key": "region",
+        "label": "Region",
+        "type": "text",
+        "required": false,
+        "placeholder": "us",
+        "helpText": "Opsgenie account region: us (default) or eu"
+      }
+    ],
+    "testEndpoint": "/v2/account"
+  },
+  "tools": [
+    {
+      "name": "opsgenie.list_alerts",
+      "description": "List alerts, optionally filtered with an Opsgenie search query.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string", "description": "Opsgenie search query, e.g. 'status: open AND priority: P1'" },
+          "limit": { "type": "integer", "description": "Max alerts to return (default 20, max 100)" }
+        }
+      }
+    },
+    {
+      "name": "opsgenie.get_alert",
+      "description": "Get a single alert by its id, tiny id, or alias.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "alertId": { "type": "string", "description": "Alert id (or tiny id / alias via identifierType)" }
+        },
+        "required": ["alertId"]
+      }
+    },
+    {
+      "name": "opsgenie.acknowledge_alert",
+      "description": "Acknowledge an alert so responders know it is being handled.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "alertId": { "type": "string", "description": "Alert id to acknowledge" },
+          "note": { "type": "string", "description": "Optional note added to the alert" }
+        },
+        "required": ["alertId"]
+      }
+    },
+    {
+      "name": "opsgenie.close_alert",
+      "description": "Close an alert, marking the underlying issue as resolved.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "alertId": { "type": "string", "description": "Alert id to close" },
+          "note": { "type": "string", "description": "Optional note added to the alert" }
+        },
+        "required": ["alertId"]
+      }
+    },
+    {
+      "name": "opsgenie.create_alert",
+      "description": "Create a new alert. This can page on-call responders — use with care.",
+      "riskLevel": "high",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "message": { "type": "string", "description": "Alert message / title (required, max 130 chars)" },
+          "description": { "type": "string", "description": "Detailed description of the alert" },
+          "priority": { "type": "string", "enum": ["P1", "P2", "P3", "P4", "P5"], "description": "Alert priority (default P3)" },
+          "tags": { "type": "array", "items": { "type": "string" }, "description": "Tags to attach to the alert" }
+        },
+        "required": ["message"]
+      }
+    },
+    {
+      "name": "opsgenie.who_is_on_call",
+      "description": "Get the current on-call participants for a schedule.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "scheduleId": { "type": "string", "description": "Schedule id (or name via identifierType)" }
+        },
+        "required": ["scheduleId"]
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "opsgenie", "scopes": [], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

@@ -1,0 +1,83 @@
+{
+  "name": "code-search",
+  "version": "1.0.0",
+  "description": "Search GitHub for code, repositories, and commits through the GitHub search API. A GitHub personal access token is optional but required for code search and to raise rate limits; repository and commit search work anonymously.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "development",
+  "tags": ["github", "search", "code", "repositories", "commits", "developer"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "github",
+    "displayName": "GitHub Code Search",
+    "description": "Search code, repositories, and commits on GitHub",
+    "icon": "github",
+    "authType": "custom",
+    "category": "developer",
+    "fields": [
+      {
+        "key": "token",
+        "label": "Personal Access Token",
+        "type": "secret",
+        "required": false,
+        "helpText": "GitHub PAT — required for code search and private repos; also raises search rate limits.",
+        "helpUrl": "https://github.com/settings/tokens"
+      }
+    ],
+    "testEndpoint": "/rate_limit"
+  },
+  "tools": [
+    {
+      "name": "code.search_code",
+      "description": "Search source code across GitHub repositories. Requires a GitHub token.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string", "description": "Code search query, e.g. 'addClass in:file language:js repo:jquery/jquery'" },
+          "limit": { "type": "integer", "description": "Max results to return (default 30, max 50)" }
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "code.search_repositories",
+      "description": "Search for repositories on GitHub by keyword and qualifiers.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string", "description": "Repository search query, e.g. 'machine learning language:python stars:>1000'" },
+          "sort": { "type": "string", "enum": ["stars", "forks", "updated"], "description": "Sort field (default: best match)" },
+          "limit": { "type": "integer", "description": "Max results to return (default 30, max 50)" }
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "code.search_commits",
+      "description": "Search commits across GitHub repositories by message and qualifiers.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string", "description": "Commit search query, e.g. 'fix memory leak repo:torvalds/linux'" },
+          "limit": { "type": "integer", "description": "Max results to return (default 30, max 50)" }
+        },
+        "required": ["query"]
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "github", "scopes": ["repo"], "required": false, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

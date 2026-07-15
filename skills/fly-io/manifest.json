@@ -1,0 +1,128 @@
+{
+  "name": "fly-io",
+  "version": "1.0.0",
+  "description": "Fly.io integration — list, inspect, start, stop, restart, and destroy Fly Machines for an app through the Fly.io Machines REST API using an app-scoped API token.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "integration",
+  "tags": ["fly-io", "fly", "machines", "deploy", "infrastructure", "devops", "hosting"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "fly",
+    "displayName": "Fly.io",
+    "description": "Fly.io Machines — start, stop, restart, and destroy app machines",
+    "icon": "fly-io",
+    "authType": "custom",
+    "category": "integration",
+    "fields": [
+      {
+        "key": "token",
+        "label": "API Token",
+        "type": "secret",
+        "required": true,
+        "helpText": "A Fly API token (run `fly tokens create`). An app-scoped deploy token is recommended.",
+        "helpUrl": "https://fly.io/docs/security/tokens/"
+      },
+      {
+        "key": "appName",
+        "label": "App Name",
+        "type": "text",
+        "required": true,
+        "helpText": "The Fly app these machines belong to, e.g. my-app.",
+        "placeholder": "my-app"
+      }
+    ],
+    "testEndpoint": "/apps/{appName}/machines"
+  },
+  "tools": [
+    {
+      "name": "fly.list_machines",
+      "description": "List the machines for a Fly app, with their state, region, and image.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "appName": { "type": "string", "description": "Fly app name (falls back to the configured app)" }
+        }
+      }
+    },
+    {
+      "name": "fly.get_machine",
+      "description": "Get a single Fly machine by id, with its state, region, and image.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "machineId": { "type": "string", "description": "The machine id" },
+          "appName": { "type": "string", "description": "Fly app name (falls back to the configured app)" }
+        },
+        "required": ["machineId"]
+      }
+    },
+    {
+      "name": "fly.start_machine",
+      "description": "Start a stopped Fly machine.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "machineId": { "type": "string", "description": "The machine id" },
+          "appName": { "type": "string", "description": "Fly app name (falls back to the configured app)" }
+        },
+        "required": ["machineId"]
+      }
+    },
+    {
+      "name": "fly.stop_machine",
+      "description": "Stop a running Fly machine.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "machineId": { "type": "string", "description": "The machine id" },
+          "appName": { "type": "string", "description": "Fly app name (falls back to the configured app)" }
+        },
+        "required": ["machineId"]
+      }
+    },
+    {
+      "name": "fly.restart_machine",
+      "description": "Restart a Fly machine.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "machineId": { "type": "string", "description": "The machine id" },
+          "appName": { "type": "string", "description": "Fly app name (falls back to the configured app)" }
+        },
+        "required": ["machineId"]
+      }
+    },
+    {
+      "name": "fly.destroy_machine",
+      "description": "Permanently destroy a Fly machine. This is not reversible.",
+      "riskLevel": "high",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "machineId": { "type": "string", "description": "The machine id" },
+          "appName": { "type": "string", "description": "Fly app name (falls back to the configured app)" },
+          "force": { "type": "boolean", "description": "Force destroy even if the machine is running (default false)" }
+        },
+        "required": ["machineId"]
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "fly", "scopes": ["machines"], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

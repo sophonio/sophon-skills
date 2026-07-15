@@ -1,0 +1,144 @@
+{
+  "name": "kubernetes",
+  "version": "1.0.0",
+  "description": "Kubernetes integration — inspect and operate a cluster through the Kubernetes REST API using a ServiceAccount bearer token. List namespaces, pods, deployments, services and nodes, read pod logs, and scale deployments. Pure standard library with custom TLS (private CA) support.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "development",
+  "tags": ["kubernetes", "k8s", "containers", "pods", "deployments", "cluster", "devops"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "kubernetes",
+    "displayName": "Kubernetes",
+    "description": "Kubernetes cluster inspection and operations via the API server",
+    "icon": "kubernetes",
+    "authType": "custom",
+    "category": "developer",
+    "fields": [
+      {
+        "key": "apiServer",
+        "label": "API Server URL",
+        "type": "url",
+        "required": true,
+        "placeholder": "https://10.0.0.1:6443",
+        "helpText": "Base URL of the Kubernetes API server."
+      },
+      {
+        "key": "token",
+        "label": "Service Account Token",
+        "type": "secret",
+        "required": true,
+        "helpText": "A ServiceAccount bearer token with permission to read/operate the target resources."
+      },
+      {
+        "key": "caCert",
+        "label": "CA Certificate (PEM)",
+        "type": "text",
+        "required": false,
+        "helpText": "Cluster CA cert to verify TLS"
+      },
+      {
+        "key": "insecureSkipVerify",
+        "label": "Skip TLS Verify",
+        "type": "text",
+        "required": false,
+        "helpText": "'true' to skip cert verification (not recommended)"
+      }
+    ],
+    "testEndpoint": "/api/v1/namespaces"
+  },
+  "tools": [
+    {
+      "name": "kubernetes.list_namespaces",
+      "description": "List all namespaces in the cluster.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "kubernetes.list_pods",
+      "description": "List pods in a namespace (or across all namespaces) with phase, node and restart count.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "namespace": { "type": "string", "description": "Namespace to list pods in; omit for all namespaces" }
+        }
+      }
+    },
+    {
+      "name": "kubernetes.get_pod_logs",
+      "description": "Fetch the logs of a pod (optionally a specific container).",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "namespace": { "type": "string", "description": "Namespace of the pod" },
+          "pod": { "type": "string", "description": "Pod name" },
+          "container": { "type": "string", "description": "Container name (required only for multi-container pods)" },
+          "tailLines": { "type": "integer", "description": "Return only the last N lines of the log" }
+        },
+        "required": ["namespace", "pod"]
+      }
+    },
+    {
+      "name": "kubernetes.list_deployments",
+      "description": "List deployments in a namespace (or across all namespaces) with desired and available replicas.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "namespace": { "type": "string", "description": "Namespace to list deployments in; omit for all namespaces" }
+        }
+      }
+    },
+    {
+      "name": "kubernetes.list_services",
+      "description": "List services in a namespace (or across all namespaces).",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "namespace": { "type": "string", "description": "Namespace to list services in; omit for all namespaces" }
+        }
+      }
+    },
+    {
+      "name": "kubernetes.list_nodes",
+      "description": "List cluster nodes with their Ready status and kubelet version.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "kubernetes.scale_deployment",
+      "description": "Scale a deployment to a given number of replicas.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "namespace": { "type": "string", "description": "Namespace of the deployment" },
+          "name": { "type": "string", "description": "Deployment name" },
+          "replicas": { "type": "integer", "description": "Desired replica count" }
+        },
+        "required": ["namespace", "name", "replicas"]
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "kubernetes", "scopes": [], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}
