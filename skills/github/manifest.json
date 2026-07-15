@@ -1,0 +1,210 @@
+{
+  "name": "github",
+  "version": "1.0.0",
+  "description": "GitHub integration — manage issues, pull requests, and Actions workflow runs, with a raw REST/GraphQL passthrough for anything else.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "development",
+  "tags": ["github", "git", "issues", "pull-requests", "ci", "actions", "devops"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "github",
+    "displayName": "GitHub",
+    "description": "GitHub repositories, issues, pull requests, and Actions",
+    "icon": "github",
+    "authType": "custom",
+    "category": "developer",
+    "fields": [
+      {
+        "key": "token",
+        "label": "Personal Access Token",
+        "type": "secret",
+        "required": true,
+        "helpText": "A fine-grained or classic PAT with repo (and workflow) scope.",
+        "helpUrl": "https://github.com/settings/tokens"
+      },
+      {
+        "key": "apiBaseUrl",
+        "label": "API Base URL",
+        "type": "url",
+        "required": false,
+        "placeholder": "https://api.github.com",
+        "helpText": "Override only for GitHub Enterprise Server, e.g. https://ghe.example.com/api/v3"
+      }
+    ],
+    "testEndpoint": "/user"
+  },
+  "tools": [
+    {
+      "name": "github.list_issues",
+      "description": "List issues in a repository, filtered by state and labels.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "repo": { "type": "string", "description": "Repository as owner/name, e.g. octocat/hello-world" },
+          "state": { "type": "string", "enum": ["open", "closed", "all"], "description": "Issue state (default open)" },
+          "labels": { "type": "string", "description": "Comma-separated list of label names to filter by" },
+          "limit": { "type": "integer", "description": "Max issues to return (default 30, max 100)" }
+        },
+        "required": ["repo"]
+      }
+    },
+    {
+      "name": "github.get_issue",
+      "description": "Get a single issue (or pull request) by number.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "repo": { "type": "string", "description": "Repository as owner/name" },
+          "number": { "type": "integer", "description": "Issue or PR number" }
+        },
+        "required": ["repo", "number"]
+      }
+    },
+    {
+      "name": "github.create_issue",
+      "description": "Create a new issue in a repository.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "repo": { "type": "string", "description": "Repository as owner/name" },
+          "title": { "type": "string", "description": "Issue title" },
+          "body": { "type": "string", "description": "Issue body (Markdown)" },
+          "labels": { "type": "array", "items": { "type": "string" }, "description": "Label names to apply" },
+          "assignees": { "type": "array", "items": { "type": "string" }, "description": "GitHub usernames to assign" }
+        },
+        "required": ["repo", "title"]
+      }
+    },
+    {
+      "name": "github.comment",
+      "description": "Add a comment to an issue or pull request.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "repo": { "type": "string", "description": "Repository as owner/name" },
+          "number": { "type": "integer", "description": "Issue or PR number" },
+          "body": { "type": "string", "description": "Comment body (Markdown)" }
+        },
+        "required": ["repo", "number", "body"]
+      }
+    },
+    {
+      "name": "github.list_pull_requests",
+      "description": "List pull requests in a repository, filtered by state.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "repo": { "type": "string", "description": "Repository as owner/name" },
+          "state": { "type": "string", "enum": ["open", "closed", "all"], "description": "PR state (default open)" },
+          "limit": { "type": "integer", "description": "Max PRs to return (default 30, max 100)" }
+        },
+        "required": ["repo"]
+      }
+    },
+    {
+      "name": "github.get_pull_request",
+      "description": "Get a single pull request by number, including merge state.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "repo": { "type": "string", "description": "Repository as owner/name" },
+          "number": { "type": "integer", "description": "Pull request number" }
+        },
+        "required": ["repo", "number"]
+      }
+    },
+    {
+      "name": "github.create_pull_request",
+      "description": "Open a new pull request.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "repo": { "type": "string", "description": "Repository as owner/name" },
+          "title": { "type": "string", "description": "PR title" },
+          "head": { "type": "string", "description": "Branch with your changes (e.g. feature-x, or owner:branch for a fork)" },
+          "base": { "type": "string", "description": "Branch to merge into (e.g. main)" },
+          "body": { "type": "string", "description": "PR description (Markdown)" },
+          "draft": { "type": "boolean", "description": "Open as a draft PR (default false)" }
+        },
+        "required": ["repo", "title", "head", "base"]
+      }
+    },
+    {
+      "name": "github.merge_pull_request",
+      "description": "Merge a pull request. This is not easily reversible.",
+      "riskLevel": "high",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "repo": { "type": "string", "description": "Repository as owner/name" },
+          "number": { "type": "integer", "description": "Pull request number" },
+          "method": { "type": "string", "enum": ["merge", "squash", "rebase"], "description": "Merge method (default merge)" },
+          "commitTitle": { "type": "string", "description": "Optional override for the merge commit title" }
+        },
+        "required": ["repo", "number"]
+      }
+    },
+    {
+      "name": "github.list_workflow_runs",
+      "description": "List recent GitHub Actions workflow runs for a repository.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "repo": { "type": "string", "description": "Repository as owner/name" },
+          "branch": { "type": "string", "description": "Filter to a branch name" },
+          "status": { "type": "string", "enum": ["queued", "in_progress", "completed", "success", "failure"], "description": "Filter by run status/conclusion" },
+          "limit": { "type": "integer", "description": "Max runs to return (default 20, max 100)" }
+        },
+        "required": ["repo"]
+      }
+    },
+    {
+      "name": "github.get_workflow_run",
+      "description": "Get a single workflow run and its jobs' conclusions.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "repo": { "type": "string", "description": "Repository as owner/name" },
+          "runId": { "type": "integer", "description": "Workflow run id" }
+        },
+        "required": ["repo", "runId"]
+      }
+    },
+    {
+      "name": "github.api",
+      "description": "Advanced escape hatch: make a raw authenticated GitHub REST API request (like `gh api`). Can perform any operation the token allows, including writes and deletes.",
+      "riskLevel": "high",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "method": { "type": "string", "enum": ["GET", "POST", "PUT", "PATCH", "DELETE"], "description": "HTTP method (default GET)" },
+          "path": { "type": "string", "description": "API path beginning with / (e.g. /repos/octocat/hello-world/releases)" },
+          "body": { "type": "object", "description": "Optional JSON request body for POST/PUT/PATCH" }
+        },
+        "required": ["path"]
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "github", "scopes": ["repo", "workflow"], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

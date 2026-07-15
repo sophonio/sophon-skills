@@ -1,0 +1,94 @@
+{
+  "name": "json-yaml-tools",
+  "version": "1.0.0",
+  "description": "Offline JSON/YAML/TOML toolkit — convert between formats, query with JMESPath, validate against JSON Schema, deep-merge documents, and pretty-print or minify. Runs fully local with no network or credentials.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "data",
+  "tags": ["json", "yaml", "toml", "jmespath", "json-schema", "convert", "validate", "merge"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "tools": [
+    {
+      "name": "data.convert",
+      "description": "Parse a JSON, YAML, or TOML document and re-emit it as JSON or YAML. TOML is read-only; output to TOML is not supported.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "input": { "type": "string", "description": "The document contents as a string. If omitted, provide inputPath." },
+          "inputPath": { "type": "string", "description": "Optional path to a file to read the document from instead of input." },
+          "from": { "type": "string", "enum": ["json", "yaml", "toml"], "description": "Source format of the document" },
+          "to": { "type": "string", "enum": ["json", "yaml"], "description": "Target output format" }
+        },
+        "required": ["from", "to"]
+      }
+    },
+    {
+      "name": "data.query",
+      "description": "Run a JMESPath expression against a JSON or YAML document and return the matched result.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "input": { "type": "string", "description": "The document contents as a string. If omitted, provide inputPath." },
+          "inputPath": { "type": "string", "description": "Optional path to a file to read the document from instead of input." },
+          "format": { "type": "string", "enum": ["json", "yaml"], "description": "Format of the input document (default json)" },
+          "expression": { "type": "string", "description": "JMESPath expression, e.g. people[?age > `30`].name" }
+        },
+        "required": ["expression"]
+      }
+    },
+    {
+      "name": "data.validate",
+      "description": "Validate a JSON or YAML document against a JSON Schema. An invalid document is a normal result (valid:false with errors), not an error.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "input": { "type": "string", "description": "The document contents as a string. If omitted, provide inputPath." },
+          "inputPath": { "type": "string", "description": "Optional path to a file to read the document from instead of input." },
+          "format": { "type": "string", "enum": ["json", "yaml"], "description": "Format of the input document (default json)" },
+          "schema": { "type": "string", "description": "The JSON Schema as a JSON string" }
+        },
+        "required": ["schema"]
+      }
+    },
+    {
+      "name": "data.merge",
+      "description": "Deep-merge two or more JSON or YAML documents left-to-right (later inputs win on conflicting scalar keys) and return the merged document in the same format.",
+      "riskLevel": "low",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "inputs": { "type": "array", "items": { "type": "string" }, "description": "Two or more document strings to merge, in precedence order (last wins)" },
+          "format": { "type": "string", "enum": ["json", "yaml"], "description": "Format of the inputs and the merged output (default json)" }
+        },
+        "required": ["inputs"]
+      }
+    },
+    {
+      "name": "data.format",
+      "description": "Pretty-print or minify a JSON or YAML document.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "input": { "type": "string", "description": "The document contents as a string. If omitted, provide inputPath." },
+          "inputPath": { "type": "string", "description": "Optional path to a file to read the document from instead of input." },
+          "format": { "type": "string", "enum": ["json", "yaml"], "description": "Format of the input document (default json)" },
+          "action": { "type": "string", "enum": ["pretty", "minify"], "description": "pretty = indented output; minify = compact output" }
+        },
+        "required": ["action"]
+      }
+    }
+  ],
+  "requirements": ["PyYAML==6.0.2", "jmespath==1.0.1", "jsonschema==4.23.0"],
+  "sandbox": {
+    "network": false,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

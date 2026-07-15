@@ -1,0 +1,123 @@
+{
+  "name": "linear",
+  "version": "1.0.0",
+  "description": "Linear integration — search, read, create, and update issues, list teams, and add comments via the Linear GraphQL API.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "integration",
+  "tags": ["linear", "issues", "tickets", "project-management", "agile", "graphql", "productivity"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "linear",
+    "displayName": "Linear",
+    "description": "Linear issue tracking and project management",
+    "icon": "linear",
+    "authType": "custom",
+    "category": "developer",
+    "fields": [
+      {
+        "key": "apiKey",
+        "label": "Personal API Key",
+        "type": "secret",
+        "required": true,
+        "helpText": "Create a personal API key in Linear settings",
+        "helpUrl": "https://linear.app/settings/api"
+      }
+    ],
+    "testEndpoint": "/graphql"
+  },
+  "tools": [
+    {
+      "name": "linear.search_issues",
+      "description": "Search issues by text query, returning identifier, title, state, assignee, and URL.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string", "description": "Free-text search across issue titles and descriptions" },
+          "limit": { "type": "integer", "description": "Max issues to return (default 25, max 100)" }
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "linear.get_issue",
+      "description": "Get a single issue by UUID or identifier (e.g. ENG-123).",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "description": "Issue UUID or identifier such as ENG-123" }
+        },
+        "required": ["id"]
+      }
+    },
+    {
+      "name": "linear.list_teams",
+      "description": "List all teams with their id, name, and key.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "linear.create_issue",
+      "description": "Create a new issue in a team.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "teamId": { "type": "string", "description": "UUID of the team to create the issue in" },
+          "title": { "type": "string", "description": "Issue title" },
+          "description": { "type": "string", "description": "Issue description (Markdown)" },
+          "priority": { "type": "integer", "description": "Priority: 0 none, 1 urgent, 2 high, 3 normal, 4 low", "enum": [0, 1, 2, 3, 4] },
+          "assigneeId": { "type": "string", "description": "UUID of the user to assign" }
+        },
+        "required": ["teamId", "title"]
+      }
+    },
+    {
+      "name": "linear.update_issue",
+      "description": "Update fields on an existing issue.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "description": "Issue UUID or identifier such as ENG-123" },
+          "title": { "type": "string", "description": "New issue title" },
+          "description": { "type": "string", "description": "New issue description (Markdown)" },
+          "stateId": { "type": "string", "description": "UUID of the workflow state to move the issue to" },
+          "priority": { "type": "integer", "description": "Priority: 0 none, 1 urgent, 2 high, 3 normal, 4 low", "enum": [0, 1, 2, 3, 4] },
+          "assigneeId": { "type": "string", "description": "UUID of the user to assign" }
+        },
+        "required": ["id"]
+      }
+    },
+    {
+      "name": "linear.add_comment",
+      "description": "Add a comment to an issue.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "issueId": { "type": "string", "description": "Issue UUID or identifier such as ENG-123" },
+          "body": { "type": "string", "description": "Comment body (Markdown)" }
+        },
+        "required": ["issueId", "body"]
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "linear", "scopes": ["read", "write"], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

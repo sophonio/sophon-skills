@@ -13,11 +13,36 @@ into `.sophon-skill` artifacts, and the docs for publishing them.
 
 ## Skills in this repo
 
+**Developer & source control**
+
 | Skill | Category | Description |
 |-------|----------|-------------|
+| [`github`](skills/github) | development | Issues, pull requests, and Actions runs, plus a raw REST API passthrough |
+| [`jira`](skills/jira) | integration | Jira — search issues, manage projects |
+| [`linear`](skills/linear) | integration | Linear issues, projects, cycles, and comments (GraphQL) |
+| [`dependency-audit`](skills/dependency-audit) | development | Scan lockfiles for known CVEs via the OSV.dev API |
+
+**Productivity, docs & calendar**
+
+| Skill | Category | Description |
+|-------|----------|-------------|
+| [`notion`](skills/notion) | integration | Read/search/create/update Notion pages and databases |
+| [`todoist`](skills/todoist) | productivity | Manage Todoist tasks and projects |
+| [`caldav-calendar`](skills/caldav-calendar) | integration | Event CRUD on any CalDAV server (iCloud, Fastmail, Nextcloud) |
 | [`confluence`](skills/confluence) | integration | Confluence — search pages, manage content and spaces |
 | [`google-gmail`](skills/google-gmail) | integration | Google personal email & calendar (Gmail IMAP/SMTP, Calendar CalDAV) |
-| [`jira`](skills/jira) | integration | Jira — search issues, manage projects |
+
+**Data & files**
+
+| Skill | Category | Description |
+|-------|----------|-------------|
+| [`sql-query`](skills/sql-query) | data | Query PostgreSQL / MySQL / SQLite with schema introspection |
+| [`pdf-toolkit`](skills/pdf-toolkit) | data | Merge, split, rotate, encrypt, and extract text/tables from PDFs |
+| [`image-processing`](skills/image-processing) | utility | Resize, convert, crop, compress, and watermark images |
+| [`json-yaml-tools`](skills/json-yaml-tools) | data | Convert, query (JMESPath), validate, and merge JSON/YAML/TOML |
+
+All skills are pure-Python and run in the sandbox with no system binaries — API skills use the
+standard library (`urllib`); others pin small, pure-Python or musllinux-wheel dependencies.
 
 ## Repository layout
 

@@ -1,0 +1,138 @@
+{
+  "name": "notion",
+  "version": "1.0.0",
+  "description": "Notion integration — search workspace content, read pages and blocks, query databases, and create or update pages via the Notion REST API.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "integration",
+  "tags": ["notion", "notes", "wiki", "database", "docs", "knowledge-base", "productivity"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "notion",
+    "displayName": "Notion",
+    "description": "Notion pages, databases, and blocks",
+    "icon": "notion",
+    "authType": "custom",
+    "category": "developer",
+    "fields": [
+      {
+        "key": "token",
+        "label": "Internal Integration Token",
+        "type": "secret",
+        "required": true,
+        "helpText": "Create an internal integration and share pages/databases with it",
+        "helpUrl": "https://www.notion.so/my-integrations"
+      }
+    ],
+    "testEndpoint": "/v1/users/me"
+  },
+  "tools": [
+    {
+      "name": "notion.search",
+      "description": "Search pages and databases shared with the integration. Optionally filter to only pages or only databases.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string", "description": "Text to search titles for. Omit to list everything shared with the integration." },
+          "filterType": { "type": "string", "enum": ["page", "database"], "description": "Restrict results to only pages or only databases" },
+          "limit": { "type": "integer", "description": "Max results to return (default 20, max 100)" }
+        }
+      }
+    },
+    {
+      "name": "notion.get_page",
+      "description": "Retrieve a page's properties and metadata by id.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "pageId": { "type": "string", "description": "The page id (with or without dashes)" }
+        },
+        "required": ["pageId"]
+      }
+    },
+    {
+      "name": "notion.get_block_children",
+      "description": "List the child blocks (content) of a page or block.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "blockId": { "type": "string", "description": "The parent page or block id" },
+          "limit": { "type": "integer", "description": "Max blocks to return (default 50, max 100)" }
+        },
+        "required": ["blockId"]
+      }
+    },
+    {
+      "name": "notion.query_database",
+      "description": "Query a database's rows, with optional Notion filter and sorts objects.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "databaseId": { "type": "string", "description": "The database id" },
+          "filter": { "type": "object", "description": "A Notion filter object (see Notion API docs)" },
+          "sorts": { "type": "array", "items": { "type": "object" }, "description": "A Notion sorts array (see Notion API docs)" },
+          "limit": { "type": "integer", "description": "Max rows to return (default 20, max 100)" }
+        },
+        "required": ["databaseId"]
+      }
+    },
+    {
+      "name": "notion.create_page",
+      "description": "Create a new page under a database or a parent page. Provide either parentDatabaseId or parentPageId. For a database parent, either pass a raw properties object or a title (which builds a minimal Name title property).",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "parentDatabaseId": { "type": "string", "description": "Create the page as a row in this database" },
+          "parentPageId": { "type": "string", "description": "Create the page as a subpage of this page" },
+          "title": { "type": "string", "description": "Convenience title. Builds a minimal Name title property (database parent) or the page title (page parent)." },
+          "properties": { "type": "object", "description": "Raw Notion properties object. Overrides title. Required if the database's title property is not named 'Name'." },
+          "children": { "type": "array", "items": { "type": "object" }, "description": "Optional array of Notion block objects for initial page content" }
+        }
+      }
+    },
+    {
+      "name": "notion.update_page",
+      "description": "Update a page's properties, or archive/unarchive it.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "pageId": { "type": "string", "description": "The page id to update" },
+          "properties": { "type": "object", "description": "Raw Notion properties object to set" },
+          "archived": { "type": "boolean", "description": "Set true to archive (move to trash), false to restore" }
+        },
+        "required": ["pageId"]
+      }
+    },
+    {
+      "name": "notion.append_blocks",
+      "description": "Append content blocks to the end of a page or block.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "blockId": { "type": "string", "description": "The parent page or block id to append to" },
+          "children": { "type": "array", "items": { "type": "object" }, "description": "Array of Notion block objects to append" }
+        },
+        "required": ["blockId", "children"]
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "notion", "scopes": ["read", "write"], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

@@ -1,0 +1,49 @@
+{
+  "name": "dependency-audit",
+  "version": "1.0.0",
+  "description": "Scan dependency lockfiles (requirements.txt, package-lock.json, Cargo.lock, go.mod) for known vulnerabilities using the free OSV.dev database. No credentials required.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "development",
+  "tags": ["security", "vulnerabilities", "dependencies", "osv", "sca", "audit", "supply-chain"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "tools": [
+    {
+      "name": "deps.audit",
+      "description": "Parse a dependency lockfile and check every package against the OSV.dev vulnerability database. Returns only packages that have known vulnerabilities, plus scanned/vulnerable counts.",
+      "riskLevel": "low",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "content": { "type": "string", "description": "The full text of the lockfile to scan" },
+          "filename": { "type": "string", "description": "Filename hint used to pick the parser: requirements.txt, package-lock.json, Cargo.lock, or go.mod" },
+          "ecosystem": { "type": "string", "description": "Optional OSV ecosystem override (e.g. PyPI, npm, crates.io, Go). Defaults to the one implied by filename." }
+        },
+        "required": ["content", "filename"]
+      }
+    },
+    {
+      "name": "deps.query_package",
+      "description": "Look up known vulnerabilities for a single package at a specific version via OSV.dev.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "ecosystem": { "type": "string", "description": "OSV ecosystem, e.g. PyPI, npm, crates.io, Go, Maven, RubyGems" },
+          "name": { "type": "string", "description": "Package name" },
+          "version": { "type": "string", "description": "Exact package version to check" }
+        },
+        "required": ["ecosystem", "name", "version"]
+      }
+    }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

@@ -1,0 +1,129 @@
+{
+  "name": "pdf-toolkit",
+  "version": "1.0.0",
+  "description": "Local PDF operations — merge, split, rotate, extract text and tables, read metadata, and encrypt or decrypt PDF files. Runs entirely offline with no network access.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "data",
+  "tags": ["pdf", "merge", "split", "rotate", "extract", "tables", "encrypt", "metadata"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "tools": [
+    {
+      "name": "pdf.merge",
+      "description": "Merge several PDF files into a single output PDF, in the given order.",
+      "riskLevel": "low",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "inputs": { "type": "array", "items": { "type": "string" }, "description": "Ordered list of input PDF paths to merge" },
+          "output": { "type": "string", "description": "Path to write the merged PDF" }
+        },
+        "required": ["inputs", "output"]
+      }
+    },
+    {
+      "name": "pdf.split",
+      "description": "Split a PDF into multiple files. With 'ranges', produce one file per range; otherwise one file per page.",
+      "riskLevel": "low",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "input": { "type": "string", "description": "Path to the source PDF" },
+          "outputDir": { "type": "string", "description": "Directory for the output files (default: current working directory)" },
+          "ranges": { "type": "string", "description": "Comma-separated 1-based page ranges, e.g. '1-3,5,8-10'. If omitted, split into single pages." }
+        },
+        "required": ["input"]
+      }
+    },
+    {
+      "name": "pdf.rotate",
+      "description": "Rotate pages of a PDF clockwise by 90, 180, or 270 degrees.",
+      "riskLevel": "low",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "input": { "type": "string", "description": "Path to the source PDF" },
+          "output": { "type": "string", "description": "Path to write the rotated PDF" },
+          "degrees": { "type": "integer", "enum": [90, 180, 270], "description": "Clockwise rotation in degrees" },
+          "pages": { "type": "array", "items": { "type": "integer" }, "description": "1-based page numbers to rotate. Omit to rotate all pages." }
+        },
+        "required": ["input", "output", "degrees"]
+      }
+    },
+    {
+      "name": "pdf.extract_text",
+      "description": "Extract text from a PDF. Returns full text and per-page text.",
+      "riskLevel": "low",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "input": { "type": "string", "description": "Path to the source PDF" },
+          "pages": { "type": "array", "items": { "type": "integer" }, "description": "1-based page numbers to extract. Omit for all pages." }
+        },
+        "required": ["input"]
+      }
+    },
+    {
+      "name": "pdf.extract_tables",
+      "description": "Extract tabular data from a PDF using pdfplumber. Returns detected tables per page.",
+      "riskLevel": "low",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "input": { "type": "string", "description": "Path to the source PDF" },
+          "pages": { "type": "array", "items": { "type": "integer" }, "description": "1-based page numbers to scan. Omit for all pages." }
+        },
+        "required": ["input"]
+      }
+    },
+    {
+      "name": "pdf.metadata",
+      "description": "Read a PDF's document metadata (title, author, etc.) and page count.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "input": { "type": "string", "description": "Path to the source PDF" }
+        },
+        "required": ["input"]
+      }
+    },
+    {
+      "name": "pdf.encrypt",
+      "description": "Encrypt a PDF with a password, producing a password-protected output file.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "input": { "type": "string", "description": "Path to the source PDF" },
+          "output": { "type": "string", "description": "Path to write the encrypted PDF" },
+          "password": { "type": "string", "description": "Password to protect the output PDF" }
+        },
+        "required": ["input", "output", "password"]
+      }
+    },
+    {
+      "name": "pdf.decrypt",
+      "description": "Decrypt a password-protected PDF, producing an unprotected output file.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "input": { "type": "string", "description": "Path to the encrypted source PDF" },
+          "output": { "type": "string", "description": "Path to write the decrypted PDF" },
+          "password": { "type": "string", "description": "Password that unlocks the source PDF" }
+        },
+        "required": ["input", "output", "password"]
+      }
+    }
+  ],
+  "requirements": ["pypdf==5.1.0", "pdfplumber==0.11.4"],
+  "sandbox": {
+    "network": false,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 512
+  },
+  "platforms": []
+}

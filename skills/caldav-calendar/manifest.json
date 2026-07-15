@@ -1,0 +1,128 @@
+{
+  "name": "caldav-calendar",
+  "version": "1.0.0",
+  "description": "CalDAV calendar integration — list calendars and events and create, update, or delete events on any CalDAV server (iCloud, Fastmail, Nextcloud, Google, and more) using an app password.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "integration",
+  "tags": ["caldav", "calendar", "icloud", "fastmail", "nextcloud", "events", "ical", "productivity"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "caldav",
+    "displayName": "CalDAV Calendar",
+    "description": "Connect any CalDAV calendar server (iCloud, Fastmail, Nextcloud, Google) with an app-specific password.",
+    "icon": "calendar",
+    "authType": "custom",
+    "category": "developer",
+    "fields": [
+      {
+        "key": "url",
+        "label": "CalDAV URL",
+        "type": "url",
+        "required": true,
+        "placeholder": "https://caldav.icloud.com/",
+        "helpText": "Provider CalDAV endpoint (iCloud: https://caldav.icloud.com/, Fastmail: https://caldav.fastmail.com/, Nextcloud: https://<host>/remote.php/dav)"
+      },
+      {
+        "key": "username",
+        "label": "Username",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "password",
+        "label": "App Password",
+        "type": "secret",
+        "required": true,
+        "helpText": "Use an app-specific password, not your account password"
+      }
+    ],
+    "testEndpoint": "url"
+  },
+  "tools": [
+    {
+      "name": "caldav.list_calendars",
+      "description": "List the calendars available on the connected CalDAV account.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "caldav.list_events",
+      "description": "List events in a calendar within a time range.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "calendar": { "type": "string", "description": "Calendar name or URL (from caldav.list_calendars). Defaults to the first calendar." },
+          "start": { "type": "string", "description": "Range start as an ISO 8601 date or datetime (e.g. 2026-07-01 or 2026-07-01T09:00:00). Defaults to now." },
+          "end": { "type": "string", "description": "Range end as an ISO 8601 date or datetime. Defaults to 30 days after start." }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "caldav.create_event",
+      "description": "Create a new event in a calendar.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "calendar": { "type": "string", "description": "Calendar name or URL. Defaults to the first calendar." },
+          "summary": { "type": "string", "description": "Event title" },
+          "start": { "type": "string", "description": "Start as an ISO 8601 date or datetime" },
+          "end": { "type": "string", "description": "End as an ISO 8601 date or datetime" },
+          "description": { "type": "string", "description": "Event description/notes" },
+          "location": { "type": "string", "description": "Event location" },
+          "allDay": { "type": "boolean", "description": "Treat start/end as all-day dates (default false)" }
+        },
+        "required": ["summary", "start", "end"]
+      }
+    },
+    {
+      "name": "caldav.update_event",
+      "description": "Update an existing event, located by its UID.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "calendar": { "type": "string", "description": "Calendar name or URL. Defaults to the first calendar." },
+          "uid": { "type": "string", "description": "UID of the event to update" },
+          "summary": { "type": "string", "description": "New event title" },
+          "start": { "type": "string", "description": "New start as an ISO 8601 date or datetime" },
+          "end": { "type": "string", "description": "New end as an ISO 8601 date or datetime" },
+          "description": { "type": "string", "description": "New event description" },
+          "location": { "type": "string", "description": "New event location" }
+        },
+        "required": ["uid"]
+      }
+    },
+    {
+      "name": "caldav.delete_event",
+      "description": "Delete an event, located by its UID. This is not reversible.",
+      "riskLevel": "high",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "calendar": { "type": "string", "description": "Calendar name or URL. Defaults to the first calendar." },
+          "uid": { "type": "string", "description": "UID of the event to delete" }
+        },
+        "required": ["uid"]
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "caldav", "scopes": ["calendar"], "required": true, "access": "proxy" }
+  ],
+  "requirements": ["caldav==1.3.9", "icalendar==6.1.0"],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

@@ -1,0 +1,115 @@
+{
+  "name": "sql-query",
+  "version": "1.0.0",
+  "description": "SQL database integration — connect to PostgreSQL, MySQL/MariaDB, or SQLite to list tables, inspect schemas, and run arbitrary read or write queries. Uses pure-Python drivers so it runs unchanged in the sandbox.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "data",
+  "tags": ["sql", "database", "postgres", "mysql", "mariadb", "sqlite", "query", "analytics"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "sql",
+    "displayName": "SQL Database",
+    "description": "PostgreSQL, MySQL/MariaDB, or SQLite database connection",
+    "icon": "database",
+    "authType": "custom",
+    "category": "developer",
+    "fields": [
+      {
+        "key": "dbType",
+        "label": "Database Type",
+        "type": "text",
+        "required": true,
+        "placeholder": "postgres | mysql | sqlite",
+        "helpText": "One of: postgres, mysql (also MariaDB), or sqlite."
+      },
+      {
+        "key": "host",
+        "label": "Host",
+        "type": "text",
+        "required": false,
+        "placeholder": "localhost",
+        "helpText": "Server hostname or IP. Leave blank for SQLite."
+      },
+      {
+        "key": "port",
+        "label": "Port",
+        "type": "text",
+        "required": false,
+        "placeholder": "5432 (postgres) / 3306 (mysql)",
+        "helpText": "Defaults to 5432 for postgres and 3306 for mysql."
+      },
+      {
+        "key": "database",
+        "label": "Database (or SQLite file path)",
+        "type": "text",
+        "required": true,
+        "placeholder": "mydb  or  /workspace/data.db",
+        "helpText": "Database name for postgres/mysql, or the file path for sqlite."
+      },
+      {
+        "key": "username",
+        "label": "Username",
+        "type": "text",
+        "required": false,
+        "helpText": "Required for postgres/mysql; ignored for sqlite."
+      },
+      {
+        "key": "password",
+        "label": "Password",
+        "type": "secret",
+        "required": false,
+        "helpText": "Required for postgres/mysql; ignored for sqlite."
+      }
+    ],
+    "testEndpoint": ""
+  },
+  "tools": [
+    {
+      "name": "sql.list_tables",
+      "description": "List the tables in the connected database.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "sql.describe_table",
+      "description": "Describe a table's columns and their data types.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "table": { "type": "string", "description": "Table name (identifier chars only: letters, digits, underscore, dot)" }
+        },
+        "required": ["table"]
+      }
+    },
+    {
+      "name": "sql.run_query",
+      "description": "Execute an arbitrary SQL statement. SELECTs return columns and rows (capped); other statements return the number of affected rows and are committed. Can read, mutate, or delete data — use with care.",
+      "riskLevel": "high",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "sql": { "type": "string", "description": "The SQL statement to execute" },
+          "limit": { "type": "integer", "description": "Max rows to return for SELECTs (default 500, hard max 1000)" }
+        },
+        "required": ["sql"]
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "sql", "scopes": ["read", "write"], "required": true, "access": "proxy" }
+  ],
+  "requirements": ["pg8000==1.31.2", "PyMySQL==1.1.1"],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

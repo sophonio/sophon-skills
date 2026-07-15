@@ -1,0 +1,152 @@
+{
+  "name": "image-processing",
+  "version": "1.0.0",
+  "description": "Local still-image processing with Pillow — inspect, resize, convert, crop, rotate, compress, thumbnail, strip EXIF, and watermark images. Runs fully offline with no network or credentials.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "utility",
+  "tags": ["image", "pillow", "resize", "convert", "thumbnail", "watermark", "exif", "crop"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "tools": [
+    {
+      "name": "image.info",
+      "description": "Inspect an image: return its width, height, format, mode, and whether it carries EXIF metadata.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "input": { "type": "string", "description": "Path to the input image file" }
+        },
+        "required": ["input"]
+      }
+    },
+    {
+      "name": "image.resize",
+      "description": "Resize an image to the given width and/or height. Preserves aspect ratio by default.",
+      "riskLevel": "low",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "input": { "type": "string", "description": "Path to the input image" },
+          "output": { "type": "string", "description": "Path to write the resized image (format inferred from extension)" },
+          "width": { "type": "integer", "description": "Target width in pixels" },
+          "height": { "type": "integer", "description": "Target height in pixels" },
+          "keepAspect": { "type": "boolean", "description": "Preserve aspect ratio, fitting within width/height (default true)" }
+        },
+        "required": ["input", "output"]
+      }
+    },
+    {
+      "name": "image.convert",
+      "description": "Convert an image to another format (PNG, JPEG, or WebP). RGBA is flattened onto white for JPEG.",
+      "riskLevel": "low",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "input": { "type": "string", "description": "Path to the input image" },
+          "output": { "type": "string", "description": "Path to write the converted image" },
+          "format": { "type": "string", "enum": ["png", "jpeg", "webp"], "description": "Target format (default: inferred from the output file extension)" }
+        },
+        "required": ["input", "output"]
+      }
+    },
+    {
+      "name": "image.crop",
+      "description": "Crop an image to the rectangle bounded by left, top, right, bottom (pixel coordinates).",
+      "riskLevel": "low",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "input": { "type": "string", "description": "Path to the input image" },
+          "output": { "type": "string", "description": "Path to write the cropped image" },
+          "left": { "type": "integer", "description": "Left edge x-coordinate" },
+          "top": { "type": "integer", "description": "Top edge y-coordinate" },
+          "right": { "type": "integer", "description": "Right edge x-coordinate (exclusive)" },
+          "bottom": { "type": "integer", "description": "Bottom edge y-coordinate (exclusive)" }
+        },
+        "required": ["input", "output", "left", "top", "right", "bottom"]
+      }
+    },
+    {
+      "name": "image.rotate",
+      "description": "Rotate an image clockwise by the given number of degrees. Expands the canvas to fit by default.",
+      "riskLevel": "low",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "input": { "type": "string", "description": "Path to the input image" },
+          "output": { "type": "string", "description": "Path to write the rotated image" },
+          "degrees": { "type": "number", "description": "Rotation angle in degrees, clockwise" },
+          "expand": { "type": "boolean", "description": "Grow the canvas so no pixels are clipped (default true)" }
+        },
+        "required": ["input", "output", "degrees"]
+      }
+    },
+    {
+      "name": "image.compress",
+      "description": "Re-encode an image at a target quality to shrink its file size (lossy for JPEG/WebP).",
+      "riskLevel": "low",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "input": { "type": "string", "description": "Path to the input image" },
+          "output": { "type": "string", "description": "Path to write the compressed image" },
+          "quality": { "type": "integer", "description": "Encoder quality 1-95 (default 80); ignored for PNG" }
+        },
+        "required": ["input", "output"]
+      }
+    },
+    {
+      "name": "image.thumbnail",
+      "description": "Create a thumbnail that fits within a square box of the given size, preserving aspect ratio.",
+      "riskLevel": "low",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "input": { "type": "string", "description": "Path to the input image" },
+          "output": { "type": "string", "description": "Path to write the thumbnail" },
+          "size": { "type": "integer", "description": "Maximum width/height of the thumbnail in pixels (default 256)" }
+        },
+        "required": ["input", "output"]
+      }
+    },
+    {
+      "name": "image.strip_exif",
+      "description": "Save a copy of the image with all EXIF/metadata removed (useful for privacy).",
+      "riskLevel": "low",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "input": { "type": "string", "description": "Path to the input image" },
+          "output": { "type": "string", "description": "Path to write the metadata-free image" }
+        },
+        "required": ["input", "output"]
+      }
+    },
+    {
+      "name": "image.watermark",
+      "description": "Overlay semi-transparent text onto an image at a chosen corner or the center.",
+      "riskLevel": "low",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "input": { "type": "string", "description": "Path to the input image" },
+          "output": { "type": "string", "description": "Path to write the watermarked image" },
+          "text": { "type": "string", "description": "Watermark text to draw" },
+          "position": { "type": "string", "enum": ["top-left", "top-right", "bottom-left", "bottom-right", "center"], "description": "Placement of the text (default bottom-right)" },
+          "opacity": { "type": "number", "description": "Text opacity from 0.0 (transparent) to 1.0 (opaque); default 0.5" }
+        },
+        "required": ["input", "output", "text"]
+      }
+    }
+  ],
+  "requirements": ["Pillow==11.0.0", "piexif==1.1.3"],
+  "sandbox": {
+    "network": false,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 512
+  },
+  "platforms": []
+}
