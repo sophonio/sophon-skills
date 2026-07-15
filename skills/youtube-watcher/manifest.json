@@ -1,0 +1,60 @@
+{
+  "name": "youtube-watcher",
+  "version": "1.0.0",
+  "description": "Fetch and read transcripts from YouTube videos. Use to summarize a video, answer questions about its content, or extract information from it. Also lists available caption languages and looks up basic video info (title, channel).",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "data",
+  "tags": ["youtube", "transcript", "captions", "subtitles", "video", "summarize", "research"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "tools": [
+    {
+      "name": "youtube.get_transcript",
+      "description": "Fetch the transcript of a YouTube video as plain text (default) or timed segments. Accepts a video ID or any YouTube URL. Optionally translate the transcript to another language.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "video": { "type": "string", "description": "YouTube video ID or URL (watch, youtu.be, shorts, embed)" },
+          "languages": { "type": "array", "items": { "type": "string" }, "description": "Preferred caption language codes in priority order (default [\"en\"]); falls back to any available transcript" },
+          "format": { "type": "string", "enum": ["text", "segments"], "description": "\"text\" = one joined string (default); \"segments\" = list of {text, start, duration}" },
+          "translateTo": { "type": "string", "description": "Optional target language code (e.g. \"es\") to translate the transcript into" }
+        },
+        "required": ["video"]
+      }
+    },
+    {
+      "name": "youtube.list_transcripts",
+      "description": "List the caption tracks available for a video (language, whether auto-generated, and whether translatable).",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "video": { "type": "string", "description": "YouTube video ID or URL" }
+        },
+        "required": ["video"]
+      }
+    },
+    {
+      "name": "youtube.get_video_info",
+      "description": "Look up basic public metadata for a video (title, channel/author, thumbnail) via YouTube's keyless oEmbed endpoint.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "video": { "type": "string", "description": "YouTube video ID or URL" }
+        },
+        "required": ["video"]
+      }
+    }
+  ],
+  "requirements": ["youtube-transcript-api==1.2.4"],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 60,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}
