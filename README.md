@@ -24,13 +24,6 @@ into `.sophon-skill` artifacts, and the docs for publishing them.
 | [`sentry`](skills/sentry) | development | Triage Sentry issues — search, inspect events, resolve/assign |
 | [`dependency-audit`](skills/dependency-audit) | development | Scan lockfiles for known CVEs via the OSV.dev API |
 
-**Communication & messaging**
-
-| Skill | Category | Description |
-|-------|----------|-------------|
-| [`discord`](skills/discord) | communication | Send messages/embeds (webhook or bot) and read channel history |
-| [`telegram`](skills/telegram) | communication | Send messages/media and read bot updates via the Telegram Bot API |
-
 **Productivity, docs & calendar**
 
 | Skill | Category | Description |
@@ -64,7 +57,6 @@ into `.sophon-skill` artifacts, and the docs for publishing them.
 | Skill | Category | Description |
 |-------|----------|-------------|
 | [`wikipedia`](skills/wikipedia) | data | Search Wikipedia and read article summaries/full text (keyless) |
-| [`weather`](skills/weather) | utility | Current conditions and forecasts for any location (keyless) |
 | [`crypto-utils`](skills/crypto-utils) | utility | Offline hashing, HMAC, JWT decode/verify, token & password generation |
 
 All skills are pure-Python and run in the sandbox with no system binaries — most use only the
