@@ -1,0 +1,73 @@
+{
+  "name": "currency-convert",
+  "version": "1.0.0",
+  "description": "Currency conversion and European Central Bank (ECB) reference exchange rates via the keyless Frankfurter API. Convert amounts between currencies, fetch latest rates for a base currency, look up historical rates for a past date, and list supported currency codes. Keyless — no credentials required.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "data",
+  "tags": ["currency", "exchange-rate", "forex", "ecb", "conversion", "frankfurter", "finance"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "tools": [
+    {
+      "name": "currency.convert",
+      "description": "Convert an amount from one currency to another using the latest ECB reference rate. Returns the amount, source/target currency, the rate, the converted result, and the rate date.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "amount": { "type": "number", "description": "Amount of the source currency to convert." },
+          "from": { "type": "string", "description": "Source currency code, e.g. USD, EUR, GBP (case-insensitive)." },
+          "to": { "type": "string", "description": "Target currency code, e.g. USD, EUR, GBP (case-insensitive)." }
+        },
+        "required": ["amount", "from", "to"]
+      }
+    },
+    {
+      "name": "currency.rates",
+      "description": "Get the latest ECB reference exchange rates for a base currency. Optionally restrict the response to specific target currencies.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "base": { "type": "string", "description": "Base currency code (default EUR)." },
+          "symbols": { "type": ["string", "array"], "items": { "type": "string" }, "description": "Optional target currencies to include: a comma-separated string (e.g. \"USD,GBP,JPY\") or an array of codes. If omitted, all available rates are returned." }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "currency.historical",
+      "description": "Get the ECB reference rate for a specific past date (YYYY-MM-DD) and convert an amount between two currencies on that date.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "date": { "type": "string", "description": "Historical date in YYYY-MM-DD format." },
+          "from": { "type": "string", "description": "Source currency code (case-insensitive)." },
+          "to": { "type": "string", "description": "Target currency code (case-insensitive)." },
+          "amount": { "type": "number", "description": "Amount of the source currency to convert (default 1)." }
+        },
+        "required": ["date", "from", "to"]
+      }
+    },
+    {
+      "name": "currency.list_currencies",
+      "description": "List all currency codes supported by the Frankfurter/ECB dataset, mapped to their full names.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

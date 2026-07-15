@@ -1,0 +1,123 @@
+{
+  "name": "datadog",
+  "version": "1.0.0",
+  "description": "Datadog integration — query metrics timeseries and list, inspect, mute, and unmute monitors via the Datadog REST API.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "integration",
+  "tags": ["datadog", "monitoring", "metrics", "monitors", "observability", "alerting", "devops"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "datadog",
+    "displayName": "Datadog",
+    "description": "Datadog metrics and monitors",
+    "icon": "datadog",
+    "authType": "custom",
+    "category": "developer",
+    "fields": [
+      {
+        "key": "apiKey",
+        "label": "API Key",
+        "type": "secret",
+        "required": true,
+        "helpText": "Datadog API key",
+        "helpUrl": "https://docs.datadoghq.com/account_management/api-app-keys/"
+      },
+      {
+        "key": "appKey",
+        "label": "Application Key",
+        "type": "secret",
+        "required": true,
+        "helpText": "Datadog Application key",
+        "helpUrl": "https://docs.datadoghq.com/account_management/api-app-keys/"
+      },
+      {
+        "key": "site",
+        "label": "Site",
+        "type": "text",
+        "required": false,
+        "placeholder": "datadoghq.com",
+        "helpText": "Your Datadog site (datadoghq.com, datadoghq.eu, us5.datadoghq.com, ...)"
+      }
+    ],
+    "testEndpoint": "/api/v1/validate"
+  },
+  "tools": [
+    {
+      "name": "datadog.query_metrics",
+      "description": "Query a metrics timeseries over a time range using the Datadog metrics query language.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string", "description": "Metrics query, e.g. avg:system.cpu.user{*}" },
+          "from": { "type": "integer", "description": "Start of the query window as a Unix timestamp in seconds" },
+          "to": { "type": "integer", "description": "End of the query window as a Unix timestamp in seconds" }
+        },
+        "required": ["query", "from", "to"]
+      }
+    },
+    {
+      "name": "datadog.list_monitors",
+      "description": "List monitors, optionally filtered by name substring and tags.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "description": "Filter to monitors whose name contains this string" },
+          "tags": { "type": "string", "description": "Comma-separated list of tags to filter by, e.g. env:prod,service:web" },
+          "limit": { "type": "integer", "description": "Max monitors to return (default 50, max 1000)" }
+        }
+      }
+    },
+    {
+      "name": "datadog.get_monitor",
+      "description": "Get a single monitor by its id.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "monitorId": { "type": "integer", "description": "The numeric monitor id" }
+        },
+        "required": ["monitorId"]
+      }
+    },
+    {
+      "name": "datadog.mute_monitor",
+      "description": "Mute a monitor so it stops sending alert notifications, optionally until a given time.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "monitorId": { "type": "integer", "description": "The numeric monitor id" },
+          "end": { "type": "integer", "description": "Optional Unix timestamp (seconds) at which to automatically unmute" }
+        },
+        "required": ["monitorId"]
+      }
+    },
+    {
+      "name": "datadog.unmute_monitor",
+      "description": "Unmute a monitor so it resumes sending alert notifications.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "monitorId": { "type": "integer", "description": "The numeric monitor id" }
+        },
+        "required": ["monitorId"]
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "datadog", "scopes": ["metrics_read", "monitors_read", "monitors_write"], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

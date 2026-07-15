@@ -1,0 +1,108 @@
+{
+  "name": "grafana",
+  "version": "1.0.0",
+  "description": "Grafana integration — search dashboards, inspect dashboard JSON, list data sources and provisioned alert rules, and add annotations via the Grafana HTTP API.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "integration",
+  "tags": ["grafana", "dashboards", "observability", "monitoring", "alerting", "annotations", "devops"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "grafana",
+    "displayName": "Grafana",
+    "description": "Grafana dashboards, data sources, alert rules, and annotations",
+    "icon": "grafana",
+    "authType": "custom",
+    "category": "integration",
+    "fields": [
+      {
+        "key": "host",
+        "label": "Grafana URL",
+        "type": "url",
+        "required": true,
+        "placeholder": "https://myorg.grafana.net"
+      },
+      {
+        "key": "token",
+        "label": "Service Account Token",
+        "type": "secret",
+        "required": true,
+        "helpText": "Service account token (glsa_...)",
+        "helpUrl": "https://grafana.com/docs/grafana/latest/administration/service-accounts/"
+      }
+    ],
+    "testEndpoint": "/api/org"
+  },
+  "tools": [
+    {
+      "name": "grafana.search_dashboards",
+      "description": "Search dashboards by title, returning matches with their uid and folder.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string", "description": "Text to search dashboard titles for" },
+          "limit": { "type": "integer", "description": "Max dashboards to return (default 30, max 100)" }
+        }
+      }
+    },
+    {
+      "name": "grafana.get_dashboard",
+      "description": "Get a single dashboard's full model and metadata by its uid.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "uid": { "type": "string", "description": "Dashboard uid" }
+        },
+        "required": ["uid"]
+      }
+    },
+    {
+      "name": "grafana.list_datasources",
+      "description": "List all configured data sources (id, uid, name, type).",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "grafana.list_alert_rules",
+      "description": "List all provisioned Grafana-managed alert rules.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "grafana.create_annotation",
+      "description": "Create an annotation, optionally attached to a dashboard/panel and tagged.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "text": { "type": "string", "description": "Annotation text/body" },
+          "dashboardUid": { "type": "string", "description": "Uid of the dashboard to attach the annotation to" },
+          "panelId": { "type": "integer", "description": "Panel id within the dashboard to attach to" },
+          "tags": { "type": "array", "items": { "type": "string" }, "description": "Tags to apply to the annotation" },
+          "time": { "type": "integer", "description": "Epoch time in milliseconds (default: now)" }
+        },
+        "required": ["text"]
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "grafana", "scopes": [], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

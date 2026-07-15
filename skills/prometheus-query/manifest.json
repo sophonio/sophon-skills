@@ -1,0 +1,122 @@
+{
+  "name": "prometheus-query",
+  "version": "1.0.0",
+  "description": "Prometheus integration — run instant and range PromQL queries and inspect alerts, scrape targets, and label values via the Prometheus HTTP API. Works with a plain Prometheus server or a token/basic-auth proxied setup (e.g. Grafana Cloud).",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "data",
+  "tags": ["prometheus", "promql", "metrics", "monitoring", "observability", "alerts", "devops"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "prometheus",
+    "displayName": "Prometheus",
+    "description": "Prometheus metrics, PromQL queries, alerts, and targets",
+    "icon": "prometheus",
+    "authType": "custom",
+    "category": "developer",
+    "fields": [
+      {
+        "key": "host",
+        "label": "Server URL",
+        "type": "url",
+        "required": true,
+        "placeholder": "http://prometheus:9090",
+        "helpText": "Base URL of the Prometheus server (the /api/v1 path is appended automatically)."
+      },
+      {
+        "key": "token",
+        "label": "Bearer Token",
+        "type": "secret",
+        "required": false,
+        "helpText": "Optional bearer token for proxied/authenticated setups such as Grafana Cloud."
+      },
+      {
+        "key": "username",
+        "label": "Basic Auth Username",
+        "type": "text",
+        "required": false,
+        "helpText": "Optional username for HTTP basic auth (used only when no bearer token is set)."
+      },
+      {
+        "key": "password",
+        "label": "Basic Auth Password",
+        "type": "secret",
+        "required": false,
+        "helpText": "Optional password for HTTP basic auth."
+      }
+    ],
+    "testEndpoint": "/api/v1/status/buildinfo"
+  },
+  "tools": [
+    {
+      "name": "prometheus.query",
+      "description": "Run an instant PromQL query and return the result vector/scalar at a single point in time.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string", "description": "PromQL expression, e.g. up or rate(http_requests_total[5m])" },
+          "time": { "type": "string", "description": "Optional evaluation timestamp (RFC3339 or Unix seconds); defaults to now" }
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "prometheus.query_range",
+      "description": "Run a PromQL query over a time range at a fixed resolution step (returns a matrix).",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string", "description": "PromQL expression to evaluate over the range" },
+          "start": { "type": "string", "description": "Range start (RFC3339 or Unix seconds)" },
+          "end": { "type": "string", "description": "Range end (RFC3339 or Unix seconds)" },
+          "step": { "type": "string", "description": "Resolution step, e.g. 15s, 1m, 1h, or a number of seconds" }
+        },
+        "required": ["query", "start", "end", "step"]
+      }
+    },
+    {
+      "name": "prometheus.list_alerts",
+      "description": "List the currently active alerts known to the Prometheus server.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "prometheus.list_targets",
+      "description": "List the active scrape targets and their health (job, health, scrape URL).",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "prometheus.label_values",
+      "description": "List all values for a given label name across the server's series.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "label": { "type": "string", "description": "Label name, e.g. job, instance, or __name__ for metric names" }
+        },
+        "required": ["label"]
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "prometheus", "scopes": [], "required": false, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

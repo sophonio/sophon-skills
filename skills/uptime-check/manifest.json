@@ -1,0 +1,65 @@
+{
+  "name": "uptime-check",
+  "version": "1.0.0",
+  "description": "Endpoint availability checks with no dependencies and no authentication — HTTP(S) health probes with latency and status-code assertions, raw TCP port reachability, and TLS certificate inspection with expiry math. Runs fully local using only the Python standard library (urllib, socket, ssl).",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "utility",
+  "tags": ["uptime", "monitoring", "http", "tcp", "tls", "ssl", "healthcheck", "latency"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "tools": [
+    {
+      "name": "uptime.http",
+      "description": "Perform an HTTP(S) request against a URL and report whether it is up. Measures latency, follows redirects, and checks the status code against 2xx (or an expected status). Connection and timeout errors are returned as ok:false with an error string, never raised.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "url": { "type": "string", "description": "Full URL to probe, e.g. https://example.com/health" },
+          "method": { "type": "string", "enum": ["GET", "HEAD"], "description": "HTTP method (default GET)" },
+          "timeoutSeconds": { "type": "number", "description": "Request timeout in seconds (default 10)" },
+          "expectStatus": { "type": "integer", "description": "Exact status code that counts as up (default: any 2xx)" },
+          "header": { "type": "object", "description": "Optional request headers as a flat key/value object" }
+        },
+        "required": ["url"]
+      }
+    },
+    {
+      "name": "uptime.tcp",
+      "description": "Check whether a raw TCP port is open and accepting connections, measuring connect latency. Refused/timed-out connections are returned as open:false with an error string, never raised.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "host": { "type": "string", "description": "Hostname or IP address to connect to" },
+          "port": { "type": "integer", "description": "TCP port number, e.g. 5432" },
+          "timeoutSeconds": { "type": "number", "description": "Connect timeout in seconds (default 10)" }
+        },
+        "required": ["host", "port"]
+      }
+    },
+    {
+      "name": "uptime.tls_cert",
+      "description": "Inspect the TLS certificate served by a host: subject, issuer, validity window, and days until expiry. Handshake/connection errors are returned with an error string, never raised.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "host": { "type": "string", "description": "Hostname to open a TLS connection to (also used for SNI)" },
+          "port": { "type": "integer", "description": "TLS port (default 443)" },
+          "timeoutSeconds": { "type": "number", "description": "Connect/handshake timeout in seconds (default 10)" }
+        },
+        "required": ["host"]
+      }
+    }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

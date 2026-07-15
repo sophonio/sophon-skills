@@ -24,6 +24,15 @@ into `.sophon-skill` artifacts, and the docs for publishing them.
 | [`sentry`](skills/sentry) | development | Triage Sentry issues — search, inspect events, resolve/assign |
 | [`dependency-audit`](skills/dependency-audit) | development | Scan lockfiles for known CVEs via the OSV.dev API |
 
+**Observability & incident**
+
+| Skill | Category | Description |
+|-------|----------|-------------|
+| [`prometheus-query`](skills/prometheus-query) | data | Run PromQL instant/range queries; inspect alerts and targets |
+| [`grafana`](skills/grafana) | integration | Search dashboards, list datasources/alert rules, create annotations |
+| [`datadog`](skills/datadog) | integration | Query metrics and list/mute monitors |
+| [`pagerduty`](skills/pagerduty) | integration | List/ack/resolve/create incidents and look up on-call |
+
 **Productivity, docs & calendar**
 
 | Skill | Category | Description |
@@ -39,6 +48,7 @@ into `.sophon-skill` artifacts, and the docs for publishing them.
 | Skill | Category | Description |
 |-------|----------|-------------|
 | [`cloudflare`](skills/cloudflare) | integration | Manage DNS records, purge cache, and list zones |
+| [`vercel`](skills/vercel) | integration | Inspect deployments, projects, and environment variables |
 | [`sql-query`](skills/sql-query) | data | Query PostgreSQL / MySQL / SQLite with schema introspection |
 | [`airtable`](skills/airtable) | data | Read/write Airtable base records |
 | [`stripe-read`](skills/stripe-read) | data | Read-only Stripe reporting (balance, charges, customers, invoices) |
@@ -57,6 +67,11 @@ into `.sophon-skill` artifacts, and the docs for publishing them.
 | Skill | Category | Description |
 |-------|----------|-------------|
 | [`wikipedia`](skills/wikipedia) | data | Search Wikipedia and read article summaries/full text (keyless) |
+| [`translate-text`](skills/translate-text) | integration | Machine translation via the DeepL API |
+| [`currency-convert`](skills/currency-convert) | data | Convert currencies and fetch ECB reference rates (keyless) |
+| [`dns-tools`](skills/dns-tools) | utility | DNS lookups (DoH), mail records (SPF/DMARC), and RDAP whois (keyless) |
+| [`uptime-check`](skills/uptime-check) | utility | Probe HTTP/TCP endpoints and check TLS certificate expiry |
+| [`units-convert`](skills/units-convert) | utility | Offline unit conversion across length, mass, temperature, and more |
 | [`crypto-utils`](skills/crypto-utils) | utility | Offline hashing, HMAC, JWT decode/verify, token & password generation |
 
 All skills are pure-Python and run in the sandbox with no system binaries — most use only the

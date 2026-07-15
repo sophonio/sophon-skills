@@ -1,0 +1,112 @@
+{
+  "name": "vercel",
+  "version": "1.0.0",
+  "description": "Vercel integration — inspect deployments, projects, and environment variable metadata via the Vercel REST API.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "integration",
+  "tags": ["vercel", "deployments", "projects", "hosting", "devops", "frontend"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "vercel",
+    "displayName": "Vercel",
+    "description": "Vercel deployments, projects, and environment configuration",
+    "icon": "vercel",
+    "authType": "custom",
+    "category": "developer",
+    "fields": [
+      {
+        "key": "token",
+        "label": "Access Token",
+        "type": "secret",
+        "required": true,
+        "helpText": "A Vercel access token with read access.",
+        "helpUrl": "https://vercel.com/account/tokens"
+      },
+      {
+        "key": "teamId",
+        "label": "Team ID",
+        "type": "text",
+        "required": false,
+        "helpText": "For team-scoped resources. Leave blank to use your personal scope."
+      }
+    ],
+    "testEndpoint": "/v2/user"
+  },
+  "tools": [
+    {
+      "name": "vercel.list_deployments",
+      "description": "List recent deployments, optionally filtered by project and state.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "projectId": { "type": "string", "description": "Filter to a project id or name" },
+          "state": { "type": "string", "description": "Filter by state (e.g. BUILDING, READY, ERROR, CANCELED)" },
+          "limit": { "type": "integer", "description": "Max deployments to return (default 20, max 100)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "vercel.get_deployment",
+      "description": "Get a single deployment by id or URL.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "deploymentId": { "type": "string", "description": "Deployment id (e.g. dpl_...) or URL" }
+        },
+        "required": ["deploymentId"]
+      }
+    },
+    {
+      "name": "vercel.list_projects",
+      "description": "List projects in the current scope.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "limit": { "type": "integer", "description": "Max projects to return (default 20, max 100)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "vercel.get_project",
+      "description": "Get a single project by id or name.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "projectId": { "type": "string", "description": "Project id or name" }
+        },
+        "required": ["projectId"]
+      }
+    },
+    {
+      "name": "vercel.list_env",
+      "description": "List a project's environment variable keys and targets. Never returns decrypted values.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "projectId": { "type": "string", "description": "Project id or name" }
+        },
+        "required": ["projectId"]
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "vercel", "scopes": [], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

@@ -1,0 +1,47 @@
+{
+  "name": "units-convert",
+  "version": "1.0.0",
+  "description": "Offline unit conversion using only the Python standard library — convert values across length, mass, volume, area, speed, time, data, pressure, energy, angle, and temperature. Pure local arithmetic with no dependencies, no network, and no credentials. Tolerant of common unit aliases and case.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "utility",
+  "tags": ["units", "conversion", "convert", "measurement", "metric", "imperial", "offline"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "tools": [
+    {
+      "name": "units.convert",
+      "description": "Convert a value from one unit to another. The two units must belong to the same dimension (length, mass, volume, area, speed, time, data, pressure, energy, angle, or temperature). Temperature (C/F/K) uses offset formulas. Returns an error if the units are incompatible.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "value": { "type": "number", "description": "The numeric value to convert." },
+          "from": { "type": "string", "description": "Source unit, e.g. km, lb, floz, mph, GiB, psi, kwh, deg, C. Common aliases and case variants are accepted (meter/metre/m)." },
+          "to": { "type": "string", "description": "Target unit in the same dimension as 'from'." }
+        },
+        "required": ["value", "from", "to"]
+      }
+    },
+    {
+      "name": "units.list_units",
+      "description": "List supported units. With no arguments, returns every unit grouped by dimension. With a category, returns just that dimension's units.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "category": { "type": "string", "enum": ["length", "mass", "volume", "area", "speed", "time", "data", "pressure", "energy", "angle", "temperature"], "description": "Optional dimension to list. If omitted, all dimensions are returned." }
+        },
+        "required": []
+      }
+    }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": false,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

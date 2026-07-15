@@ -1,0 +1,70 @@
+{
+  "name": "dns-tools",
+  "version": "1.0.0",
+  "description": "DNS and WHOIS diagnostics via DNS-over-HTTPS (Google) and RDAP. Resolve records (A/AAAA/MX/TXT/NS/CNAME/SOA/CAA), do reverse PTR lookups, inspect mail deliverability records (MX, SPF, DMARC), and look up domain registration/expiry with RDAP. Keyless — no credentials required.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "utility",
+  "tags": ["dns", "whois", "rdap", "doh", "networking", "diagnostics", "spf", "dmarc"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "tools": [
+    {
+      "name": "dns.lookup",
+      "description": "Resolve DNS records for a hostname over DNS-over-HTTPS. Returns the answer records with their data and TTLs.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "description": "Hostname to resolve, e.g. example.com" },
+          "type": { "type": "string", "enum": ["A", "AAAA", "MX", "TXT", "NS", "CNAME", "SOA", "CAA"], "description": "Record type to query (default A)" }
+        },
+        "required": ["name"]
+      }
+    },
+    {
+      "name": "dns.reverse",
+      "description": "Reverse DNS (PTR) lookup for an IPv4 or IPv6 address. Returns the hostname(s) the address maps to.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "ip": { "type": "string", "description": "IPv4 or IPv6 address, e.g. 8.8.8.8 or 2001:4860:4860::8888" }
+        },
+        "required": ["ip"]
+      }
+    },
+    {
+      "name": "dns.mail_records",
+      "description": "Fetch a domain's mail deliverability records: MX servers (sorted by preference), the SPF policy (from TXT), and the DMARC policy (from _dmarc TXT).",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "domain": { "type": "string", "description": "Domain to inspect, e.g. example.com" }
+        },
+        "required": ["domain"]
+      }
+    },
+    {
+      "name": "dns.whois",
+      "description": "Look up domain registration details via RDAP (the modern WHOIS): registrar, status, nameservers, and registration/expiration dates.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "domain": { "type": "string", "description": "Domain to look up, e.g. example.com" }
+        },
+        "required": ["domain"]
+      }
+    }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

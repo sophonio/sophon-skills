@@ -1,0 +1,83 @@
+{
+  "name": "translate-text",
+  "version": "1.0.0",
+  "description": "Machine translation via the DeepL REST API — translate text into 30+ languages with optional formality control, list supported languages, and check your account usage.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "integration",
+  "tags": ["translation", "deepl", "language", "localization", "i18n", "text", "nlp"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "deepl",
+    "displayName": "DeepL",
+    "description": "DeepL machine translation",
+    "icon": "deepl",
+    "authType": "custom",
+    "category": "integration",
+    "fields": [
+      {
+        "key": "authKey",
+        "label": "DeepL Auth Key",
+        "type": "secret",
+        "required": true,
+        "helpText": "DeepL API auth key (free keys end in :fx)",
+        "helpUrl": "https://www.deepl.com/pro-api"
+      }
+    ]
+  },
+  "tools": [
+    {
+      "name": "translate.text",
+      "description": "Translate one or more text strings into a target language, with optional source language and formality.",
+      "riskLevel": "low",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "description": "Text to translate — a single string or an array of strings.",
+            "oneOf": [
+              { "type": "string" },
+              { "type": "array", "items": { "type": "string" } }
+            ]
+          },
+          "targetLang": { "type": "string", "description": "Target language code, e.g. EN, DE, FR, EN-GB, PT-BR" },
+          "sourceLang": { "type": "string", "description": "Source language code (optional; auto-detected if omitted), e.g. EN, DE" },
+          "formality": { "type": "string", "enum": ["default", "more", "less"], "description": "Formality of the translation (only supported for some target languages)" }
+        },
+        "required": ["text", "targetLang"]
+      }
+    },
+    {
+      "name": "translate.list_languages",
+      "description": "List the languages DeepL supports as translation sources or targets.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "type": { "type": "string", "enum": ["source", "target"], "description": "Which set of languages to list (default target)" }
+        }
+      }
+    },
+    {
+      "name": "translate.usage",
+      "description": "Get character usage and the plan limit for the connected DeepL account.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "deepl", "scopes": [], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

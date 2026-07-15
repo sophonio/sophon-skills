@@ -1,0 +1,138 @@
+{
+  "name": "pagerduty",
+  "version": "1.0.0",
+  "description": "PagerDuty integration — list and inspect incidents, acknowledge and resolve them, create new incidents, and see who is on call, via the PagerDuty REST API.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "integration",
+  "tags": ["pagerduty", "incidents", "oncall", "alerting", "monitoring", "devops", "sre"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "pagerduty",
+    "displayName": "PagerDuty",
+    "description": "PagerDuty incidents, on-call schedules, and alerting",
+    "icon": "pagerduty",
+    "authType": "custom",
+    "category": "integration",
+    "fields": [
+      {
+        "key": "apiToken",
+        "label": "API Token",
+        "type": "secret",
+        "required": true,
+        "helpText": "PagerDuty REST API token",
+        "helpUrl": "https://support.pagerduty.com/docs/api-access-keys"
+      },
+      {
+        "key": "fromEmail",
+        "label": "From Email",
+        "type": "email",
+        "required": false,
+        "helpText": "Email of a valid user (required to acknowledge, resolve, or create incidents)"
+      }
+    ],
+    "testEndpoint": "/incidents?limit=1"
+  },
+  "tools": [
+    {
+      "name": "pagerduty.list_incidents",
+      "description": "List incidents, optionally filtered by status and urgency.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "statuses": {
+            "type": "array",
+            "items": { "type": "string", "enum": ["triggered", "acknowledged", "resolved"] },
+            "description": "Filter by incident status"
+          },
+          "urgencies": {
+            "type": "array",
+            "items": { "type": "string", "enum": ["high", "low"] },
+            "description": "Filter by incident urgency"
+          },
+          "limit": { "type": "integer", "description": "Max incidents to return (default 25, max 100)" }
+        }
+      }
+    },
+    {
+      "name": "pagerduty.get_incident",
+      "description": "Get a single incident by its id.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "incidentId": { "type": "string", "description": "The incident id, e.g. PXYZ123" }
+        },
+        "required": ["incidentId"]
+      }
+    },
+    {
+      "name": "pagerduty.acknowledge_incident",
+      "description": "Acknowledge a triggered incident. Requires a From email.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "incidentId": { "type": "string", "description": "The incident id, e.g. PXYZ123" }
+        },
+        "required": ["incidentId"]
+      }
+    },
+    {
+      "name": "pagerduty.resolve_incident",
+      "description": "Resolve an incident. Requires a From email.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "incidentId": { "type": "string", "description": "The incident id, e.g. PXYZ123" }
+        },
+        "required": ["incidentId"]
+      }
+    },
+    {
+      "name": "pagerduty.create_incident",
+      "description": "Create (trigger) a new incident on a service. This pages on-call responders. Requires a From email.",
+      "riskLevel": "high",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "serviceId": { "type": "string", "description": "The PagerDuty service id, e.g. PSVC123" },
+          "title": { "type": "string", "description": "A short title/summary for the incident" },
+          "urgency": { "type": "string", "enum": ["high", "low"], "description": "Incident urgency (default high)" },
+          "body": { "type": "string", "description": "Optional longer description/details of the incident" }
+        },
+        "required": ["serviceId", "title"]
+      }
+    },
+    {
+      "name": "pagerduty.list_oncalls",
+      "description": "List current on-call assignments, optionally filtered by schedule.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "scheduleIds": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Filter to specific schedule ids"
+          },
+          "limit": { "type": "integer", "description": "Max on-call entries to return (default 25, max 100)" }
+        }
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "pagerduty", "scopes": ["incidents.read", "incidents.write", "oncalls.read"], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}
