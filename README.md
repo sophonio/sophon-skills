@@ -40,6 +40,7 @@ into `.sophon-skill` artifacts, and the docs for publishing them.
 | [`pdf-toolkit`](skills/pdf-toolkit) | data | Merge, split, rotate, encrypt, and extract text/tables from PDFs |
 | [`image-processing`](skills/image-processing) | utility | Resize, convert, crop, compress, and watermark images |
 | [`json-yaml-tools`](skills/json-yaml-tools) | data | Convert, query (JMESPath), validate, and merge JSON/YAML/TOML |
+| [`youtube-watcher`](skills/youtube-watcher) | data | Fetch YouTube transcripts to summarize or answer questions about a video |
 
 All skills are pure-Python and run in the sandbox with no system binaries — API skills use the
 standard library (`urllib`); others pin small, pure-Python or musllinux-wheel dependencies.
