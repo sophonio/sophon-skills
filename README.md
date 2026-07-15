@@ -18,9 +18,18 @@ into `.sophon-skill` artifacts, and the docs for publishing them.
 | Skill | Category | Description |
 |-------|----------|-------------|
 | [`github`](skills/github) | development | Issues, pull requests, and Actions runs, plus a raw REST API passthrough |
+| [`gitlab`](skills/gitlab) | development | Issues, merge requests, and CI/CD pipelines (SaaS + self-managed) |
 | [`jira`](skills/jira) | integration | Jira — search issues, manage projects |
 | [`linear`](skills/linear) | integration | Linear issues, projects, cycles, and comments (GraphQL) |
+| [`sentry`](skills/sentry) | development | Triage Sentry issues — search, inspect events, resolve/assign |
 | [`dependency-audit`](skills/dependency-audit) | development | Scan lockfiles for known CVEs via the OSV.dev API |
+
+**Communication & messaging**
+
+| Skill | Category | Description |
+|-------|----------|-------------|
+| [`discord`](skills/discord) | communication | Send messages/embeds (webhook or bot) and read channel history |
+| [`telegram`](skills/telegram) | communication | Send messages/media and read bot updates via the Telegram Bot API |
 
 **Productivity, docs & calendar**
 
@@ -32,18 +41,34 @@ into `.sophon-skill` artifacts, and the docs for publishing them.
 | [`confluence`](skills/confluence) | integration | Confluence — search pages, manage content and spaces |
 | [`google-gmail`](skills/google-gmail) | integration | Google personal email & calendar (Gmail IMAP/SMTP, Calendar CalDAV) |
 
-**Data & files**
+**Cloud, data & business**
 
 | Skill | Category | Description |
 |-------|----------|-------------|
+| [`cloudflare`](skills/cloudflare) | integration | Manage DNS records, purge cache, and list zones |
 | [`sql-query`](skills/sql-query) | data | Query PostgreSQL / MySQL / SQLite with schema introspection |
+| [`airtable`](skills/airtable) | data | Read/write Airtable base records |
+| [`stripe-read`](skills/stripe-read) | data | Read-only Stripe reporting (balance, charges, customers, invoices) |
+
+**Files & media**
+
+| Skill | Category | Description |
+|-------|----------|-------------|
 | [`pdf-toolkit`](skills/pdf-toolkit) | data | Merge, split, rotate, encrypt, and extract text/tables from PDFs |
 | [`image-processing`](skills/image-processing) | utility | Resize, convert, crop, compress, and watermark images |
 | [`json-yaml-tools`](skills/json-yaml-tools) | data | Convert, query (JMESPath), validate, and merge JSON/YAML/TOML |
 | [`youtube-watcher`](skills/youtube-watcher) | data | Fetch YouTube transcripts to summarize or answer questions about a video |
 
-All skills are pure-Python and run in the sandbox with no system binaries — API skills use the
-standard library (`urllib`); others pin small, pure-Python or musllinux-wheel dependencies.
+**Research & utilities**
+
+| Skill | Category | Description |
+|-------|----------|-------------|
+| [`wikipedia`](skills/wikipedia) | data | Search Wikipedia and read article summaries/full text (keyless) |
+| [`weather`](skills/weather) | utility | Current conditions and forecasts for any location (keyless) |
+| [`crypto-utils`](skills/crypto-utils) | utility | Offline hashing, HMAC, JWT decode/verify, token & password generation |
+
+All skills are pure-Python and run in the sandbox with no system binaries — most use only the
+standard library (`urllib`, `hashlib`); a few pin small, pure-Python or musllinux-wheel dependencies.
 
 ## Repository layout
 

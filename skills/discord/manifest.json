@@ -1,0 +1,105 @@
+{
+  "name": "discord",
+  "version": "1.0.0",
+  "description": "Discord integration — send messages and rich embeds via an incoming webhook, or read channels and post anywhere a bot can reach using a bot token.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "communication",
+  "tags": ["discord", "chat", "webhook", "bot", "messaging", "notifications"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "discord",
+    "displayName": "Discord",
+    "description": "Send messages and embeds via webhook, or read/post via a bot token",
+    "icon": "discord",
+    "authType": "custom",
+    "category": "integration",
+    "fields": [
+      {
+        "key": "webhookUrl",
+        "label": "Webhook URL",
+        "type": "secret",
+        "required": false,
+        "helpText": "For sending messages to one channel (no bot needed)"
+      },
+      {
+        "key": "botToken",
+        "label": "Bot Token",
+        "type": "secret",
+        "required": false,
+        "helpText": "For reading channels / sending to any channel the bot can access"
+      }
+    ]
+  },
+  "tools": [
+    {
+      "name": "discord.send_message",
+      "description": "Send a text message. Uses a webhook URL (per-message or configured) if given, otherwise a bot token posting to a channel.",
+      "riskLevel": "high",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "content": { "type": "string", "description": "Message text to send" },
+          "webhookUrl": { "type": "string", "description": "Override the configured webhook URL for this message" },
+          "channelId": { "type": "string", "description": "Channel id to post to when using a bot token" },
+          "username": { "type": "string", "description": "Override the displayed username (webhook only)" }
+        },
+        "required": ["content"]
+      }
+    },
+    {
+      "name": "discord.send_embed",
+      "description": "Send a rich embed (title, description, color, link). Uses a webhook URL if given, otherwise a bot token posting to a channel.",
+      "riskLevel": "high",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string", "description": "Embed title" },
+          "description": { "type": "string", "description": "Embed body text" },
+          "webhookUrl": { "type": "string", "description": "Override the configured webhook URL for this embed" },
+          "channelId": { "type": "string", "description": "Channel id to post to when using a bot token" },
+          "color": { "type": "integer", "description": "Sidebar color as a decimal integer (e.g. 5814783)" },
+          "url": { "type": "string", "description": "URL the embed title links to" }
+        },
+        "required": ["title"]
+      }
+    },
+    {
+      "name": "discord.list_messages",
+      "description": "List recent messages in a channel. Requires a bot token.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "channelId": { "type": "string", "description": "Channel id to read messages from" },
+          "limit": { "type": "integer", "description": "Max messages to return (default 20, max 100)" }
+        },
+        "required": ["channelId"]
+      }
+    },
+    {
+      "name": "discord.get_channel",
+      "description": "Get metadata for a channel. Requires a bot token.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "channelId": { "type": "string", "description": "Channel id to fetch" }
+        },
+        "required": ["channelId"]
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "discord", "scopes": [], "required": false, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

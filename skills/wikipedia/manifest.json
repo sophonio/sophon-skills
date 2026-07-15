@@ -1,0 +1,61 @@
+{
+  "name": "wikipedia",
+  "version": "1.0.0",
+  "description": "Wikipedia search and article reader via the public MediaWiki API. Search articles, fetch concise page summaries, and read full article plaintext in any Wikipedia language edition. Keyless — no credentials required.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "data",
+  "tags": ["wikipedia", "mediawiki", "search", "encyclopedia", "reference", "articles", "knowledge"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "tools": [
+    {
+      "name": "wikipedia.search",
+      "description": "Full-text search Wikipedia for articles matching a query. Returns matching page titles, plaintext snippets, and page ids.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string", "description": "Search query text" },
+          "language": { "type": "string", "description": "Wikipedia language edition code, e.g. en, de, fr, es (default en)" },
+          "limit": { "type": "integer", "description": "Max results to return (default 10, max 50)" }
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "wikipedia.get_summary",
+      "description": "Get the short summary (description and lead extract) of a Wikipedia article by title.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string", "description": "Exact article title, e.g. Alan Turing" },
+          "language": { "type": "string", "description": "Wikipedia language edition code, e.g. en, de, fr, es (default en)" }
+        },
+        "required": ["title"]
+      }
+    },
+    {
+      "name": "wikipedia.get_article",
+      "description": "Get the full plaintext extract of a Wikipedia article by title. Very long extracts may be truncated.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string", "description": "Exact article title, e.g. Alan Turing" },
+          "language": { "type": "string", "description": "Wikipedia language edition code, e.g. en, de, fr, es (default en)" }
+        },
+        "required": ["title"]
+      }
+    }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

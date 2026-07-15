@@ -1,0 +1,115 @@
+{
+  "name": "crypto-utils",
+  "version": "1.0.0",
+  "description": "Offline cryptographic and encoding utilities — hashing, HMAC, JWT decoding/verification, secure token and password generation, and base64/base64url/hex/URL encode/decode. Runs fully local with no network or credentials, using only the Python standard library.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "utility",
+  "tags": ["crypto", "hash", "hmac", "jwt", "base64", "encoding", "password", "token"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "tools": [
+    {
+      "name": "crypto.hash",
+      "description": "Compute a cryptographic hash (hex digest) of some data. Provide either plain text (hashed as UTF-8) or base64-encoded bytes.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "text": { "type": "string", "description": "Text to hash (encoded as UTF-8). Ignored if dataBase64 is given." },
+          "dataBase64": { "type": "string", "description": "Base64-encoded raw bytes to hash instead of text." },
+          "algorithm": { "type": "string", "enum": ["md5", "sha1", "sha256", "sha384", "sha512"], "description": "Hash algorithm (default sha256)." }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "crypto.hmac",
+      "description": "Compute an HMAC (hex) of a message with a secret key.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "text": { "type": "string", "description": "Message to authenticate (UTF-8)." },
+          "key": { "type": "string", "description": "Secret key (UTF-8)." },
+          "algorithm": { "type": "string", "enum": ["md5", "sha1", "sha256", "sha384", "sha512"], "description": "Hash algorithm for the HMAC (default sha256)." }
+        },
+        "required": ["text", "key"]
+      }
+    },
+    {
+      "name": "crypto.jwt_decode",
+      "description": "Decode a JWT into its header and payload (no verification required). If a secret is provided and the algorithm is HS256/HS384/HS512, the signature is verified with a constant-time compare and 'valid' is returned. Asymmetric algorithms (RS/ES/PS) are decoded but not verified.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "token": { "type": "string", "description": "The JWT string (header.payload.signature)." },
+          "secret": { "type": "string", "description": "Optional shared secret to verify an HS256/384/512 signature." },
+          "algorithm": { "type": "string", "description": "Expected algorithm (default HS256). Used for signature verification." }
+        },
+        "required": ["token"]
+      }
+    },
+    {
+      "name": "crypto.generate_token",
+      "description": "Generate a cryptographically secure random token.",
+      "riskLevel": "low",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "length": { "type": "integer", "description": "Number of random bytes of entropy (default 32)." },
+          "format": { "type": "string", "enum": ["hex", "urlsafe", "base64"], "description": "Output encoding (default hex)." }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "crypto.generate_password",
+      "description": "Generate a cryptographically secure random password with a mix of character classes.",
+      "riskLevel": "low",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "length": { "type": "integer", "description": "Password length in characters (default 20, minimum 4)." },
+          "symbols": { "type": "boolean", "description": "Include punctuation symbols (default true)." }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "crypto.encode",
+      "description": "Encode UTF-8 text into base64, base64url, hex, or URL (percent) encoding.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "text": { "type": "string", "description": "Text to encode (UTF-8)." },
+          "encoding": { "type": "string", "enum": ["base64", "base64url", "hex", "url"], "description": "Target encoding." }
+        },
+        "required": ["text", "encoding"]
+      }
+    },
+    {
+      "name": "crypto.decode",
+      "description": "Decode base64, base64url, hex, or URL (percent) encoded text back into a UTF-8 string.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "text": { "type": "string", "description": "Encoded text to decode." },
+          "encoding": { "type": "string", "enum": ["base64", "base64url", "hex", "url"], "description": "Source encoding of the text." }
+        },
+        "required": ["text", "encoding"]
+      }
+    }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": false,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

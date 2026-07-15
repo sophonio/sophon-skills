@@ -1,0 +1,166 @@
+{
+  "name": "gitlab",
+  "version": "1.0.0",
+  "description": "GitLab integration — manage issues, merge requests, and CI/CD pipelines via the REST API v4, with a raw REST passthrough for anything else. Works with gitlab.com and self-managed instances.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "development",
+  "tags": ["gitlab", "git", "issues", "merge-requests", "ci", "pipelines", "devops"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "gitlab",
+    "displayName": "GitLab",
+    "description": "GitLab projects, issues, merge requests, and CI/CD pipelines",
+    "icon": "gitlab",
+    "authType": "custom",
+    "category": "developer",
+    "fields": [
+      {
+        "key": "token",
+        "label": "Personal Access Token",
+        "type": "secret",
+        "required": true,
+        "helpText": "A PAT with api scope.",
+        "helpUrl": "https://gitlab.com/-/user_settings/personal_access_tokens"
+      },
+      {
+        "key": "host",
+        "label": "GitLab Host",
+        "type": "url",
+        "required": false,
+        "placeholder": "https://gitlab.com",
+        "helpText": "Override for self-managed GitLab, e.g. https://gitlab.example.com"
+      }
+    ],
+    "testEndpoint": "/user"
+  },
+  "tools": [
+    {
+      "name": "gitlab.list_issues",
+      "description": "List issues in a project, filtered by state and labels.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "project": { "type": "string", "description": "Project id (numeric) or path, e.g. 123 or group/project" },
+          "state": { "type": "string", "enum": ["opened", "closed", "all"], "description": "Issue state (default opened)" },
+          "labels": { "type": "string", "description": "Comma-separated list of label names to filter by" },
+          "limit": { "type": "integer", "description": "Max issues to return (default 30, max 100)" }
+        },
+        "required": ["project"]
+      }
+    },
+    {
+      "name": "gitlab.get_issue",
+      "description": "Get a single issue by its project-scoped internal id (iid).",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "project": { "type": "string", "description": "Project id (numeric) or path" },
+          "iid": { "type": "integer", "description": "Issue internal id (iid)" }
+        },
+        "required": ["project", "iid"]
+      }
+    },
+    {
+      "name": "gitlab.create_issue",
+      "description": "Create a new issue in a project.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "project": { "type": "string", "description": "Project id (numeric) or path" },
+          "title": { "type": "string", "description": "Issue title" },
+          "description": { "type": "string", "description": "Issue description (Markdown)" },
+          "labels": { "type": "string", "description": "Comma-separated list of label names to apply" }
+        },
+        "required": ["project", "title"]
+      }
+    },
+    {
+      "name": "gitlab.list_merge_requests",
+      "description": "List merge requests in a project, filtered by state.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "project": { "type": "string", "description": "Project id (numeric) or path" },
+          "state": { "type": "string", "enum": ["opened", "closed", "merged", "all"], "description": "Merge request state (default opened)" },
+          "limit": { "type": "integer", "description": "Max merge requests to return (default 30, max 100)" }
+        },
+        "required": ["project"]
+      }
+    },
+    {
+      "name": "gitlab.get_merge_request",
+      "description": "Get a single merge request by its project-scoped internal id (iid).",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "project": { "type": "string", "description": "Project id (numeric) or path" },
+          "iid": { "type": "integer", "description": "Merge request internal id (iid)" }
+        },
+        "required": ["project", "iid"]
+      }
+    },
+    {
+      "name": "gitlab.create_merge_request",
+      "description": "Open a new merge request.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "project": { "type": "string", "description": "Project id (numeric) or path" },
+          "sourceBranch": { "type": "string", "description": "Branch with your changes" },
+          "targetBranch": { "type": "string", "description": "Branch to merge into (e.g. main)" },
+          "title": { "type": "string", "description": "Merge request title" },
+          "description": { "type": "string", "description": "Merge request description (Markdown)" }
+        },
+        "required": ["project", "sourceBranch", "targetBranch", "title"]
+      }
+    },
+    {
+      "name": "gitlab.list_pipelines",
+      "description": "List recent CI/CD pipelines for a project.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "project": { "type": "string", "description": "Project id (numeric) or path" },
+          "ref": { "type": "string", "description": "Filter to a branch or tag name" },
+          "status": { "type": "string", "enum": ["created", "waiting_for_resource", "preparing", "pending", "running", "success", "failed", "canceled", "skipped", "manual", "scheduled"], "description": "Filter by pipeline status" },
+          "limit": { "type": "integer", "description": "Max pipelines to return (default 20, max 100)" }
+        },
+        "required": ["project"]
+      }
+    },
+    {
+      "name": "gitlab.api",
+      "description": "Advanced escape hatch: make a raw authenticated GitLab REST API v4 request. Can perform any operation the token allows, including writes and deletes.",
+      "riskLevel": "high",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "method": { "type": "string", "enum": ["GET", "POST", "PUT", "PATCH", "DELETE"], "description": "HTTP method (default GET)" },
+          "path": { "type": "string", "description": "API path beginning with / (e.g. /projects/123/releases)" },
+          "body": { "type": "object", "description": "Optional JSON request body for POST/PUT/PATCH" }
+        },
+        "required": ["path"]
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "gitlab", "scopes": ["api"], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

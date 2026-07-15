@@ -1,0 +1,120 @@
+{
+  "name": "airtable",
+  "version": "1.0.0",
+  "description": "Airtable integration — list, read, create, update, and delete records in an Airtable base via the REST API.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "data",
+  "tags": ["airtable", "database", "records", "spreadsheet", "no-code", "tables", "data"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "airtable",
+    "displayName": "Airtable",
+    "description": "Airtable bases, tables, and records",
+    "icon": "airtable",
+    "authType": "custom",
+    "category": "integration",
+    "fields": [
+      {
+        "key": "apiToken",
+        "label": "Personal Access Token",
+        "type": "secret",
+        "required": true,
+        "helpText": "Create a scoped personal access token with data.records read/write access to your base.",
+        "helpUrl": "https://airtable.com/create/tokens"
+      },
+      {
+        "key": "baseId",
+        "label": "Base ID",
+        "type": "text",
+        "required": true,
+        "placeholder": "appXXXXXXXXXXXXXX",
+        "helpText": "The base id, found in the API docs for your base (starts with 'app')."
+      }
+    ]
+  },
+  "tools": [
+    {
+      "name": "airtable.list_records",
+      "description": "List records from a table, with optional formula filter, view, and paging controls.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "table": { "type": "string", "description": "Table name or table id (e.g. 'Tasks' or 'tblXXXXXXXXXXXXXX')" },
+          "filterByFormula": { "type": "string", "description": "An Airtable formula to filter records, e.g. \"{Status}='Done'\"" },
+          "maxRecords": { "type": "integer", "description": "Maximum total number of records to return" },
+          "view": { "type": "string", "description": "Name or id of a view; only records in that view are returned, in its order" },
+          "pageSize": { "type": "integer", "description": "Records per page (max 100)" },
+          "offset": { "type": "string", "description": "Pagination offset returned by a previous call to fetch the next page" }
+        },
+        "required": ["table"]
+      }
+    },
+    {
+      "name": "airtable.get_record",
+      "description": "Retrieve a single record by id from a table.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "table": { "type": "string", "description": "Table name or table id" },
+          "recordId": { "type": "string", "description": "The record id (starts with 'rec')" }
+        },
+        "required": ["table", "recordId"]
+      }
+    },
+    {
+      "name": "airtable.create_record",
+      "description": "Create a new record in a table.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "table": { "type": "string", "description": "Table name or table id" },
+          "fields": { "type": "object", "description": "Field name/value pairs for the new record, e.g. {\"Name\": \"Acme\", \"Status\": \"Todo\"}" }
+        },
+        "required": ["table", "fields"]
+      }
+    },
+    {
+      "name": "airtable.update_record",
+      "description": "Update fields on an existing record (a partial PATCH — only the given fields change).",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "table": { "type": "string", "description": "Table name or table id" },
+          "recordId": { "type": "string", "description": "The record id to update" },
+          "fields": { "type": "object", "description": "Field name/value pairs to set on the record" }
+        },
+        "required": ["table", "recordId", "fields"]
+      }
+    },
+    {
+      "name": "airtable.delete_record",
+      "description": "Delete a record from a table. This is irreversible.",
+      "riskLevel": "high",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "table": { "type": "string", "description": "Table name or table id" },
+          "recordId": { "type": "string", "description": "The record id to delete" }
+        },
+        "required": ["table", "recordId"]
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "airtable", "scopes": ["data.records:read", "data.records:write"], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

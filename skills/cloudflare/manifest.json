@@ -1,0 +1,143 @@
+{
+  "name": "cloudflare",
+  "version": "1.0.0",
+  "description": "Cloudflare integration — list zones, manage DNS records, and purge cache through the Cloudflare API v4 using a scoped API token.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "integration",
+  "tags": ["cloudflare", "dns", "cdn", "cache", "zones", "networking", "devops"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "cloudflare",
+    "displayName": "Cloudflare",
+    "description": "Cloudflare zones, DNS records, and cache",
+    "icon": "cloudflare",
+    "authType": "custom",
+    "category": "integration",
+    "fields": [
+      {
+        "key": "apiToken",
+        "label": "API Token",
+        "type": "secret",
+        "required": true,
+        "helpText": "Create a scoped API token with the permissions you need (e.g. Zone:Read, DNS:Edit, Cache Purge).",
+        "helpUrl": "https://dash.cloudflare.com/profile/api-tokens"
+      },
+      {
+        "key": "zoneId",
+        "label": "Default Zone ID",
+        "type": "text",
+        "required": false,
+        "helpText": "Optional default zone id used when a tool call does not pass one."
+      },
+      {
+        "key": "accountId",
+        "label": "Account ID",
+        "type": "text",
+        "required": false,
+        "helpText": "Optional Cloudflare account id, used by account-scoped operations."
+      }
+    ],
+    "testEndpoint": "/user/tokens/verify"
+  },
+  "tools": [
+    {
+      "name": "cloudflare.list_zones",
+      "description": "List the zones (domains) the API token can access.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "limit": { "type": "integer", "description": "Max zones to return (default 50, max 50)" }
+        }
+      }
+    },
+    {
+      "name": "cloudflare.list_dns_records",
+      "description": "List DNS records in a zone, optionally filtered by type and name.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "zoneId": { "type": "string", "description": "Zone id (falls back to the configured default zone)" },
+          "type": { "type": "string", "description": "Filter by record type, e.g. A, AAAA, CNAME, TXT, MX" },
+          "name": { "type": "string", "description": "Filter by record name, e.g. www.example.com" },
+          "limit": { "type": "integer", "description": "Max records to return (default 100, max 100)" }
+        }
+      }
+    },
+    {
+      "name": "cloudflare.create_dns_record",
+      "description": "Create a DNS record in a zone.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "zoneId": { "type": "string", "description": "Zone id (falls back to the configured default zone)" },
+          "type": { "type": "string", "description": "Record type, e.g. A, AAAA, CNAME, TXT, MX" },
+          "name": { "type": "string", "description": "Record name, e.g. www.example.com or @ for the root" },
+          "content": { "type": "string", "description": "Record content, e.g. an IP address or target hostname" },
+          "ttl": { "type": "integer", "description": "Time to live in seconds. 1 means automatic (default)." },
+          "proxied": { "type": "boolean", "description": "Whether the record is proxied through Cloudflare (orange cloud)" }
+        },
+        "required": ["type", "name", "content"]
+      }
+    },
+    {
+      "name": "cloudflare.update_dns_record",
+      "description": "Update an existing DNS record. Only the fields you pass are changed.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "zoneId": { "type": "string", "description": "Zone id (falls back to the configured default zone)" },
+          "recordId": { "type": "string", "description": "The DNS record id to update" },
+          "type": { "type": "string", "description": "New record type" },
+          "name": { "type": "string", "description": "New record name" },
+          "content": { "type": "string", "description": "New record content" },
+          "ttl": { "type": "integer", "description": "New TTL in seconds. 1 means automatic." },
+          "proxied": { "type": "boolean", "description": "Whether the record is proxied through Cloudflare" }
+        },
+        "required": ["recordId"]
+      }
+    },
+    {
+      "name": "cloudflare.delete_dns_record",
+      "description": "Delete a DNS record. This is not easily reversible.",
+      "riskLevel": "high",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "zoneId": { "type": "string", "description": "Zone id (falls back to the configured default zone)" },
+          "recordId": { "type": "string", "description": "The DNS record id to delete" }
+        },
+        "required": ["recordId"]
+      }
+    },
+    {
+      "name": "cloudflare.purge_cache",
+      "description": "Purge Cloudflare's cache for a zone — either everything, or a specific list of file URLs.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "zoneId": { "type": "string", "description": "Zone id (falls back to the configured default zone)" },
+          "everything": { "type": "boolean", "description": "Purge the entire cache for the zone" },
+          "files": { "type": "array", "items": { "type": "string" }, "description": "Specific file URLs to purge from cache" }
+        }
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "cloudflare", "scopes": ["zone:read", "dns:edit", "cache:purge"], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

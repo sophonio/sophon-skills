@@ -1,0 +1,120 @@
+{
+  "name": "sentry",
+  "version": "1.0.0",
+  "description": "Sentry integration — list projects, browse and inspect error issues and their events, and triage issues (resolve, ignore, assign) via the Sentry REST API.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "development",
+  "tags": ["sentry", "errors", "monitoring", "issues", "observability", "debugging", "devops"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "sentry",
+    "displayName": "Sentry",
+    "description": "Sentry projects, issues, and events",
+    "icon": "sentry",
+    "authType": "custom",
+    "category": "developer",
+    "fields": [
+      {
+        "key": "token",
+        "label": "Auth Token",
+        "type": "secret",
+        "required": true,
+        "helpText": "Create an auth/user token with event:read and project:read",
+        "helpUrl": "https://sentry.io/settings/account/api/auth-tokens/"
+      },
+      {
+        "key": "organization",
+        "label": "Organization Slug",
+        "type": "text",
+        "required": true,
+        "placeholder": "my-org-slug"
+      },
+      {
+        "key": "host",
+        "label": "Host",
+        "type": "url",
+        "required": false,
+        "placeholder": "https://sentry.io",
+        "helpText": "Override for self-hosted Sentry"
+      }
+    ]
+  },
+  "tools": [
+    {
+      "name": "sentry.list_projects",
+      "description": "List all projects in the connected Sentry organization.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "sentry.list_issues",
+      "description": "List issues for a project, optionally filtered by a Sentry search query and stats period.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "project": { "type": "string", "description": "Project slug" },
+          "query": { "type": "string", "description": "Sentry search query, e.g. 'is:unresolved level:error'" },
+          "statsPeriod": { "type": "string", "description": "Relative time window, e.g. 24h, 14d (default 14d)" },
+          "limit": { "type": "integer", "description": "Max issues to return (default 25, max 100)" }
+        },
+        "required": ["project"]
+      }
+    },
+    {
+      "name": "sentry.get_issue",
+      "description": "Get a single issue by its id, including title, culprit, level, status, and counts.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "issueId": { "type": "string", "description": "The numeric issue id" }
+        },
+        "required": ["issueId"]
+      }
+    },
+    {
+      "name": "sentry.list_events",
+      "description": "List the most recent events (individual occurrences) for an issue.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "issueId": { "type": "string", "description": "The numeric issue id" },
+          "limit": { "type": "integer", "description": "Max events to return (default 25, max 100)" }
+        },
+        "required": ["issueId"]
+      }
+    },
+    {
+      "name": "sentry.update_issue",
+      "description": "Update an issue's status (resolve, ignore, unresolve) and/or reassign it.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "issueId": { "type": "string", "description": "The numeric issue id" },
+          "status": { "type": "string", "enum": ["resolved", "ignored", "unresolved"], "description": "New status for the issue" },
+          "assignedTo": { "type": "string", "description": "Actor to assign, e.g. a username/email or 'team:slug'" }
+        },
+        "required": ["issueId"]
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "sentry", "scopes": ["event:read", "project:read", "event:write"], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

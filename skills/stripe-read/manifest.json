@@ -1,0 +1,115 @@
+{
+  "name": "stripe-read",
+  "version": "1.0.0",
+  "description": "Stripe read-only reporting — inspect your balance, charges, customers, invoices, and subscriptions via the Stripe REST API. Read-only by design: use a restricted read key (rk_...) so it can never mutate your account.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "data",
+  "tags": ["stripe", "payments", "billing", "invoices", "subscriptions", "reporting", "finance"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "stripe",
+    "displayName": "Stripe (Read-Only)",
+    "description": "Read-only access to Stripe balance, charges, customers, invoices, and subscriptions",
+    "icon": "stripe",
+    "authType": "custom",
+    "category": "integration",
+    "fields": [
+      {
+        "key": "apiKey",
+        "label": "Restricted API Key",
+        "type": "secret",
+        "required": true,
+        "helpText": "Use a RESTRICTED read-only key (rk_...) to limit blast radius",
+        "helpUrl": "https://dashboard.stripe.com/apikeys"
+      }
+    ],
+    "testEndpoint": "/v1/balance"
+  },
+  "tools": [
+    {
+      "name": "stripe.get_balance",
+      "description": "Get the current account balance (available and pending funds by currency).",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "stripe.list_charges",
+      "description": "List recent charges, optionally filtered by customer.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "limit": { "type": "integer", "description": "Max charges to return (default 10, max 100)" },
+          "customer": { "type": "string", "description": "Only return charges for this customer id (cus_...)" }
+        }
+      }
+    },
+    {
+      "name": "stripe.list_customers",
+      "description": "List customers, optionally filtered by email.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "limit": { "type": "integer", "description": "Max customers to return (default 10, max 100)" },
+          "email": { "type": "string", "description": "Only return customers with this exact email address" }
+        }
+      }
+    },
+    {
+      "name": "stripe.list_invoices",
+      "description": "List invoices, optionally filtered by customer and status.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "limit": { "type": "integer", "description": "Max invoices to return (default 10, max 100)" },
+          "customer": { "type": "string", "description": "Only return invoices for this customer id (cus_...)" },
+          "status": { "type": "string", "enum": ["draft", "open", "paid", "uncollectible", "void"], "description": "Filter by invoice status" }
+        }
+      }
+    },
+    {
+      "name": "stripe.list_subscriptions",
+      "description": "List subscriptions, optionally filtered by customer and status.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "limit": { "type": "integer", "description": "Max subscriptions to return (default 10, max 100)" },
+          "customer": { "type": "string", "description": "Only return subscriptions for this customer id (cus_...)" },
+          "status": { "type": "string", "enum": ["active", "past_due", "unpaid", "canceled", "incomplete", "incomplete_expired", "trialing", "paused", "all", "ended"], "description": "Filter by subscription status (use 'all' for every status)" }
+        }
+      }
+    },
+    {
+      "name": "stripe.get_object",
+      "description": "Retrieve a single object by id from an allowlisted read-only resource collection.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "resource": { "type": "string", "enum": ["charges", "customers", "invoices", "subscriptions", "payment_intents", "payouts", "products", "prices"], "description": "The resource collection to read from" },
+          "id": { "type": "string", "description": "The object id (e.g. ch_..., cus_..., in_..., sub_...)" }
+        },
+        "required": ["resource", "id"]
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "stripe", "scopes": ["read"], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}
