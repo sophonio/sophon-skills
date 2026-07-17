@@ -77,14 +77,23 @@ def clamp(value, default, maximum):
         return default
 
 
+BLOCK_TAG_RE = re.compile(
+    r"</?(?:p|div|br|hr|li|ul|ol|tr|td|th|table|h[1-6]|blockquote|pre|section|article)\b[^>]*>",
+    re.IGNORECASE,
+)
 TAG_RE = re.compile(r"<[^>]+>")
 
 
 def strip_html(text):
-    """Naively strip HTML tags and collapse whitespace for plain-text summaries."""
+    """Strip HTML tags and collapse whitespace for plain-text summaries.
+
+    Block-level tags become a space (so "<p>a</p><p>b</p>" keeps a word break); inline
+    tags are dropped outright (so "Hello <i>there</i>," does not gain a stray space).
+    """
     if not text:
         return ""
-    return re.sub(r"\s+", " ", html.unescape(TAG_RE.sub(" ", text))).strip()
+    text = TAG_RE.sub("", BLOCK_TAG_RE.sub(" ", text))
+    return re.sub(r"\s+", " ", html.unescape(text)).strip()
 
 
 def get_admin_id():

@@ -93,6 +93,10 @@ def job_path(job):
     segments = [s for s in str(job or "").strip("/").split("/") if s]
     if not segments:
         raise ValueError("job path required (e.g. my-job or team-a/service-x)")
+    if any(seg in (".", "..") for seg in segments):
+        # '.'/'..' survive URL-quoting (dots are unreserved) and would let a crafted job
+        # path traverse out of the /job/ tree after server-side normalization.
+        raise ValueError("job path must not contain '.' or '..' segments")
     return "".join(f"/job/{urllib.parse.quote(seg, safe='')}" for seg in segments)
 
 

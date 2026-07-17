@@ -93,6 +93,8 @@ def paged_values(path, query=None, limit=50):
         data = request("GET", next_url, query=query if pages == 0 else None) or {}
         items.extend(data.get("values", []))
         next_url = data.get("next")
+        if next_url and not str(next_url).startswith(f"{API_BASE}/"):
+            next_url = None  # never follow (or send credentials to) an off-API "next" link
         pages += 1
     return items[:limit]
 
@@ -227,6 +229,8 @@ def get_file():
         raise ValueError("ref required")
     if not file_path:
         raise ValueError("path required")
+    if any(seg == ".." for seg in str(file_path).split("/")):
+        raise ValueError("path must not contain '..' segments")
     raw, truncated = request(
         "GET",
         f"{repo_path(params.get('repo'))}/src/{urllib.parse.quote(str(ref), safe='')}"
