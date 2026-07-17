@@ -1,0 +1,152 @@
+{
+  "name": "salesforce",
+  "version": "1.0.0",
+  "description": "Salesforce CRM integration via the Salesforce REST API (v62.0) — run SOQL queries and SOSL full-text searches, fetch and describe objects, create and update records, and log Task activities. Uses OAuth2 client credentials against your org's My Domain with an External Client App and a run-as integration user; an access token is minted per invocation (no refresh token).",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "integration",
+  "tags": ["salesforce", "crm", "soql", "sosl", "sales", "records", "opportunities", "leads", "rest-api"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "salesforce",
+    "displayName": "Salesforce",
+    "description": "Salesforce CRM records, SOQL/SOSL, and activities (client-credentials)",
+    "icon": "salesforce",
+    "authType": "custom",
+    "category": "integration",
+    "fields": [
+      {
+        "key": "myDomainUrl",
+        "label": "My Domain URL",
+        "type": "url",
+        "required": true,
+        "helpText": "Your org's My Domain URL, e.g. https://acme.my.salesforce.com. Required — the client credentials flow does not work against login.salesforce.com.",
+        "helpUrl": "https://help.salesforce.com/s/articleView?id=sf.domain_name_overview.htm&type=5"
+      },
+      {
+        "key": "clientId",
+        "label": "Consumer Key (Client ID)",
+        "type": "text",
+        "required": true,
+        "helpText": "The Consumer Key of your External Client App with OAuth and the Client Credentials Flow enabled."
+      },
+      {
+        "key": "clientSecret",
+        "label": "Consumer Secret (Client Secret)",
+        "type": "secret",
+        "required": true,
+        "helpText": "The Consumer Secret of the External Client App.",
+        "helpUrl": "https://help.salesforce.com/s/articleView?id=sf.connected_app_client_credentials_setup.htm&type=5"
+      }
+    ],
+    "testEndpoint": "/services/oauth2/userinfo"
+  },
+  "tools": [
+    {
+      "name": "sf.soql_query",
+      "description": "Run a SOQL query and return the matching records, following pagination up to a capped number of pages.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "soql": { "type": "string", "description": "The SOQL query to run, e.g. SELECT Id, Name, StageName FROM Opportunity WHERE IsClosed = false" },
+          "limit": { "type": "integer", "description": "Max records to return (default 100, max 500)" }
+        },
+        "required": ["soql"]
+      }
+    },
+    {
+      "name": "sf.search",
+      "description": "Run a SOSL full-text search across objects and return the matching records.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "sosl": { "type": "string", "description": "The SOSL search string, e.g. FIND {Acme} IN NAME FIELDS RETURNING Account(Id, Name), Contact(Id, Name, Email)" }
+        },
+        "required": ["sosl"]
+      }
+    },
+    {
+      "name": "sf.get_record",
+      "description": "Fetch a single record by object type and record Id, optionally limited to specific fields.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "objectType": { "type": "string", "description": "API name of the object, e.g. Account, Contact, Opportunity, Lead, Case" },
+          "recordId": { "type": "string", "description": "The 15- or 18-character Salesforce record Id" },
+          "fields": { "type": "array", "items": { "type": "string" }, "description": "Field API names to return (omit for all accessible fields)" }
+        },
+        "required": ["objectType", "recordId"]
+      }
+    },
+    {
+      "name": "sf.describe_object",
+      "description": "Describe an object's fields — names, labels, types, and active picklist values.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "objectType": { "type": "string", "description": "API name of the object to describe, e.g. Opportunity or MyCustomObject__c" }
+        },
+        "required": ["objectType"]
+      }
+    },
+    {
+      "name": "sf.create_record",
+      "description": "Create a new record of the given object type from a fields object.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "objectType": { "type": "string", "description": "API name of the object to create, e.g. Account, Contact, Opportunity" },
+          "fields": { "type": "object", "description": "Field API name to value map for the new record, e.g. {\"Name\": \"Acme Corp\", \"Industry\": \"Technology\"}" }
+        },
+        "required": ["objectType", "fields"]
+      }
+    },
+    {
+      "name": "sf.update_record",
+      "description": "Update fields on an existing record by object type and record Id.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "objectType": { "type": "string", "description": "API name of the object, e.g. Account, Opportunity" },
+          "recordId": { "type": "string", "description": "The Id of the record to update" },
+          "fields": { "type": "object", "description": "Field API name to new value map, e.g. {\"StageName\": \"Closed Won\"}" }
+        },
+        "required": ["objectType", "recordId", "fields"]
+      }
+    },
+    {
+      "name": "sf.add_task",
+      "description": "Create a Task activity, optionally linked to a person (WhoId: Contact/Lead) and/or a related record (WhatId: Account, Opportunity, ...).",
+      "riskLevel": "low",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "subject": { "type": "string", "description": "Task subject, e.g. Follow up on renewal" },
+          "whoId": { "type": "string", "description": "Id of the Contact or Lead the task is about" },
+          "whatId": { "type": "string", "description": "Id of the related record (Account, Opportunity, Case, ...)" },
+          "activityDate": { "type": "string", "description": "Due date in YYYY-MM-DD format" },
+          "description": { "type": "string", "description": "Task notes/description" }
+        },
+        "required": ["subject"]
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "salesforce", "scopes": ["api"], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

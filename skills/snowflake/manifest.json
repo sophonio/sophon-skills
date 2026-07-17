@@ -1,0 +1,168 @@
+{
+  "name": "snowflake",
+  "version": "1.0.0",
+  "description": "Snowflake data warehouse integration via the Snowflake SQL API and REST catalog — run SQL statements, poll long-running statements by handle, cancel statements, and browse databases, schemas, tables, columns, and warehouses. Authenticates with a Programmatic Access Token (PAT) sent as a static bearer token; no OAuth flow or token endpoint is involved.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "data",
+  "tags": ["snowflake", "sql", "data-warehouse", "database", "analytics", "sql-api", "query", "data"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "snowflake",
+    "displayName": "Snowflake",
+    "description": "Snowflake SQL API and REST catalog via a Programmatic Access Token",
+    "icon": "snowflake",
+    "authType": "custom",
+    "category": "integration",
+    "fields": [
+      {
+        "key": "accountUrl",
+        "label": "Account URL",
+        "type": "url",
+        "required": true,
+        "helpText": "Your Snowflake account URL, e.g. https://myorg-myaccount.snowflakecomputing.com.",
+        "helpUrl": "https://docs.snowflake.com/en/user-guide/admin-account-identifier"
+      },
+      {
+        "key": "pat",
+        "label": "Programmatic Access Token",
+        "type": "secret",
+        "required": true,
+        "helpText": "A Snowflake Programmatic Access Token (PAT). Generate one in Snowsight under your user profile, ideally restricted to a single role. Default expiry is 15 days (max 365).",
+        "helpUrl": "https://docs.snowflake.com/en/user-guide/programmatic-access-tokens"
+      },
+      {
+        "key": "warehouse",
+        "label": "Warehouse",
+        "type": "text",
+        "required": true,
+        "helpText": "Virtual warehouse used to execute SQL statements (e.g. COMPUTE_WH)."
+      },
+      {
+        "key": "role",
+        "label": "Role",
+        "type": "text",
+        "required": false,
+        "helpText": "Optional role to assume for statements. Defaults to the token user's default role; must match the PAT's role restriction if one is set."
+      }
+    ],
+    "testEndpoint": "/api/v2/databases?maxResults=1"
+  },
+  "tools": [
+    {
+      "name": "snowflake.query",
+      "description": "Execute an arbitrary SQL statement on the configured warehouse via the Snowflake SQL API. With the default timeout the statement runs synchronously and returns columns and rows (capped, with a truncation flag); a timeout above 20 seconds submits the statement asynchronously and immediately returns a statement handle to poll with snowflake.get_statement.",
+      "riskLevel": "high",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "statement": { "type": "string", "description": "The SQL statement to execute (single statement)" },
+          "database": { "type": "string", "description": "Database context for the statement (optional)" },
+          "schema": { "type": "string", "description": "Schema context for the statement (optional)" },
+          "role": { "type": "string", "description": "Role to run the statement as (optional, overrides the connection's role)" },
+          "timeout": { "type": "integer", "description": "Server-side statement timeout in seconds (default 20, max 3600). Values above 20 submit the statement asynchronously: the tool returns a statement handle immediately — poll it with snowflake.get_statement." }
+        },
+        "required": ["statement"]
+      }
+    },
+    {
+      "name": "snowflake.get_statement",
+      "description": "Check the status of a previously submitted statement by handle and, when it has completed, fetch and stitch its result partitions into columns and rows (capped, with a truncation flag).",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "statementHandle": { "type": "string", "description": "The statement handle returned by snowflake.query" }
+        },
+        "required": ["statementHandle"]
+      }
+    },
+    {
+      "name": "snowflake.cancel_statement",
+      "description": "Cancel a running statement by handle.",
+      "riskLevel": "low",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "statementHandle": { "type": "string", "description": "The statement handle of the running statement to cancel" }
+        },
+        "required": ["statementHandle"]
+      }
+    },
+    {
+      "name": "snowflake.list_databases",
+      "description": "List databases visible to the connection's role.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "limit": { "type": "integer", "description": "Max databases to return (default 25, max 100)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "snowflake.list_schemas",
+      "description": "List schemas in a database.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "database": { "type": "string", "description": "Database name (case-sensitive if it was created quoted)" },
+          "limit": { "type": "integer", "description": "Max schemas to return (default 25, max 100)" }
+        },
+        "required": ["database"]
+      }
+    },
+    {
+      "name": "snowflake.list_tables",
+      "description": "List tables in a schema, with row counts and sizes.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "database": { "type": "string", "description": "Database name (case-sensitive if it was created quoted)" },
+          "schema": { "type": "string", "description": "Schema name (case-sensitive if it was created quoted)" },
+          "limit": { "type": "integer", "description": "Max tables to return (default 25, max 100)" }
+        },
+        "required": ["database", "schema"]
+      }
+    },
+    {
+      "name": "snowflake.describe_table",
+      "description": "Get a table's detail including its columns (name, datatype, nullability, default, comment) from the REST catalog, falling back to DESCRIBE TABLE via the SQL API when the catalog omits columns.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "database": { "type": "string", "description": "Database name (case-sensitive if it was created quoted)" },
+          "schema": { "type": "string", "description": "Schema name (case-sensitive if it was created quoted)" },
+          "table": { "type": "string", "description": "Table name (case-sensitive if it was created quoted)" }
+        },
+        "required": ["database", "schema", "table"]
+      }
+    },
+    {
+      "name": "snowflake.list_warehouses",
+      "description": "List virtual warehouses visible to the connection's role, with state, size, and auto-suspend settings.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "snowflake", "scopes": ["read", "write"], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

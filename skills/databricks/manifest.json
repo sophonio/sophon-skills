@@ -1,0 +1,154 @@
+{
+  "name": "databricks",
+  "version": "1.0.0",
+  "description": "Databricks workspace integration — run SQL on a SQL warehouse (Statement Execution API with inline JSON results), poll and cancel statements, browse Unity Catalog (catalogs, schemas, tables with columns), and list and trigger Lakeflow Jobs. Authenticates with a workspace Personal Access Token sent as a Bearer token.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "data",
+  "tags": ["databricks", "sql", "warehouse", "unity-catalog", "jobs", "lakehouse", "spark", "data"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "databricks",
+    "displayName": "Databricks",
+    "description": "Databricks SQL warehouses, Unity Catalog, and Jobs via the REST API",
+    "icon": "databricks",
+    "authType": "custom",
+    "category": "integration",
+    "fields": [
+      {
+        "key": "baseUrl",
+        "label": "Workspace URL",
+        "type": "url",
+        "required": true,
+        "helpText": "Your Databricks workspace URL, e.g. https://adb-123.4.azuredatabricks.net or https://xyz.cloud.databricks.com (no trailing slash)."
+      },
+      {
+        "key": "apiToken",
+        "label": "Personal Access Token",
+        "type": "secret",
+        "required": true,
+        "helpText": "Generate in the workspace under Settings > Developer > Access tokens. Tokens are auto-revoked after 90 days of inactivity.",
+        "helpUrl": "https://docs.databricks.com/en/dev-tools/auth/pat.html"
+      },
+      {
+        "key": "warehouseId",
+        "label": "SQL Warehouse ID",
+        "type": "text",
+        "required": true,
+        "helpText": "SQL Warehouse ID from SQL Warehouses > Connection details."
+      }
+    ],
+    "testEndpoint": "/api/2.0/sql/warehouses"
+  },
+  "tools": [
+    {
+      "name": "databricks.execute_sql",
+      "description": "Execute an arbitrary SQL statement on the configured SQL warehouse and return the result rows inline (JSON, capped at 1000 rows; statements producing more than 25 MiB of inline results fail outright). If the statement is still running after 20 seconds, returns the statement_id to poll with databricks.get_statement.",
+      "riskLevel": "high",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "statement": { "type": "string", "description": "The SQL statement to execute (e.g. SELECT * FROM main.default.orders LIMIT 10)" },
+          "row_limit": { "type": "integer", "description": "Max rows to return (default 1000, max 1000)" }
+        },
+        "required": ["statement"]
+      }
+    },
+    {
+      "name": "databricks.get_statement",
+      "description": "Get the status and results of a previously submitted SQL statement by its statement_id, fetching additional result chunks when the result is chunked (rows capped at 1000).",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "statement_id": { "type": "string", "description": "The statement_id returned by databricks.execute_sql" }
+        },
+        "required": ["statement_id"]
+      }
+    },
+    {
+      "name": "databricks.cancel_statement",
+      "description": "Cancel a running SQL statement by its statement_id.",
+      "riskLevel": "low",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "statement_id": { "type": "string", "description": "The statement_id of the running statement to cancel" }
+        },
+        "required": ["statement_id"]
+      }
+    },
+    {
+      "name": "databricks.list_warehouses",
+      "description": "List the SQL warehouses in the workspace with their id, name, state, and size.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "name": "databricks.list_tables",
+      "description": "Browse Unity Catalog: with no arguments lists catalogs; with catalog lists its schemas; with catalog and schema lists the tables with their column names and types.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "catalog": { "type": "string", "description": "Catalog name (e.g. main). Omit to list catalogs." },
+          "schema": { "type": "string", "description": "Schema name within the catalog (e.g. default). Requires catalog; omit to list schemas." }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "databricks.list_jobs",
+      "description": "List jobs in the workspace with their job_id, name, and creator.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "limit": { "type": "integer", "description": "Max jobs to return (default 25, max 25)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "databricks.list_job_runs",
+      "description": "List recent job runs with their run state, result, start time, and duration; optionally filtered to a single job.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "job_id": { "type": "integer", "description": "Only list runs of this job. Omit for runs across all jobs." },
+          "limit": { "type": "integer", "description": "Max runs to return (default 25, max 25)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "databricks.run_job",
+      "description": "Trigger a job to run now and return the new run_id. Runs whatever tasks the job defines (notebooks, pipelines, scripts).",
+      "riskLevel": "high",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "job_id": { "type": "integer", "description": "The job_id of the job to trigger (see databricks.list_jobs)" }
+        },
+        "required": ["job_id"]
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "databricks", "scopes": ["all-apis"], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

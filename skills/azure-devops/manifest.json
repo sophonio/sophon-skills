@@ -1,0 +1,167 @@
+{
+  "name": "azure-devops",
+  "version": "1.0.0",
+  "description": "Azure DevOps integration — query and manage work items (WIQL, create, update), inspect builds and their failing jobs, list pull requests, and run pipelines. Authenticates with an org-scoped Personal Access Token sent as HTTP Basic auth (empty username) against the Azure DevOps REST API v7.1; works with dev.azure.com organizations and on-premises Azure DevOps Server collection URLs.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "development",
+  "tags": ["azure-devops", "work-items", "boards", "pipelines", "builds", "pull-requests", "wiql", "devops", "microsoft", "ci-cd"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "azure-devops",
+    "displayName": "Azure DevOps",
+    "description": "Azure DevOps work items, builds, pull requests, and pipelines",
+    "icon": "azure-devops",
+    "authType": "custom",
+    "category": "developer",
+    "fields": [
+      {
+        "key": "organizationUrl",
+        "label": "Organization URL",
+        "type": "url",
+        "required": true,
+        "helpText": "Your Azure DevOps organization URL, e.g. https://dev.azure.com/acme. On-premises Azure DevOps Server collection URLs also work.",
+        "helpUrl": "https://learn.microsoft.com/en-us/azure/devops/extend/develop/work-with-urls"
+      },
+      {
+        "key": "pat",
+        "label": "Personal Access Token",
+        "type": "secret",
+        "required": true,
+        "helpText": "An org-scoped Personal Access Token with Work Items (Read & Write), Build (Read & Execute), and Code (Read) scopes. Created under User settings > Personal access tokens.",
+        "helpUrl": "https://learn.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate"
+      }
+    ],
+    "testEndpoint": "/_apis/projects?api-version=7.1&$top=1"
+  },
+  "credentials": [
+    { "service": "azure-devops", "scopes": ["vso.work_write", "vso.build_execute", "vso.code"], "required": true, "access": "proxy" }
+  ],
+  "tools": [
+    {
+      "name": "devops.query_work_items",
+      "description": "Run a WIQL query against a project and return the matching work items (id, type, title, state, assignee; capped at 50).",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "project": { "type": "string", "description": "Project name or ID to query in" },
+          "wiql": { "type": "string", "description": "WIQL query, e.g. SELECT [System.Id] FROM WorkItems WHERE [System.State] = 'Active'" }
+        },
+        "required": ["project", "wiql"]
+      }
+    },
+    {
+      "name": "devops.get_work_item",
+      "description": "Get a single work item with its core fields, description, relations (links/attachments), and most recent comments.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "description": "Work item ID" },
+          "commentLimit": { "type": "integer", "description": "Max recent comments to include (default 10, max 50)" }
+        },
+        "required": ["id"]
+      }
+    },
+    {
+      "name": "devops.create_work_item",
+      "description": "Create a new work item (Bug, Task, User Story, etc.) in a project with title and optional description, assignee, and tags.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "project": { "type": "string", "description": "Project name or ID to create the work item in" },
+          "type": { "type": "string", "description": "Work item type name as defined by the project's process, e.g. Bug, Task, User Story, Feature, Epic" },
+          "title": { "type": "string", "description": "Work item title (System.Title)" },
+          "description": { "type": "string", "description": "Description body, HTML allowed (System.Description)" },
+          "assignedTo": { "type": "string", "description": "Assignee display name, email, or unique name (System.AssignedTo)" },
+          "tags": { "type": "string", "description": "Semicolon-separated tags, e.g. \"frontend; urgent\" (System.Tags)" }
+        },
+        "required": ["project", "type", "title"]
+      }
+    },
+    {
+      "name": "devops.update_work_item",
+      "description": "Update an existing work item: change state, reassign, retitle, or set arbitrary fields by reference name.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "description": "Work item ID to update" },
+          "state": { "type": "string", "description": "New state as defined by the work item type, e.g. Active, Resolved, Closed" },
+          "assignedTo": { "type": "string", "description": "New assignee display name, email, or unique name" },
+          "title": { "type": "string", "description": "New title" },
+          "fields": { "type": "object", "description": "Additional fields to set, keyed by reference name (e.g. {\"Microsoft.VSTS.Common.Priority\": 1})" }
+        },
+        "required": ["id"]
+      }
+    },
+    {
+      "name": "devops.list_builds",
+      "description": "List recent builds in a project, optionally filtered by status or result (id, build number, definition, status, result, start time, branch).",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "project": { "type": "string", "description": "Project name or ID" },
+          "statusFilter": { "type": "string", "description": "Filter by build status", "enum": ["inProgress", "completed", "cancelling", "postponed", "notStarted", "all"] },
+          "resultFilter": { "type": "string", "description": "Filter by build result", "enum": ["succeeded", "partiallySucceeded", "failed", "canceled"] },
+          "limit": { "type": "integer", "description": "Max builds to return (default 25, max 100)" }
+        },
+        "required": ["project"]
+      }
+    },
+    {
+      "name": "devops.get_build",
+      "description": "Get a build's details plus its timeline, surfacing failed jobs/stages with their error messages.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "project": { "type": "string", "description": "Project name or ID" },
+          "buildId": { "type": "integer", "description": "Build ID" }
+        },
+        "required": ["project", "buildId"]
+      }
+    },
+    {
+      "name": "devops.list_pull_requests",
+      "description": "List pull requests in a repository, or across all repositories in a project when no repository is given (id, title, author, branches, status).",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "project": { "type": "string", "description": "Project name or ID" },
+          "repository": { "type": "string", "description": "Repository name or ID; omit to list pull requests across the whole project" },
+          "status": { "type": "string", "description": "Filter by pull request status (default active)", "enum": ["active", "completed", "abandoned", "all"] },
+          "limit": { "type": "integer", "description": "Max pull requests to return (default 25, max 100)" }
+        },
+        "required": ["project"]
+      }
+    },
+    {
+      "name": "devops.run_pipeline",
+      "description": "Queue a run of a YAML/classic pipeline, optionally on a specific branch. This starts real CI/CD jobs which may deploy or change environments.",
+      "riskLevel": "high",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "project": { "type": "string", "description": "Project name or ID" },
+          "pipelineId": { "type": "integer", "description": "Pipeline (definition) ID to run" },
+          "branch": { "type": "string", "description": "Branch to run against, e.g. main or refs/heads/main (defaults to the pipeline's default branch)" }
+        },
+        "required": ["project", "pipelineId"]
+      }
+    }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

@@ -72,6 +72,21 @@ into `.sophon-skill` artifacts, and the docs for publishing them.
 | [`json-yaml-tools`](skills/json-yaml-tools) | data | Convert, query (JMESPath), validate, and merge JSON/YAML/TOML |
 | [`youtube-watcher`](skills/youtube-watcher) | data | Fetch YouTube transcripts to summarize or answer questions about a video |
 
+**Enterprise systems**
+
+| Skill | Category | Description |
+|-------|----------|-------------|
+| [`salesforce`](skills/salesforce) | integration | Query and update Salesforce CRM records with SOQL/SOSL (client-credentials) |
+| [`servicenow`](skills/servicenow) | integration | Work ServiceNow incidents, changes, and knowledge (OAuth or basic auth) |
+| [`sharepoint`](skills/sharepoint) | integration | Search SharePoint sites, query lists, and find files via Graph (app-only) |
+| [`snowflake`](skills/snowflake) | data | Run SQL and browse databases/schemas on Snowflake (programmatic access token) |
+| [`zendesk`](skills/zendesk) | integration | Triage and respond to Zendesk Support tickets (client-credentials) |
+| [`outlook-mail`](skills/outlook-mail) | integration | Microsoft 365 mailbox triage — read, search, draft, send via Graph (app-only) |
+| [`entra-id`](skills/entra-id) | integration | Look up Entra ID users, groups, roles, sign-ins, and app registrations |
+| [`databricks`](skills/databricks) | data | Execute SQL on warehouses, browse Unity Catalog, and trigger jobs |
+| [`okta`](skills/okta) | integration | Search Okta users/groups/apps and query the system log |
+| [`azure-devops`](skills/azure-devops) | development | Azure DevOps work items (WIQL), builds, PRs, and pipeline runs |
+
 **Research & utilities**
 
 | Skill | Category | Description |

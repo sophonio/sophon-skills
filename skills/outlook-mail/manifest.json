@@ -1,0 +1,156 @@
+{
+  "name": "outlook-mail",
+  "version": "1.0.0",
+  "description": "Microsoft 365 (Outlook) mailbox integration via Microsoft Graph — list, search, and read messages, browse mail folders, move messages, create drafts, and send mail for a mailbox. Uses app-only (client-credentials) auth and works with Microsoft 365 work/school accounts. Message bodies are read as plain text.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "integration",
+  "tags": ["outlook", "mail", "email", "microsoft365", "microsoft-graph", "inbox", "office365"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "microsoft-graph",
+    "displayName": "Outlook Mail",
+    "description": "Microsoft 365 mailbox messages via Microsoft Graph (app-only)",
+    "icon": "outlook",
+    "authType": "custom",
+    "category": "integration",
+    "fields": [
+      {
+        "key": "tenantId",
+        "label": "Directory (Tenant) ID",
+        "type": "text",
+        "required": true,
+        "helpText": "The Azure AD tenant ID (GUID) of your Microsoft 365 organization."
+      },
+      {
+        "key": "clientId",
+        "label": "Application (Client) ID",
+        "type": "text",
+        "required": true,
+        "helpText": "The Application (client) ID of the app registration."
+      },
+      {
+        "key": "clientSecret",
+        "label": "Client Secret",
+        "type": "secret",
+        "required": true,
+        "helpText": "A client secret for the app registration. Requires the Mail.Read application permission with admin consent; Mail.ReadWrite for move/draft; Mail.Send for sending.",
+        "helpUrl": "https://learn.microsoft.com/en-us/graph/permissions-reference"
+      },
+      {
+        "key": "userId",
+        "label": "Mailbox (UPN/email)",
+        "type": "text",
+        "required": true,
+        "helpText": "The mailbox to operate on (app-only requires an explicit user)."
+      }
+    ],
+    "testEndpoint": "/mailFolders/inbox/messages?$top=1&$select=subject,from,receivedDateTime"
+  },
+  "tools": [
+    {
+      "name": "mail.list_messages",
+      "description": "List the most recent messages in a mail folder (default inbox), newest first, with subject, sender, received time, read state, and attachment flag.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "folder": { "type": "string", "description": "Mail folder id or well-known name (inbox, drafts, sentitems, deleteditems, junkemail, archive). Default inbox." },
+          "limit": { "type": "integer", "description": "Max messages to return (default 25, max 50)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "mail.search_messages",
+      "description": "Search messages across the mailbox using either a free-text search phrase or an OData filter expression. Exactly one of search or filter must be given; search results have no guaranteed order (Graph forbids $orderby with $search).",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "search": { "type": "string", "description": "Free-text search phrase (matches subject, body, sender, etc.). Mutually exclusive with filter." },
+          "filter": { "type": "string", "description": "OData $filter expression, e.g. \"isRead eq false\" or \"from/emailAddress/address eq 'a@b.com'\". Mutually exclusive with search." },
+          "limit": { "type": "integer", "description": "Max messages to return (default 25, max 50)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "mail.get_message",
+      "description": "Get a single message: plain-text body, to/cc recipients, and attachment metadata (names, sizes, and content types — no attachment contents).",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "messageId": { "type": "string", "description": "The message id to fetch" }
+        },
+        "required": ["messageId"]
+      }
+    },
+    {
+      "name": "mail.list_folders",
+      "description": "List the mail folders in the mailbox with total and unread item counts.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "name": "mail.move_message",
+      "description": "Move a message to another mail folder (by folder id or well-known name such as archive or deleteditems).",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "messageId": { "type": "string", "description": "The message id to move" },
+          "destinationId": { "type": "string", "description": "Destination folder id or well-known name (inbox, archive, deleteditems, junkemail, drafts, sentitems)" }
+        },
+        "required": ["messageId", "destinationId"]
+      }
+    },
+    {
+      "name": "mail.create_draft",
+      "description": "Create a draft message (never sends). Either a new draft (subject, to, body) or a reply draft to an existing message via replyToMessageId.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "subject": { "type": "string", "description": "Draft subject. Required for a new draft; optional override for a reply draft." },
+          "to": { "type": "array", "items": { "type": "string" }, "description": "Recipient email addresses. Required for a new draft; optional override for a reply draft." },
+          "body": { "type": "string", "description": "Plain-text body of the draft" },
+          "replyToMessageId": { "type": "string", "description": "If set, create a reply draft to this message id instead of a fresh draft" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "mail.send_mail",
+      "description": "Send an email from the mailbox immediately. Irreversible once accepted for delivery; the message is saved to Sent Items.",
+      "riskLevel": "high",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "to": { "type": "array", "items": { "type": "string" }, "description": "Recipient email addresses" },
+          "subject": { "type": "string", "description": "Email subject" },
+          "body": { "type": "string", "description": "Plain-text body of the email" },
+          "cc": { "type": "array", "items": { "type": "string" }, "description": "CC recipient email addresses" }
+        },
+        "required": ["to", "subject", "body"]
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "microsoft-graph", "scopes": ["Mail.Read", "Mail.ReadWrite", "Mail.Send"], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

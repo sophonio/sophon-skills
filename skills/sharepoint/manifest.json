@@ -1,0 +1,165 @@
+{
+  "name": "sharepoint",
+  "version": "1.0.0",
+  "description": "SharePoint Online integration via Microsoft Graph — search and resolve sites, browse lists, query and read list items, search document libraries, and create or update list items. Uses app-only (client-credentials) auth with an Azure AD app registration; requires Sites.Read.All application permission with admin consent (Sites.ReadWrite.All to enable the write tools).",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "integration",
+  "tags": ["sharepoint", "microsoft-graph", "microsoft365", "sites", "lists", "documents", "files", "office365"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "microsoft-graph",
+    "displayName": "SharePoint",
+    "description": "SharePoint Online sites, lists, and files via Microsoft Graph (app-only)",
+    "icon": "sharepoint",
+    "authType": "custom",
+    "category": "integration",
+    "fields": [
+      {
+        "key": "tenantId",
+        "label": "Directory (Tenant) ID",
+        "type": "text",
+        "required": true,
+        "helpText": "The Azure AD tenant ID (GUID) of your Microsoft 365 organization."
+      },
+      {
+        "key": "clientId",
+        "label": "Application (Client) ID",
+        "type": "text",
+        "required": true,
+        "helpText": "The Application (client) ID of the app registration."
+      },
+      {
+        "key": "clientSecret",
+        "label": "Client Secret",
+        "type": "secret",
+        "required": true,
+        "helpText": "A client secret for the app registration. Requires the Sites.Read.All application permission with admin consent; Sites.ReadWrite.All to enable the write tools.",
+        "helpUrl": "https://learn.microsoft.com/en-us/graph/auth-v2-service"
+      }
+    ],
+    "testEndpoint": "/sites?search=*"
+  },
+  "tools": [
+    {
+      "name": "sp.search_sites",
+      "description": "Search SharePoint sites across the tenant by keyword and return their ids, display names, and web URLs.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string", "description": "Keyword to search site names for (use * to list sites)" }
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "sp.get_site",
+      "description": "Resolve a SharePoint site by its hostname and server-relative path (e.g. contoso.sharepoint.com + sites/Marketing). Works even for tenants that lock down site search.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "hostname": { "type": "string", "description": "SharePoint hostname (e.g. contoso.sharepoint.com)" },
+          "path": { "type": "string", "description": "Server-relative site path (e.g. sites/Marketing or teams/Engineering)" }
+        },
+        "required": ["hostname", "path"]
+      }
+    },
+    {
+      "name": "sp.list_lists",
+      "description": "List the lists (including document libraries) in a SharePoint site with their ids, display names, and list templates.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "siteId": { "type": "string", "description": "The site id (from sp.search_sites or sp.get_site)" }
+        },
+        "required": ["siteId"]
+      }
+    },
+    {
+      "name": "sp.query_list_items",
+      "description": "Query the items of a SharePoint list, returning each item's column fields. Supports an optional OData $filter and follows result pages up to a cap.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "siteId": { "type": "string", "description": "The site id" },
+          "listId": { "type": "string", "description": "The list id (from sp.list_lists)" },
+          "filter": { "type": "string", "description": "OData $filter expression, e.g. fields/Status eq 'Active' (the column usually must be indexed)" },
+          "top": { "type": "integer", "description": "Page size (default 25, max 50)" }
+        },
+        "required": ["siteId", "listId"]
+      }
+    },
+    {
+      "name": "sp.get_list_item",
+      "description": "Get a single SharePoint list item by id, including all of its column fields.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "siteId": { "type": "string", "description": "The site id" },
+          "listId": { "type": "string", "description": "The list id" },
+          "itemId": { "type": "string", "description": "The list item id" }
+        },
+        "required": ["siteId", "listId", "itemId"]
+      }
+    },
+    {
+      "name": "sp.search_files",
+      "description": "Search the site's default document library for files by keyword and return name, web URL, size, and last-modified time.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "siteId": { "type": "string", "description": "The site id whose default document library to search" },
+          "query": { "type": "string", "description": "Keyword to search file and folder names/content for" }
+        },
+        "required": ["siteId", "query"]
+      }
+    },
+    {
+      "name": "sp.create_list_item",
+      "description": "Create a new item in a SharePoint list with the given column fields.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "siteId": { "type": "string", "description": "The site id" },
+          "listId": { "type": "string", "description": "The list id" },
+          "fields": { "type": "object", "description": "Column name -> value map for the new item, e.g. {\"Title\": \"New task\", \"Status\": \"Active\"}" }
+        },
+        "required": ["siteId", "listId", "fields"]
+      }
+    },
+    {
+      "name": "sp.update_list_item",
+      "description": "Update the column fields of an existing SharePoint list item.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "siteId": { "type": "string", "description": "The site id" },
+          "listId": { "type": "string", "description": "The list id" },
+          "itemId": { "type": "string", "description": "The list item id to update" },
+          "fields": { "type": "object", "description": "Column name -> value map of the fields to change" }
+        },
+        "required": ["siteId", "listId", "itemId", "fields"]
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "microsoft-graph", "scopes": ["Sites.Read.All", "Sites.ReadWrite.All"], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

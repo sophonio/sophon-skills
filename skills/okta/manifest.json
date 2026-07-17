@@ -1,0 +1,161 @@
+{
+  "name": "okta",
+  "version": "1.0.0",
+  "description": "Okta identity integration — search and inspect users, list groups and their members, see a user's assigned apps, query the system log, add users to groups, and suspend users. Authenticates with a static SSWS admin API token (Authorization: SSWS {apiToken}) against your Okta org's /api/v1 endpoints, with cursor pagination via Link headers.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "integration",
+  "tags": ["okta", "identity", "iam", "sso", "users", "groups", "directory", "security", "audit-log"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "okta",
+    "displayName": "Okta",
+    "description": "Okta identity and access management via the Okta admin API (SSWS token)",
+    "icon": "okta",
+    "authType": "custom",
+    "category": "integration",
+    "fields": [
+      {
+        "key": "baseUrl",
+        "label": "Okta Org URL",
+        "type": "url",
+        "required": true,
+        "helpText": "Your Okta org base URL, e.g. https://acme.okta.com (also acme.okta-emea.com or acme.oktapreview.com). No trailing slash or path."
+      },
+      {
+        "key": "apiToken",
+        "label": "API Token",
+        "type": "secret",
+        "required": true,
+        "helpText": "SSWS admin API token created in Admin Console > Security > API > Tokens. Inherits the creating admin's permissions and expires after 30 days of non-use.",
+        "helpUrl": "https://developer.okta.com/docs/guides/create-an-api-token/main/"
+      }
+    ],
+    "testEndpoint": "/api/v1/users/me"
+  },
+  "tools": [
+    {
+      "name": "okta.search_users",
+      "description": "Search Okta users by a simple name/email prefix (q) or a SCIM-style search expression, returning trimmed user summaries.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "q": { "type": "string", "description": "Simple prefix match against firstName, lastName, and email (e.g. \"ada\")" },
+          "search": { "type": "string", "description": "SCIM-style filter expression, e.g. profile.department eq \"Engineering\" or status eq \"ACTIVE\". Takes precedence over q." },
+          "limit": { "type": "integer", "description": "Max users to return (default 25, max 100)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "okta.get_user",
+      "description": "Get a single Okta user by id or login (email), including full profile, status, and lifecycle timestamps.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "userId": { "type": "string", "description": "Okta user id (e.g. 00u1abcd...) or login/email" }
+        },
+        "required": ["userId"]
+      }
+    },
+    {
+      "name": "okta.list_groups",
+      "description": "List Okta groups, optionally filtered by a name prefix.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "q": { "type": "string", "description": "Prefix match on the group name (e.g. \"eng\")" },
+          "limit": { "type": "integer", "description": "Max groups to return (default 25, max 100)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "okta.list_group_members",
+      "description": "List the users in an Okta group as trimmed summaries, following Link-header pagination up to the limit.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "groupId": { "type": "string", "description": "The Okta group id (e.g. 00g1abcd...)" },
+          "limit": { "type": "integer", "description": "Max members to return across pages (default 200, max 1000)" }
+        },
+        "required": ["groupId"]
+      }
+    },
+    {
+      "name": "okta.list_user_apps",
+      "description": "List the applications assigned to a user (id, label, status, sign-on mode).",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "userId": { "type": "string", "description": "The Okta user id (e.g. 00u1abcd...); use okta.search_users or okta.get_user to find it" },
+          "limit": { "type": "integer", "description": "Max apps to return (default 50, max 100)" }
+        },
+        "required": ["userId"]
+      }
+    },
+    {
+      "name": "okta.query_system_log",
+      "description": "Query the Okta system log (audit events) by time window, filter expression, or keyword, returning event type, actor, outcome, and targets.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "since": { "type": "string", "description": "Start of window (ISO 8601, e.g. 2026-07-16T00:00:00Z)" },
+          "until": { "type": "string", "description": "End of window (ISO 8601, e.g. 2026-07-17T00:00:00Z)" },
+          "filter": { "type": "string", "description": "SCIM-style filter expression, e.g. eventType eq \"user.session.start\"" },
+          "q": { "type": "string", "description": "Keyword search across event fields (e.g. an email or app name)" },
+          "limit": { "type": "integer", "description": "Max events to return (default 50, max 100)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "okta.add_user_to_group",
+      "description": "Add a user to an Okta group (group membership grants the group's app assignments and policies).",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "groupId": { "type": "string", "description": "The Okta group id to add the user to" },
+          "userId": { "type": "string", "description": "The Okta user id to add" }
+        },
+        "required": ["groupId", "userId"]
+      }
+    },
+    {
+      "name": "okta.suspend_user",
+      "description": "Suspend an ACTIVE Okta user, blocking sign-in until unsuspended. Reversible in the Admin Console, but immediately cuts the user's access.",
+      "riskLevel": "high",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "userId": { "type": "string", "description": "The Okta user id to suspend (user must be in ACTIVE status)" }
+        },
+        "required": ["userId"]
+      }
+    }
+  ],
+  "credentials": [
+    {
+      "service": "okta",
+      "scopes": ["okta.users.read", "okta.users.manage", "okta.groups.read", "okta.groups.manage", "okta.apps.read", "okta.logs.read"],
+      "required": true,
+      "access": "proxy"
+    }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

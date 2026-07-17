@@ -1,0 +1,164 @@
+{
+  "name": "entra-id",
+  "version": "1.0.0",
+  "description": "Microsoft Entra ID (Azure AD) directory integration via Microsoft Graph — search users and groups, inspect a user's profile, manager, and group memberships, list group and admin-role members, review sign-in logs, and list app registrations with client-secret expiry dates. All tools are read-only. Uses app-only (client-credentials) auth and requires the Directory.Read.All application permission with admin consent (plus AuditLog.Read.All and an Entra ID P1/P2 license for sign-in logs).",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "integration",
+  "tags": ["entra", "azure-ad", "microsoft-graph", "directory", "identity", "users", "groups", "sign-in-logs", "audit"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "microsoft-graph",
+    "displayName": "Microsoft Entra ID",
+    "description": "Microsoft Entra ID directory (users, groups, roles, sign-ins) via Microsoft Graph (app-only)",
+    "icon": "entra",
+    "authType": "custom",
+    "category": "integration",
+    "fields": [
+      {
+        "key": "tenantId",
+        "label": "Directory (Tenant) ID",
+        "type": "text",
+        "required": true,
+        "helpText": "The Microsoft Entra tenant ID (GUID) of your organization."
+      },
+      {
+        "key": "clientId",
+        "label": "Application (Client) ID",
+        "type": "text",
+        "required": true,
+        "helpText": "The Application (client) ID of the app registration."
+      },
+      {
+        "key": "clientSecret",
+        "label": "Client Secret",
+        "type": "secret",
+        "required": true,
+        "helpText": "A client secret for the app registration. Requires the Directory.Read.All application permission with admin consent; AuditLog.Read.All additionally for sign-in logs.",
+        "helpUrl": "https://learn.microsoft.com/en-us/graph/auth-v2-service"
+      }
+    ],
+    "testEndpoint": "/users?$top=1&$select=id,displayName"
+  },
+  "tools": [
+    {
+      "name": "entra.search_users",
+      "description": "Search directory users by display name or email. Uses Microsoft Graph $search (token match) by default, or a startswith prefix filter on displayName/mail/userPrincipalName when prefix is true. Returns id, displayName, mail, userPrincipalName, jobTitle, department, and accountEnabled. Results capped at 100.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string", "description": "Search term to match against display name or email address" },
+          "prefix": { "type": "boolean", "description": "If true, use a startswith prefix filter on displayName, mail, and userPrincipalName instead of $search (default false)" },
+          "limit": { "type": "integer", "description": "Max users to return (default 25, max 100)" }
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "entra.get_user",
+      "description": "Get a single user's directory profile by object id or userPrincipalName, including job title, department, account status, and their manager (id, displayName, mail).",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "userId": { "type": "string", "description": "User object id (GUID) or userPrincipalName (e.g. alice@contoso.com)" }
+        },
+        "required": ["userId"]
+      }
+    },
+    {
+      "name": "entra.list_user_groups",
+      "description": "List the groups a user is a direct member of (groups only — directory roles and administrative units are excluded server-side). Returns group id, displayName, and groupTypes. Results capped at 100 (first page only).",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "userId": { "type": "string", "description": "User object id (GUID) or userPrincipalName" },
+          "limit": { "type": "integer", "description": "Max groups to return (default 25, max 100)" }
+        },
+        "required": ["userId"]
+      }
+    },
+    {
+      "name": "entra.search_groups",
+      "description": "Search directory groups by display name. Uses Microsoft Graph $search (token match) by default, or a startswith(displayName, ...) prefix filter when prefix is true. Returns id, displayName, mail, groupTypes, and securityEnabled. Results capped at 100.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string", "description": "Search term to match against the group display name" },
+          "prefix": { "type": "boolean", "description": "If true, use a startswith(displayName, ...) prefix filter instead of $search (default false)" },
+          "limit": { "type": "integer", "description": "Max groups to return (default 25, max 100)" }
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "entra.list_group_members",
+      "description": "List the direct members of a group (users, groups, devices, service principals). Follows pagination up to 5 pages and caps results at 200; the response includes a truncated flag when more members exist. Returns id, displayName, mail, userPrincipalName, and member type.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "groupId": { "type": "string", "description": "Group object id (GUID)" },
+          "limit": { "type": "integer", "description": "Max members to return (default 25, max 200)" }
+        },
+        "required": ["groupId"]
+      }
+    },
+    {
+      "name": "entra.list_role_members",
+      "description": "List the members of an activated directory (admin) role by its display name, e.g. 'Global Administrator'. Follows pagination up to 5 pages and caps results at 200; the response includes a truncated flag when more members exist. If the role has never been assigned (not activated), returns a message plus the list of activated role names.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "roleName": { "type": "string", "description": "Directory role display name (e.g. 'Global Administrator', 'User Administrator'); case-insensitive" },
+          "limit": { "type": "integer", "description": "Max members to return (default 100, max 200)" }
+        },
+        "required": ["roleName"]
+      }
+    },
+    {
+      "name": "entra.list_signin_logs",
+      "description": "List Entra sign-in log entries since a given time, optionally filtered by user, application, or sign-in error code. Requires AuditLog.Read.All and an Entra ID P1/P2 license. Results capped at 50 (first page only).",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "since": { "type": "string", "description": "Only return sign-ins created at or after this time (ISO 8601, e.g. 2026-07-16T00:00:00Z)" },
+          "userPrincipalName": { "type": "string", "description": "Filter to sign-ins by this userPrincipalName (exact match)" },
+          "appDisplayName": { "type": "string", "description": "Filter to sign-ins to this application display name (exact match)" },
+          "errorCode": { "type": "integer", "description": "Filter by sign-in status error code (0 = success; e.g. 50126 = invalid credentials)" },
+          "limit": { "type": "integer", "description": "Max entries to return (default 25, max 50)" }
+        },
+        "required": ["since"]
+      }
+    },
+    {
+      "name": "entra.list_applications",
+      "description": "List app registrations in the tenant with their client-secret expiry dates (passwordCredentials endDateTime only), useful for flagging expiring secrets. Results capped at 100 (first page only).",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "limit": { "type": "integer", "description": "Max applications to return (default 25, max 100)" }
+        },
+        "required": []
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "microsoft-graph", "scopes": ["Directory.Read.All", "AuditLog.Read.All"], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

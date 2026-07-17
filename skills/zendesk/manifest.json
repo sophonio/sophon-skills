@@ -1,0 +1,174 @@
+{
+  "name": "zendesk",
+  "version": "1.0.0",
+  "description": "Zendesk Support integration — search across tickets, users, and organizations, list and inspect tickets with their comment threads, look up users, search Help Center articles, and create or update tickets and comments. Uses OAuth2 client-credentials auth against a confidential OAuth client in your Zendesk Admin Center (a short-lived access token is minted fresh on every invocation); API-token basic auth is not used because Zendesk is sunsetting API tokens starting 2026-07-28.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "integration",
+  "tags": ["zendesk", "support", "tickets", "help-desk", "customer-service", "help-center", "guide", "oauth"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "zendesk",
+    "displayName": "Zendesk",
+    "description": "Zendesk Support tickets, users, and Help Center via OAuth2 client credentials",
+    "icon": "zendesk",
+    "authType": "custom",
+    "category": "integration",
+    "fields": [
+      {
+        "key": "subdomain",
+        "label": "Zendesk Subdomain",
+        "type": "text",
+        "required": true,
+        "pattern": "^[a-z0-9-]+$",
+        "patternMessage": "Just the subdomain (e.g. yourcompany for yourcompany.zendesk.com), not the full URL",
+        "helpText": "The subdomain of your Zendesk instance — the part before .zendesk.com."
+      },
+      {
+        "key": "clientId",
+        "label": "OAuth Client ID (unique identifier)",
+        "type": "text",
+        "required": true,
+        "helpText": "The unique identifier of a confidential OAuth client created in Admin Center under Apps and integrations > APIs > OAuth clients.",
+        "helpUrl": "https://support.zendesk.com/hc/en-us/articles/4408845965210"
+      },
+      {
+        "key": "clientSecret",
+        "label": "OAuth Client Secret",
+        "type": "secret",
+        "required": true,
+        "helpText": "The secret shown when the OAuth client is created. Zendesk shows it only once — copy it then."
+      }
+    ],
+    "testEndpoint": "/api/v2/users/me.json"
+  },
+  "tools": [
+    {
+      "name": "zendesk.search",
+      "description": "Search across tickets, users, and organizations using Zendesk's universal search query syntax (e.g. \"type:ticket status:open priority:high\").",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string", "description": "Search query in Zendesk search syntax (e.g. \"type:ticket status:open login error\")" },
+          "limit": { "type": "integer", "description": "Max results to return (default 25, max 100)" }
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "zendesk.list_tickets",
+      "description": "List tickets, optionally filtered by status and sorted. Returns a trimmed summary per ticket.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "description": "Only return tickets with this status", "enum": ["new", "open", "pending", "hold", "solved", "closed"] },
+          "sortBy": { "type": "string", "description": "Field to sort by (default created_at). Sorting by id is only supported without a status filter; with a status filter it falls back to created_at.", "enum": ["created_at", "updated_at", "status", "id"] },
+          "sortOrder": { "type": "string", "description": "Sort direction (default desc)", "enum": ["asc", "desc"] },
+          "limit": { "type": "integer", "description": "Max tickets to return (default 25, max 100)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "zendesk.get_ticket",
+      "description": "Get a ticket's details plus its comment thread (author, public/internal flag, and body per comment).",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "ticketId": { "type": "integer", "description": "The ticket id" },
+          "maxComments": { "type": "integer", "description": "Max comments to include (default 20, max 100)" }
+        },
+        "required": ["ticketId"]
+      }
+    },
+    {
+      "name": "zendesk.search_help_center",
+      "description": "Search Help Center (Zendesk Guide) knowledge-base articles by keyword.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string", "description": "Keywords to search article titles and bodies for" },
+          "limit": { "type": "integer", "description": "Max articles to return (default 25, max 100)" }
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "zendesk.get_user",
+      "description": "Look up a Zendesk user by id, or search users by email address. Provide userId or email.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "userId": { "type": "integer", "description": "The user id to fetch" },
+          "email": { "type": "string", "description": "Email address to search users by (used when userId is not given)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "zendesk.create_ticket",
+      "description": "Create a new support ticket with a subject and first comment, optionally setting the requester, priority, and tags.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "subject": { "type": "string", "description": "Ticket subject/title" },
+          "body": { "type": "string", "description": "Body of the ticket's first comment (the description)" },
+          "requesterId": { "type": "integer", "description": "Existing user id to set as requester (takes precedence over requesterEmail)" },
+          "requesterEmail": { "type": "string", "description": "Requester email — creates the user if they don't exist yet" },
+          "requesterName": { "type": "string", "description": "Requester display name (used with requesterEmail)" },
+          "priority": { "type": "string", "description": "Ticket priority", "enum": ["urgent", "high", "normal", "low"] },
+          "tags": { "type": "array", "items": { "type": "string" }, "description": "Tags to set on the ticket" }
+        },
+        "required": ["subject", "body"]
+      }
+    },
+    {
+      "name": "zendesk.update_ticket",
+      "description": "Update a ticket's status, priority, assignee, and/or tags. Note that tags replace the ticket's existing tag list.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "ticketId": { "type": "integer", "description": "The ticket id to update" },
+          "status": { "type": "string", "description": "New status", "enum": ["new", "open", "pending", "hold", "solved", "closed"] },
+          "priority": { "type": "string", "description": "New priority", "enum": ["urgent", "high", "normal", "low"] },
+          "assigneeId": { "type": "integer", "description": "User id of the agent to assign the ticket to" },
+          "tags": { "type": "array", "items": { "type": "string" }, "description": "New full tag list (replaces existing tags)" }
+        },
+        "required": ["ticketId"]
+      }
+    },
+    {
+      "name": "zendesk.add_comment",
+      "description": "Add a comment to a ticket, either public (visible to the requester) or internal (agents only).",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "ticketId": { "type": "integer", "description": "The ticket id to comment on" },
+          "body": { "type": "string", "description": "Comment text" },
+          "public": { "type": "boolean", "description": "true for a public reply visible to the requester, false for an internal note (default true)" }
+        },
+        "required": ["ticketId", "body"]
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "zendesk", "scopes": ["read", "write"], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

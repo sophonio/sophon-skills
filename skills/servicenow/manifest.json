@@ -1,0 +1,171 @@
+{
+  "name": "servicenow",
+  "version": "1.0.0",
+  "description": "ServiceNow integration via the Table API — search and read records in any table (incidents, changes, requests, CMDB CIs), search published knowledge articles, look up users and groups for routing, create incidents, update records, and add work notes. Authenticates with either OAuth2 client-credentials (instance Application Registry client id/secret) or HTTP basic auth with a service account, against your own ServiceNow instance URL.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "integration",
+  "tags": ["servicenow", "itsm", "incidents", "table-api", "knowledge-base", "cmdb", "service-desk", "itil", "change-management"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "servicenow",
+    "displayName": "ServiceNow",
+    "description": "ServiceNow ITSM records via the Table API",
+    "icon": "servicenow",
+    "authType": "custom",
+    "category": "integration",
+    "fields": [
+      {
+        "key": "baseUrl",
+        "label": "Instance URL",
+        "type": "url",
+        "required": true,
+        "helpText": "Your ServiceNow instance URL, e.g. https://acme.service-now.com (no trailing slash)."
+      },
+      {
+        "key": "username",
+        "label": "Username",
+        "type": "text",
+        "required": false,
+        "helpText": "Service account username for basic auth. Leave empty if using OAuth client credentials."
+      },
+      {
+        "key": "password",
+        "label": "Password",
+        "type": "secret",
+        "required": false,
+        "helpText": "Service account password for basic auth. Leave empty if using OAuth client credentials."
+      },
+      {
+        "key": "clientId",
+        "label": "OAuth Client ID",
+        "type": "text",
+        "required": false,
+        "helpText": "Client ID from the instance's Application Registry (OAuth client-credentials). Leave empty if using basic auth.",
+        "helpUrl": "https://www.servicenow.com/docs/bundle/zurich-platform-security/page/administer/security/concept/c_OAuthApplications.html"
+      },
+      {
+        "key": "clientSecret",
+        "label": "OAuth Client Secret",
+        "type": "secret",
+        "required": false,
+        "helpText": "Client secret from the instance's Application Registry. Leave empty if using basic auth."
+      }
+    ],
+    "testEndpoint": "/api/now/table/sys_user?sysparm_limit=1&sysparm_fields=sys_id,user_name"
+  },
+  "tools": [
+    {
+      "name": "snow.search_records",
+      "description": "Search records in any ServiceNow table (e.g. incident, change_request, sc_request, cmdb_ci) using an encoded sysparm_query, with pagination and display values.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "table": { "type": "string", "description": "Table name to query (e.g. incident, change_request, sc_request, cmdb_ci)" },
+          "sysparm_query": { "type": "string", "description": "Encoded query string (e.g. active=true^priority=1^ORDERBYDESCsys_updated_on)" },
+          "fields": { "type": "string", "description": "Comma-separated field names to return (default: sys_id,number,name,short_description,state,priority,assigned_to,sys_updated_on)" },
+          "limit": { "type": "integer", "description": "Max records to return (default 20, max 100)" },
+          "offset": { "type": "integer", "description": "Number of records to skip, for pagination (default 0)" }
+        },
+        "required": ["table"]
+      }
+    },
+    {
+      "name": "snow.get_record",
+      "description": "Get a single record from any table by sys_id, with display values for reference fields.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "table": { "type": "string", "description": "Table name the record lives in (e.g. incident)" },
+          "sys_id": { "type": "string", "description": "The sys_id (32-char GUID) of the record" }
+        },
+        "required": ["table", "sys_id"]
+      }
+    },
+    {
+      "name": "snow.search_knowledge",
+      "description": "Search published knowledge base articles (kb_knowledge) by text matched against the short description and body.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string", "description": "Search text matched (LIKE) against article short_description and text; only workflow_state=published articles are returned" },
+          "limit": { "type": "integer", "description": "Max articles to return (default 10, max 50)" }
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "snow.get_user",
+      "description": "Look up a user (sys_user) or group (sys_user_group) by name, username, or email — useful for finding caller_id or assignment_group values for routing.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string", "description": "Name, username (user_name), or email address to look up" },
+          "type": { "type": "string", "description": "What to look up: a user or a group (default user)", "enum": ["user", "group"] },
+          "limit": { "type": "integer", "description": "Max matches to return (default 10, max 50)" }
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "snow.create_incident",
+      "description": "Create a new incident record with short description, details, caller, urgency/impact, and assignment group.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "short_description": { "type": "string", "description": "One-line summary of the incident" },
+          "description": { "type": "string", "description": "Full description of the incident" },
+          "caller_id": { "type": "string", "description": "Caller: sys_id (32-char GUID) of the sys_user record — use snow.get_user first to resolve a name or email to a sys_id" },
+          "urgency": { "type": "string", "description": "Urgency: 1 = High, 2 = Medium, 3 = Low", "enum": ["1", "2", "3"] },
+          "impact": { "type": "string", "description": "Impact: 1 = High, 2 = Medium, 3 = Low", "enum": ["1", "2", "3"] },
+          "assignment_group": { "type": "string", "description": "Assignment group: sys_id (32-char GUID) of the sys_user_group record — use snow.get_user with type=group first to resolve a group name to a sys_id" }
+        },
+        "required": ["short_description"]
+      }
+    },
+    {
+      "name": "snow.update_record",
+      "description": "Update fields of an existing record in any table (PATCH by table and sys_id).",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "table": { "type": "string", "description": "Table name the record lives in (e.g. incident)" },
+          "sys_id": { "type": "string", "description": "The sys_id of the record to update" },
+          "fields": { "type": "object", "description": "Object of field name -> new value (e.g. {\"state\": \"2\", \"assignment_group\": \"d625dccec0a8016700a222a0f7900d06\"}). Reference fields (caller_id, assignment_group, assigned_to, ...) take sys_ids, not display names — use snow.get_user to resolve names first" }
+        },
+        "required": ["table", "sys_id", "fields"]
+      }
+    },
+    {
+      "name": "snow.add_work_note",
+      "description": "Add a work note to an incident. Work notes are journal entries and cannot be edited or deleted once written.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "sys_id": { "type": "string", "description": "The sys_id of the incident to annotate" },
+          "work_notes": { "type": "string", "description": "The work note text to append to the incident's work notes journal" }
+        },
+        "required": ["sys_id", "work_notes"]
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "servicenow", "scopes": ["read", "write"], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}
