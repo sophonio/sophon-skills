@@ -1,7 +1,7 @@
 {
   "name": "youtube-watcher",
-  "version": "1.0.0",
-  "description": "Fetch and read transcripts from YouTube videos. Use to summarize a video, answer questions about its content, or extract information from it. Also lists available caption languages and looks up basic video info (title, channel).",
+  "version": "1.1.0",
+  "description": "Fetch and read transcripts from YouTube videos. Use to summarize a video, answer questions about its content, or extract information from it. Also lists available caption languages and looks up basic video info (title, channel). Falls back to yt-dlp when YouTube blocks automated transcript requests, and supports an optional proxy.",
   "author": "Buildersoft LLC",
   "license": "MIT",
   "category": "data",
@@ -20,7 +20,8 @@
           "video": { "type": "string", "description": "YouTube video ID or URL (watch, youtu.be, shorts, embed)" },
           "languages": { "type": "array", "items": { "type": "string" }, "description": "Preferred caption language codes in priority order (default [\"en\"]); falls back to any available transcript" },
           "format": { "type": "string", "enum": ["text", "segments"], "description": "\"text\" = one joined string (default); \"segments\" = list of {text, start, duration}" },
-          "translateTo": { "type": "string", "description": "Optional target language code (e.g. \"es\") to translate the transcript into" }
+          "translateTo": { "type": "string", "description": "Optional target language code (e.g. \"es\") to translate the transcript into" },
+          "proxy": { "type": "string", "description": "Optional HTTP(S) proxy URL (\"http://user:pass@host:port\") to route transcript requests through when YouTube blocks the current IP; ideally a rotating residential proxy" }
         },
         "required": ["video"]
       }
@@ -32,7 +33,8 @@
       "parameters": {
         "type": "object",
         "properties": {
-          "video": { "type": "string", "description": "YouTube video ID or URL" }
+          "video": { "type": "string", "description": "YouTube video ID or URL" },
+          "proxy": { "type": "string", "description": "Optional HTTP(S) proxy URL to route the request through when YouTube blocks the current IP" }
         },
         "required": ["video"]
       }
@@ -50,10 +52,10 @@
       }
     }
   ],
-  "requirements": ["youtube-transcript-api==1.2.4"],
+  "requirements": ["youtube-transcript-api==1.2.4", "yt-dlp==2026.7.4"],
   "sandbox": {
     "network": true,
-    "timeoutSeconds": 60,
+    "timeoutSeconds": 120,
     "maxMemoryMb": 256
   },
   "platforms": []

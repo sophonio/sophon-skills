@@ -95,7 +95,8 @@ if (-not $ApiKey.StartsWith('smk_')) {
 $headers = @{ Authorization = "Bearer $ApiKey" }
 $anyFailed = $false
 
-foreach ($a in $artifacts) {
+for ($i = 0; $i -lt $artifacts.Count; $i++) {
+    $a = $artifacts[$i]
     Write-Output "Publishing $($a.Name) ..."
     try {
         # PowerShell 7 -Form sends a FileInfo value as a file part; the field name must be 'package'.
@@ -109,6 +110,11 @@ foreach ($a in $artifacts) {
         $body = ''
         if ($_.ErrorDetails -and $_.ErrorDetails.Message) { $body = $_.ErrorDetails.Message }
         Write-Warning "  FAILED ($status) $($a.Name): $($_.Exception.Message) $body"
+    }
+
+    if ($i -lt ($artifacts.Count - 1)) {
+        Write-Output 'Waiting 2 seconds before the next upload ...'
+        Start-Sleep -Seconds 2
     }
 }
 

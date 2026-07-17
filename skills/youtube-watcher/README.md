@@ -4,8 +4,9 @@ Fetch and read transcripts from YouTube videos so Sophon can summarize a video, 
 about its content, or extract information from it — without watching it.
 
 Built on the pure-Python [`youtube-transcript-api`](https://pypi.org/project/youtube-transcript-api/)
-(no API key required) plus YouTube's keyless oEmbed endpoint for basic metadata. No credentials to
-configure.
+(no API key required), with an automatic [`yt-dlp`](https://pypi.org/project/yt-dlp/) fallback for
+when YouTube blocks automated transcript requests, plus YouTube's keyless oEmbed endpoint for basic
+metadata. No credentials to configure.
 
 ## Tools
 
@@ -26,7 +27,16 @@ configure.
 - `format` — `text` (one joined string, default) or `segments` (list of `{text, start, duration}`
   with timestamps in seconds).
 - `translateTo` — a target language code (e.g. `es`, `fr`) to translate the transcript into, when
-  the source track is translatable.
+  the source track is translatable. If the primary library reports the track as non-translatable
+  (increasingly common for auto-generated tracks), the yt-dlp fallback still tries YouTube's
+  auto-translation.
+- `proxy` — an optional HTTP(S) proxy URL (`http://user:pass@host:port`) routing the transcript
+  request through that proxy; use a rotating residential proxy if YouTube blocks your IP.
+  `youtube.list_transcripts` accepts the same option.
+
+Results include a `source` field (`youtube-transcript-api` or `yt-dlp`, showing which path served
+the request) and, when the requested languages weren't available, a `note` explaining which
+language was returned instead.
 
 ## Notes
 
@@ -34,9 +44,12 @@ configure.
   disabled returns a clear error.
 - `get_video_info` uses oEmbed, which returns title/author/thumbnail but not duration or description
   (those require the YouTube Data API and a key, which this skill deliberately avoids).
-- YouTube may rate-limit or IP-block automated transcript requests, especially from shared or
-  datacenter IPs. When that happens the tool returns a clear `IpBlocked` error rather than crashing;
-  the underlying library can be routed through a proxy if this becomes a problem in a deployment.
+- YouTube rate-limits and IP-blocks automated transcript requests (`RequestBlocked`), especially
+  from datacenter/VPN IPs or after bursts of requests; residential IPs usually recover within
+  minutes. When the primary library is blocked, the skill automatically retries the whole fetch
+  through `yt-dlp`, which emulates real player clients and survives most blocks. If both paths
+  fail, the full error text (including remediation guidance) is returned — pass the `proxy` option
+  to route around a persistent block.
 - Transcripts of long videos can be large; use `format: "segments"` when you need timestamps to cite
   or jump to specific moments.
 
