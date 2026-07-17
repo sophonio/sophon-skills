@@ -1,0 +1,145 @@
+{
+  "name": "artifactory",
+  "version": "1.0.1",
+  "description": "JFrog Artifactory integration — list repositories, search artifacts (quick search or safely-constructed AQL), inspect artifact storage info and download stats, read and set item properties, browse builds, and view per-repository storage usage. Authenticates with a static JFrog access (identity) token sent as a Bearer header against {baseUrl}/artifactory/api.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "development",
+  "tags": ["artifactory", "jfrog", "artifacts", "repositories", "binaries", "packages", "builds", "aql", "devops"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "artifactory",
+    "displayName": "Artifactory",
+    "description": "JFrog Artifactory binary repository manager",
+    "icon": "artifactory",
+    "authType": "custom",
+    "category": "developer",
+    "fields": [
+      {
+        "key": "baseUrl",
+        "label": "JFrog Platform URL",
+        "type": "url",
+        "required": true,
+        "placeholder": "https://mycompany.jfrog.io",
+        "helpText": "Base URL of your JFrog Platform instance (cloud or self-hosted), without a trailing path — the skill appends /artifactory/api itself."
+      },
+      {
+        "key": "accessToken",
+        "label": "Access Token",
+        "type": "secret",
+        "required": true,
+        "helpText": "A JFrog access token. Any user can self-generate an identity token from their profile (profile > Access Tokens). Storage summary needs an admin or system:info-scoped token.",
+        "helpUrl": "https://jfrog.com/help/r/jfrog-platform-administration-documentation/access-tokens"
+      }
+    ],
+    "testEndpoint": "/artifactory/api/repositories"
+  },
+  "tools": [
+    {
+      "name": "artifactory.list_repositories",
+      "description": "List repositories, optionally filtered by repository type (local, remote, virtual, or federated). Returns key, type, package type, and URL for each.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "type": { "type": "string", "description": "Filter by repository type", "enum": ["local", "remote", "virtual", "federated"] }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "artifactory.search_artifacts",
+      "description": "Search artifacts. Quick mode: pass name (optionally repos) for a name-based quick search — quick search only covers local and remote repositories, not virtual ones. AQL mode: pass repo, pathPattern, namePattern, and/or createdAfter — the skill builds a safe AQL query from these structured parameters (raw AQL strings are not accepted). Results always include repo, path, and name; capped at 100.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "description": "Quick search: artifact name (or fragment) to search for" },
+          "repos": { "type": "string", "description": "Quick search: comma-separated list of repository keys to search in" },
+          "repo": { "type": "string", "description": "AQL search: repository key to search in" },
+          "pathPattern": { "type": "string", "description": "AQL search: path wildcard pattern (e.g. org/acme/*)" },
+          "namePattern": { "type": "string", "description": "AQL search: file name wildcard pattern (e.g. *.jar)" },
+          "createdAfter": { "type": "string", "description": "AQL search: only items created after this ISO 8601 date (e.g. 2026-01-01)" },
+          "limit": { "type": "integer", "description": "Max results to return (default 50, max 100)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "artifactory.get_artifact_info",
+      "description": "Get storage info for an artifact: size, checksums (including sha256), created and last-modified timestamps, and download URI. Set stats to true to also include the download count and last-downloaded time.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "repo": { "type": "string", "description": "Repository key (e.g. libs-release)" },
+          "path": { "type": "string", "description": "Path to the artifact within the repository (e.g. org/acme/app/1.0/app-1.0.jar)" },
+          "stats": { "type": "boolean", "description": "Also fetch download statistics (downloadCount, lastDownloaded)" }
+        },
+        "required": ["repo", "path"]
+      }
+    },
+    {
+      "name": "artifactory.get_item_properties",
+      "description": "Get the properties (key/value metadata) set on a repository item. Returns an empty map with a note when the item has no properties.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "repo": { "type": "string", "description": "Repository key" },
+          "path": { "type": "string", "description": "Path to the item within the repository" }
+        },
+        "required": ["repo", "path"]
+      }
+    },
+    {
+      "name": "artifactory.list_builds",
+      "description": "List all builds known to Artifactory (name and last build time). Pass buildName to list the numbers and start dates of a specific build instead.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "buildName": { "type": "string", "description": "Build name to list build numbers for" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "artifactory.get_storage_summary",
+      "description": "Get per-repository storage usage (repo key, used space, items count, package type). Requires an admin token or a scoped token with system:info permission.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "name": "artifactory.set_item_properties",
+      "description": "Set properties (key/value metadata) on a repository item. Requires Artifactory Pro; works on local repositories only. By default properties are applied to the given item only (recursive=0); pass recursive=true to also stamp every item beneath a folder.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "repo": { "type": "string", "description": "Repository key (must be a local repository)" },
+          "path": { "type": "string", "description": "Path to the item within the repository" },
+          "properties": { "type": "object", "description": "Property key/value pairs to set", "additionalProperties": { "type": "string" } },
+          "recursive": { "type": "boolean", "description": "When path is a folder, also apply the properties to every item beneath it (default false)" }
+        },
+        "required": ["repo", "path", "properties"]
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "artifactory", "scopes": ["read", "write"], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

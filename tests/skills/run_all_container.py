@@ -20,6 +20,11 @@ PAIRS = [
     ("bitbucket", "bitbucket.list_repos"), ("mongodb-atlas", "atlas.list_projects"),
     ("jenkins", "jenkins.list_jobs"), ("intercom", "intercom.search_conversations"),
     ("freshdesk", "freshdesk.list_tickets"), ("freshservice", "freshservice.list_tickets"),
+    ("hubspot", "hubspot.list_owners"), ("pipedrive", "pipedrive.list_deals"),
+    ("clickhouse", "clickhouse.list_databases"), ("sonarqube", "sonar.search_projects"),
+    ("jira-service-management", "jsm.list_service_desks"), ("planner", "planner.list_plans"),
+    ("tableau", "tableau.list_workbooks"), ("hashicorp-vault", "vault.list_mounts"),
+    ("dynamics-365", "dynamics.whoami"), ("artifactory", "artifactory.list_repositories"),
 ]
 
 

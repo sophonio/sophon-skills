@@ -1,0 +1,150 @@
+{
+  "name": "clickhouse",
+  "version": "1.0.0",
+  "description": "ClickHouse analytics database integration via the native HTTP interface — run read-only SELECT queries (server-enforced with readonly=1), list databases and tables, describe table schemas, inspect partition-level storage stats, and insert rows as JSONEachRow. Authenticates with HTTP Basic auth (username/password) against ClickHouse Cloud or self-hosted servers.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "data",
+  "tags": ["clickhouse", "sql", "olap", "analytics", "database", "data-warehouse", "columnar"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "clickhouse",
+    "displayName": "ClickHouse",
+    "description": "ClickHouse analytics database via the native HTTP interface",
+    "icon": "clickhouse",
+    "authType": "custom",
+    "category": "integration",
+    "fields": [
+      {
+        "key": "baseUrl",
+        "label": "Server URL",
+        "type": "url",
+        "required": true,
+        "placeholder": "https://your-instance.clickhouse.cloud:8443",
+        "helpText": "The ClickHouse HTTP(S) interface URL, including port — https://host:8443 for ClickHouse Cloud, http://host:8123 for a default self-hosted server."
+      },
+      {
+        "key": "username",
+        "label": "Username",
+        "type": "text",
+        "required": true,
+        "helpText": "A dedicated database user is recommended — ideally SELECT-only or with a readonly settings profile."
+      },
+      {
+        "key": "password",
+        "label": "Password",
+        "type": "secret",
+        "required": true,
+        "helpText": "The database user's password. Sent via HTTP Basic auth — use an HTTPS URL in production.",
+        "helpUrl": "https://clickhouse.com/docs/en/interfaces/http"
+      },
+      {
+        "key": "database",
+        "label": "Default Database",
+        "type": "text",
+        "required": false,
+        "helpText": "Optional default database for queries (e.g. default). Tools can override it per call."
+      }
+    ],
+    "testEndpoint": "/?query=SELECT%20version()%20FORMAT%20JSON"
+  },
+  "tools": [
+    {
+      "name": "clickhouse.query",
+      "description": "Run a read-only SELECT query. Executed with readonly=1 so the server rejects any write statement; results are returned as columns (from FORMAT JSON meta) plus data rows, capped by limit.",
+      "riskLevel": "low",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "sql": { "type": "string", "description": "The SELECT statement to run. Do not include a FORMAT clause — FORMAT JSON is added automatically." },
+          "limit": { "type": "integer", "description": "Max rows to return (default 100, max 1000). Appended as LIMIT when the query has none; extra rows are truncated." }
+        },
+        "required": ["sql"]
+      }
+    },
+    {
+      "name": "clickhouse.list_databases",
+      "description": "List database names on the server (from system.databases).",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "name": "clickhouse.list_tables",
+      "description": "List tables in a database with engine, total rows, and total bytes (from system.tables, using typed parameter binding).",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "database": { "type": "string", "description": "Database to list tables from (defaults to the connection's default database, else 'default')" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "clickhouse.describe_table",
+      "description": "Describe a table's columns (name, type, default, comment) via DESCRIBE TABLE. Database and table names are strictly validated identifiers.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "table": { "type": "string", "description": "Table name (letters, digits, underscores only)" },
+          "database": { "type": "string", "description": "Database the table lives in (defaults to the connection's default database, else 'default')" }
+        },
+        "required": ["table"]
+      }
+    },
+    {
+      "name": "clickhouse.table_stats",
+      "description": "Partition-level storage stats for a table from system.parts: part count, row count, compressed and uncompressed bytes per active partition.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "table": { "type": "string", "description": "Table name (letters, digits, underscores only)" },
+          "database": { "type": "string", "description": "Database the table lives in (defaults to the connection's default database, else 'default')" }
+        },
+        "required": ["table"]
+      }
+    },
+    {
+      "name": "clickhouse.insert_rows",
+      "description": "Insert rows into a table using INSERT ... FORMAT JSONEachRow. Requires a user with INSERT grants (the recommended readonly user cannot insert).",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "table": { "type": "string", "description": "Target table name (letters, digits, underscores only)" },
+          "rows": { "type": "array", "items": { "type": "object" }, "description": "Rows to insert — one JSON object per row, keys matching column names" },
+          "database": { "type": "string", "description": "Database of the target table (defaults to the connection's default database, else 'default')" }
+        },
+        "required": ["table", "rows"]
+      }
+    },
+    {
+      "name": "clickhouse.ping",
+      "description": "Check connectivity and return the ClickHouse server version (SELECT version()).",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "clickhouse", "scopes": ["read", "write"], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

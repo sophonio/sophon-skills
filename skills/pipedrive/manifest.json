@@ -1,0 +1,156 @@
+{
+  "name": "pipedrive",
+  "version": "1.0.0",
+  "description": "Pipedrive CRM integration — search deals, people, organizations, and leads; list and update deals across pipelines and stages; look up contact details; and log notes and activities. Authenticates with your personal Pipedrive API token sent as the x-api-token header against https://{companyDomain}.pipedrive.com (v2 endpoints for deals, persons, activities, and search; v1 for notes).",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "integration",
+  "tags": ["pipedrive", "crm", "sales", "deals", "pipeline", "contacts", "activities", "notes"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "pipedrive",
+    "displayName": "Pipedrive",
+    "description": "Pipedrive CRM — deals, contacts, notes, and activities",
+    "icon": "pipedrive",
+    "authType": "custom",
+    "category": "integration",
+    "fields": [
+      {
+        "key": "companyDomain",
+        "label": "Company Domain",
+        "type": "text",
+        "required": true,
+        "placeholder": "yourcompany",
+        "pattern": "^[a-z0-9-]+$",
+        "patternMessage": "Just the subdomain — e.g. 'yourcompany' for https://yourcompany.pipedrive.com",
+        "helpText": "The subdomain of your Pipedrive URL (https://<subdomain>.pipedrive.com). Enter only the subdomain."
+      },
+      {
+        "key": "apiToken",
+        "label": "API Token",
+        "type": "secret",
+        "required": true,
+        "helpText": "Your personal API token from Pipedrive Settings > Personal preferences > API. Company admins can disable API access per user.",
+        "helpUrl": "https://support.pipedrive.com/en/article/how-can-i-find-my-personal-api-key"
+      }
+    ],
+    "testEndpoint": "/api/v1/users/me"
+  },
+  "tools": [
+    {
+      "name": "pipedrive.search",
+      "description": "Search Pipedrive deals, people, organizations, and leads by term.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "term": { "type": "string", "description": "Search term (at least 2 characters)" },
+          "item_types": { "type": "string", "description": "Comma-separated item types to search (default: deal,person,organization,lead)" },
+          "limit": { "type": "integer", "description": "Max results to return (default 20, max 50)" }
+        },
+        "required": ["term"]
+      }
+    },
+    {
+      "name": "pipedrive.list_deals",
+      "description": "List deals, optionally filtered by pipeline, stage, status, or owner. Uses cursor pagination — pass the returned next_cursor to fetch the next page.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "pipeline_id": { "type": "integer", "description": "Only deals in this pipeline" },
+          "stage_id": { "type": "integer", "description": "Only deals in this stage" },
+          "status": { "type": "string", "description": "Only deals with this status", "enum": ["open", "won", "lost"] },
+          "owner_id": { "type": "integer", "description": "Only deals owned by this user" },
+          "limit": { "type": "integer", "description": "Max deals per page (default 25, max 100)" },
+          "cursor": { "type": "string", "description": "Pagination cursor from a previous call's next_cursor" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "pipedrive.get_deal",
+      "description": "Get a deal's details: title, value and currency, stage, status, owner, linked person and organization, and expected close date.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "dealId": { "type": "integer", "description": "The deal id" }
+        },
+        "required": ["dealId"]
+      }
+    },
+    {
+      "name": "pipedrive.get_person",
+      "description": "Get a person's details: name, email addresses, phone numbers, and linked organization.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "personId": { "type": "integer", "description": "The person id" }
+        },
+        "required": ["personId"]
+      }
+    },
+    {
+      "name": "pipedrive.update_deal",
+      "description": "Update a deal — move it to another stage, change its status (open/won/lost), or change its value or owner.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "dealId": { "type": "integer", "description": "The deal id to update" },
+          "stage_id": { "type": "integer", "description": "Move the deal to this stage" },
+          "status": { "type": "string", "description": "New status", "enum": ["open", "won", "lost"] },
+          "value": { "type": "number", "description": "New monetary value of the deal" },
+          "owner_id": { "type": "integer", "description": "Reassign the deal to this user" }
+        },
+        "required": ["dealId"]
+      }
+    },
+    {
+      "name": "pipedrive.add_note",
+      "description": "Add a note to a deal, person, or organization.",
+      "riskLevel": "low",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "content": { "type": "string", "description": "Note content (HTML or plain text)" },
+          "deal_id": { "type": "integer", "description": "Attach the note to this deal" },
+          "person_id": { "type": "integer", "description": "Attach the note to this person" },
+          "org_id": { "type": "integer", "description": "Attach the note to this organization" }
+        },
+        "required": ["content"]
+      }
+    },
+    {
+      "name": "pipedrive.create_activity",
+      "description": "Create an activity (call, meeting, task, deadline, email, or lunch) with a due date, optionally linked to a deal or person.",
+      "riskLevel": "low",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "subject": { "type": "string", "description": "Activity subject" },
+          "type": { "type": "string", "description": "Activity type", "enum": ["call", "meeting", "task", "deadline", "email", "lunch"] },
+          "due_date": { "type": "string", "description": "Due date (YYYY-MM-DD)" },
+          "due_time": { "type": "string", "description": "Due time (HH:MM, optional)" },
+          "deal_id": { "type": "integer", "description": "Link the activity to this deal" },
+          "person_id": { "type": "integer", "description": "Link the activity to this person" }
+        },
+        "required": ["subject", "type", "due_date"]
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "pipedrive", "scopes": ["read", "write"], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

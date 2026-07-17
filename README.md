@@ -96,6 +96,16 @@ into `.sophon-skill` artifacts, and the docs for publishing them.
 | [`intercom`](skills/intercom) | integration | Search Intercom conversations and contacts, add notes, reply, and triage |
 | [`freshdesk`](skills/freshdesk) | integration | Freshdesk ticket triage — list, search, create, update, and annotate |
 | [`freshservice`](skills/freshservice) | integration | Freshservice ITSM — tickets, change requests, and asset lookups |
+| [`hubspot`](skills/hubspot) | integration | HubSpot CRM — search, create, and update contacts, companies, deals, tickets |
+| [`pipedrive`](skills/pipedrive) | integration | Pipedrive sales pipeline — deals, contacts, notes, and activities |
+| [`clickhouse`](skills/clickhouse) | data | Read-only SQL on ClickHouse plus schema and storage introspection |
+| [`sonarqube`](skills/sonarqube) | development | Quality gates, issues, hotspots, and metrics from SonarQube/SonarCloud |
+| [`jira-service-management`](skills/jira-service-management) | integration | JSM service desks — queues, requests, SLAs, comments, approvals |
+| [`planner`](skills/planner) | productivity | Microsoft Planner plans, buckets, and tasks via Graph (app-only) |
+| [`tableau`](skills/tableau) | data | Tableau workbooks, view data, jobs, and extract refreshes (PAT) |
+| [`hashicorp-vault`](skills/hashicorp-vault) | integration | Vault health, mounts, secret metadata, and policies (token or AppRole) |
+| [`dynamics-365`](skills/dynamics-365) | integration | Dynamics 365 Dataverse records — OData queries and record CRUD |
+| [`artifactory`](skills/artifactory) | development | JFrog Artifactory repositories, artifact search (AQL), builds, properties |
 
 **Research & utilities**
 

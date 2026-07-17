@@ -1,0 +1,162 @@
+{
+  "name": "hashicorp-vault",
+  "version": "1.0.0",
+  "description": "HashiCorp Vault integration — check cluster health and seal status, list secret engines and KV v2 secret keys, inspect secret metadata, read secret values, and review ACL policies and the current token. Authenticates with either a static Vault token or AppRole (role_id/secret_id login), with optional Vault Enterprise namespace and an opt-in TLS-verification skip for self-signed private deployments.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "integration",
+  "tags": ["vault", "hashicorp", "secrets", "kv", "approle", "security", "policies", "devops"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "hashicorp-vault",
+    "displayName": "HashiCorp Vault",
+    "description": "Secrets management with HashiCorp Vault (token or AppRole auth)",
+    "icon": "vault",
+    "authType": "custom",
+    "category": "integration",
+    "fields": [
+      {
+        "key": "baseUrl",
+        "label": "Vault Address",
+        "type": "url",
+        "required": true,
+        "helpText": "Base URL of the Vault server, e.g. https://vault.example.com:8200 (no trailing /v1)."
+      },
+      {
+        "key": "token",
+        "label": "Vault Token",
+        "type": "secret",
+        "required": false,
+        "helpText": "A Vault token sent as X-Vault-Token. Leave empty to use AppRole instead. Prefer a token scoped to metadata/list paths unless you want vault.read_secret to return live values.",
+        "helpUrl": "https://developer.hashicorp.com/vault/docs/concepts/tokens"
+      },
+      {
+        "key": "roleId",
+        "label": "AppRole Role ID",
+        "type": "text",
+        "required": false,
+        "helpText": "AppRole role_id. Used with the Secret ID when no static token is set.",
+        "helpUrl": "https://developer.hashicorp.com/vault/docs/auth/approle"
+      },
+      {
+        "key": "secretId",
+        "label": "AppRole Secret ID",
+        "type": "secret",
+        "required": false,
+        "helpText": "AppRole secret_id. Used with the Role ID when no static token is set."
+      },
+      {
+        "key": "namespace",
+        "label": "Namespace",
+        "type": "text",
+        "required": false,
+        "helpText": "Vault Enterprise namespace (sent as X-Vault-Namespace on every call). Leave empty for OSS Vault.",
+        "helpUrl": "https://developer.hashicorp.com/vault/docs/enterprise/namespaces"
+      },
+      {
+        "key": "insecureSkipTlsVerify",
+        "label": "Skip TLS Verification",
+        "type": "text",
+        "required": false,
+        "helpText": "Set to 'true' to skip TLS certificate verification for self-signed private deployments. Not recommended — this allows man-in-the-middle attacks."
+      }
+    ],
+    "testEndpoint": "/v1/auth/token/lookup-self"
+  },
+  "tools": [
+    {
+      "name": "vault.health",
+      "description": "Get Vault cluster health: initialized, sealed, standby, version, and cluster name. Non-200 health codes (429 unsealed standby, 472 DR secondary, 473 performance standby, 501 not initialized, 503 sealed) are returned as normal results with the HTTP status included.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "name": "vault.list_mounts",
+      "description": "List enabled secret engines (mounts) with their path, type, and description.",
+      "riskLevel": "low",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "name": "vault.list_secrets",
+      "description": "List secret key names under a KV v2 path (metadata list). Returns key names only, never secret values.",
+      "riskLevel": "low",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "mount": { "type": "string", "description": "KV v2 mount path (default: secret)" },
+          "path": { "type": "string", "description": "Folder path to list under (e.g. apps/web). Omit to list the mount root." }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "vault.get_secret_metadata",
+      "description": "Get KV v2 metadata for a secret: created/updated times, current version, max versions, and custom metadata. Never returns secret values.",
+      "riskLevel": "low",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "mount": { "type": "string", "description": "KV v2 mount path (default: secret)" },
+          "path": { "type": "string", "description": "Secret path (e.g. apps/web/db)" }
+        },
+        "required": ["path"]
+      }
+    },
+    {
+      "name": "vault.read_secret",
+      "description": "Read a KV v2 secret's live values (data plus version info). This returns real secret VALUES into the agent context — use a metadata-scoped token if you do not want that possible.",
+      "riskLevel": "high",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "mount": { "type": "string", "description": "KV v2 mount path (default: secret)" },
+          "path": { "type": "string", "description": "Secret path (e.g. apps/web/db)" },
+          "version": { "type": "integer", "description": "Specific secret version to read (default: latest)" }
+        },
+        "required": ["path"]
+      }
+    },
+    {
+      "name": "vault.list_policies",
+      "description": "List ACL policy names, or fetch a single policy's HCL document when a name is given.",
+      "riskLevel": "low",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "description": "Policy name to fetch (omit to list all policy names)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "vault.lookup_token",
+      "description": "Look up the current token (self): display name, policies, TTL, and expire time. Never echoes the token itself.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "hashicorp-vault", "scopes": ["read"], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

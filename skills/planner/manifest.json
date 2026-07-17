@@ -1,0 +1,160 @@
+{
+  "name": "planner",
+  "version": "1.0.0",
+  "description": "Microsoft Planner integration via Microsoft Graph — list plans, buckets, and tasks, read task details and checklists, and create, update, and assign tasks in a Microsoft 365 group's basic plans. Uses app-only (client-credentials) auth with Tasks.Read.All / Tasks.ReadWrite.All application permissions; task updates handle Planner's If-Match ETag concurrency automatically. Works with Microsoft 365 work/school tenants (basic plans only; Planner Premium plans are not available on Graph v1.0).",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "productivity",
+  "tags": ["planner", "microsoft-planner", "tasks", "microsoft365", "microsoft-graph", "project-management", "productivity", "office365"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "microsoft-graph",
+    "displayName": "Planner",
+    "description": "Microsoft Planner tasks via Microsoft Graph (app-only)",
+    "icon": "planner",
+    "authType": "custom",
+    "category": "integration",
+    "fields": [
+      {
+        "key": "tenantId",
+        "label": "Directory (Tenant) ID",
+        "type": "text",
+        "required": true,
+        "helpText": "The Azure AD tenant ID (GUID) of your Microsoft 365 organization."
+      },
+      {
+        "key": "clientId",
+        "label": "Application (Client) ID",
+        "type": "text",
+        "required": true,
+        "helpText": "The Application (client) ID of the app registration."
+      },
+      {
+        "key": "clientSecret",
+        "label": "Client Secret",
+        "type": "secret",
+        "required": true,
+        "helpText": "A client secret for the app registration. Requires the Tasks.Read.All (reads) and Tasks.ReadWrite.All (writes) application permissions with admin consent.",
+        "helpUrl": "https://learn.microsoft.com/en-us/graph/auth-v2-service"
+      },
+      {
+        "key": "defaultGroupId",
+        "label": "Default Group ID",
+        "type": "text",
+        "required": true,
+        "helpText": "The Microsoft 365 group whose plans to use by default; Graph has no app-only list-all-plans endpoint."
+      }
+    ],
+    "testEndpoint": "/groups/{defaultGroupId}/planner/plans"
+  },
+  "tools": [
+    {
+      "name": "planner.list_plans",
+      "description": "List the Planner plans owned by a Microsoft 365 group (defaults to the connection's default group). Returns id, title, and owner group id per plan (first page of Graph results only).",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "groupId": { "type": "string", "description": "Microsoft 365 group id whose plans to list (defaults to the connection's defaultGroupId)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "planner.list_buckets",
+      "description": "List the buckets (columns) in a Planner plan. Returns id, name, and orderHint per bucket (first page of Graph results only).",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "planId": { "type": "string", "description": "The Planner plan id to list buckets for" }
+        },
+        "required": ["planId"]
+      }
+    },
+    {
+      "name": "planner.list_tasks",
+      "description": "List the tasks in a Planner plan, or in a single bucket when bucketId is given. Returns id, title, percentComplete, dueDateTime, bucketId, assigned user ids, and priority per task (first page of Graph results only).",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "planId": { "type": "string", "description": "The Planner plan id to list tasks for (required unless bucketId is given)" },
+          "bucketId": { "type": "string", "description": "A bucket id to list tasks for instead of the whole plan" },
+          "limit": { "type": "integer", "description": "Max tasks to return (default 50, max 200)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "planner.get_task",
+      "description": "Get a Planner task including its details: description and checklist items (title/isChecked).",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "taskId": { "type": "string", "description": "The Planner task id" }
+        },
+        "required": ["taskId"]
+      }
+    },
+    {
+      "name": "planner.create_task",
+      "description": "Create a new Planner task in a plan, optionally in a specific bucket, with an optional due date and initial assignees.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "planId": { "type": "string", "description": "The Planner plan id to create the task in" },
+          "title": { "type": "string", "description": "Task title" },
+          "bucketId": { "type": "string", "description": "Bucket id to place the task in (defaults to the plan's default bucket)" },
+          "dueDateTime": { "type": "string", "description": "Due date-time (ISO 8601, e.g. 2026-07-31T17:00:00Z)" },
+          "assigneeIds": { "type": "array", "items": { "type": "string" }, "description": "Azure AD user ids to assign the task to" }
+        },
+        "required": ["planId", "title"]
+      }
+    },
+    {
+      "name": "planner.update_task",
+      "description": "Update fields of an existing Planner task (title, percentComplete, dueDateTime, bucketId). Handles the required If-Match ETag and retries once on an edit conflict.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "taskId": { "type": "string", "description": "The Planner task id to update" },
+          "title": { "type": "string", "description": "New task title" },
+          "percentComplete": { "type": "integer", "description": "Completion percentage: 0 (not started), 50 (in progress), or 100 (complete)" },
+          "dueDateTime": { "type": "string", "description": "New due date-time (ISO 8601); pass an empty string to clear the due date" },
+          "bucketId": { "type": "string", "description": "Bucket id to move the task to" }
+        },
+        "required": ["taskId"]
+      }
+    },
+    {
+      "name": "planner.assign_task",
+      "description": "Add or remove a user on a Planner task's assignments. Handles the required If-Match ETag and retries once on an edit conflict.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "taskId": { "type": "string", "description": "The Planner task id" },
+          "userId": { "type": "string", "description": "Azure AD user id to add or remove" },
+          "action": { "type": "string", "description": "Whether to add or remove the assignment (default add)", "enum": ["add", "remove"] }
+        },
+        "required": ["taskId", "userId"]
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "microsoft-graph", "scopes": ["Tasks.Read.All", "Tasks.ReadWrite.All"], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

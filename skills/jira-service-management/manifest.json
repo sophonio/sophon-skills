@@ -1,0 +1,156 @@
+{
+  "name": "jira-service-management",
+  "version": "1.0.0",
+  "description": "Jira Service Management (JSM) integration via the Atlassian Service Desk API — browse service desks and request types, list queues and their issues, read customer requests and SLAs, create requests, add comments, and answer approvals. Authenticates with Basic auth (Atlassian account email + API token) and stays strictly on /rest/servicedeskapi.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "integration",
+  "tags": ["jira", "jsm", "service-management", "atlassian", "itsm", "service-desk", "requests", "sla", "approvals"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "atlassian-jsm",
+    "displayName": "Jira Service Management",
+    "description": "Atlassian Jira Service Management customer requests, queues, SLAs, and approvals",
+    "icon": "jira",
+    "authType": "custom",
+    "category": "integration",
+    "fields": [
+      {
+        "key": "baseUrl",
+        "label": "Atlassian URL",
+        "type": "url",
+        "required": true,
+        "placeholder": "https://yourorg.atlassian.net",
+        "pattern": "^https://[a-zA-Z0-9-]+\\.atlassian\\.net$",
+        "patternMessage": "Must be a valid Atlassian URL (e.g. https://yourorg.atlassian.net)",
+        "helpText": "Your Atlassian Cloud site URL (the same site that hosts your Jira Service Management projects)."
+      },
+      {
+        "key": "email",
+        "label": "Email",
+        "type": "email",
+        "required": true,
+        "placeholder": "you@company.com",
+        "helpText": "Email of the Atlassian account the API token belongs to."
+      },
+      {
+        "key": "apiToken",
+        "label": "API Token",
+        "type": "secret",
+        "required": true,
+        "helpText": "Create at the Atlassian API tokens page. Tokens expire (max lifetime 1 year) — set a reminder to rotate the token and update this connection.",
+        "helpUrl": "https://id.atlassian.com/manage-profile/security/api-tokens"
+      }
+    ],
+    "testEndpoint": "/rest/servicedeskapi/servicedesk?limit=1"
+  },
+  "tools": [
+    {
+      "name": "jsm.list_service_desks",
+      "description": "List the service desks on the site (id, project key, project name). Pass serviceDeskId to instead list that desk's request types (id, name, description) — needed before creating a request.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "serviceDeskId": { "type": "string", "description": "When given, list the request types of this service desk instead of the service desks themselves" },
+          "limit": { "type": "integer", "description": "Max items to return (default 50, max 100)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "jsm.list_queue_issues",
+      "description": "List the issues in a service desk queue (key, summary, status, requester, created). Omit queueId to list the desk's queues first. Requires the connection account to hold a licensed JSM agent seat on the project.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "serviceDeskId": { "type": "string", "description": "The service desk id (from jsm.list_service_desks)" },
+          "queueId": { "type": "string", "description": "The queue id; omit to list the available queues instead" },
+          "limit": { "type": "integer", "description": "Max issues to return (default 25, max 100)" }
+        },
+        "required": ["serviceDeskId"]
+      }
+    },
+    {
+      "name": "jsm.get_request",
+      "description": "Get a customer request: current status, request type, reporter, participants, and created date.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "issueIdOrKey": { "type": "string", "description": "The request's issue id or key (e.g. ITS-42)" }
+        },
+        "required": ["issueIdOrKey"]
+      }
+    },
+    {
+      "name": "jsm.get_request_slas",
+      "description": "Get the SLA cycles of a customer request: SLA name, breached flag, ongoing cycle with remaining time, and completed cycles.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "issueIdOrKey": { "type": "string", "description": "The request's issue id or key (e.g. ITS-42)" }
+        },
+        "required": ["issueIdOrKey"]
+      }
+    },
+    {
+      "name": "jsm.create_request",
+      "description": "Create a customer request on a service desk, optionally raising it on behalf of a customer.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "serviceDeskId": { "type": "string", "description": "The service desk id (from jsm.list_service_desks)" },
+          "requestTypeId": { "type": "string", "description": "The request type id (from jsm.list_service_desks with serviceDeskId)" },
+          "summary": { "type": "string", "description": "Short summary of the request" },
+          "description": { "type": "string", "description": "Detailed description of the request" },
+          "raiseOnBehalfOf": { "type": "string", "description": "Account id or email of the customer to raise the request for (requires agent permissions)" }
+        },
+        "required": ["serviceDeskId", "requestTypeId", "summary"]
+      }
+    },
+    {
+      "name": "jsm.add_request_comment",
+      "description": "Add a comment to a customer request. Comments are internal (agent-only) by default; set public to true to make them visible to the customer.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "issueIdOrKey": { "type": "string", "description": "The request's issue id or key (e.g. ITS-42)" },
+          "body": { "type": "string", "description": "Comment text" },
+          "public": { "type": "boolean", "description": "true to make the comment visible to the customer (default false = internal)" }
+        },
+        "required": ["issueIdOrKey", "body"]
+      }
+    },
+    {
+      "name": "jsm.answer_approval",
+      "description": "Approve or decline a pending approval on a customer request. Only works when the connection account is the assigned approver for that approval.",
+      "riskLevel": "high",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "issueIdOrKey": { "type": "string", "description": "The request's issue id or key (e.g. ITS-42)" },
+          "approvalId": { "type": "string", "description": "The approval id on the request" },
+          "decision": { "type": "string", "description": "The decision to record", "enum": ["approve", "decline"] }
+        },
+        "required": ["issueIdOrKey", "approvalId", "decision"]
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "atlassian-jsm", "scopes": ["read", "write"], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

@@ -1,0 +1,158 @@
+{
+  "name": "sonarqube",
+  "version": "1.0.0",
+  "description": "SonarQube integration — browse projects, quality gate status, issues, security hotspots, metrics, and analysis history, and assign issues, via the SonarQube Web API. Uses a static user token sent as a Bearer Authorization header (SonarQube Server 10.0+ and SonarQube Cloud); an optional organization key is appended for SonarQube Cloud. Works on the free Community Build.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "development",
+  "tags": ["sonarqube", "code-quality", "static-analysis", "security", "quality-gate", "coverage", "hotspots", "devops"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "sonarqube",
+    "displayName": "SonarQube",
+    "description": "SonarQube code quality and security analysis",
+    "icon": "sonarqube",
+    "authType": "custom",
+    "category": "developer",
+    "fields": [
+      {
+        "key": "baseUrl",
+        "label": "SonarQube URL",
+        "type": "url",
+        "required": true,
+        "helpText": "Base URL of your SonarQube server (e.g. https://sonarqube.mycompany.com) or https://sonarcloud.io for SonarQube Cloud."
+      },
+      {
+        "key": "token",
+        "label": "User Token",
+        "type": "secret",
+        "required": true,
+        "helpText": "Generate under My Account > Security > Generate Tokens. Sent as a Bearer Authorization header (SonarQube Server 10.0+/Cloud). Note: the /api/authentication/validate endpoint returns HTTP 200 with {\"valid\": false} for a bad token, so connection validation must check the response body, not just the status code.",
+        "helpUrl": "https://docs.sonarsource.com/sonarqube-server/latest/user-guide/managing-tokens/"
+      },
+      {
+        "key": "organization",
+        "label": "Organization Key",
+        "type": "text",
+        "required": false,
+        "helpText": "SonarQube Cloud only: your organization key, appended as an organization= query parameter on every request. Leave empty for self-hosted SonarQube Server."
+      }
+    ],
+    "testEndpoint": "/api/authentication/validate"
+  },
+  "tools": [
+    {
+      "name": "sonar.search_projects",
+      "description": "List SonarQube projects visible to the token, with each project's key, name, and last analysis date.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "filter": { "type": "string", "description": "Optional filter expression (e.g. 'query = \"web\"' or 'ncloc > 1000')" },
+          "limit": { "type": "integer", "description": "Max projects per page (default 25, max 100)" },
+          "page": { "type": "integer", "description": "1-based page number" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "sonar.get_quality_gate_status",
+      "description": "Get the quality gate status of a project (OK/ERROR) plus the failing conditions with metric, actual value, and threshold.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "projectKey": { "type": "string", "description": "Project key (e.g. my-org_my-repo)" },
+          "branch": { "type": "string", "description": "Branch name (defaults to the main branch)" }
+        },
+        "required": ["projectKey"]
+      }
+    },
+    {
+      "name": "sonar.search_issues",
+      "description": "Search issues (bugs, vulnerabilities, code smells), optionally filtered by project, severity, type, status, and assignee.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "projectKey": { "type": "string", "description": "Project key to search within" },
+          "severities": { "type": "string", "description": "Comma-separated severities: INFO,MINOR,MAJOR,CRITICAL,BLOCKER" },
+          "types": { "type": "string", "description": "Comma-separated types: CODE_SMELL,BUG,VULNERABILITY" },
+          "statuses": { "type": "string", "description": "Comma-separated statuses: OPEN,CONFIRMED,REOPENED,RESOLVED,CLOSED" },
+          "assignees": { "type": "string", "description": "Comma-separated assignee logins ('__me__' for the token owner)" },
+          "limit": { "type": "integer", "description": "Max issues per page (default 25, max 100)" },
+          "page": { "type": "integer", "description": "1-based page number" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "sonar.search_hotspots",
+      "description": "Search security hotspots of a project, with security category, vulnerability probability, file, and line.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "projectKey": { "type": "string", "description": "Project key to search hotspots in" },
+          "status": { "type": "string", "description": "Hotspot status filter: TO_REVIEW or REVIEWED", "enum": ["TO_REVIEW", "REVIEWED"] },
+          "limit": { "type": "integer", "description": "Max hotspots per page (default 25, max 100)" },
+          "page": { "type": "integer", "description": "1-based page number" }
+        },
+        "required": ["projectKey"]
+      }
+    },
+    {
+      "name": "sonar.get_measures",
+      "description": "Get current metric values for a component (project, directory, or file) as metric/value pairs. Defaults to coverage, duplicated_lines_density, ncloc, complexity, reliability_rating, security_rating, sqale_rating.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "component": { "type": "string", "description": "Component key (project key, or a file/directory key)" },
+          "metricKeys": { "type": "string", "description": "Comma-separated metric keys to fetch (overrides the default set)" }
+        },
+        "required": ["component"]
+      }
+    },
+    {
+      "name": "sonar.get_analysis_history",
+      "description": "Get the historical values of metrics for a component over past analyses, as date/value series per metric.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "component": { "type": "string", "description": "Component key (usually the project key)" },
+          "metrics": { "type": "string", "description": "Comma-separated metric keys (default: coverage,ncloc)" },
+          "limit": { "type": "integer", "description": "Max history points per page (default 25, max 100)" },
+          "page": { "type": "integer", "description": "1-based page number" }
+        },
+        "required": ["component"]
+      }
+    },
+    {
+      "name": "sonar.assign_issue",
+      "description": "Assign an issue to a user (or unassign it when no assignee is given).",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "issue": { "type": "string", "description": "Issue key to assign" },
+          "assignee": { "type": "string", "description": "Login of the new assignee; omit to unassign" }
+        },
+        "required": ["issue"]
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "sonarqube", "scopes": ["read", "write"], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

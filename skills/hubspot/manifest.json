@@ -1,0 +1,158 @@
+{
+  "name": "hubspot",
+  "version": "1.0.0",
+  "description": "HubSpot CRM integration via the CRM v3 API — search and read contacts, companies, deals, and tickets, list pipelines and owners, create and update CRM records, and log notes on records. Authenticates with a HubSpot private-app access token (Bearer) against api.hubapi.com.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "integration",
+  "tags": ["hubspot", "crm", "contacts", "companies", "deals", "tickets", "sales", "pipelines", "notes"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "hubspot",
+    "displayName": "HubSpot",
+    "description": "HubSpot CRM records via the CRM v3 API (private-app token)",
+    "icon": "hubspot",
+    "authType": "custom",
+    "category": "integration",
+    "fields": [
+      {
+        "key": "accessToken",
+        "label": "Private App Access Token",
+        "type": "secret",
+        "required": true,
+        "helpText": "Access token of a HubSpot private app (Settings > Development > Legacy apps > Create private app) with the CRM scopes this skill needs.",
+        "helpUrl": "https://developers.hubspot.com/docs/guides/apps/private-apps/overview"
+      }
+    ],
+    "testEndpoint": "/crm/v3/objects/contacts?limit=1"
+  },
+  "tools": [
+    {
+      "name": "hubspot.search_objects",
+      "description": "Search CRM records (contacts, companies, deals, or tickets) by a single property filter and/or free-text query. Returns trimmed results plus a nextAfter cursor for paging. Note: HubSpot caps search at ~5 requests/second per token and 10,000 total results per query.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "objectType": { "type": "string", "description": "CRM object type to search", "enum": ["contacts", "companies", "deals", "tickets"] },
+          "query": { "type": "string", "description": "Free-text search across the object's default searchable properties" },
+          "propertyName": { "type": "string", "description": "Property to filter on (e.g. email, dealstage, hs_pipeline)" },
+          "operator": { "type": "string", "description": "Filter operator (default EQ), e.g. EQ, NEQ, GT, GTE, LT, LTE, CONTAINS_TOKEN, HAS_PROPERTY" },
+          "value": { "type": "string", "description": "Filter value (used with propertyName/operator)" },
+          "properties": { "type": "array", "items": { "type": "string" }, "description": "Property names to return for each record" },
+          "limit": { "type": "integer", "description": "Max records to return (default 20, max 100)" },
+          "after": { "type": "string", "description": "Paging cursor from a previous result's nextAfter" }
+        },
+        "required": ["objectType"]
+      }
+    },
+    {
+      "name": "hubspot.get_object",
+      "description": "Get a single CRM record by id, optionally selecting properties and including associated record ids.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "objectType": { "type": "string", "description": "CRM object type", "enum": ["contacts", "companies", "deals", "tickets"] },
+          "objectId": { "type": "string", "description": "The record id" },
+          "properties": { "type": "array", "items": { "type": "string" }, "description": "Property names to return" },
+          "associations": { "type": "array", "items": { "type": "string" }, "description": "Object types to return associated record ids for (e.g. contacts, deals)" }
+        },
+        "required": ["objectType", "objectId"]
+      }
+    },
+    {
+      "name": "hubspot.list_pipelines",
+      "description": "List pipelines (with their stages: id, label, displayOrder) for deals or tickets.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "objectType": { "type": "string", "description": "Pipeline object type", "enum": ["deals", "tickets"] }
+        },
+        "required": ["objectType"]
+      }
+    },
+    {
+      "name": "hubspot.list_owners",
+      "description": "List CRM owners (users records can be assigned to): id, email, first and last name.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "limit": { "type": "integer", "description": "Max owners to return (default 100, max 500)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "hubspot.create_object",
+      "description": "Create a CRM record (contact, company, deal, or ticket) with the given properties.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "objectType": { "type": "string", "description": "CRM object type to create", "enum": ["contacts", "companies", "deals", "tickets"] },
+          "properties": { "type": "object", "description": "Property name -> value map (e.g. {\"email\": \"a@b.co\", \"firstname\": \"Ann\"})" }
+        },
+        "required": ["objectType", "properties"]
+      }
+    },
+    {
+      "name": "hubspot.update_object",
+      "description": "Update properties of an existing CRM record.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "objectType": { "type": "string", "description": "CRM object type", "enum": ["contacts", "companies", "deals", "tickets"] },
+          "objectId": { "type": "string", "description": "The record id to update" },
+          "properties": { "type": "object", "description": "Property name -> value map of fields to change" }
+        },
+        "required": ["objectType", "objectId", "properties"]
+      }
+    },
+    {
+      "name": "hubspot.add_note",
+      "description": "Log a note on a CRM record (contact, company, deal, or ticket). hs_timestamp is required by HubSpot, so pass the note time as an ISO 8601 timestamp.",
+      "riskLevel": "low",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "objectType": { "type": "string", "description": "Type of the record to attach the note to", "enum": ["contacts", "companies", "deals", "tickets"] },
+          "objectId": { "type": "string", "description": "Id of the record to attach the note to" },
+          "body": { "type": "string", "description": "Note body text" },
+          "timestamp": { "type": "string", "description": "Note timestamp (ISO 8601, e.g. 2026-07-18T12:00:00Z) — required by HubSpot's hs_timestamp property" }
+        },
+        "required": ["objectType", "objectId", "body", "timestamp"]
+      }
+    }
+  ],
+  "credentials": [
+    {
+      "service": "hubspot",
+      "scopes": [
+        "crm.objects.contacts.read",
+        "crm.objects.contacts.write",
+        "crm.objects.companies.read",
+        "crm.objects.companies.write",
+        "crm.objects.deals.read",
+        "crm.objects.deals.write",
+        "tickets",
+        "crm.objects.owners.read",
+        "crm.objects.notes.write"
+      ],
+      "required": true,
+      "access": "proxy"
+    }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

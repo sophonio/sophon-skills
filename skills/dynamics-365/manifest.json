@@ -1,0 +1,159 @@
+{
+  "name": "dynamics-365",
+  "version": "1.0.0",
+  "description": "Microsoft Dynamics 365 (Dataverse) integration via the Web API — query and read records with formatted values, inspect entity fields, create and update records, and attach notes. Uses app-only OAuth2 client-credentials auth against your Dataverse environment (scope {environmentUrl}/.default) through an Application User with a Dataverse security role.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "integration",
+  "tags": ["dynamics", "dynamics-365", "dataverse", "crm", "microsoft", "power-platform", "odata", "records"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "dynamics-365",
+    "displayName": "Dynamics 365",
+    "description": "Microsoft Dynamics 365 / Dataverse records via the Web API (app-only)",
+    "icon": "dynamics",
+    "authType": "custom",
+    "category": "integration",
+    "fields": [
+      {
+        "key": "tenantId",
+        "label": "Directory (Tenant) ID",
+        "type": "text",
+        "required": true,
+        "helpText": "The Microsoft Entra tenant ID (GUID) of your organization."
+      },
+      {
+        "key": "clientId",
+        "label": "Application (Client) ID",
+        "type": "text",
+        "required": true,
+        "helpText": "The Application (client) ID of the Entra app registration. No API permissions are needed; access comes from the Application User's Dataverse security role."
+      },
+      {
+        "key": "clientSecret",
+        "label": "Client Secret",
+        "type": "secret",
+        "required": true,
+        "helpText": "A client secret created on the app registration.",
+        "helpUrl": "https://learn.microsoft.com/power-apps/developer/data-platform/use-single-tenant-server-server-authentication"
+      },
+      {
+        "key": "environmentUrl",
+        "label": "Environment URL",
+        "type": "url",
+        "required": true,
+        "helpText": "Your Dataverse environment URL, e.g. https://org12345.crm.dynamics.com (no trailing slash)."
+      }
+    ],
+    "testEndpoint": "/api/data/v9.2/WhoAmI"
+  },
+  "tools": [
+    {
+      "name": "dynamics.query_records",
+      "description": "Query records of an entity set (e.g. accounts, contacts, opportunities) with optional OData $filter, $select, and $orderby. Returns raw values plus formatted display values (as <field>@formatted) where present.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "entitySet": { "type": "string", "description": "Entity set (plural) name, e.g. accounts, contacts, opportunities" },
+          "filter": { "type": "string", "description": "OData $filter expression, e.g. revenue gt 100000" },
+          "select": { "type": "string", "description": "Comma-separated attribute logical names to return, e.g. name,revenue" },
+          "orderby": { "type": "string", "description": "OData $orderby expression, e.g. name asc" },
+          "top": { "type": "integer", "description": "Max records to return (default 25, max 50)" }
+        },
+        "required": ["entitySet"]
+      }
+    },
+    {
+      "name": "dynamics.get_record",
+      "description": "Get a single record by GUID from an entity set, with optional $select. Returns raw values plus formatted display values where present.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "entitySet": { "type": "string", "description": "Entity set (plural) name, e.g. accounts" },
+          "recordId": { "type": "string", "description": "Record GUID, e.g. 00000000-0000-0000-0000-000000000000" },
+          "select": { "type": "string", "description": "Comma-separated attribute logical names to return" }
+        },
+        "required": ["entitySet", "recordId"]
+      }
+    },
+    {
+      "name": "dynamics.whoami",
+      "description": "Verify the connection: returns the calling Application User's UserId, BusinessUnitId, and OrganizationId.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "name": "dynamics.list_entity_fields",
+      "description": "List the readable attributes of an entity (logical name, type, display name) to help construct queries.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "entity": { "type": "string", "description": "Entity logical name (singular), e.g. account, contact" }
+        },
+        "required": ["entity"]
+      }
+    },
+    {
+      "name": "dynamics.create_record",
+      "description": "Create a record in an entity set from a fields object and return the new record's id (from the OData-EntityId response header). Lookup fields use @odata.bind syntax (e.g. \"primarycontactid@odata.bind\": \"/contacts(guid)\") and option-set (choice) fields take integer values.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "entitySet": { "type": "string", "description": "Entity set (plural) name, e.g. accounts" },
+          "fields": { "type": "object", "description": "Attribute logical name -> value map. Lookups use \"<nav>@odata.bind\": \"/<entitySet>(guid)\"; option-sets are integers." }
+        },
+        "required": ["entitySet", "fields"]
+      }
+    },
+    {
+      "name": "dynamics.update_record",
+      "description": "Update fields of an existing record (PATCH with If-Match: * so a missing record fails instead of being created). Lookup fields use @odata.bind syntax; option-set fields take integer values.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "entitySet": { "type": "string", "description": "Entity set (plural) name, e.g. accounts" },
+          "recordId": { "type": "string", "description": "Record GUID to update" },
+          "fields": { "type": "object", "description": "Attribute logical name -> value map of fields to change" }
+        },
+        "required": ["entitySet", "recordId", "fields"]
+      }
+    },
+    {
+      "name": "dynamics.add_annotation",
+      "description": "Attach a note (annotation) to an existing record. The entity logical name is derived from entitySet by simple singularization; if the note fails with an invalid-property error mentioning objectid_..., pass entityLogicalName explicitly.",
+      "riskLevel": "low",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "entitySet": { "type": "string", "description": "Entity set (plural) name of the target record, e.g. accounts" },
+          "recordId": { "type": "string", "description": "GUID of the record to attach the note to" },
+          "noteText": { "type": "string", "description": "Body text of the note" },
+          "subject": { "type": "string", "description": "Optional note subject/title" },
+          "entityLogicalName": { "type": "string", "description": "Entity logical name (singular) if it cannot be derived from entitySet (e.g. opportunity for opportunities); pass it when the note fails with an invalid objectid_... property error" }
+        },
+        "required": ["entitySet", "recordId", "noteText"]
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "dynamics-365", "scopes": [".default"], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

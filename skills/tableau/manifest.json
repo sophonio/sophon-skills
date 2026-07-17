@@ -1,0 +1,151 @@
+{
+  "name": "tableau",
+  "version": "1.0.0",
+  "description": "Tableau integration via the Tableau REST API (v3.23) — list workbooks, views, data sources, and background jobs, pull view data as structured rows, search content by name, and trigger full extract refreshes. Authenticates with a Personal Access Token (PAT): the PAT name and secret are exchanged at /auth/signin for a short-lived session token per invocation. Works with Tableau Cloud and Tableau Server 2024.2 or later.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "data",
+  "tags": ["tableau", "analytics", "dashboards", "workbooks", "datasources", "business-intelligence", "reporting", "rest-api"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "tableau",
+    "displayName": "Tableau",
+    "description": "Tableau Cloud / Server content and data via the REST API (PAT auth)",
+    "icon": "tableau",
+    "authType": "custom",
+    "category": "integration",
+    "fields": [
+      {
+        "key": "baseUrl",
+        "label": "Tableau URL",
+        "type": "url",
+        "required": true,
+        "helpText": "Your Tableau Cloud pod URL (e.g. https://10ax.online.tableau.com) or your Tableau Server URL."
+      },
+      {
+        "key": "siteContentUrl",
+        "label": "Site Content URL",
+        "type": "text",
+        "required": false,
+        "helpText": "The site name as it appears in your Tableau URLs (the value after /site/). Leave empty for the default site on Tableau Server; required on Tableau Cloud."
+      },
+      {
+        "key": "patName",
+        "label": "Personal Access Token Name",
+        "type": "text",
+        "required": true,
+        "helpText": "The name you gave the Personal Access Token in My Account Settings > Personal Access Tokens."
+      },
+      {
+        "key": "patSecret",
+        "label": "Personal Access Token Secret",
+        "type": "secret",
+        "required": true,
+        "helpText": "The token secret shown once when the PAT was created.",
+        "helpUrl": "https://help.tableau.com/current/pro/desktop/en-us/useracct.htm"
+      }
+    ],
+    "testEndpoint": "/api/3.23/auth/signin"
+  },
+  "tools": [
+    {
+      "name": "tableau.list_workbooks",
+      "description": "List workbooks on the site with project, owner, last-update time, and web URL.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "limit": { "type": "integer", "description": "Max workbooks to return (default 25, max 100)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "tableau.list_views",
+      "description": "List views on the site, or the views of one workbook when workbookId is given.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "workbookId": { "type": "string", "description": "Workbook id (LUID) to list views for; omit to list all views on the site" },
+          "limit": { "type": "integer", "description": "Max views to return (default 25, max 100)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "tableau.list_datasources",
+      "description": "List published data sources on the site with type, project, and last-update time.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "limit": { "type": "integer", "description": "Max data sources to return (default 25, max 100)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "tableau.get_view_data",
+      "description": "Get the underlying data of a view as structured rows (columns, rows, count). Rows beyond the cap are dropped and flagged with truncated=true.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "viewId": { "type": "string", "description": "View id (LUID) to fetch data for" },
+          "maxRows": { "type": "integer", "description": "Max rows to return (default 200, max 1000)" }
+        },
+        "required": ["viewId"]
+      }
+    },
+    {
+      "name": "tableau.search_content",
+      "description": "Search workbooks, views, and data sources whose name contains the query (case-insensitive), merged into one result. Matches client-side over the first 100 items of each content type.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string", "description": "Text to match against content names (case-insensitive substring)" },
+          "limit": { "type": "integer", "description": "Max results per content type (default 25, max 100)" }
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "tableau.list_jobs",
+      "description": "List background jobs (extract refreshes, subscriptions) with type, status, and creation time — useful for refresh-failure triage.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "limit": { "type": "integer", "description": "Max jobs to return (default 25, max 100)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "tableau.refresh_datasource",
+      "description": "Trigger an extract refresh for a published data source. This is always a FULL refresh (not incremental) and queues a background job on the server.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "datasourceId": { "type": "string", "description": "Data source id (LUID) to refresh" }
+        },
+        "required": ["datasourceId"]
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "tableau", "scopes": ["read", "write"], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}
