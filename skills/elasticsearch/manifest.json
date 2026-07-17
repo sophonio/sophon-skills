@@ -1,0 +1,178 @@
+{
+  "name": "elasticsearch",
+  "version": "1.0.0",
+  "description": "Elasticsearch integration — search with the Query DSL, run ES|QL queries, count and fetch documents, list indices, inspect mappings and cluster health, and index documents over the REST API. Authenticates with an API key (Authorization: ApiKey) or HTTP basic auth (username + password), and supports custom CA certificates for self-signed TLS. Works with Elastic Cloud, Elastic serverless, self-managed Elasticsearch 8/9, and OpenSearch (basic auth). AWS OpenSearch domains in IAM/SigV4-only mode are not supported.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "data",
+  "tags": ["elasticsearch", "opensearch", "search", "query-dsl", "esql", "indices", "full-text-search", "elastic"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "elasticsearch",
+    "displayName": "Elasticsearch",
+    "description": "Search, query, and index documents in an Elasticsearch or OpenSearch cluster",
+    "icon": "elasticsearch",
+    "authType": "custom",
+    "category": "integration",
+    "fields": [
+      {
+        "key": "baseUrl",
+        "label": "Cluster URL",
+        "type": "url",
+        "required": true,
+        "helpText": "Base URL of the cluster REST API, e.g. https://my-cluster.es.us-east-1.aws.elastic.cloud:443 or https://localhost:9200."
+      },
+      {
+        "key": "apiKey",
+        "label": "API Key",
+        "type": "secret",
+        "required": false,
+        "helpText": "Base64 API key (the encoded id:key string Kibana shows when you create an API key). If set, it is used instead of username/password.",
+        "helpUrl": "https://www.elastic.co/guide/en/kibana/current/api-keys.html"
+      },
+      {
+        "key": "username",
+        "label": "Username",
+        "type": "text",
+        "required": false,
+        "helpText": "Username for HTTP basic auth (e.g. elastic). Required together with password when no API key is set. Use this for OpenSearch."
+      },
+      {
+        "key": "password",
+        "label": "Password",
+        "type": "secret",
+        "required": false,
+        "helpText": "Password for HTTP basic auth. Required together with username when no API key is set."
+      },
+      {
+        "key": "caCert",
+        "label": "CA Certificate (PEM)",
+        "type": "text",
+        "required": false,
+        "helpText": "PEM-encoded CA certificate to trust, for clusters with self-signed or private-CA TLS certificates."
+      },
+      {
+        "key": "insecureTls",
+        "label": "Skip TLS Verification",
+        "type": "text",
+        "required": false,
+        "helpText": "Set to 'true' to skip TLS certificate verification (not recommended — prefer providing the CA certificate)."
+      }
+    ],
+    "testEndpoint": "/"
+  },
+  "tools": [
+    {
+      "name": "es.search",
+      "description": "Search an index with the Elasticsearch Query DSL and return trimmed hits (id, index, score, source) plus totals and any aggregation results.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "index": { "type": "string", "description": "Index name, alias, comma-separated list, or wildcard pattern (e.g. logs-*)" },
+          "query": { "type": "object", "description": "Query DSL query object (e.g. {\"match\": {\"message\": \"error\"}}). Omit to match all documents." },
+          "size": { "type": "integer", "description": "Max hits to return (default 10, max 100)" },
+          "sort": { "type": "array", "items": {}, "description": "Query DSL sort clause passed through as-is (e.g. [{\"@timestamp\": \"desc\"}])" },
+          "aggs": { "type": "object", "description": "Query DSL aggregations object passed through as-is" }
+        },
+        "required": ["index"]
+      }
+    },
+    {
+      "name": "es.esql_query",
+      "description": "Run an ES|QL query (e.g. FROM logs-* | WHERE level == \"error\" | LIMIT 10) and return columns and row values. Requires Elasticsearch 8.11+; not available on OpenSearch.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string", "description": "The ES|QL query string" }
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "es.count",
+      "description": "Count documents in an index, optionally filtered by a Query DSL query.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "index": { "type": "string", "description": "Index name, alias, comma-separated list, or wildcard pattern" },
+          "query": { "type": "object", "description": "Query DSL query object to filter the count. Omit to count all documents." }
+        },
+        "required": ["index"]
+      }
+    },
+    {
+      "name": "es.get_document",
+      "description": "Get a single document by index and document id.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "index": { "type": "string", "description": "Index name" },
+          "id": { "type": "string", "description": "Document id" }
+        },
+        "required": ["index", "id"]
+      }
+    },
+    {
+      "name": "es.list_indices",
+      "description": "List indices in the cluster with health, document count, and store size, sorted by index name.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "name": "es.get_mapping",
+      "description": "Get the field mappings (properties) of an index.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "index": { "type": "string", "description": "Index name, alias, or wildcard pattern" }
+        },
+        "required": ["index"]
+      }
+    },
+    {
+      "name": "es.cluster_health",
+      "description": "Get cluster health: status, node counts, and shard statistics.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "name": "es.index_document",
+      "description": "Index (create or overwrite) a document. With an id it is written via PUT to that id, overwriting any existing document; without an id a new document is created with an auto-generated id.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "index": { "type": "string", "description": "Index name to write to" },
+          "document": { "type": "object", "description": "The document body as a JSON object" },
+          "id": { "type": "string", "description": "Document id. If given, overwrites any existing document with that id; if omitted, an id is auto-generated." }
+        },
+        "required": ["index", "document"]
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "elasticsearch", "scopes": ["read", "write"], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

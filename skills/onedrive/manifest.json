@@ -1,0 +1,153 @@
+{
+  "name": "onedrive",
+  "version": "1.0.0",
+  "description": "OneDrive for Business integration via Microsoft Graph — browse folders, search and read files, create folders, upload text files, and create organization-scoped sharing links on a user's drive. Uses app-only (client-credentials) auth against https://graph.microsoft.com/v1.0/users/{userId}/drive and works with Microsoft 365 work/school accounts (not consumer OneDrive personal). Requires the Files.Read.All application permission for read tools and Files.ReadWrite.All for write tools, both with admin consent.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "integration",
+  "tags": ["onedrive", "files", "storage", "microsoft365", "microsoft-graph", "sharepoint", "documents", "office365"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "microsoft-graph",
+    "displayName": "OneDrive",
+    "description": "OneDrive for Business files via Microsoft Graph (app-only); test endpoint '/' resolves to /users/{userId}/drive",
+    "icon": "onedrive",
+    "authType": "custom",
+    "category": "integration",
+    "fields": [
+      {
+        "key": "tenantId",
+        "label": "Directory (Tenant) ID",
+        "type": "text",
+        "required": true,
+        "helpText": "The Azure AD tenant ID (GUID) of your Microsoft 365 organization."
+      },
+      {
+        "key": "clientId",
+        "label": "Application (Client) ID",
+        "type": "text",
+        "required": true,
+        "helpText": "The Application (client) ID of the app registration."
+      },
+      {
+        "key": "clientSecret",
+        "label": "Client Secret",
+        "type": "secret",
+        "required": true,
+        "helpText": "A client secret for the app registration. Requires the Files.Read.All application permission with admin consent; Files.ReadWrite.All is needed for the write tools.",
+        "helpUrl": "https://learn.microsoft.com/en-us/graph/auth-v2-service"
+      },
+      {
+        "key": "userId",
+        "label": "User (UPN/email)",
+        "type": "text",
+        "required": true,
+        "helpText": "The OneDrive owner to operate on (app-only requires an explicit user)."
+      }
+    ],
+    "testEndpoint": "/"
+  },
+  "tools": [
+    {
+      "name": "onedrive.list_folder",
+      "description": "List the items (files and folders) in a OneDrive folder. Lists the drive root when no path is given.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "path": { "type": "string", "description": "Drive-relative folder path (e.g. Documents/Reports). Omit to list the root." },
+          "limit": { "type": "integer", "description": "Max items to return (default 25, max 100)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "onedrive.search_files",
+      "description": "Search the user's OneDrive for files and folders matching a text query (matches names and file content).",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string", "description": "Search text (e.g. a file name or keywords)" },
+          "limit": { "type": "integer", "description": "Max items to return (default 25, max 100)" }
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "onedrive.get_item",
+      "description": "Get metadata for a single file or folder by item id or drive-relative path, including webUrl, size, and parent path.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "itemId": { "type": "string", "description": "The drive item id (preferred if known)" },
+          "path": { "type": "string", "description": "Drive-relative path (e.g. Documents/Reports/q3.docx); used when itemId is not given" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "onedrive.read_file",
+      "description": "Download a file's content and return it as UTF-8 text (capped at 512 KB). Refuses binary files — use onedrive.get_item and the webUrl for those.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "itemId": { "type": "string", "description": "The drive item id of the file to read" }
+        },
+        "required": ["itemId"]
+      }
+    },
+    {
+      "name": "onedrive.create_folder",
+      "description": "Create a new folder in the drive root or under a parent folder. Fails instead of renaming if a sibling with the same name already exists.",
+      "riskLevel": "low",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "description": "Name of the folder to create" },
+          "parentPath": { "type": "string", "description": "Drive-relative path of the parent folder (e.g. Documents). Omit to create in the root." }
+        },
+        "required": ["name"]
+      }
+    },
+    {
+      "name": "onedrive.upload_file",
+      "description": "Upload text content as a file at a drive-relative path, creating or replacing the file (max 1 MB of text).",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "path": { "type": "string", "description": "Drive-relative destination path including file name (e.g. Documents/notes.txt)" },
+          "content": { "type": "string", "description": "Text content of the file (UTF-8, max 1 MB)" }
+        },
+        "required": ["path", "content"]
+      }
+    },
+    {
+      "name": "onedrive.create_share_link",
+      "description": "Create a view-only sharing link for a file or folder. App-only auth creates organization-scoped links (usable by people signed in to the tenant), not anonymous links.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "itemId": { "type": "string", "description": "The drive item id to share" }
+        },
+        "required": ["itemId"]
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "microsoft-graph", "scopes": ["Files.Read.All", "Files.ReadWrite.All"], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

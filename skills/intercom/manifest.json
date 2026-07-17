@@ -1,0 +1,163 @@
+{
+  "name": "intercom",
+  "version": "1.0.0",
+  "description": "Intercom customer-messaging integration — search and read conversations and contacts, list Help Center articles, add internal notes, reply to customers, and close/snooze/assign conversations. Authenticates with a static internal-app Access Token (Authorization: Bearer) pinned to Intercom API version 2.15, with a regional base URL (api.intercom.io, api.eu.intercom.io, or api.au.intercom.io).",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "integration",
+  "tags": ["intercom", "support", "conversations", "contacts", "helpdesk", "customer-messaging", "articles", "inbox"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "intercom",
+    "displayName": "Intercom",
+    "description": "Intercom conversations, contacts, and Help Center articles via an internal-app access token",
+    "icon": "intercom",
+    "authType": "custom",
+    "category": "integration",
+    "fields": [
+      {
+        "key": "baseUrl",
+        "label": "API Base URL",
+        "type": "url",
+        "required": true,
+        "placeholder": "https://api.intercom.io",
+        "helpText": "Regional Intercom API host: https://api.intercom.io (US), https://api.eu.intercom.io (EU), or https://api.au.intercom.io (Australia). Must match your workspace's data-hosting region."
+      },
+      {
+        "key": "accessToken",
+        "label": "Access Token",
+        "type": "secret",
+        "required": true,
+        "helpText": "Access Token of YOUR OWN internal app, from Developer Hub > your app > Configure > Authentication. Intercom's terms forbid sharing internal-app tokens — each user must create their own app.",
+        "helpUrl": "https://developers.intercom.com/docs/build-an-integration/learn-more/authentication"
+      }
+    ],
+    "testEndpoint": "/me"
+  },
+  "tools": [
+    {
+      "name": "intercom.search_conversations",
+      "description": "Search conversations by state, assignee, and/or last-updated time. Returns one page of trimmed conversation summaries plus a cursor for the next page.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "state": { "type": "string", "description": "Conversation state to filter by", "enum": ["open", "closed", "snoozed"] },
+          "assigneeId": { "type": "string", "description": "Admin id the conversation is assigned to (admin_assignee_id)" },
+          "updatedSince": { "type": "integer", "description": "Only conversations updated after this Unix epoch timestamp (seconds)" },
+          "limit": { "type": "integer", "description": "Max conversations per page (default 20, max 50)" },
+          "cursor": { "type": "string", "description": "Pagination cursor (nextCursor from a previous page)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "intercom.get_conversation",
+      "description": "Get a conversation's state, subject, source snippet, contact ids, assignee, and up to the 20 most recent conversation parts with HTML stripped to plain text.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "conversationId": { "type": "string", "description": "The conversation id" }
+        },
+        "required": ["conversationId"]
+      }
+    },
+    {
+      "name": "intercom.search_contacts",
+      "description": "Search contacts by email, or by any searchable contact attribute (field/operator/value). Returns trimmed contact summaries plus a pagination cursor.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "email": { "type": "string", "description": "Contact email to match exactly (shortcut for field=email)" },
+          "field": { "type": "string", "description": "Searchable contact attribute to filter on (e.g. name, external_id, role, custom_attributes.plan) when email is not used" },
+          "value": { "type": "string", "description": "Value to compare the field against. For the IN/NIN operators, pass a comma-separated list (e.g. \"user,lead\")" },
+          "operator": { "type": "string", "description": "Comparison operator (default =)", "enum": ["=", "!=", "IN", "NIN", ">", "<", "~", "!~", "^", "$"] },
+          "limit": { "type": "integer", "description": "Max contacts per page (default 20, max 50)" },
+          "cursor": { "type": "string", "description": "Pagination cursor (nextCursor from a previous page)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "intercom.get_contact",
+      "description": "Get a contact's profile including location, associated company ids, and custom attributes.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "contactId": { "type": "string", "description": "The contact id" }
+        },
+        "required": ["contactId"]
+      }
+    },
+    {
+      "name": "intercom.list_articles",
+      "description": "List Help Center articles (id, title, state, url). This is a paged listing, not a full-text search.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "limit": { "type": "integer", "description": "Articles per page (default 25, max 50)" },
+          "page": { "type": "integer", "description": "Page number to fetch (default 1)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "intercom.add_note",
+      "description": "Add an internal note to a conversation. Notes are visible to teammates only and are never shown to the customer. The authoring admin is resolved automatically from the access token.",
+      "riskLevel": "low",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "conversationId": { "type": "string", "description": "The conversation id to add the note to" },
+          "body": { "type": "string", "description": "Note text (HTML allowed)" }
+        },
+        "required": ["conversationId", "body"]
+      }
+    },
+    {
+      "name": "intercom.reply_customer",
+      "description": "Send a customer-facing reply to a conversation. WARNING: this delivers a real message to the customer (email/in-app) and cannot be unsent — use intercom.add_note for internal-only remarks.",
+      "riskLevel": "high",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "conversationId": { "type": "string", "description": "The conversation id to reply to" },
+          "body": { "type": "string", "description": "Reply text sent to the customer (HTML allowed)" }
+        },
+        "required": ["conversationId", "body"]
+      }
+    },
+    {
+      "name": "intercom.update_conversation",
+      "description": "Close, snooze, or assign a conversation. snooze requires snoozedUntil (epoch seconds); assign requires assigneeId (and assigneeType admin or team).",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "conversationId": { "type": "string", "description": "The conversation id to update" },
+          "action": { "type": "string", "description": "The management action to perform", "enum": ["close", "snooze", "assign"] },
+          "snoozedUntil": { "type": "integer", "description": "Unix epoch timestamp (seconds) to snooze until (required for action=snooze)" },
+          "assigneeId": { "type": "string", "description": "Admin or team id to assign the conversation to (required for action=assign)" },
+          "assigneeType": { "type": "string", "description": "Whether assigneeId is an admin or a team (default admin)", "enum": ["admin", "team"] }
+        },
+        "required": ["conversationId", "action"]
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "intercom", "scopes": ["read", "write"], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

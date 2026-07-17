@@ -86,6 +86,16 @@ into `.sophon-skill` artifacts, and the docs for publishing them.
 | [`databricks`](skills/databricks) | data | Execute SQL on warehouses, browse Unity Catalog, and trigger jobs |
 | [`okta`](skills/okta) | integration | Search Okta users/groups/apps and query the system log |
 | [`azure-devops`](skills/azure-devops) | development | Azure DevOps work items (WIQL), builds, PRs, and pipeline runs |
+| [`splunk`](skills/splunk) | data | Run SPL searches and browse indexes and saved searches (auth token) |
+| [`elasticsearch`](skills/elasticsearch) | data | Query Elasticsearch/OpenSearch — Query DSL, ES\|QL, mappings, cluster health |
+| [`powerbi`](skills/powerbi) | data | List Power BI workspaces and reports, run DAX queries, trigger refreshes |
+| [`onedrive`](skills/onedrive) | integration | Browse, search, read, and upload OneDrive for Business files (Graph app-only) |
+| [`bitbucket`](skills/bitbucket) | development | Bitbucket Cloud repos, pull requests, diffs, and Pipelines runs |
+| [`mongodb-atlas`](skills/mongodb-atlas) | data | MongoDB Atlas operations — clusters, alerts, metrics, events (service account) |
+| [`jenkins`](skills/jenkins) | development | Inspect Jenkins jobs, builds, and queue; read console logs; trigger builds |
+| [`intercom`](skills/intercom) | integration | Search Intercom conversations and contacts, add notes, reply, and triage |
+| [`freshdesk`](skills/freshdesk) | integration | Freshdesk ticket triage — list, search, create, update, and annotate |
+| [`freshservice`](skills/freshservice) | integration | Freshservice ITSM — tickets, change requests, and asset lookups |
 
 **Research & utilities**
 

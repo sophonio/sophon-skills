@@ -1,0 +1,151 @@
+{
+  "name": "bitbucket",
+  "version": "1.0.0",
+  "description": "Bitbucket Cloud integration — list repositories, browse and review pull requests (details, approvals, unified diffs), read files at any ref, list Pipelines runs, and add pull request comments for a workspace. Authenticates with HTTP Basic using your Atlassian account email plus a scoped Atlassian API token (app passwords were retired 2026-07-28).",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "development",
+  "tags": ["bitbucket", "atlassian", "git", "repositories", "pull-requests", "code-review", "pipelines", "ci"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "bitbucket",
+    "displayName": "Bitbucket",
+    "description": "Bitbucket Cloud repositories, pull requests, and Pipelines",
+    "icon": "bitbucket",
+    "authType": "custom",
+    "category": "developer",
+    "fields": [
+      {
+        "key": "email",
+        "label": "Atlassian Account Email",
+        "type": "email",
+        "required": true,
+        "helpText": "The email of your Atlassian account (used as the Basic auth username — not your Bitbucket username)."
+      },
+      {
+        "key": "apiToken",
+        "label": "API Token",
+        "type": "secret",
+        "required": true,
+        "helpText": "A scoped Atlassian API token with the Bitbucket scopes read:account, read:repository:bitbucket, read:pullrequest:bitbucket, write:pullrequest:bitbucket, and read:pipeline:bitbucket. Tokens expire (max 1 year).",
+        "helpUrl": "https://id.atlassian.com/manage-profile/security/api-tokens"
+      },
+      {
+        "key": "workspace",
+        "label": "Workspace",
+        "type": "text",
+        "required": true,
+        "helpText": "Workspace ID (the slug in bitbucket.org/{workspace}/...)"
+      }
+    ],
+    "testEndpoint": "/user"
+  },
+  "tools": [
+    {
+      "name": "bitbucket.list_repos",
+      "description": "List repositories in the workspace, most recently updated first. Optionally filter with a Bitbucket query expression.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string", "description": "Bitbucket filter query (e.g. name ~ \"api\" or language = \"python\")" },
+          "limit": { "type": "integer", "description": "Max repositories to return (default 25, max 50)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "bitbucket.list_pull_requests",
+      "description": "List pull requests in a repository, optionally filtered by state.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "repo": { "type": "string", "description": "Repository slug within the workspace" },
+          "state": { "type": "string", "description": "Filter by pull request state (default OPEN)", "enum": ["OPEN", "MERGED", "DECLINED", "SUPERSEDED"] },
+          "limit": { "type": "integer", "description": "Max pull requests to return (default 25, max 50)" }
+        },
+        "required": ["repo"]
+      }
+    },
+    {
+      "name": "bitbucket.get_pull_request",
+      "description": "Get details of a pull request, including its reviewers and a participants/approval summary.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "repo": { "type": "string", "description": "Repository slug within the workspace" },
+          "id": { "type": "integer", "description": "Pull request ID" }
+        },
+        "required": ["repo", "id"]
+      }
+    },
+    {
+      "name": "bitbucket.get_pr_diff",
+      "description": "Get the unified diff of a pull request as plain text (truncated to about 100 KB with a truncated flag).",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "repo": { "type": "string", "description": "Repository slug within the workspace" },
+          "id": { "type": "integer", "description": "Pull request ID" }
+        },
+        "required": ["repo", "id"]
+      }
+    },
+    {
+      "name": "bitbucket.get_file",
+      "description": "Read a file's raw contents from a repository at a given ref (branch, tag, or commit). Capped at about 256 KB with a truncated flag.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "repo": { "type": "string", "description": "Repository slug within the workspace" },
+          "ref": { "type": "string", "description": "Branch name, tag, or commit hash (e.g. main)" },
+          "path": { "type": "string", "description": "File path within the repository (e.g. src/app.py)" }
+        },
+        "required": ["repo", "ref", "path"]
+      }
+    },
+    {
+      "name": "bitbucket.list_pipeline_runs",
+      "description": "List Bitbucket Pipelines runs for a repository, most recent first, with state, result, and target branch.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "repo": { "type": "string", "description": "Repository slug within the workspace" },
+          "limit": { "type": "integer", "description": "Max pipeline runs to return (default 25, max 50)" }
+        },
+        "required": ["repo"]
+      }
+    },
+    {
+      "name": "bitbucket.add_pr_comment",
+      "description": "Add a comment to a pull request (additive; does not modify code or PR state).",
+      "riskLevel": "low",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "repo": { "type": "string", "description": "Repository slug within the workspace" },
+          "id": { "type": "integer", "description": "Pull request ID" },
+          "text": { "type": "string", "description": "Comment text (plain text / markdown)" }
+        },
+        "required": ["repo", "id", "text"]
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "bitbucket", "scopes": ["read:account", "read:repository:bitbucket", "read:pullrequest:bitbucket", "write:pullrequest:bitbucket", "read:pipeline:bitbucket"], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

@@ -1,0 +1,165 @@
+{
+  "name": "mongodb-atlas",
+  "version": "1.0.0",
+  "description": "MongoDB Atlas control-plane integration via the Atlas Administration API v2 — list projects and clusters, inspect cluster configuration and connection strings, monitor open alerts and acknowledge them, pull process metrics (CPU, connections, opcounters), review project activity events, and list database users. Uses OAuth2 client-credentials auth with an Atlas Service Account (short-lived tokens minted per call) against a pinned API version (2025-03-12). Control-plane/ops only: the Atlas Data API reached end-of-life in September 2025, so this skill includes no document CRUD tools.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "data",
+  "tags": ["mongodb", "atlas", "database", "clusters", "alerts", "metrics", "monitoring", "devops", "cloud", "ops"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "mongodb-atlas",
+    "displayName": "MongoDB Atlas",
+    "description": "MongoDB Atlas cluster operations via the Atlas Administration API (service account)",
+    "icon": "mongodb",
+    "authType": "custom",
+    "category": "integration",
+    "fields": [
+      {
+        "key": "clientId",
+        "label": "Service Account Client ID",
+        "type": "text",
+        "required": true,
+        "helpText": "The client ID of an Atlas Service Account (created by an Organization Owner under Organization Settings).",
+        "helpUrl": "https://www.mongodb.com/docs/atlas/configure-api-access/"
+      },
+      {
+        "key": "clientSecret",
+        "label": "Service Account Client Secret",
+        "type": "secret",
+        "required": true,
+        "helpText": "The service account client secret (shown once at creation). Used for the OAuth2 client-credentials grant."
+      },
+      {
+        "key": "projectId",
+        "label": "Project ID",
+        "type": "text",
+        "required": false,
+        "helpText": "Default project (group) ID; tools accept an override"
+      }
+    ],
+    "testEndpoint": "/groups"
+  },
+  "tools": [
+    {
+      "name": "atlas.list_projects",
+      "description": "List Atlas projects (groups) visible to the service account, with id, name, cluster count, and creation date.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "limit": { "type": "integer", "description": "Max projects to return (default 25, max 100)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "atlas.list_clusters",
+      "description": "List clusters in a project with name, state, MongoDB version, instance size, and paused flag.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "projectId": { "type": "string", "description": "Project (group) ID; defaults to the connection's Project ID" },
+          "limit": { "type": "integer", "description": "Max clusters to return (default 25, max 100)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "atlas.get_cluster",
+      "description": "Get one cluster's configuration (state, version, instance size, backup, disk) and its SRV connection string.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "clusterName": { "type": "string", "description": "Cluster name (e.g. Cluster0)" },
+          "projectId": { "type": "string", "description": "Project (group) ID; defaults to the connection's Project ID" }
+        },
+        "required": ["clusterName"]
+      }
+    },
+    {
+      "name": "atlas.list_alerts",
+      "description": "List OPEN alerts for a project with id, event type, status, creation time, and metric name.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "projectId": { "type": "string", "description": "Project (group) ID; defaults to the connection's Project ID" },
+          "limit": { "type": "integer", "description": "Max alerts to return (default 25, max 100)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "atlas.acknowledge_alert",
+      "description": "Acknowledge an open alert until a given date-time, optionally with a comment. Reversible (an alert can be unacknowledged by setting a past date).",
+      "riskLevel": "low",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "alertId": { "type": "string", "description": "The alert ID to acknowledge" },
+          "acknowledgedUntil": { "type": "string", "description": "Acknowledge until this ISO 8601 date-time (e.g. 2026-07-18T00:00:00Z)" },
+          "comment": { "type": "string", "description": "Optional acknowledgement comment" },
+          "projectId": { "type": "string", "description": "Project (group) ID; defaults to the connection's Project ID" }
+        },
+        "required": ["alertId", "acknowledgedUntil"]
+      }
+    },
+    {
+      "name": "atlas.get_process_metrics",
+      "description": "Get recent measurements for a MongoDB process (CPU, connections, opcounters by default) as trimmed time series.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "processId": { "type": "string", "description": "Process identifier as host:port (e.g. cluster0-shard-00-00.ab1cd.mongodb.net:27017)" },
+          "metrics": { "type": "array", "items": { "type": "string" }, "description": "Atlas measurement names (default: PROCESS_CPU_USER, CONNECTIONS, OPCOUNTER_QUERY, OPCOUNTER_INSERT, OPCOUNTER_UPDATE, OPCOUNTER_DELETE)" },
+          "granularity": { "type": "string", "description": "ISO 8601 duration between data points (default PT1M)", "enum": ["PT1M", "PT5M", "PT1H", "P1D"] },
+          "period": { "type": "string", "description": "ISO 8601 duration to look back from now (default PT1H, e.g. PT1H, PT24H, P2D)" },
+          "projectId": { "type": "string", "description": "Project (group) ID; defaults to the connection's Project ID" }
+        },
+        "required": ["processId"]
+      }
+    },
+    {
+      "name": "atlas.list_events",
+      "description": "List recent project activity events with event type, creation time, and the acting user or API key.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "projectId": { "type": "string", "description": "Project (group) ID; defaults to the connection's Project ID" },
+          "limit": { "type": "integer", "description": "Max events to return (default 25, max 100)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "atlas.list_database_users",
+      "description": "List database users in a project with username, roles, and auth database. Never returns any password material.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "projectId": { "type": "string", "description": "Project (group) ID; defaults to the connection's Project ID" },
+          "limit": { "type": "integer", "description": "Max users to return (default 25, max 100)" }
+        },
+        "required": []
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "mongodb-atlas", "scopes": ["ORG_READ_ONLY", "GROUP_READ_ONLY", "GROUP_ALERT_ACKNOWLEDGER"], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

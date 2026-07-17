@@ -1,0 +1,151 @@
+{
+  "name": "freshdesk",
+  "version": "1.0.0",
+  "description": "Freshdesk helpdesk integration via the Freshdesk REST API v2 — list, search, create, and update support tickets, read ticket conversations, add private/public notes, and look up contacts. Authenticates with a personal Freshdesk API key sent as HTTP Basic auth against your portal URL. Ticket status and priority codes are mapped to readable names (Open/Pending/Resolved/Closed, Low/Medium/High/Urgent) in results.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "integration",
+  "tags": ["freshdesk", "freshworks", "helpdesk", "tickets", "support", "customer-service", "contacts", "notes"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "freshdesk",
+    "displayName": "Freshdesk",
+    "description": "Freshdesk helpdesk tickets and contacts via the REST API v2",
+    "icon": "freshdesk",
+    "authType": "custom",
+    "category": "integration",
+    "fields": [
+      {
+        "key": "baseUrl",
+        "label": "Freshdesk URL",
+        "type": "url",
+        "required": true,
+        "helpText": "Your Freshdesk portal URL, e.g. https://yourcompany.freshdesk.com"
+      },
+      {
+        "key": "apiKey",
+        "label": "API Key",
+        "type": "secret",
+        "required": true,
+        "helpText": "Your personal Freshdesk API key: log in, open Profile Settings, and click View API key.",
+        "helpUrl": "https://support.freshdesk.com/support/solutions/articles/215517-how-to-find-your-api-key"
+      }
+    ],
+    "testEndpoint": "/api/v2/agents/me"
+  },
+  "tools": [
+    {
+      "name": "freshdesk.list_tickets",
+      "description": "List tickets in the helpdesk, optionally filtered by a predefined view, an updated-since timestamp, and a sort order. Status and priority are returned as readable names.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "filter": { "type": "string", "description": "Predefined ticket view to filter by", "enum": ["new_and_my_open", "watching", "spam", "deleted"] },
+          "updatedSince": { "type": "string", "description": "Only tickets updated at or after this ISO 8601 timestamp (e.g. 2026-07-01T00:00:00Z)" },
+          "orderBy": { "type": "string", "description": "Field to sort by (default created_at)", "enum": ["created_at", "due_by", "updated_at", "status"] },
+          "orderType": { "type": "string", "description": "Sort direction (default desc)", "enum": ["asc", "desc"] },
+          "limit": { "type": "integer", "description": "Max tickets to return (default 30, max 100)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "freshdesk.get_ticket",
+      "description": "Get a ticket's details (subject, description, status, priority, requester) together with its conversation thread of replies and notes.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "ticketId": { "type": "integer", "description": "The numeric ticket id" },
+          "conversationLimit": { "type": "integer", "description": "Max conversation entries to return (default 30, max 100)" }
+        },
+        "required": ["ticketId"]
+      }
+    },
+    {
+      "name": "freshdesk.search_tickets",
+      "description": "Search tickets with a Freshdesk query expression, e.g. status:2 AND priority:4 or tag:'billing'. The query may be at most 510 characters (the 512-character API limit includes the automatically added surrounding quotes).",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string", "description": "Freshdesk ticket search expression (without surrounding double quotes — they are added automatically), e.g. status:2 AND priority:4. Max 510 characters." }
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "freshdesk.search_contacts",
+      "description": "Find contacts either by a Freshdesk query expression or by exact email address.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string", "description": "Freshdesk contact search expression (without surrounding double quotes), e.g. name:'Jane'. Max 510 characters." },
+          "email": { "type": "string", "description": "Exact email address to look up (used instead of query when provided)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "freshdesk.create_ticket",
+      "description": "Create a new support ticket with a subject, description, and requester email; optionally set priority, status, and tags.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "subject": { "type": "string", "description": "Ticket subject line" },
+          "description": { "type": "string", "description": "Ticket body (HTML allowed)" },
+          "email": { "type": "string", "description": "Requester's email address (a contact is created if it does not exist)" },
+          "priority": { "type": "integer", "description": "Priority: 1=Low, 2=Medium, 3=High, 4=Urgent (default 1)", "enum": [1, 2, 3, 4] },
+          "status": { "type": "integer", "description": "Status: 2=Open, 3=Pending, 4=Resolved, 5=Closed (default 2)", "enum": [2, 3, 4, 5] },
+          "tags": { "type": "array", "items": { "type": "string" }, "description": "Tags to attach to the ticket" }
+        },
+        "required": ["subject", "description", "email"]
+      }
+    },
+    {
+      "name": "freshdesk.update_ticket",
+      "description": "Update an existing ticket's status, priority, assigned agent, and/or tags.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "ticketId": { "type": "integer", "description": "The numeric ticket id to update" },
+          "status": { "type": "integer", "description": "New status: 2=Open, 3=Pending, 4=Resolved, 5=Closed", "enum": [2, 3, 4, 5] },
+          "priority": { "type": "integer", "description": "New priority: 1=Low, 2=Medium, 3=High, 4=Urgent", "enum": [1, 2, 3, 4] },
+          "responderId": { "type": "integer", "description": "Agent id to assign the ticket to" },
+          "tags": { "type": "array", "items": { "type": "string" }, "description": "Replacement tag list for the ticket" }
+        },
+        "required": ["ticketId"]
+      }
+    },
+    {
+      "name": "freshdesk.add_note",
+      "description": "Add a note to a ticket — private (agent-only, the default) or public (visible to the requester).",
+      "riskLevel": "low",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "ticketId": { "type": "integer", "description": "The numeric ticket id to add the note to" },
+          "body": { "type": "string", "description": "Note content (HTML allowed)" },
+          "private": { "type": "boolean", "description": "Whether the note is private/agent-only (default true)" }
+        },
+        "required": ["ticketId", "body"]
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "freshdesk", "scopes": ["read", "write"], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

@@ -1,0 +1,146 @@
+{
+  "name": "powerbi",
+  "version": "1.0.0",
+  "description": "Power BI integration via the Power BI REST API — list workspaces, datasets, reports, and dashboards, run DAX queries against datasets, trigger dataset refreshes, and inspect refresh history. Uses app-only (OAuth2 client-credentials) auth with a Microsoft Entra service principal; the service principal must be allowed to call Fabric public APIs (tenant setting) and be a Member or Admin of each target workspace.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "data",
+  "tags": ["powerbi", "power-bi", "microsoft-fabric", "dax", "datasets", "reports", "dashboards", "analytics", "business-intelligence"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "powerbi",
+    "displayName": "Power BI",
+    "description": "Power BI workspaces, datasets, reports, and refreshes via the Power BI REST API (service principal)",
+    "icon": "powerbi",
+    "authType": "custom",
+    "category": "integration",
+    "fields": [
+      {
+        "key": "tenantId",
+        "label": "Directory (Tenant) ID",
+        "type": "text",
+        "required": true,
+        "helpText": "The Microsoft Entra tenant ID (GUID) of your organization."
+      },
+      {
+        "key": "clientId",
+        "label": "Application (Client) ID",
+        "type": "text",
+        "required": true,
+        "helpText": "The Application (client) ID of the Entra app registration. Do not add Power BI API permissions to the app — they are unused for service principals and cause errors.",
+        "helpUrl": "https://learn.microsoft.com/en-us/power-bi/developer/embedded/embed-service-principal"
+      },
+      {
+        "key": "clientSecret",
+        "label": "Client Secret",
+        "type": "secret",
+        "required": true,
+        "helpText": "A client secret for the app registration. A Fabric admin must enable the tenant setting 'Service principals can call Fabric public APIs' for this to work."
+      }
+    ],
+    "testEndpoint": "/groups"
+  },
+  "tools": [
+    {
+      "name": "powerbi.list_workspaces",
+      "description": "List the Power BI workspaces (groups) the service principal has access to, with id, name, and whether each is on dedicated capacity.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "name": "powerbi.list_datasets",
+      "description": "List the datasets (semantic models) in a workspace, with id, name, owner, and whether each is refreshable.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "workspaceId": { "type": "string", "description": "The workspace (group) ID (GUID)" }
+        },
+        "required": ["workspaceId"]
+      }
+    },
+    {
+      "name": "powerbi.list_reports",
+      "description": "List the reports in a workspace, with id, name, web URL, and the dataset each report is bound to.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "workspaceId": { "type": "string", "description": "The workspace (group) ID (GUID)" }
+        },
+        "required": ["workspaceId"]
+      }
+    },
+    {
+      "name": "powerbi.list_dashboards",
+      "description": "List the dashboards in a workspace (id and display name). If dashboardId is given, list that dashboard's tiles instead (id, title, and linked report/dataset).",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "workspaceId": { "type": "string", "description": "The workspace (group) ID (GUID)" },
+          "dashboardId": { "type": "string", "description": "Optional dashboard ID (GUID); when given, returns the dashboard's tiles instead of the dashboard list" }
+        },
+        "required": ["workspaceId"]
+      }
+    },
+    {
+      "name": "powerbi.execute_dax",
+      "description": "Run a single DAX query against a dataset via the Execute Queries REST API and return the first result table's rows (capped by maxRows, with a truncation flag). API limits: one query per call, at most 100,000 rows / 15 MB per query result. Not available for RLS/SSO-enabled datasets when using a service principal.",
+      "riskLevel": "low",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "workspaceId": { "type": "string", "description": "The workspace (group) ID (GUID)" },
+          "datasetId": { "type": "string", "description": "The dataset ID (GUID)" },
+          "query": { "type": "string", "description": "The DAX query to execute, e.g. EVALUATE TOPN(10, 'Sales')" },
+          "maxRows": { "type": "integer", "description": "Max rows to return from the first result table (default 100, max 1000)" }
+        },
+        "required": ["workspaceId", "datasetId", "query"]
+      }
+    },
+    {
+      "name": "powerbi.get_refresh_history",
+      "description": "Get the refresh history of a dataset — status, start/end time, and a trimmed service exception for failed refreshes.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "workspaceId": { "type": "string", "description": "The workspace (group) ID (GUID)" },
+          "datasetId": { "type": "string", "description": "The dataset ID (GUID)" },
+          "limit": { "type": "integer", "description": "Max refresh entries to return (default 10, max 100)" }
+        },
+        "required": ["workspaceId", "datasetId"]
+      }
+    },
+    {
+      "name": "powerbi.refresh_dataset",
+      "description": "Trigger an asynchronous refresh of a dataset. On shared capacity a dataset is limited to 8 API/scheduled refreshes per day; the refresh runs in the background — check progress with powerbi.get_refresh_history.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "workspaceId": { "type": "string", "description": "The workspace (group) ID (GUID)" },
+          "datasetId": { "type": "string", "description": "The dataset ID (GUID) to refresh" }
+        },
+        "required": ["workspaceId", "datasetId"]
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "powerbi", "scopes": ["https://analysis.windows.net/powerbi/api/.default"], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

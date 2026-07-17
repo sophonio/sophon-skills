@@ -1,0 +1,147 @@
+{
+  "name": "freshservice",
+  "version": "1.0.0",
+  "description": "Freshservice IT service management integration — list, inspect, create, and update tickets, add notes, list changes, and search assets via the Freshservice REST API v2. Authenticates with an agent API key over HTTP Basic (apiKey as username, 'X' as password) against your {subdomain}.freshservice.com instance.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "integration",
+  "tags": ["freshservice", "freshworks", "itsm", "tickets", "service-desk", "changes", "assets", "cmdb", "helpdesk"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "freshservice",
+    "displayName": "Freshservice",
+    "description": "Freshservice IT service desk — tickets, changes, and assets",
+    "icon": "freshservice",
+    "authType": "custom",
+    "category": "integration",
+    "fields": [
+      {
+        "key": "baseUrl",
+        "label": "Freshservice URL",
+        "type": "url",
+        "required": true,
+        "helpText": "Your Freshservice instance URL, e.g. https://yourcompany.freshservice.com"
+      },
+      {
+        "key": "apiKey",
+        "label": "API Key",
+        "type": "secret",
+        "required": true,
+        "helpText": "Your agent API key from Profile Settings. An admin must have API access enabled for your agent account.",
+        "helpUrl": "https://support.freshservice.com/en/support/solutions/articles/50000000306-where-do-i-find-my-api-key-"
+      }
+    ],
+    "testEndpoint": "/api/v2/tickets?per_page=1"
+  },
+  "credentials": [
+    { "service": "freshservice", "scopes": ["tickets", "changes", "assets"], "required": true, "access": "proxy" }
+  ],
+  "tools": [
+    {
+      "name": "freshservice.list_tickets",
+      "description": "List tickets in the service desk, optionally restricted to a predefined filter or to tickets updated since a timestamp. Returns a trimmed summary with human-readable status and priority.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "limit": { "type": "integer", "description": "Max tickets to return (default 30, max 100)" },
+          "updated_since": { "type": "string", "description": "Only return tickets updated at or after this timestamp (ISO 8601, e.g. 2026-07-01T00:00:00Z)" },
+          "filter": { "type": "string", "description": "Predefined ticket filter", "enum": ["new_and_my_open", "watching", "deleted"] }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "freshservice.get_ticket",
+      "description": "Get a ticket's details (subject, description, status, priority, requester) together with its conversation thread (replies and notes, trimmed).",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "ticketId": { "type": "integer", "description": "The ticket id to fetch" }
+        },
+        "required": ["ticketId"]
+      }
+    },
+    {
+      "name": "freshservice.list_changes",
+      "description": "List change requests with subject, human-readable status (Open, Planning, Approval, Pending Release, Pending Review, Closed), risk, and planned start/end dates.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "limit": { "type": "integer", "description": "Max changes to return (default 30, max 100)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "freshservice.search_assets",
+      "description": "Search CMDB assets by name, asset tag, or serial number (exact match per the Freshservice search syntax). Fails with a clear message if the plan lacks the asset module.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string", "description": "The value to search for (exact match)" },
+          "field": { "type": "string", "description": "Asset field to search (default name)", "enum": ["name", "asset_tag", "serial_number"] },
+          "limit": { "type": "integer", "description": "Max assets to return (default 30, max 100)" }
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "freshservice.create_ticket",
+      "description": "Create a new incident ticket on behalf of a requester email (source is set to Portal).",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "subject": { "type": "string", "description": "Ticket subject/title" },
+          "description": { "type": "string", "description": "Ticket description (HTML or plain text)" },
+          "email": { "type": "string", "description": "Requester email address the ticket is created for" },
+          "priority": { "type": "integer", "description": "Priority: 1=Low, 2=Medium, 3=High, 4=Urgent (default 1)", "enum": [1, 2, 3, 4] },
+          "status": { "type": "integer", "description": "Status: 2=Open, 3=Pending, 4=Resolved, 5=Closed (default 2)", "enum": [2, 3, 4, 5] }
+        },
+        "required": ["subject", "description", "email"]
+      }
+    },
+    {
+      "name": "freshservice.update_ticket",
+      "description": "Update a ticket's status, priority, and/or assigned group.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "ticketId": { "type": "integer", "description": "The ticket id to update" },
+          "status": { "type": "integer", "description": "New status: 2=Open, 3=Pending, 4=Resolved, 5=Closed", "enum": [2, 3, 4, 5] },
+          "priority": { "type": "integer", "description": "New priority: 1=Low, 2=Medium, 3=High, 4=Urgent", "enum": [1, 2, 3, 4] },
+          "groupId": { "type": "integer", "description": "Agent group id to assign the ticket to" }
+        },
+        "required": ["ticketId"]
+      }
+    },
+    {
+      "name": "freshservice.add_note",
+      "description": "Add a note to a ticket's conversation (private by default; set private to false for a public note visible to the requester).",
+      "riskLevel": "low",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "ticketId": { "type": "integer", "description": "The ticket id to add the note to" },
+          "body": { "type": "string", "description": "Note content (HTML or plain text)" },
+          "private": { "type": "boolean", "description": "Whether the note is private/internal (default true)" }
+        },
+        "required": ["ticketId", "body"]
+      }
+    }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

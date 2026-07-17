@@ -1,0 +1,132 @@
+{
+  "name": "jenkins",
+  "version": "1.0.0",
+  "description": "Jenkins CI/CD integration — list jobs (including folder-nested jobs), inspect job health and build details, read console logs, view the build queue, and trigger builds with or without parameters. Authenticates with a per-user Jenkins API token sent as HTTP Basic auth (username:apiToken); API-token requests are CSRF-exempt so no crumb is needed. All read responses are bounded with tree= field selection so large instances stay fast.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "development",
+  "tags": ["jenkins", "ci", "cd", "builds", "pipelines", "automation", "devops", "continuous-integration"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "jenkins",
+    "displayName": "Jenkins",
+    "description": "Jenkins CI/CD jobs, builds, and queue via the remote access API",
+    "icon": "jenkins",
+    "authType": "custom",
+    "category": "developer",
+    "fields": [
+      {
+        "key": "baseUrl",
+        "label": "Jenkins URL",
+        "type": "url",
+        "required": true,
+        "helpText": "Base URL of your Jenkins instance (e.g. https://jenkins.example.com). Must be reachable from Sophon — VPN-only instances will not work."
+      },
+      {
+        "key": "username",
+        "label": "Username",
+        "type": "text",
+        "required": true,
+        "helpText": "Your Jenkins username (the account the API token belongs to)."
+      },
+      {
+        "key": "apiToken",
+        "label": "API Token",
+        "type": "secret",
+        "required": true,
+        "helpText": "Generate at {your Jenkins URL}/me/configure under API Token — Add new token.",
+        "helpUrl": "https://www.jenkins.io/doc/book/system-administration/authenticating-scripted-clients/"
+      }
+    ],
+    "testEndpoint": "/me/api/json"
+  },
+  "credentials": [
+    { "service": "jenkins", "scopes": ["read", "build"], "required": true, "access": "proxy" }
+  ],
+  "tools": [
+    {
+      "name": "jenkins.list_jobs",
+      "description": "List Jenkins jobs at the top level or inside a folder, with each job's name, URL, latest status (success, failed, unstable, ...), whether it is currently building, and whether it is a folder.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "folder": { "type": "string", "description": "Folder path to list jobs under (e.g. team-a or team-a/subfolder). Omit for the top level." }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "jenkins.get_job",
+      "description": "Get details of a Jenkins job: description, buildability, queue state, health report, and the last, last successful, and last failed build numbers.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "job": { "type": "string", "description": "Full job path, e.g. my-job or team-a/service-x for a job inside a folder" }
+        },
+        "required": ["job"]
+      }
+    },
+    {
+      "name": "jenkins.get_build",
+      "description": "Get details of a specific build of a job: result, timing, whether it is still building, build parameters, causes, and changelog entries.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "job": { "type": "string", "description": "Full job path, e.g. my-job or team-a/service-x" },
+          "number": { "type": "integer", "description": "Build number" }
+        },
+        "required": ["job", "number"]
+      }
+    },
+    {
+      "name": "jenkins.get_console_log",
+      "description": "Fetch the console log of a build, either from a byte offset (for incremental reads of running builds) or just the last N KiB via tailKb. Returns whether more output is expected.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "job": { "type": "string", "description": "Full job path, e.g. my-job or team-a/service-x" },
+          "number": { "type": "integer", "description": "Build number" },
+          "start": { "type": "integer", "description": "Byte offset to read from (default 0). Ignored when tailKb is set." },
+          "tailKb": { "type": "integer", "description": "Return only the last N KiB of the log (max 256). Useful for long logs." }
+        },
+        "required": ["job", "number"]
+      }
+    },
+    {
+      "name": "jenkins.get_queue",
+      "description": "List items waiting in the Jenkins build queue with the reason each one is waiting and how long it has been queued.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "name": "jenkins.trigger_build",
+      "description": "Trigger a build of a job, optionally with build parameters. The build's impact depends entirely on what the job does (deploys, releases, etc.). Returns the queue item URL.",
+      "riskLevel": "high",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "job": { "type": "string", "description": "Full job path, e.g. my-job or team-a/service-x" },
+          "parameters": { "type": "object", "description": "Build parameters as name/value pairs. When provided, buildWithParameters is used instead of build." }
+        },
+        "required": ["job"]
+      }
+    }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

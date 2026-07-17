@@ -1,0 +1,148 @@
+{
+  "name": "splunk",
+  "version": "1.0.0",
+  "description": "Splunk integration via the management REST API (typically port 8089) — run oneshot SPL searches, dispatch and poll asynchronous search jobs, fetch job results, list and run saved searches, and list indexes. Authenticates with a static Splunk authentication token (JWT) sent as a Bearer header; an optional insecure-TLS toggle supports self-signed management certificates. All requests use output_mode=json.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "data",
+  "tags": ["splunk", "spl", "search", "logs", "siem", "observability", "monitoring", "indexes", "saved-searches"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "splunk",
+    "displayName": "Splunk",
+    "description": "Splunk SPL searches, jobs, saved searches, and indexes via the management REST API",
+    "icon": "splunk",
+    "authType": "custom",
+    "category": "integration",
+    "fields": [
+      {
+        "key": "baseUrl",
+        "label": "Management API URL",
+        "type": "url",
+        "required": true,
+        "helpText": "Base URL of the Splunk management API, including the management port (e.g. https://splunk.example.com:8089)."
+      },
+      {
+        "key": "authToken",
+        "label": "Authentication Token",
+        "type": "secret",
+        "required": true,
+        "helpText": "A Splunk authentication token (JWT) created under Settings > Tokens. Token authentication must be enabled by an admin, and tokens expire and need rotation.",
+        "helpUrl": "https://docs.splunk.com/Documentation/Splunk/latest/Security/CreateAuthTokens"
+      },
+      {
+        "key": "insecureSkipTlsVerify",
+        "label": "Skip TLS Verification",
+        "type": "text",
+        "required": false,
+        "helpText": "true to skip TLS verification for self-signed management certs"
+      }
+    ],
+    "testEndpoint": "/services/authentication/current-context?output_mode=json"
+  },
+  "tools": [
+    {
+      "name": "splunk.oneshot_search",
+      "description": "Run an SPL search synchronously (oneshot) and return the results immediately. Best for quick queries that finish within the sandbox timeout.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string", "description": "SPL query (e.g. index=main error | stats count by host). 'search ' is prefixed automatically unless the query starts with a generating command (leading |)." },
+          "earliestTime": { "type": "string", "description": "Earliest event time (Splunk time modifier or ISO 8601, e.g. -24h@h)" },
+          "latestTime": { "type": "string", "description": "Latest event time (Splunk time modifier or ISO 8601, e.g. now)" },
+          "count": { "type": "integer", "description": "Max results to return (default 50, max 100)" }
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "splunk.create_search_job",
+      "description": "Dispatch an SPL search as an asynchronous job and return its sid. Poll with splunk.get_job_status, then fetch output with splunk.get_job_results.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string", "description": "SPL query to run. 'search ' is prefixed automatically unless the query starts with a generating command (leading |)." },
+          "earliestTime": { "type": "string", "description": "Earliest event time (Splunk time modifier or ISO 8601, e.g. -24h@h)" },
+          "latestTime": { "type": "string", "description": "Latest event time (Splunk time modifier or ISO 8601, e.g. now)" }
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "splunk.get_job_status",
+      "description": "Get the status of a search job by sid — dispatch state, completion progress, and event/result counts.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "sid": { "type": "string", "description": "Search job id returned by splunk.create_search_job or splunk.run_saved_search" }
+        },
+        "required": ["sid"]
+      }
+    },
+    {
+      "name": "splunk.get_job_results",
+      "description": "Fetch the results of a completed search job by sid, with paging via count and offset.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "sid": { "type": "string", "description": "Search job id to fetch results for" },
+          "count": { "type": "integer", "description": "Max results to return (default 50, max 100)" },
+          "offset": { "type": "integer", "description": "Result offset for paging (default 0)" }
+        },
+        "required": ["sid"]
+      }
+    },
+    {
+      "name": "splunk.list_saved_searches",
+      "description": "List saved searches (reports/alerts) visible to the token's user — name, SPL, and cron schedule.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "count": { "type": "integer", "description": "Max saved searches to return (default 30, max 100)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "splunk.run_saved_search",
+      "description": "Dispatch a saved search by name as an asynchronous job and return its sid.",
+      "riskLevel": "low",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "description": "Exact name of the saved search to dispatch" }
+        },
+        "required": ["name"]
+      }
+    },
+    {
+      "name": "splunk.list_indexes",
+      "description": "List indexes with total event count and current size on disk.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "count": { "type": "integer", "description": "Max indexes to return (default 30, max 100)" }
+        },
+        "required": []
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "splunk", "scopes": ["search"], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}
