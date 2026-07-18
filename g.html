@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Genius</title>
+    <style>*{box-sizing:border-box}body{width:100%;margin:0;color:#fff;background:#000;font-family:Helvetica Neue,Arial,Helvetica,Geneva,sans-serif;font-size:20px;font-weight:700}a,a:active,a:focus{color:#3d85c6;text-decoration:none}a:hover{border-bottom:1px dotted}header{background-color:#ffff64;padding:10px;color:#000}header img{height:20px;display:block;margin:0 auto}main{max-width:860px;margin:0 auto}.text{text-align:center}.alert{margin:40px 20px}h1{font-size:7.5rem;text-transform:uppercase;font-weight:700;margin:0}@media screen and (max-width:420px){h1{font-size:3.5rem}}.distractions{margin:3rem auto 0;width:100%;max-width:700px}.iframe-container{width:100%;height:0;padding-top:56.25%;position:relative}.iframe-container iframe{max-width:100%;max-height:100%;position:absolute;top:0;left:0}</style>
+    <style type="text/css">.cloudflare_content{margin-top:2rem}#recaptcha_widget{display:flex;justify-content:center}</style>
+    <script type="text/javascript">!function(e,a){var t,n,i,l;a.__SV||((window.mixpanel=a)._i=[],a.init=function(e,t,n){function o(e,t){var n=t.split(".");2==n.length&&(e=e[n[0]],t=n[1]),e[t]=function(){e.push([t].concat(Array.prototype.slice.call(arguments,0)))}}var p=a;for(void 0!==n?p=a[n]=[]:n="mixpanel",p.people=p.people||[],p.toString=function(e){var t="mixpanel";return"mixpanel"!==n&&(t+="."+n),e||(t+=" (stub)"),t},p.people.toString=function(){return p.toString(1)+".people (stub)"},i="disable time_event track track_pageview track_links track_forms track_with_groups add_group set_group remove_group register register_once alias unregister identify name_tag set_config reset opt_in_tracking opt_out_tracking has_opted_in_tracking has_opted_out_tracking clear_opt_in_out_tracking start_batch_senders people.set people.set_once people.unset people.increment people.append people.union people.track_charge people.clear_charges people.delete_user people.remove".split(" "),l=0;l<i.length;l++)o(p,i[l]);var r="set set_once union unset remove delete".split(" ");p.get_group=function(){function e(e){t[e]=function(){call2_args=arguments,call2=[e].concat(Array.prototype.slice.call(call2_args,0)),p.push([n,call2])}}for(var t={},n=["get_group"].concat(Array.prototype.slice.call(arguments,0)),o=0;o<r.length;o++)e(r[o]);return t},a._i.push([e,t,n])},a.__SV=1.2,(t=e.createElement("script")).type="text/javascript",t.async=!0,t.src="undefined"!=typeof MIXPANEL_CUSTOM_LIB_URL?MIXPANEL_CUSTOM_LIB_URL:"file:"===e.location.protocol&&"//cdn.mxpnl.com/libs/mixpanel-2-latest.min.js".match(/^\/\//)?"https://cdn.mxpnl.com/libs/mixpanel-2-latest.min.js":"//cdn.mxpnl.com/libs/mixpanel-2-latest.min.js",(n=e.getElementsByTagName("script")[0]).parentNode.insertBefore(t,n))}(document,window.mixpanel||[]),mixpanel.init("77967c52dc38186cc1aadebdd19e2a82");</script>
+    <script type="text/javascript">/* eslint-env browser */
+/* globals mixpanel */
+/* eslint-disable no-unused-vars */
+const METRICS_URL = 'https://librato-collector.genius.com/v1/metrics';
+
+function sendToLibrato(body) {
+  if (navigator.sendBeacon) {
+    navigator.sendBeacon(
+      METRICS_URL,
+      new Blob([JSON.stringify(body)], {type: 'application/json'})
+    );
+  } else {
+    fetch(
+      METRICS_URL,
+      {
+        method: 'POST',
+        body: JSON.stringify(body),
+        headers: {'Content-Type': 'application/json'},
+      }
+    );
+  }
+}
+
+function count(name, {source}, extra = {}) {
+  sendToLibrato({counters: [{name, value: 1, source}]});
+  mixpanel.track(name, Object.assign({source}, extra));
+}
+</script>
+  <meta http-equiv="refresh" content="360"></head>
+  <body>
+    <header>
+      <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTUiPjxwYXRoIGQ9Ik0xMS43IDIuOXMwLS4xIDAgMGMtLjgtLjgtMS43LTEuMi0yLjgtMS4yLTEuMSAwLTIuMS40LTIuOCAxLjEtLjIuMi0uMy40LS41LjZ2LjFjMCAuMS4xLjEuMS4xLjQtLjIuOS0uMyAxLjQtLjMgMS4xIDAgMi4yLjUgMi45IDEuMmgxLjZjLjEgMCAuMS0uMS4xLS4xVjIuOWMuMSAwIDAgMCAwIDB6bS0uMSA0LjZoLTEuNWMtLjggMC0xLjQtLjYtMS41LTEuNC4xIDAgMC0uMSAwLS4xLS4zIDAtLjYuMi0uOC40di4yYy0uNiAxLjguMSAyLjQuOSAyLjRoMS4xYy4xIDAgLjEuMS4xLjF2LjRjMCAuMS4xLjEuMS4xLjYtLjEgMS4yLS40IDEuNy0uOFY3LjZjLjEgMCAwLS4xLS4xLS4xeiIvPjxwYXRoIGQ9Ik0xMS42IDExLjlzLS4xIDAgMCAwYy0uMSAwLS4xIDAgMCAwLS4xIDAtLjEgMCAwIDAtLjguMy0xLjYuNS0yLjUuNS0zLjcgMC02LjgtMy02LjgtNi44IDAtLjkuMi0xLjcuNS0yLjUgMC0uMS0uMS0uMS0uMi0uMWgtLjFDMS40IDQuMi44IDUuNy44IDcuNWMwIDMuNiAyLjkgNi40IDYuNCA2LjQgMS43IDAgMy4zLS43IDQuNC0xLjhWMTJjLjEgMCAwLS4xIDAtLjF6bTEzLjctMy4xaDMuNWMuOCAwIDEuNC0uNSAxLjQtMS4zdi0uMmMwLS4xLS4xLS4xLS4xLS4xaC00LjhjLS4xIDAtLjEuMS0uMS4xdjEuNGMtLjEgMCAwIC4xLjEuMXptNS4xLTYuN2gtNS4yYy0uMSAwLS4xLjEtLjEuMXYxLjRjMCAuMS4xLjEuMS4xSDI5Yy44IDAgMS40LS41IDEuNC0xLjN2LS4yYy4xLS4xLjEtLjEgMC0uMXoiLz48cGF0aCBkPSJNMzAuNCAxMi4zaC02LjFjLTEgMC0xLjYtLjYtMS42LTEuNlYxYzAtLjEtLjEtLjEtLjEtLjEtMS4xIDAtMS44LjctMS44IDEuOFYxMmMwIDEuMS43IDEuOCAxLjggMS44SDI5Yy44IDAgMS40LS42IDEuNC0xLjN2LS4xYy4xIDAgLjEtLjEgMC0uMXptMTIgMGMtLjYtLjEtLjktLjYtLjktMS4zVjEuMXMwLS4xLS4xLS4xSDQxYy0uOSAwLTEuNS42LTEuNSAxLjV2OS45YzAgLjkuNiAxLjUgMS41IDEuNS44IDAgMS40LS42IDEuNS0xLjUgMC0uMSAwLS4xLS4xLS4xem04LjIgMGgtLjJjLS45IDAtMS40LS40LTEuOC0xLjFsLTQuNS03LjQtLjEtLjFjLS4xIDAtLjEuMS0uMS4xVjhsMi44IDQuN2MuNC42LjkgMS4yIDIgMS4yIDEgMCAxLjctLjUgMi0xLjQgMC0uMi0uMS0uMi0uMS0uMnptLS45LTMuOGMuMSAwIC4xLS4xLjEtLjFWMS4xYzAtLjEgMC0uMS0uMS0uMWgtLjRjLS45IDAtMS41LjYtMS41IDEuNXYzLjFsMS43IDIuOGMuMSAwIC4xLjEuMi4xem0xMyAzLjhjLS42LS4xLS45LS42LS45LTEuMnYtMTBjMC0uMSAwLS4xLS4xLS4xaC0uM2MtLjkgMC0xLjUuNi0xLjUgMS41djkuOWMwIC45LjYgMS41IDEuNSAxLjUuOCAwIDEuNC0uNiAxLjUtMS41bC0uMi0uMXptMTguNC0uNUg4MWMtLjcuMy0xLjUuNS0yLjUuNS0xLjYgMC0yLjktLjUtMy43LTEuNC0uOS0xLTEuNC0yLjQtMS40LTQuMlYxYzAtLjEgMC0uMS0uMS0uMUg3M2MtLjkgMC0xLjUuNi0xLjUgMS41VjhjMCAzLjcgMiA1LjkgNS40IDUuOSAxLjkgMCAzLjQtLjcgNC4zLTEuOXYtLjFjMC0uMSAwLS4xLS4xLS4xeiIvPjxwYXRoIGQ9Ik04MS4yLjloLS4zYy0uOSAwLTEuNS42LTEuNSAxLjV2NS43YzAgLjctLjEgMS4zLS4zIDEuOCAwIC4xLjEuMS4xLjEgMS40LS4zIDIuMS0xLjQgMi4xLTMuM1YxYzAtLjEtLjEtLjEtLjEtLjF6bTEyLjcgNy42bDEuNC4zYzEuNS4zIDEuNi44IDEuNiAxLjIgMCAuMS4xLjEuMS4xIDEuMS0uMSAxLjgtLjcgMS44LTEuNXMtLjYtMS4yLTEuOS0xLjVsLTEuNC0uM2MtMy4yLS42LTMuOC0yLjMtMy44LTMuNiAwLS43LjItMS4zLjYtMS45di0uMmMwLS4xLS4xLS4xLS4xLS4xLTEuNS43LTIuMyAxLjktMi4zIDMuNC0uMSAyLjMgMS4zIDMuNyA0IDQuMXptNS4yIDMuMmMtLjEuMS0uMS4xIDAgMC0uOS40LTEuOC42LTIuOC42LTEuNiAwLTMtLjUtNC4zLTEuNC0uMy0uMy0uNS0uNi0uNS0xIDAtLjEgMC0uMS0uMS0uMXMtLjMtLjEtLjQtLjFjLS40IDAtLjguMi0xLjEuNi0uMi4zLS40LjctLjMgMS4xLjEuNC4zLjcuNiAxIDEuNCAxIDIuOCAxLjUgNC41IDEuNSAyIDAgMy43LS43IDQuNS0xLjl2LS4xYzAtLjEgMC0uMi0uMS0uMnoiLz48cGF0aCBkPSJNOTQuMSAzLjJjMCAuMS4xLjEuMS4xaC4yYzEuMSAwIDEuNy4zIDIuNC44LjMuMi42LjMgMSAuM3MuOC0uMiAxLjEtLjZjLjItLjMuMy0uNi4zLS45IDAtLjEgMC0uMS0uMS0uMS0uMiAwLS4zLS4xLS41LS4yLS44LS42LTEuNC0uOS0yLjYtLjktMS4yIDAtMiAuNi0yIDEuNC4xIDAgLjEgMCAuMS4xeiIvPjwvc3ZnPgo=" alt="Genius logo"/>
+    </header>
+    <main>
+      <div class="text alert">
+        <h1>Scrrrr!!</h1>
+        <div class="dek">Sorry, we have to make sure you're a human before we can show you this page.</div>
+        <div class="cloudflare_content">
+          <div class="main-wrapper" role="main"><div class="main-content"><noscript><div class="h2"><span id="challenge-error-text">Enable JavaScript and cookies to continue</span></div></noscript></div></div><script>(function(){window._cf_chl_opt = {cFPWv: 'b',cH: 's3U1QwlKehlNO2iEH0pYwfvP9i97wWltqbPZqjXYTJA-1784362253-1.2.1.1-.UXVSVmVF0UvzxhE7xewG1yfsk_FJMapgsp.CuAQONK4QqbARQYGX.KKH.YH0eGW',cITimeS: '1784362253',cRay: 'a1d003371f50c31d',cTplB: '0',cTplC:1,cTplO:0,cTplV:5,cType: 'managed',cUPMDTk:"/?__cf_chl_tk=y73QN8uRoqulQV8pXeVj796Ht4CgtQN9IwiFSskXVYk-1784362253-1.0.1.1-ywuaCXK9UzaXxDW6.8nHSFSvCfqfqZCiFVMrRt.7rb4",cvId: '3',cZone: 'docs.genius.com',fa:"/?__cf_chl_f_tk=y73QN8uRoqulQV8pXeVj796Ht4CgtQN9IwiFSskXVYk-1784362253-1.0.1.1-ywuaCXK9UzaXxDW6.8nHSFSvCfqfqZCiFVMrRt.7rb4",md: 'XUh5QXZJJsmeJr9WI9fq_2YKrEJc6mZ6IMxf1Hn_0Qk-1784362253-1.2.1.1-KrXE_hOB154pLr4N.SEHx.DQyiVOOjnsE6DbUwlsIXo53F87AQSyFVQAvP3pNLAa7Xi8kKgTGwdl9GFEQffhHEMpQJ16p3TT4C.mfaRS8CQjjPb5z5iDYOW8nJ2wg69Q2JT7OIEcciYZndbcUUSg2g8oEvLoFWyCFh.5BsiYS4KCAfXpo.x0RfU07W9Lqf9y_GQ3wgXjJ6DVPRnu5hPTrQiagqsSHpJ8WQHR0TKDQP9XNLxKtFBYEP2dik5t37TN.uofU51_y8L5mMKrcgz35cxW0HxwKIeovJVsA7HvFK8_87uWXl1bg7FKToa4anLP.5eOQaSNkdrFDVoWdANB4ACgi6q4VZtLHWqmSVVJRJWfVe8yJX7CujVKRh.1tfJkaenEtU3cmaYt_NV3i9Bo3aBEY1Ae3AD8i0qxrX6JUwh8GFMdyHAx.KmPULg6RNl_EIO4qI5KjxmZ.5vGz7kb2HgHChD2LUQmle6.Ntshr.Z_wLAC1K2YXwM65aqhI3A14gWrcCyimoFqD60OhGWigHXORrkrMZEc0jXlfa1vEf6Mz8DKhPooQSWEZnMz9jHYpBIll4OoZjIqdwQXvCR8vojxJrFei1jr0.ps3OKilXXvaWv4fzRucTfwRxVAkTxxhpuUh3BvrLIqRjT5bL5DhFyaOjiizSG4223y7xrXrrx7Z1JKb9bQ9AEOSrUEI9kMzbzdSuzbatJqtftg.SY.WBU0Cjo4eSnFoRiuZSZl1wqYUdtr6vGnBKETo8fvcwSvPct4A8zQtr5gzfuxlkWCxyjxYl3TSqzbeRUxCGGvpUjdKjqffcJCUJKNi8tu6Ebu2CSqw1PMUQf4CrRBrppAxzRoJOE2QQCg09Mlzt3mKAoHdHt0Yw0aQFvKrWf0vjDQEjbf8V02taU9M35mv6KdUFdKp5Nk3j6GuhzY3FFdtn7tDmIdUH3z4hmA.S9Qh_lmA1721qCtQi__9G3NvZtgP68D4.NT5Rnb_NCFQaaTpSPTt4b27tXPJmqy06a.CTEMyvPz3UWcHJ0rO3TTN0kqMWt7ups96q4tzRub0AA97B_sPfXKdwV9_bFSRpTRJl3cp9i2FpiElhwG8zXI6opSFPMtRh40xsodbD858djsQ2E',mdrd: 'MoN45KJ_WNszTwn0NLjWWF_5mrmzTZHb4rVsej4pzSE-1784362253-1.2.1.1-k9cvjaY09zQZD0P1LTfnK_jd7BO7vsXtR5sCoPpfm6xHcwmLy9Ik9WruqcipmZlvBxfr9_Njpe3O4w2nAFDVbJQ4SBarb4m7.nsJveB07Dg7Kk1zPYU9oLZEDcxkJsvLA4vpO85YttvQYQ7npTzJxgFEAdsbtKVIMIOUPBm7zLOfeqrmCNd7GI7szy7ILZ_uJEDGmsUFQnuPhuG97A.pSuEditTF8Tm3wVvtXUDGTqI',};var a = document.createElement('script');a.src = '/cdn-cgi/challenge-platform/h/b/orchestrate/chl_page/v1?ray=a1d003371f50c31d';window._cf_chl_opt.cOgUHash = location.hash === '' && location.href.indexOf('#') !== -1 ? '#' : location.hash;window._cf_chl_opt.cOgUQuery = location.search === '' && location.href.slice(0, location.href.length - window._cf_chl_opt.cOgUHash.length).indexOf('?') !== -1 ? '?' : location.search;if (window.history && window.history.replaceState) {var ogU = location.pathname + window._cf_chl_opt.cOgUQuery + window._cf_chl_opt.cOgUHash;history.replaceState(null, null,"/?__cf_chl_rt_tk=y73QN8uRoqulQV8pXeVj796Ht4CgtQN9IwiFSskXVYk-1784362253-1.0.1.1-ywuaCXK9UzaXxDW6.8nHSFSvCfqfqZCiFVMrRt.7rb4"+ window._cf_chl_opt.cOgUHash);a.onload = function() {history.replaceState(null, null, ogU);}}document.getElementsByTagName('head')[0].appendChild(a);}());</script>
+        </div>
+      </div>
+
+      <div class="text distractions">
+        <p>
+          <a href="https://twitter.com/genius" class="twitter-follow-button" data-show-count="true" data-size="large" data-dnt="true">Follow @genius</a>
+          <script>!function(t,e,r){var n,s=t.getElementsByTagName(e)[0],i=/^http:/.test(t.location)?"http":"https";t.getElementById(r)||((n=t.createElement(e)).id=r,n.src=i+"://platform.twitter.com/widgets.js",s.parentNode.insertBefore(n,s))}(document,"script","twitter-wjs");</script>
+        </p>
+      </div>
+    </main>
+    <script type="text/javascript">count("cloudflare_error.challenge",{source:"cloudflare"});</script>
+  </body>
+</html>
