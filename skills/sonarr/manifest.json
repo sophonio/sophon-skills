@@ -1,0 +1,162 @@
+{
+  "name": "sonarr",
+  "version": "1.0.0",
+  "description": "Sonarr integration for your self-hosted TV series PVR — search TheTVDB for shows, add series, browse your library, the airing calendar, missing episodes, and the download queue, and manage season monitoring, quality profiles, and root folders. Authenticates with your instance's static API key sent as the X-Api-Key header (Sonarr Settings > General > Security); requires Sonarr v3+ and the server must be reachable from Sophon's sandbox (LAN-only or VPN-only instances need a reverse proxy or tunnel).",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "integration",
+  "tags": ["sonarr", "tv", "series", "pvr", "media", "self-hosted", "usenet", "torrents", "automation", "servarr"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "sonarr",
+    "displayName": "Sonarr",
+    "description": "Self-hosted Sonarr TV series PVR (API v3)",
+    "icon": "sonarr",
+    "authType": "custom",
+    "category": "integration",
+    "fields": [
+      {
+        "key": "base_url",
+        "label": "Sonarr URL",
+        "type": "url",
+        "required": true,
+        "placeholder": "http://192.168.1.10:8989",
+        "helpText": "The URL of your Sonarr server including port, without a trailing slash. Must be reachable from Sophon's sandbox — LAN-only or VPN-only instances need a reverse proxy or tunnel."
+      },
+      {
+        "key": "api_key",
+        "label": "API Key",
+        "type": "secret",
+        "required": true,
+        "helpText": "Found in Sonarr under Settings > General > Security.",
+        "helpUrl": "https://wiki.servarr.com/sonarr/settings#security"
+      }
+    ],
+    "testEndpoint": "/api/v3/system/status"
+  },
+  "tools": [
+    {
+      "name": "sonarr.search_series_lookup",
+      "description": "Search TheTVDB (via Sonarr) for TV series to add. Returns title, year, tvdbId, and a short overview for each match.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "term": { "type": "string", "description": "Series search term, e.g. 'Breaking Bad' or 'tvdb:81189'" }
+        },
+        "required": ["term"]
+      }
+    },
+    {
+      "name": "sonarr.list_series",
+      "description": "List all TV series in the Sonarr library with monitoring state, status, episode counts, and ids.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "name": "sonarr.get_calendar",
+      "description": "Get upcoming and recently aired episodes from the Sonarr calendar, optionally within a date window.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "start": { "type": "string", "description": "Window start date (ISO 8601, e.g. 2026-07-18)" },
+          "end": { "type": "string", "description": "Window end date (ISO 8601, e.g. 2026-07-25)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "sonarr.get_missing",
+      "description": "List monitored episodes that have aired but are missing from disk (wanted/missing), paginated.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "page": { "type": "integer", "description": "Page number (default 1)" },
+          "pageSize": { "type": "integer", "description": "Results per page (default 20, max 100)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "sonarr.get_queue",
+      "description": "Show the current download queue with status, time left, and download progress per item.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "name": "sonarr.add_series",
+      "description": "Add a new TV series to Sonarr by TheTVDB id, choosing a quality profile and root folder, optionally searching for missing episodes immediately.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "tvdbId": { "type": "integer", "description": "TheTVDB id of the series (from sonarr.search_series_lookup)" },
+          "title": { "type": "string", "description": "Series title" },
+          "qualityProfileId": { "type": "integer", "description": "Quality profile id (from sonarr.list_quality_profiles)" },
+          "rootFolderPath": { "type": "string", "description": "Root folder path (from sonarr.list_root_folders)" },
+          "monitored": { "type": "boolean", "description": "Monitor the series for new episodes (default true)" },
+          "languageProfileId": { "type": "integer", "description": "Language profile id (older Sonarr v3 installs only)" },
+          "seasons": { "type": "array", "items": { "type": "object" }, "description": "Optional per-season monitoring, e.g. [{\"seasonNumber\": 1, \"monitored\": true}]" },
+          "searchForMissingEpisodes": { "type": "boolean", "description": "Start searching for missing episodes right after adding (default false)" }
+        },
+        "required": ["tvdbId", "title", "qualityProfileId", "rootFolderPath"]
+      }
+    },
+    {
+      "name": "sonarr.set_season_monitored",
+      "description": "Turn monitoring on or off for one season of a series (or the whole series when seasonNumber is omitted).",
+      "riskLevel": "low",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "seriesId": { "type": "integer", "description": "Sonarr series id (from sonarr.list_series)" },
+          "seasonNumber": { "type": "integer", "description": "Season to update; omit to set the whole-series monitored flag" },
+          "monitored": { "type": "boolean", "description": "true to monitor, false to unmonitor" }
+        },
+        "required": ["seriesId", "monitored"]
+      }
+    },
+    {
+      "name": "sonarr.list_quality_profiles",
+      "description": "List the quality profiles configured in Sonarr (id and name), for use with sonarr.add_series.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "name": "sonarr.list_root_folders",
+      "description": "List the root folders configured in Sonarr with free space, for use with sonarr.add_series.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "sonarr", "scopes": ["read", "write"], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

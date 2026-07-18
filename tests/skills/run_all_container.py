@@ -25,6 +25,11 @@ PAIRS = [
     ("jira-service-management", "jsm.list_service_desks"), ("planner", "planner.list_plans"),
     ("tableau", "tableau.list_workbooks"), ("hashicorp-vault", "vault.list_mounts"),
     ("dynamics-365", "dynamics.whoami"), ("artifactory", "artifactory.list_repositories"),
+    ("tmdb", "tmdb.get_trending"), ("plex", "plex.list_libraries"),
+    ("jellyfin", "jellyfin.list_libraries"), ("radarr", "radarr.list_movies"),
+    ("sonarr", "sonarr.list_series"), ("seerr", "seerr.list_requests"),
+    ("steam", "steam.get_player_summary"), ("twitch", "twitch.get_top_games"),
+    ("ticketmaster", "ticketmaster.search_events"), ("lastfm", "lastfm.get_chart_top_artists"),
 ]
 
 

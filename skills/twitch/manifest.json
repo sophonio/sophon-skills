@@ -1,0 +1,146 @@
+{
+  "name": "twitch",
+  "version": "1.0.0",
+  "description": "Twitch integration via the Helix API — search channels, browse live streams, top games, clips, videos, and channel info. Uses OAuth2 client-credentials (an app access token minted from your Twitch application's Client ID and Client Secret), which grants public/catalog data only — no followed channels, subscriptions, or chat. Tool output includes twitch.tv links for attribution; Twitch is a trademark of Twitch Interactive, Inc., and per the Twitch Developer Services Agreement API data must not be cached for more than 24 hours.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "integration",
+  "tags": ["twitch", "streaming", "live", "helix", "games", "clips", "videos", "esports"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "twitch",
+    "displayName": "Twitch",
+    "description": "Twitch public catalog data via the Helix API (app access token)",
+    "icon": "twitch",
+    "authType": "custom",
+    "category": "integration",
+    "fields": [
+      {
+        "key": "client_id",
+        "label": "Client ID",
+        "type": "text",
+        "required": true,
+        "helpText": "The Client ID of your registered Twitch application.",
+        "helpUrl": "https://dev.twitch.tv/console/apps"
+      },
+      {
+        "key": "client_secret",
+        "label": "Client Secret",
+        "type": "secret",
+        "required": true,
+        "helpText": "A Client Secret generated for your Twitch application (Manage > New Secret).",
+        "helpUrl": "https://dev.twitch.tv/console/apps"
+      }
+    ],
+    "testEndpoint": "/games/top?first=1"
+  },
+  "tools": [
+    {
+      "name": "twitch.search_channels",
+      "description": "Search Twitch channels by name. Returns channel id, login, display name, live status, current game, and twitch.tv URL.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string", "description": "Channel search query text" },
+          "first": { "type": "integer", "description": "Max results to return (default 20, max 100)" },
+          "live_only": { "type": "boolean", "description": "If true, only return channels that are currently live" }
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "twitch.get_streams",
+      "description": "List live streams, optionally filtered by game id, broadcaster login, or language. Returns streamer, game, title, viewer count, start time, and twitch.tv URL.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "game_id": { "type": "string", "description": "Only streams playing this game id (resolve with twitch.get_game)" },
+          "user_login": { "type": "string", "description": "Only the stream of this broadcaster login" },
+          "language": { "type": "string", "description": "ISO 639-1 language code, e.g. en, de, fr" },
+          "first": { "type": "integer", "description": "Max results to return (default 20, max 100)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "twitch.get_top_games",
+      "description": "List the most-watched games/categories on Twitch right now.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "first": { "type": "integer", "description": "Max results to return (default 20, max 100)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "twitch.get_clips",
+      "description": "List clips for a broadcaster or a game (one of broadcaster_id or game_id is required), optionally within a time window. Returns clip id, title, view count, URL, and creator.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "broadcaster_id": { "type": "string", "description": "Broadcaster id to list clips for" },
+          "game_id": { "type": "string", "description": "Game id to list clips for (resolve with twitch.get_game)" },
+          "first": { "type": "integer", "description": "Max results to return (default 20, max 100)" },
+          "started_at": { "type": "string", "description": "Window start (RFC3339, e.g. 2026-07-01T00:00:00Z)" },
+          "ended_at": { "type": "string", "description": "Window end (RFC3339, e.g. 2026-07-08T00:00:00Z)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "twitch.get_videos",
+      "description": "List a broadcaster's videos (VODs). Returns video id, title, publish date, URL, and view count.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "user_id": { "type": "string", "description": "Broadcaster user id to list videos for" },
+          "first": { "type": "integer", "description": "Max results to return (default 20, max 100)" },
+          "type": { "type": "string", "description": "Video type filter", "enum": ["archive", "highlight", "upload"] }
+        },
+        "required": ["user_id"]
+      }
+    },
+    {
+      "name": "twitch.get_channel_info",
+      "description": "Get channel information for a broadcaster: name, current game, stream title, tags, and twitch.tv URL.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "broadcaster_id": { "type": "string", "description": "Broadcaster id to look up" }
+        },
+        "required": ["broadcaster_id"]
+      }
+    },
+    {
+      "name": "twitch.get_game",
+      "description": "Resolve a game/category by exact name to its Twitch id and box art URL (use the id with twitch.get_streams or twitch.get_clips).",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "description": "Exact game/category name, e.g. Hades" }
+        },
+        "required": ["name"]
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "twitch", "scopes": [], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

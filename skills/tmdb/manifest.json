@@ -1,0 +1,148 @@
+{
+  "name": "tmdb",
+  "version": "1.0.0",
+  "description": "The Movie Database (TMDB) integration — search movies, TV shows, and people; get movie/TV details, seasons, trending titles, discover by genre/year/rating, streaming watch providers (JustWatch data), and recommendations. Authenticates with either a TMDB v3 API key or a v4 API Read Access Token (the skill detects which you pasted). This product uses the TMDB API but is not endorsed or certified by TMDB; TMDB's API is free for non-commercial use only. Watch provider data is provided by JustWatch.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "data",
+  "tags": ["tmdb", "movies", "tv", "streaming", "watch-providers", "trending", "recommendations", "entertainment", "justwatch"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "tmdb",
+    "displayName": "TMDB",
+    "description": "The Movie Database — movie and TV metadata, trending, and watch providers",
+    "icon": "tmdb",
+    "authType": "custom",
+    "category": "integration",
+    "fields": [
+      {
+        "key": "api_token",
+        "label": "API Key or Read Access Token",
+        "type": "secret",
+        "required": true,
+        "helpText": "Either works: paste your TMDB v3 API Key (32-character hex) OR your v4 API Read Access Token (long JWT starting with 'eyJ'). Both are shown on the same TMDB API settings page.",
+        "helpUrl": "https://www.themoviedb.org/settings/api"
+      },
+      {
+        "key": "region",
+        "label": "Region",
+        "type": "text",
+        "required": false,
+        "helpText": "Default region for watch providers, certifications, and discover filters (ISO 3166-1 alpha-2, default US)."
+      }
+    ],
+    "testEndpoint": "/authentication"
+  },
+  "tools": [
+    {
+      "name": "tmdb.search_media",
+      "description": "Search TMDB for movies, TV shows, and people in one query (multi search). Returns trimmed results with id, media_type, title/name, release date, and overview.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string", "description": "Search text, e.g. a movie title, show name, or person" },
+          "page": { "type": "integer", "description": "Results page (default 1, max 500)" }
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "tmdb.get_movie_details",
+      "description": "Get details for a movie by TMDB id: genres, runtime, overview, rating, certification (for your region), directors, top cast, and keywords.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "movieId": { "type": "string", "description": "TMDB movie id, e.g. 550" }
+        },
+        "required": ["movieId"]
+      }
+    },
+    {
+      "name": "tmdb.get_tv_details",
+      "description": "Get details for a TV show by TMDB id (seasons, episodes, networks, creators). Pass a season number to get that season's episode list instead.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "tvId": { "type": "string", "description": "TMDB TV show id, e.g. 1399" },
+          "season": { "type": "integer", "description": "Optional season number — returns that season's episodes (0 = specials)" }
+        },
+        "required": ["tvId"]
+      }
+    },
+    {
+      "name": "tmdb.discover_titles",
+      "description": "Discover movies or TV shows by filters: genres, year, minimum rating, watch providers (with region), and sort order.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "mediaType": { "type": "string", "description": "What to discover: movie or tv (default movie)", "enum": ["movie", "tv"] },
+          "withGenres": { "type": "string", "description": "Comma-separated TMDB genre ids, e.g. '878,53' (AND) or pipe for OR" },
+          "year": { "type": "integer", "description": "Release year (primary_release_year for movies, first_air_date_year for TV)" },
+          "minVoteAverage": { "type": "number", "description": "Minimum vote average 0-10 (vote_average.gte)" },
+          "withWatchProviders": { "type": "string", "description": "Pipe-separated watch provider ids, e.g. '8|9' (Netflix|Prime). Uses watchRegion." },
+          "watchRegion": { "type": "string", "description": "Region for the watch-provider filter (ISO 3166-1; defaults to the connection's region field)" },
+          "sortBy": { "type": "string", "description": "Sort order, e.g. popularity.desc, vote_average.desc, primary_release_date.desc" },
+          "page": { "type": "integer", "description": "Results page (default 1, max 500)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "tmdb.get_trending",
+      "description": "Get trending movies, TV shows, or both for today or this week.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "mediaType": { "type": "string", "description": "movie, tv, or all (default all)", "enum": ["movie", "tv", "all"] },
+          "timeWindow": { "type": "string", "description": "day or week (default day)", "enum": ["day", "week"] }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "tmdb.get_watch_providers",
+      "description": "Get where to stream, rent, or buy a movie or TV show in a region. Watch provider data is provided by JustWatch and the output includes the required JustWatch attribution.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "description": "TMDB movie or TV id" },
+          "mediaType": { "type": "string", "description": "movie or tv (default movie)", "enum": ["movie", "tv"] },
+          "region": { "type": "string", "description": "ISO 3166-1 region to look up (defaults to the connection's region field, then US)" }
+        },
+        "required": ["id"]
+      }
+    },
+    {
+      "name": "tmdb.get_recommendations",
+      "description": "Get TMDB's recommended titles similar to a given movie or TV show.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "description": "TMDB movie or TV id to base recommendations on" },
+          "mediaType": { "type": "string", "description": "movie or tv (default movie)", "enum": ["movie", "tv"] },
+          "page": { "type": "integer", "description": "Results page (default 1, max 500)" }
+        },
+        "required": ["id"]
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "tmdb", "scopes": ["read"], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

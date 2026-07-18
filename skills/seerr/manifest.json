@@ -1,0 +1,142 @@
+{
+  "name": "seerr",
+  "version": "1.0.0",
+  "description": "Overseerr / Jellyseerr media request management for your Plex or Jellyfin ecosystem — search movies and TV shows, check availability and request status, browse trending and popular titles, and create, approve, or decline media requests. Authenticates with your instance's admin-scoped API key (X-Api-Key header, Settings > General > API Key), so request approval and creation act with admin rights. Self-hosted: your Overseerr/Jellyseerr server must be reachable from Sophon's sandbox (LAN/VPN-only hosts usually need a reverse proxy or tunnel). Media metadata originates from TMDB via your server.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "integration",
+  "tags": ["overseerr", "jellyseerr", "media-requests", "plex", "jellyfin", "movies", "tv", "self-hosted", "tmdb"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "overseerr",
+    "displayName": "Overseerr",
+    "description": "Overseerr / Jellyseerr media request server",
+    "icon": "overseerr",
+    "authType": "custom",
+    "category": "integration",
+    "fields": [
+      {
+        "key": "base_url",
+        "label": "Server URL",
+        "type": "url",
+        "required": true,
+        "placeholder": "http://192.168.1.50:5055",
+        "helpText": "Root URL of your Overseerr or Jellyseerr server, without a trailing slash. Must be reachable from Sophon's sandbox — LAN/VPN-only hosts usually need a reverse proxy or tunnel."
+      },
+      {
+        "key": "api_key",
+        "label": "API Key",
+        "type": "secret",
+        "required": true,
+        "helpText": "Copy from Settings > General > API Key in Overseerr/Jellyseerr. This key is admin-scoped.",
+        "helpUrl": "https://docs.overseerr.dev/using-overseerr/settings"
+      }
+    ],
+    "testEndpoint": "/api/v1/auth/me"
+  },
+  "tools": [
+    {
+      "name": "seerr.search_media",
+      "description": "Search movies and TV shows by title via your Seerr server (TMDB-backed). Returns id, media type, title, release date, overview, and current availability status.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string", "description": "Search text, e.g. a movie or show title" },
+          "page": { "type": "integer", "description": "Result page to return (default 1)" }
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "seerr.get_media_status",
+      "description": "Get availability and request status for a specific movie or TV show by its TMDB id.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "mediaType": { "type": "string", "description": "Whether the TMDB id is a movie or a TV show", "enum": ["movie", "tv"] },
+          "tmdbId": { "type": "integer", "description": "TMDB id of the title (from seerr.search_media)" }
+        },
+        "required": ["mediaType", "tmdbId"]
+      }
+    },
+    {
+      "name": "seerr.list_requests",
+      "description": "List media requests on the server — id, type, request status, media title/availability, and who requested it.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "take": { "type": "integer", "description": "Max requests to return (default 20, max 100)" },
+          "skip": { "type": "integer", "description": "Number of requests to skip for paging (default 0)" },
+          "filter": { "type": "string", "description": "Only return requests in this state", "enum": ["all", "pending", "approved", "available", "processing"] }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "seerr.get_trending",
+      "description": "Browse discovery feeds from your Seerr server: trending titles (mixed), popular movies, or popular TV shows.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "feed": { "type": "string", "description": "Which discovery feed to browse (default trending)", "enum": ["trending", "movies", "tv"] },
+          "page": { "type": "integer", "description": "Result page to return (default 1)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "seerr.create_request",
+      "description": "Create a media request for a movie or TV show by TMDB id. Runs with the admin API key, so the request may be auto-approved per server settings.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "mediaType": { "type": "string", "description": "Type of media being requested", "enum": ["movie", "tv"] },
+          "mediaId": { "type": "integer", "description": "TMDB id of the title to request" },
+          "seasons": { "description": "TV only: 'all' to request every season, or a list of season numbers, e.g. [1, 2]", "oneOf": [ { "type": "string", "enum": ["all"] }, { "type": "array", "items": { "type": "integer" } } ] }
+        },
+        "required": ["mediaType", "mediaId"]
+      }
+    },
+    {
+      "name": "seerr.approve_request",
+      "description": "Approve a pending media request (admin action — the server starts processing the download).",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "requestId": { "type": "integer", "description": "Id of the request to approve (from seerr.list_requests)" }
+        },
+        "required": ["requestId"]
+      }
+    },
+    {
+      "name": "seerr.decline_request",
+      "description": "Decline a pending media request (admin action).",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "requestId": { "type": "integer", "description": "Id of the request to decline (from seerr.list_requests)" }
+        },
+        "required": ["requestId"]
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "overseerr", "scopes": ["read", "write"], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

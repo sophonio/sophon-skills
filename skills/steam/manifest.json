@@ -1,0 +1,138 @@
+{
+  "name": "steam",
+  "version": "1.0.0",
+  "description": "Steam integration via the official Steam Web API — resolve vanity URLs, look up player profiles, list owned and recently played games with playtime, check per-game achievements, fetch game news, and get live player counts. Auth is a static Steam Web API key sent as the key query parameter; the game-news and current-player-count tools hit keyless endpoints and work without a key. Private or friends-only profiles return empty results. Powered by Steam. Steam is a trademark of Valve Corporation; this skill is not affiliated with or endorsed by Valve.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "integration",
+  "tags": ["steam", "valve", "gaming", "games", "achievements", "playtime", "player-stats", "game-news"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "steam",
+    "displayName": "Steam",
+    "description": "Steam player profiles, game libraries, achievements, and game stats via the Steam Web API",
+    "icon": "steam",
+    "authType": "custom",
+    "category": "integration",
+    "fields": [
+      {
+        "key": "api_key",
+        "label": "Steam Web API Key",
+        "type": "secret",
+        "required": false,
+        "helpText": "Get a key at steamcommunity.com/dev/apikey (requires a non-limited Steam account, i.e. at least $5 spent). Optional — the game-news and current-player-count tools work without it.",
+        "helpUrl": "https://steamcommunity.com/dev/apikey"
+      },
+      {
+        "key": "default_steam_id",
+        "label": "Default SteamID64",
+        "type": "text",
+        "required": false,
+        "helpText": "Optional 64-bit SteamID (e.g. 76561197960287930) used by library and achievement tools when no steamId argument is given. Use steam.resolve_vanity_url to find yours."
+      }
+    ],
+    "testEndpoint": "/ISteamUser/GetPlayerSummaries/v2/?key={api_key}&steamids=76561197960287930"
+  },
+  "tools": [
+    {
+      "name": "steam.resolve_vanity_url",
+      "description": "Resolve a Steam Community vanity URL name (the custom name in steamcommunity.com/id/<name>) to a 64-bit SteamID.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "vanityUrl": { "type": "string", "description": "The vanity name to resolve, e.g. 'gabelogannewell' for steamcommunity.com/id/gabelogannewell" }
+        },
+        "required": ["vanityUrl"]
+      }
+    },
+    {
+      "name": "steam.get_player_summary",
+      "description": "Get profile summaries (persona name, profile URL, online state, current game) for one or more players. Accepts a comma-separated list of SteamID64s; falls back to the connection's default_steam_id.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "steamIds": { "type": "string", "description": "Comma-separated 64-bit SteamIDs (up to 100). Defaults to the connection's default_steam_id." }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "steam.get_owned_games",
+      "description": "List the games a player owns with total playtime, sorted by most played. Includes free games that have been played. Returns empty for private/friends-only profiles.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "steamId": { "type": "string", "description": "64-bit SteamID. Defaults to the connection's default_steam_id." },
+          "limit": { "type": "integer", "description": "Max games to return (default 50, max 500); count still reflects the full library size." }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "steam.get_recently_played",
+      "description": "List games a player has played in the last two weeks with recent and total playtime. Returns empty for private/friends-only profiles.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "steamId": { "type": "string", "description": "64-bit SteamID. Defaults to the connection's default_steam_id." },
+          "count": { "type": "integer", "description": "Max games to return (max 50; omit for all)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "steam.get_player_achievements",
+      "description": "Get a player's achievement progress for one game: total achievements, how many are unlocked, and the list of unlocked achievement names. Requires the profile's game details to be public.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "steamId": { "type": "string", "description": "64-bit SteamID. Defaults to the connection's default_steam_id." },
+          "appId": { "type": "integer", "description": "Steam app id of the game, e.g. 440 for Team Fortress 2" }
+        },
+        "required": ["appId"]
+      }
+    },
+    {
+      "name": "steam.get_app_news",
+      "description": "Get the latest news posts for a game (patch notes, announcements, community posts). Keyless — works without a Steam Web API key.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "appId": { "type": "integer", "description": "Steam app id of the game, e.g. 730 for Counter-Strike 2" },
+          "count": { "type": "integer", "description": "Number of news items to return (default 5, max 20)" }
+        },
+        "required": ["appId"]
+      }
+    },
+    {
+      "name": "steam.get_current_players",
+      "description": "Get the current number of players in-game for a Steam app right now. Keyless — works without a Steam Web API key.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "appId": { "type": "integer", "description": "Steam app id of the game, e.g. 570 for Dota 2" }
+        },
+        "required": ["appId"]
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "steam", "scopes": [], "required": false, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

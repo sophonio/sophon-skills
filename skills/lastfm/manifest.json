@@ -1,0 +1,153 @@
+{
+  "name": "lastfm",
+  "version": "1.0.0",
+  "description": "Last.fm music data integration — look up artist info, similar artists, and top tracks, search tracks, browse tag and global charts, and read a user's recent plays and top artists. Uses a free Last.fm API key (read-only public methods, no scrobbling). Attribution required: music data is provided by Last.fm and the Last.fm API is for non-commercial use.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "integration",
+  "tags": ["lastfm", "music", "artists", "tracks", "charts", "scrobbling", "audioscrobbler", "recommendations"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "lastfm",
+    "displayName": "Last.fm",
+    "description": "Music metadata, charts, and listening history via the Last.fm API",
+    "icon": "lastfm",
+    "authType": "custom",
+    "category": "integration",
+    "fields": [
+      {
+        "key": "api_key",
+        "label": "API Key",
+        "type": "secret",
+        "required": true,
+        "helpText": "Create a free Last.fm API account to get an API key.",
+        "helpUrl": "https://www.last.fm/api/account/create"
+      },
+      {
+        "key": "default_username",
+        "label": "Default Username",
+        "type": "text",
+        "required": false,
+        "helpText": "Optional Last.fm username used by the user.* tools when no username is given."
+      }
+    ],
+    "testEndpoint": "/?method=chart.gettopartists&format=json&limit=1"
+  },
+  "tools": [
+    {
+      "name": "lastfm.get_artist_info",
+      "description": "Get info about an artist: bio summary, listener and play counts, top tags, and Last.fm URL.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "artist": { "type": "string", "description": "Artist name, e.g. Radiohead" }
+        },
+        "required": ["artist"]
+      }
+    },
+    {
+      "name": "lastfm.get_similar_artists",
+      "description": "List artists similar to a given artist, with match scores and Last.fm URLs.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "artist": { "type": "string", "description": "Artist name to find similar artists for" },
+          "limit": { "type": "integer", "description": "Max artists to return (default 10, max 50)" }
+        },
+        "required": ["artist"]
+      }
+    },
+    {
+      "name": "lastfm.get_artist_top_tracks",
+      "description": "List an artist's most popular tracks on Last.fm with play and listener counts.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "artist": { "type": "string", "description": "Artist name" },
+          "limit": { "type": "integer", "description": "Max tracks to return (default 10, max 50)" }
+        },
+        "required": ["artist"]
+      }
+    },
+    {
+      "name": "lastfm.search_tracks",
+      "description": "Search Last.fm for tracks by name. Returns track name, artist, listeners, and Last.fm URL.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "track": { "type": "string", "description": "Track name to search for" },
+          "limit": { "type": "integer", "description": "Max tracks to return (default 10, max 50)" }
+        },
+        "required": ["track"]
+      }
+    },
+    {
+      "name": "lastfm.get_tag_top_artists",
+      "description": "List the top artists for a genre tag (e.g. shoegaze, jazz) on Last.fm.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "tag": { "type": "string", "description": "Tag/genre name, e.g. shoegaze" },
+          "limit": { "type": "integer", "description": "Max artists to return (default 10, max 50)" }
+        },
+        "required": ["tag"]
+      }
+    },
+    {
+      "name": "lastfm.get_chart_top_artists",
+      "description": "List the current global top-chart artists on Last.fm.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "limit": { "type": "integer", "description": "Max artists to return (default 10, max 50)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "lastfm.get_user_recent_tracks",
+      "description": "List a user's recently played tracks (name, artist, date, or now playing). Falls back to the connection's default_username when no username is given.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "username": { "type": "string", "description": "Last.fm username (defaults to the connection's default_username)" },
+          "limit": { "type": "integer", "description": "Max tracks to return (default 10, max 50)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "lastfm.get_user_top_artists",
+      "description": "List a user's top artists for a period. Falls back to the connection's default_username when no username is given.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "username": { "type": "string", "description": "Last.fm username (defaults to the connection's default_username)" },
+          "period": { "type": "string", "description": "Time period (default overall)", "enum": ["7day", "1month", "3month", "6month", "12month", "overall"] },
+          "limit": { "type": "integer", "description": "Max artists to return (default 10, max 50)" }
+        },
+        "required": []
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "lastfm", "scopes": [], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

@@ -107,6 +107,21 @@ into `.sophon-skill` artifacts, and the docs for publishing them.
 | [`dynamics-365`](skills/dynamics-365) | integration | Dynamics 365 Dataverse records — OData queries and record CRUD |
 | [`artifactory`](skills/artifactory) | development | JFrog Artifactory repositories, artifact search (AQL), builds, properties |
 
+**Entertainment & media**
+
+| Skill | Category | Description |
+|-------|----------|-------------|
+| [`tmdb`](skills/tmdb) | data | Search movies/TV, discovery, trending, and streaming providers (TMDB) |
+| [`plex`](skills/plex) | integration | Search a Plex server, sessions, on-deck, recently added, library scans |
+| [`jellyfin`](skills/jellyfin) | integration | Jellyfin library search, items, sessions, next-up, metadata refresh |
+| [`radarr`](skills/radarr) | integration | Radarr movie library, calendar, queue, and add/monitor movies |
+| [`sonarr`](skills/sonarr) | integration | Sonarr series library, calendar, missing episodes, queue, add series |
+| [`seerr`](skills/seerr) | integration | Overseerr/Jellyseerr media requests — search, request, approve, decline |
+| [`steam`](skills/steam) | integration | Steam profiles, owned/recent games, achievements, player counts, news |
+| [`twitch`](skills/twitch) | integration | Twitch streams, top games, clips, VODs, and channel info (app token) |
+| [`ticketmaster`](skills/ticketmaster) | integration | Search live events, attractions, and venues via Ticketmaster Discovery |
+| [`lastfm`](skills/lastfm) | integration | Last.fm artist info, similar artists, charts, and public listening history |
+
 **Research & utilities**
 
 | Skill | Category | Description |

@@ -1,0 +1,135 @@
+{
+  "name": "ticketmaster",
+  "version": "1.0.0",
+  "description": "Ticketmaster Discovery API integration — search live events by keyword, city, date window, and genre; look up full event details including on-sale dates and price ranges; find performers (attractions) and their upcoming shows; search venues; browse the segment/genre taxonomy; and get typeahead suggestions. Authenticates with a free self-serve Consumer Key (apikey query parameter) from developer.ticketmaster.com. Event data is provided by the Ticketmaster Discovery API and is biased toward Ticketmaster-ticketed events; API access may not be resold and responses should only be cached briefly per Ticketmaster's terms.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "integration",
+  "tags": ["ticketmaster", "events", "concerts", "tickets", "venues", "attractions", "live-events", "discovery", "sports", "music"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "ticketmaster",
+    "displayName": "Ticketmaster",
+    "description": "Live event, attraction, and venue discovery via the Ticketmaster Discovery API",
+    "icon": "ticketmaster",
+    "authType": "custom",
+    "category": "integration",
+    "fields": [
+      {
+        "key": "apiKey",
+        "label": "Consumer Key (API Key)",
+        "type": "secret",
+        "required": true,
+        "helpText": "Consumer Key of your app on developer.ticketmaster.com (Discovery API access is granted to every app by default).",
+        "helpUrl": "https://developer.ticketmaster.com/products-and-docs/apis/getting-started/"
+      }
+    ],
+    "testEndpoint": "/discovery/v2/classifications.json?size=1"
+  },
+  "tools": [
+    {
+      "name": "ticketmaster.search_events",
+      "description": "Search live events by keyword, city, country, date window, and/or classification (e.g. Music, Sports). Returns trimmed event summaries: name, date, venue, price ranges, and ticket URL. Deep paging is capped at the first 1000 results.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "keyword": { "type": "string", "description": "Free-text keyword (artist, team, event name)" },
+          "city": { "type": "string", "description": "Filter by city name, e.g. Boston" },
+          "countryCode": { "type": "string", "description": "ISO 3166-1 alpha-2 country code, e.g. US, GB, DE" },
+          "startDateTime": { "type": "string", "description": "Only events starting after this instant (ISO 8601 with Z, e.g. 2026-08-01T00:00:00Z)" },
+          "endDateTime": { "type": "string", "description": "Only events starting before this instant (ISO 8601 with Z)" },
+          "classificationName": { "type": "string", "description": "Segment/genre filter, e.g. Music, Sports, Rock, Comedy" },
+          "size": { "type": "integer", "description": "Results per page (default 20, max 100)" },
+          "page": { "type": "integer", "description": "Page number, 0-based (default 0). size * (page + 1) must stay <= 1000." }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "ticketmaster.get_event",
+      "description": "Get full details of a single event by id, including start dates, status, public on-sale window, venue, performers, classifications, price ranges, and seatmap URL.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "eventId": { "type": "string", "description": "Ticketmaster event id, e.g. G5vYZ4x1sVo-1" }
+        },
+        "required": ["eventId"]
+      }
+    },
+    {
+      "name": "ticketmaster.search_attractions",
+      "description": "Search attractions (performers, artists, teams) by keyword. Returns id, name, and classification names.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "keyword": { "type": "string", "description": "Attraction name to search for, e.g. Coldplay" },
+          "size": { "type": "integer", "description": "Results per page (default 20, max 100)" }
+        },
+        "required": ["keyword"]
+      }
+    },
+    {
+      "name": "ticketmaster.get_attraction_events",
+      "description": "List upcoming events for a specific attraction (performer/team) by attraction id.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "attractionId": { "type": "string", "description": "Ticketmaster attraction id, e.g. K8vZ917Gku7" },
+          "size": { "type": "integer", "description": "Results per page (default 20, max 100)" }
+        },
+        "required": ["attractionId"]
+      }
+    },
+    {
+      "name": "ticketmaster.search_venues",
+      "description": "Search venues by keyword. Returns id, name, city, state, and country.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "keyword": { "type": "string", "description": "Venue name to search for, e.g. Madison Square Garden" },
+          "size": { "type": "integer", "description": "Results per page (default 20, max 100)" }
+        },
+        "required": ["keyword"]
+      }
+    },
+    {
+      "name": "ticketmaster.list_classifications",
+      "description": "List the Ticketmaster classification taxonomy: segments (Music, Sports, Arts & Theatre, ...) with their genres.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "name": "ticketmaster.suggest",
+      "description": "Typeahead suggestions for a partial keyword: matching attractions, venues, and events.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "keyword": { "type": "string", "description": "Partial search text, e.g. 'cold'" }
+        },
+        "required": ["keyword"]
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "ticketmaster", "scopes": ["read"], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

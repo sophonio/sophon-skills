@@ -1,0 +1,160 @@
+{
+  "name": "radarr",
+  "version": "1.0.0",
+  "description": "Radarr integration for your self-hosted movie PVR — search TMDB for films, add movies, browse your library, the release calendar, the download queue, and grab/import history, and manage monitoring, quality profiles, and root folders. Authenticates with your instance's static API key sent as the X-Api-Key header (Radarr Settings > General > Security); requires Radarr v3+ and the server must be reachable from Sophon's sandbox (LAN-only or VPN-only instances need a reverse proxy or tunnel).",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "integration",
+  "tags": ["radarr", "movies", "film", "pvr", "media", "self-hosted", "usenet", "torrents", "automation", "servarr"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "radarr",
+    "displayName": "Radarr",
+    "description": "Self-hosted Radarr movie PVR (API v3)",
+    "icon": "radarr",
+    "authType": "custom",
+    "category": "integration",
+    "fields": [
+      {
+        "key": "base_url",
+        "label": "Radarr URL",
+        "type": "url",
+        "required": true,
+        "placeholder": "http://192.168.1.50:7878",
+        "helpText": "The URL of your Radarr server including port, without a trailing slash. Must be reachable from Sophon's sandbox — LAN-only or VPN-only instances need a reverse proxy or tunnel."
+      },
+      {
+        "key": "api_key",
+        "label": "API Key",
+        "type": "secret",
+        "required": true,
+        "helpText": "Found in Radarr under Settings > General > Security.",
+        "helpUrl": "https://wiki.servarr.com/radarr/settings#security"
+      }
+    ],
+    "testEndpoint": "/api/v3/system/status"
+  },
+  "tools": [
+    {
+      "name": "radarr.search_movie_lookup",
+      "description": "Search TMDB (via Radarr) for movies to add. Returns title, year, tmdbId, and a short overview for each match.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "term": { "type": "string", "description": "Movie search term, e.g. 'Dune' or 'tmdb:693134'" }
+        },
+        "required": ["term"]
+      }
+    },
+    {
+      "name": "radarr.list_movies",
+      "description": "List all movies in the Radarr library with monitoring state, whether the file is present, year, and ids.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "name": "radarr.get_calendar",
+      "description": "Get upcoming and recent movie releases from the Radarr calendar (cinema, digital, physical), optionally within a date window.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "start": { "type": "string", "description": "Window start date (ISO 8601, e.g. 2026-07-18)" },
+          "end": { "type": "string", "description": "Window end date (ISO 8601, e.g. 2026-08-18)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "radarr.get_queue",
+      "description": "Show the current download queue with status, time left, and download progress per item.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "name": "radarr.get_history",
+      "description": "List recent grab, import, and download-failure events from Radarr history, paginated.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "page": { "type": "integer", "description": "Page number (default 1)" },
+          "pageSize": { "type": "integer", "description": "Results per page (default 20, max 100)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "radarr.add_movie",
+      "description": "Add a new movie to Radarr by TMDB id, choosing a quality profile and root folder, optionally searching for a release immediately.",
+      "riskLevel": "medium",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "tmdbId": { "type": "integer", "description": "TMDB id of the movie (from radarr.search_movie_lookup)" },
+          "title": { "type": "string", "description": "Movie title" },
+          "qualityProfileId": { "type": "integer", "description": "Quality profile id (from radarr.list_quality_profiles)" },
+          "rootFolderPath": { "type": "string", "description": "Root folder path (from radarr.list_root_folders)" },
+          "monitored": { "type": "boolean", "description": "Monitor the movie for releases (default true)" },
+          "minimumAvailability": { "type": "string", "enum": ["announced", "inCinemas", "released"], "description": "When Radarr considers the movie available (default 'released')" },
+          "searchForMovie": { "type": "boolean", "description": "Start searching for a release right after adding (default false)" }
+        },
+        "required": ["tmdbId", "title", "qualityProfileId", "rootFolderPath"]
+      }
+    },
+    {
+      "name": "radarr.set_monitored",
+      "description": "Turn monitoring on or off for a movie in the library.",
+      "riskLevel": "low",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "movieId": { "type": "integer", "description": "Radarr movie id (from radarr.list_movies)" },
+          "monitored": { "type": "boolean", "description": "true to monitor, false to unmonitor" }
+        },
+        "required": ["movieId", "monitored"]
+      }
+    },
+    {
+      "name": "radarr.list_quality_profiles",
+      "description": "List the quality profiles configured in Radarr (id and name), for use with radarr.add_movie.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "name": "radarr.list_root_folders",
+      "description": "List the root folders configured in Radarr with free space, for use with radarr.add_movie.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "radarr", "scopes": ["read", "write"], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

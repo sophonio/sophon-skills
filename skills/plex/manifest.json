@@ -1,0 +1,132 @@
+{
+  "name": "plex",
+  "version": "1.0.0",
+  "description": "Plex Media Server integration — search your libraries, inspect item details, list libraries, browse recently added and On Deck items, see active playback sessions, and trigger library scans on your own Plex server. Authenticates with a static owner/admin X-Plex-Token (Plex's 'Legacy' token auth — powerful, guard it carefully) sent on every request together with Accept: application/json and a fixed X-Plex-Client-Identifier. Self-hosted: your Plex server (usually a LAN address like http://192.168.1.50:32400) must be reachable from Sophon's sandbox — LAN-only servers need a VPN, tunnel, or reverse proxy.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "integration",
+  "tags": ["plex", "media-server", "movies", "tv", "music", "self-hosted", "streaming", "library"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "plex",
+    "displayName": "Plex",
+    "description": "Plex Media Server libraries, sessions, and scans via the Plex HTTP API",
+    "icon": "plex",
+    "authType": "custom",
+    "category": "integration",
+    "fields": [
+      {
+        "key": "base_url",
+        "label": "Plex Server URL",
+        "type": "url",
+        "required": true,
+        "placeholder": "http://192.168.1.50:32400",
+        "helpText": "Base URL of your Plex Media Server (e.g. http://192.168.1.50:32400). Must be reachable from Sophon's sandbox — LAN-only servers need a VPN, tunnel, or reverse proxy."
+      },
+      {
+        "key": "plex_token",
+        "label": "X-Plex-Token",
+        "type": "secret",
+        "required": true,
+        "helpText": "Your owner/admin X-Plex-Token: in Plex Web open any library item > Get Info > View XML, then copy the X-Plex-Token value from the URL. Warning: this token is admin-powerful — it grants full control of your server.",
+        "helpUrl": "https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/"
+      }
+    ],
+    "testEndpoint": "/library/sections"
+  },
+  "credentials": [
+    { "service": "plex", "scopes": ["read", "scan"], "required": true, "access": "proxy" }
+  ],
+  "tools": [
+    {
+      "name": "plex.search_library",
+      "description": "Search Plex for items matching a query — across all libraries, or within one library section if sectionId is given. Returns title, type, year, ratingKey, and library section for each match.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string", "description": "Search text, e.g. a movie or show title" },
+          "sectionId": { "type": "string", "description": "Library section key to search within (from plex.list_libraries). Omit to search all libraries." },
+          "limit": { "type": "integer", "description": "Max results to return (default 25, max 100)" }
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "plex.get_item_details",
+      "description": "Get details of a library item by ratingKey — summary, year, rating, duration, and trimmed media stream info (resolution, codecs, container, bitrate).",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "ratingKey": { "type": "string", "description": "The item's ratingKey (from search or listing tools)" }
+        },
+        "required": ["ratingKey"]
+      }
+    },
+    {
+      "name": "plex.list_libraries",
+      "description": "List the library sections on the Plex server with each section's key, title, type (movie, show, artist, photo), and metadata agent.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "name": "plex.get_recently_added",
+      "description": "List recently added items — server-wide, or for one library section if sectionId is given.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "sectionId": { "type": "string", "description": "Library section key to list recently added items from. Omit for server-wide." },
+          "limit": { "type": "integer", "description": "Max items to return (default 25, max 100)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "plex.get_active_sessions",
+      "description": "List active playback sessions — who is watching what, on which player, and how far along they are.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "name": "plex.get_on_deck",
+      "description": "List On Deck items (continue-watching queue) across the server.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "name": "plex.scan_library_section",
+      "description": "Trigger a scan (refresh) of a library section so Plex picks up new or changed files.",
+      "riskLevel": "low",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "sectionId": { "type": "string", "description": "Library section key to scan (from plex.list_libraries)" }
+        },
+        "required": ["sectionId"]
+      }
+    }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

@@ -1,0 +1,153 @@
+{
+  "name": "jellyfin",
+  "version": "1.0.0",
+  "description": "Jellyfin integration for your self-hosted media server — search movies, shows, music, and episodes; inspect item metadata; list libraries; see recently added items and who is watching right now; get continue-watching / next-up episodes; and trigger metadata or library refreshes. Authenticates with a static admin API key sent in the modern Authorization: MediaBrowser header (Dashboard > API Keys). API keys are admin-scoped, so the tool set is read-only plus low-risk refresh/scan. Requires the server to be reachable from Sophon's sandbox (LAN-only or VPN-only instances need a reverse proxy or tunnel).",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "integration",
+  "tags": ["jellyfin", "media", "movies", "tv", "music", "self-hosted", "streaming", "library", "automation"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "jellyfin",
+    "displayName": "Jellyfin",
+    "description": "Self-hosted Jellyfin media server",
+    "icon": "jellyfin",
+    "authType": "custom",
+    "category": "integration",
+    "fields": [
+      {
+        "key": "base_url",
+        "label": "Jellyfin URL",
+        "type": "url",
+        "required": true,
+        "placeholder": "http://192.168.1.10:8096",
+        "helpText": "The URL of your Jellyfin server including port, without a trailing slash. Must be reachable from Sophon's sandbox — LAN-only or VPN-only instances need a reverse proxy or tunnel."
+      },
+      {
+        "key": "api_key",
+        "label": "API Key",
+        "type": "secret",
+        "required": true,
+        "helpText": "Create one in Jellyfin under Dashboard > Advanced > API Keys. Note: Jellyfin API keys are admin-scoped (full server privileges) — this skill only reads and triggers refreshes.",
+        "helpUrl": "https://jellyfin.org/docs/general/networking/"
+      },
+      {
+        "key": "default_user_id",
+        "label": "Default User ID",
+        "type": "text",
+        "required": false,
+        "helpText": "Optional Jellyfin user ID used for continue-watching / next-up queries. Find it in the Dashboard > Users (the id in the URL) or from active session data."
+      }
+    ],
+    "testEndpoint": "/System/Info"
+  },
+  "tools": [
+    {
+      "name": "jellyfin.search_library",
+      "description": "Search across all libraries for movies, shows, episodes, or music by title. Optionally restrict to item types.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "searchTerm": { "type": "string", "description": "Text to search for" },
+          "includeItemTypes": { "type": "string", "description": "Comma-separated item types to restrict to, e.g. 'Movie,Series,Episode,Audio'" },
+          "limit": { "type": "integer", "description": "Max results (default 25, max 100)" }
+        },
+        "required": ["searchTerm"]
+      }
+    },
+    {
+      "name": "jellyfin.get_item",
+      "description": "Get full metadata for one item (overview, genres, cast/crew, and media streams) by its id.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "itemId": { "type": "string", "description": "The item id (from search results)" },
+          "userId": { "type": "string", "description": "Optional user id to fetch user-scoped fields; defaults to the connection card's default user" }
+        },
+        "required": ["itemId"]
+      }
+    },
+    {
+      "name": "jellyfin.list_libraries",
+      "description": "List the media libraries (virtual folders) with their collection types, plus overall item counts.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "name": "jellyfin.get_recently_added",
+      "description": "List the most recently added items, optionally within one library.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "parentId": { "type": "string", "description": "Optional library/folder id to scope to (from jellyfin.list_libraries)" },
+          "limit": { "type": "integer", "description": "Max results (default 20, max 100)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "jellyfin.get_active_sessions",
+      "description": "Show current playback sessions — who is watching what, on which client, and whether it is paused.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "name": "jellyfin.get_next_up",
+      "description": "Get the continue-watching / next-up episodes for a user. Requires a user id (default_user_id or the userId parameter).",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "userId": { "type": "string", "description": "User id; defaults to the connection card's default user" },
+          "limit": { "type": "integer", "description": "Max results (default 20, max 100)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "jellyfin.refresh_item_metadata",
+      "description": "Trigger a metadata refresh for one item.",
+      "riskLevel": "low",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "itemId": { "type": "string", "description": "The item id to refresh" }
+        },
+        "required": ["itemId"]
+      }
+    },
+    {
+      "name": "jellyfin.scan_library",
+      "description": "Trigger a full library scan on the server.",
+      "riskLevel": "low",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "jellyfin", "scopes": ["read", "refresh"], "required": true, "access": "proxy" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}
