@@ -1,0 +1,138 @@
+{
+  "name": "dataroot",
+  "version": "1.0.3",
+  "description": "Dataroot integration via the Dataroot REST API — discover the organizations you belong to, their connections and data sources, inspect a data source's schema/table/column metadata, list organization members, and check the signed-in account and quota. Authenticates with your Dataroot email and password to mint a short-lived access token per invocation; secret data-source settings (passwords, access keys, credentials) are masked before output. Dataroot is a Buildersoft LLC product.",
+  "author": "Buildersoft LLC",
+  "license": "Proprietary",
+  "category": "integration",
+  "tags": ["dataroot", "data", "analytics", "connections", "data-sources", "metadata", "organizations", "rest-api"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "dataroot",
+    "displayName": "Dataroot",
+    "description": "Dataroot organization, connection, and data-source discovery and metadata",
+    "icon": "dataroot",
+    "authType": "custom",
+    "category": "integration",
+    "fields": [
+      {
+        "key": "baseUrl",
+        "label": "Base URL",
+        "type": "url",
+        "required": true,
+        "helpText": "Your Dataroot API base URL, e.g. https://api.dev.dataroot.at (no trailing slash)."
+      },
+      {
+        "key": "emailAddress",
+        "label": "Email Address",
+        "type": "text",
+        "required": true,
+        "helpText": "The email address of the Dataroot account used for API access."
+      },
+      {
+        "key": "password",
+        "label": "Password",
+        "type": "secret",
+        "required": true,
+        "helpText": "The account password. Used only to obtain a short-lived access token per call — it is never stored by the skill."
+      }
+    ],
+    "testEndpoint": "/api/v1/organizations"
+  },
+  "tools": [
+    {
+      "name": "dataroot.list_organizations",
+      "description": "List the organizations the authenticated account belongs to (id and name). Use this to discover which organizations you can query.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "dataroot.list_connections",
+      "description": "List the connections in an organization, with each connection's status and data-source count.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "organization": { "type": "string", "description": "Organization name or id" }
+        },
+        "required": ["organization"]
+      }
+    },
+    {
+      "name": "dataroot.list_data_sources",
+      "description": "List the data sources in an organization. Aggregates across the organization's connections (capped) when connectionId is omitted, or scopes to a single connection when it is given. Returns id, name, type, category, status, tags, and owning connection — no connection settings/secrets.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "organization": { "type": "string", "description": "Organization name or id" },
+          "connectionId": { "type": "string", "description": "Optional connection id to scope the listing to a single connection" }
+        },
+        "required": ["organization"]
+      }
+    },
+    {
+      "name": "dataroot.get_data_source",
+      "description": "Get one data source's details and settings by connection and source id. Secret settings values (passwords, access keys, credentials) are masked.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "organization": { "type": "string", "description": "Organization name or id" },
+          "connectionId": { "type": "string", "description": "The connection id the data source belongs to" },
+          "sourceId": { "type": "string", "description": "The data source id" }
+        },
+        "required": ["organization", "connectionId", "sourceId"]
+      }
+    },
+    {
+      "name": "dataroot.get_data_source_metadata",
+      "description": "Get a data source's schema/table/column metadata (schemas, tables, and columns with their types), summarized and capped to stay compact.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "organization": { "type": "string", "description": "Organization name or id" },
+          "dataSourceId": { "type": "string", "description": "The data source id whose metadata to fetch" }
+        },
+        "required": ["organization", "dataSourceId"]
+      }
+    },
+    {
+      "name": "dataroot.list_members",
+      "description": "List the members of an organization (name, email, owner flag, and membership status).",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "organization": { "type": "string", "description": "Organization name or id" }
+        },
+        "required": ["organization"]
+      }
+    },
+    {
+      "name": "dataroot.whoami",
+      "description": "Return the authenticated account's profile (and monthly quota when available). Useful as a connectivity/identity check.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "dataroot", "scopes": ["read"], "required": true, "access": "injected" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 45,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}
