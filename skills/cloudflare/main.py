@@ -2,7 +2,7 @@
 
 Pure standard library (urllib) so it runs unchanged in the alpine Python sandbox with no pip
 dependencies. `params` is injected as a global by the Sophon runtime and carries the tool name,
-the tool arguments, and the connection-card credential fields (apiToken, zoneId, accountId).
+the tool arguments, and the connection-card credential fields (apiToken, zoneId).
 
 Cloudflare wraps every response as {"success": bool, "result": ..., "errors": [...]}. On
 success=false we surface the errors as {"error": errors}.

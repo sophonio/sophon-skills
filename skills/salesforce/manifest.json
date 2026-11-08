@@ -1,6 +1,6 @@
 {
   "name": "salesforce",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Salesforce CRM integration via the Salesforce REST API (v62.0) — run SOQL queries and SOSL full-text searches, fetch and describe objects, create and update records, and log Task activities. Uses OAuth2 client credentials against your org's My Domain with an External Client App and a run-as integration user; an access token is minted per invocation (no refresh token).",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -140,7 +140,7 @@
     }
   ],
   "credentials": [
-    { "service": "salesforce", "scopes": ["api"], "required": true, "access": "proxy" }
+    { "service": "salesforce", "scopes": ["api"], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

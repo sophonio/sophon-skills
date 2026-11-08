@@ -1,6 +1,6 @@
 {
   "name": "linear",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Linear integration — search, read, create, and update issues, list teams, and add comments via the Linear GraphQL API.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -111,7 +111,7 @@
     }
   ],
   "credentials": [
-    { "service": "linear", "scopes": ["read", "write"], "required": true, "access": "proxy" }
+    { "service": "linear", "scopes": ["read", "write"], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

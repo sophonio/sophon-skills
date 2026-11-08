@@ -1,6 +1,6 @@
 {
   "name": "radarr",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Radarr integration for your self-hosted movie PVR — search TMDB for films, add movies, browse your library, the release calendar, the download queue, and grab/import history, and manage monitoring, quality profiles, and root folders. Authenticates with your instance's static API key sent as the X-Api-Key header (Radarr Settings > General > Security); requires Radarr v3+ and the server must be reachable from Sophon's sandbox (LAN-only or VPN-only instances need a reverse proxy or tunnel).",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -148,7 +148,7 @@
     }
   ],
   "credentials": [
-    { "service": "radarr", "scopes": ["read", "write"], "required": true, "access": "proxy" }
+    { "service": "radarr", "scopes": ["read", "write"], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

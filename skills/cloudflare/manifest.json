@@ -1,6 +1,6 @@
 {
   "name": "cloudflare",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Cloudflare integration — list zones, manage DNS records, and purge cache through the Cloudflare API v4 using a scoped API token.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -31,13 +31,6 @@
         "type": "text",
         "required": false,
         "helpText": "Optional default zone id used when a tool call does not pass one."
-      },
-      {
-        "key": "accountId",
-        "label": "Account ID",
-        "type": "text",
-        "required": false,
-        "helpText": "Optional Cloudflare account id, used by account-scoped operations."
       }
     ],
     "testEndpoint": "/user/tokens/verify"
@@ -131,7 +124,7 @@
     }
   ],
   "credentials": [
-    { "service": "cloudflare", "scopes": ["zone:read", "dns:edit", "cache:purge"], "required": true, "access": "proxy" }
+    { "service": "cloudflare", "scopes": ["zone:read", "dns:edit", "cache:purge"], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

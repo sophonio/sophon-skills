@@ -1,6 +1,6 @@
 {
   "name": "hashicorp-vault",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "HashiCorp Vault integration — check cluster health and seal status, list secret engines and KV v2 secret keys, inspect secret metadata, read secret values, and review ACL policies and the current token. Authenticates with either a static Vault token or AppRole (role_id/secret_id login), with optional Vault Enterprise namespace and an opt-in TLS-verification skip for self-signed private deployments.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -150,7 +150,7 @@
     }
   ],
   "credentials": [
-    { "service": "hashicorp-vault", "scopes": ["read"], "required": true, "access": "proxy" }
+    { "service": "hashicorp-vault", "scopes": ["read"], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

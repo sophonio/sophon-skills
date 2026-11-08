@@ -1,6 +1,6 @@
 {
   "name": "vercel",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Vercel integration — inspect deployments, projects, and environment variable metadata via the Vercel REST API.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -100,7 +100,7 @@
     }
   ],
   "credentials": [
-    { "service": "vercel", "scopes": [], "required": true, "access": "proxy" }
+    { "service": "vercel", "scopes": [], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

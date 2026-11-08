@@ -1,6 +1,6 @@
 {
   "name": "powerbi",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Power BI integration via the Power BI REST API — list workspaces, datasets, reports, and dashboards, run DAX queries against datasets, trigger dataset refreshes, and inspect refresh history. Uses app-only (OAuth2 client-credentials) auth with a Microsoft Entra service principal; the service principal must be allowed to call Fabric public APIs (tenant setting) and be a Member or Admin of each target workspace.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -134,7 +134,7 @@
     }
   ],
   "credentials": [
-    { "service": "powerbi", "scopes": ["https://analysis.windows.net/powerbi/api/.default"], "required": true, "access": "proxy" }
+    { "service": "powerbi", "scopes": ["https://analysis.windows.net/powerbi/api/.default"], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

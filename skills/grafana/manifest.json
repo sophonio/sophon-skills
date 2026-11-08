@@ -1,6 +1,6 @@
 {
   "name": "grafana",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Grafana integration — search dashboards, inspect dashboard JSON, list data sources and provisioned alert rules, and add annotations via the Grafana HTTP API.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -96,7 +96,7 @@
     }
   ],
   "credentials": [
-    { "service": "grafana", "scopes": [], "required": true, "access": "proxy" }
+    { "service": "grafana", "scopes": [], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

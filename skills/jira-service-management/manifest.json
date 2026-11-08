@@ -1,6 +1,6 @@
 {
   "name": "jira-service-management",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Jira Service Management (JSM) integration via the Atlassian Service Desk API — browse service desks and request types, list queues and their issues, read customer requests and SLAs, create requests, add comments, and answer approvals. Authenticates with Basic auth (Atlassian account email + API token) and stays strictly on /rest/servicedeskapi.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -144,7 +144,7 @@
     }
   ],
   "credentials": [
-    { "service": "atlassian-jsm", "scopes": ["read", "write"], "required": true, "access": "proxy" }
+    { "service": "atlassian-jsm", "scopes": ["read", "write"], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

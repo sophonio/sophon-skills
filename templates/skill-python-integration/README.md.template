@@ -1,0 +1,42 @@
+# {{name}}
+
+{{description}}
+
+Implemented with the Python standard library (no dependencies), so it runs in the sandbox unchanged.
+
+## Tools
+
+| Tool | Risk | Description |
+|------|------|-------------|
+| `{{name}}.list_items` | none | List items |
+
+## Connection
+
+Connect the **{{name}}** integration with:
+
+- **Base URL** — the API root, e.g. `https://api.example.com`.
+- **API Token** — created in the provider's UI.
+
+The credentials are stored in Sophon's credential vault and supplied to the skill at call time under
+their exact manifest field keys (`baseUrl`, `apiToken`); they are never written into the skill.
+
+## Development notes
+
+- `main.py` runs at module scope with an injected `params` global — there is no stdin protocol and
+  no `__main__` block.
+- Read credentials at module scope; read tool arguments inside handlers. The build script uses that
+  split to distinguish them.
+- `credentials[].access` must be `"injected"`. `"proxy"` names an unimplemented broker and means the
+  skill receives no credentials at all.
+- Field keys are permanent: renaming one orphans every stored credential.
+
+Add tests as `tests/skills/test_{{name}}.py` in this repo, using the `mockhttp` harness; run them
+with `python tests/skills/run_all.py`.
+
+## Trademarks
+
+Add a trademark note here when wrapping a third-party brand.
+
+## License
+
+MIT — see [LICENSE](LICENSE) for details.

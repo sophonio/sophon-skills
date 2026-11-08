@@ -1,6 +1,6 @@
 {
   "name": "clickhouse",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "ClickHouse analytics database integration via the native HTTP interface — run read-only SELECT queries (server-enforced with readonly=1), list databases and tables, describe table schemas, inspect partition-level storage stats, and insert rows as JSONEachRow. Authenticates with HTTP Basic auth (username/password) against ClickHouse Cloud or self-hosted servers.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -138,7 +138,7 @@
     }
   ],
   "credentials": [
-    { "service": "clickhouse", "scopes": ["read", "write"], "required": true, "access": "proxy" }
+    { "service": "clickhouse", "scopes": ["read", "write"], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

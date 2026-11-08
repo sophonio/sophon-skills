@@ -1,6 +1,6 @@
 {
   "name": "entra-id",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Microsoft Entra ID (Azure AD) directory integration via Microsoft Graph — search users and groups, inspect a user's profile, manager, and group memberships, list group and admin-role members, review sign-in logs, and list app registrations with client-secret expiry dates. All tools are read-only. Uses app-only (client-credentials) auth and requires the Directory.Read.All application permission with admin consent (plus AuditLog.Read.All and an Entra ID P1/P2 license for sign-in logs).",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -152,7 +152,7 @@
     }
   ],
   "credentials": [
-    { "service": "microsoft-graph", "scopes": ["Directory.Read.All", "AuditLog.Read.All"], "required": true, "access": "proxy" }
+    { "service": "microsoft-graph", "scopes": ["Directory.Read.All", "AuditLog.Read.All"], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

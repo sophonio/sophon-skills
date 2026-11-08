@@ -1,6 +1,6 @@
 {
   "name": "sentry",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Sentry integration — list projects, browse and inspect error issues and their events, and triage issues (resolve, ignore, assign) via the Sentry REST API.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -108,7 +108,7 @@
     }
   ],
   "credentials": [
-    { "service": "sentry", "scopes": ["event:read", "project:read", "event:write"], "required": true, "access": "proxy" }
+    { "service": "sentry", "scopes": ["event:read", "project:read", "event:write"], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

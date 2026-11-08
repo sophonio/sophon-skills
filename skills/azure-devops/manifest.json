@@ -1,6 +1,6 @@
 {
   "name": "azure-devops",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Azure DevOps integration — query and manage work items (WIQL, create, update), inspect builds and their failing jobs, list pull requests, and run pipelines. Authenticates with an org-scoped Personal Access Token sent as HTTP Basic auth (empty username) against the Azure DevOps REST API v7.1; works with dev.azure.com organizations and on-premises Azure DevOps Server collection URLs.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -37,7 +37,7 @@
     "testEndpoint": "/_apis/projects?api-version=7.1&$top=1"
   },
   "credentials": [
-    { "service": "azure-devops", "scopes": ["vso.work_write", "vso.build_execute", "vso.code"], "required": true, "access": "proxy" }
+    { "service": "azure-devops", "scopes": ["vso.work_write", "vso.build_execute", "vso.code"], "required": true, "access": "injected" }
   ],
   "tools": [
     {

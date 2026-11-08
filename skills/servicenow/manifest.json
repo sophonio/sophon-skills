@@ -1,6 +1,6 @@
 {
   "name": "servicenow",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "ServiceNow integration via the Table API — search and read records in any table (incidents, changes, requests, CMDB CIs), search published knowledge articles, look up users and groups for routing, create incidents, update records, and add work notes. Authenticates with either OAuth2 client-credentials (instance Application Registry client id/secret) or HTTP basic auth with a service account, against your own ServiceNow instance URL.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -159,7 +159,7 @@
     }
   ],
   "credentials": [
-    { "service": "servicenow", "scopes": ["read", "write"], "required": true, "access": "proxy" }
+    { "service": "servicenow", "scopes": ["read", "write"], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

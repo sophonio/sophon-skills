@@ -29,26 +29,28 @@ pytest tests/
 
 ### Local Development
 
-You can test the skill manually by piping JSON to stdin:
+The runtime does not use stdin. It executes `main.py` at module scope with a `params` global built
+from the `SOPHON_PARAMS` environment variable, so run it the same way:
 
 ```bash
-echo '{"tool": "hello.greet", "parameters": {"name": "World"}}' | python main.py
+SOPHON_PARAMS='{"tool": "hello.greet", "name": "World"}' \
+  python -c 'import json,os; params=json.loads(os.environ["SOPHON_PARAMS"]); exec(open("main.py").read())'
 ```
 
 Expected output:
 ```json
-{"success": true, "result": "Hello, World! Welcome to {{name}}."}
+{"message": "Hello, World!"}
 ```
 
 ## Project Structure
 
 ```
 {{name}}/
-  manifest.json      # Skill manifest (tools, permissions, metadata)
+  manifest.json      # Skill manifest (tools, sandbox, metadata)
   main.py            # Tool handler implementations
-  requirements.txt   # Python dependencies
+  requirements.txt   # Python dependencies (pip-installed on EVERY tool call — keep it empty)
   tests/
-    test_main.py     # pytest tests
+    test_main.py     # tests
   README.md          # This file
   LICENSE            # MIT License
 ```

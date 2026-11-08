@@ -1,6 +1,6 @@
 {
   "name": "bitbucket",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Bitbucket Cloud integration — list repositories, browse and review pull requests (details, approvals, unified diffs), read files at any ref, list Pipelines runs, and add pull request comments for a workspace. Authenticates with HTTP Basic using your Atlassian account email plus a scoped Atlassian API token (app passwords were retired 2026-07-28).",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -139,7 +139,7 @@
     }
   ],
   "credentials": [
-    { "service": "bitbucket", "scopes": ["read:account", "read:repository:bitbucket", "read:pullrequest:bitbucket", "write:pullrequest:bitbucket", "read:pipeline:bitbucket"], "required": true, "access": "proxy" }
+    { "service": "bitbucket", "scopes": ["read:account", "read:repository:bitbucket", "read:pullrequest:bitbucket", "write:pullrequest:bitbucket", "read:pipeline:bitbucket"], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

@@ -1,6 +1,6 @@
 {
   "name": "hubspot",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "HubSpot CRM integration via the CRM v3 API — search and read contacts, companies, deals, and tickets, list pipelines and owners, create and update CRM records, and log notes on records. Authenticates with a HubSpot private-app access token (Bearer) against api.hubapi.com.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -145,7 +145,7 @@
         "crm.objects.notes.write"
       ],
       "required": true,
-      "access": "proxy"
+      "access": "injected"
     }
   ],
   "requirements": [],

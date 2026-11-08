@@ -1,6 +1,6 @@
 {
   "name": "steam",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Steam integration via the official Steam Web API — resolve vanity URLs, look up player profiles, list owned and recently played games with playtime, check per-game achievements, fetch game news, and get live player counts. Auth is a static Steam Web API key sent as the key query parameter; the game-news and current-player-count tools hit keyless endpoints and work without a key. Private or friends-only profiles return empty results. Powered by Steam. Steam is a trademark of Valve Corporation; this skill is not affiliated with or endorsed by Valve.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -126,7 +126,7 @@
     }
   ],
   "credentials": [
-    { "service": "steam", "scopes": [], "required": false, "access": "proxy" }
+    { "service": "steam", "scopes": [], "required": false, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

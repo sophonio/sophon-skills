@@ -1,6 +1,6 @@
 {
   "name": "jira",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Jira integration — search issues, manage projects",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -97,7 +97,7 @@
     }
   ],
   "credentials": [
-    { "service": "atlassian-jira", "scopes": ["read", "write"], "required": true, "access": "proxy" }
+    { "service": "atlassian-jira", "scopes": ["read", "write"], "required": true, "access": "injected" }
   ],
   "platforms": []
 }

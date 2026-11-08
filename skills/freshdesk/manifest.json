@@ -1,6 +1,6 @@
 {
   "name": "freshdesk",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Freshdesk helpdesk integration via the Freshdesk REST API v2 — list, search, create, and update support tickets, read ticket conversations, add private/public notes, and look up contacts. Authenticates with a personal Freshdesk API key sent as HTTP Basic auth against your portal URL. Ticket status and priority codes are mapped to readable names (Open/Pending/Resolved/Closed, Low/Medium/High/Urgent) in results.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -139,7 +139,7 @@
     }
   ],
   "credentials": [
-    { "service": "freshdesk", "scopes": ["read", "write"], "required": true, "access": "proxy" }
+    { "service": "freshdesk", "scopes": ["read", "write"], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

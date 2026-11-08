@@ -1,6 +1,6 @@
 {
   "name": "confluence",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Confluence integration — search pages, manage content and spaces",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -125,7 +125,7 @@
     }
   ],
   "credentials": [
-    { "service": "atlassian-confluence", "scopes": ["read", "write"], "required": true, "access": "proxy" }
+    { "service": "atlassian-confluence", "scopes": ["read", "write"], "required": true, "access": "injected" }
   ],
   "platforms": []
 }

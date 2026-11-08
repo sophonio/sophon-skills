@@ -1,6 +1,6 @@
 {
   "name": "outlook-calendar",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Microsoft 365 (Outlook) calendar integration via Microsoft Graph — list, create, update, and delete calendar events and list calendars for a mailbox. Uses app-only (client-credentials) auth and works with Microsoft 365 work/school accounts.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -121,7 +121,7 @@
     }
   ],
   "credentials": [
-    { "service": "microsoft-graph", "scopes": ["Calendars.ReadWrite"], "required": true, "access": "proxy" }
+    { "service": "microsoft-graph", "scopes": ["Calendars.ReadWrite"], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

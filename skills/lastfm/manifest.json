@@ -1,6 +1,6 @@
 {
   "name": "lastfm",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Last.fm music data integration — look up artist info, similar artists, and top tracks, search tracks, browse tag and global charts, and read a user's recent plays and top artists. Uses a free Last.fm API key (read-only public methods, no scrobbling). Attribution required: music data is provided by Last.fm and the Last.fm API is for non-commercial use.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -141,7 +141,7 @@
     }
   ],
   "credentials": [
-    { "service": "lastfm", "scopes": [], "required": true, "access": "proxy" }
+    { "service": "lastfm", "scopes": [], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

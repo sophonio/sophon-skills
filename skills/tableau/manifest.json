@@ -1,6 +1,6 @@
 {
   "name": "tableau",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Tableau integration via the Tableau REST API (v3.23) — list workbooks, views, data sources, and background jobs, pull view data as structured rows, search content by name, and trigger full extract refreshes. Authenticates with a Personal Access Token (PAT): the PAT name and secret are exchanged at /auth/signin for a short-lived session token per invocation. Works with Tableau Cloud and Tableau Server 2024.2 or later.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -139,7 +139,7 @@
     }
   ],
   "credentials": [
-    { "service": "tableau", "scopes": ["read", "write"], "required": true, "access": "proxy" }
+    { "service": "tableau", "scopes": ["read", "write"], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

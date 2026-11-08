@@ -23,7 +23,6 @@ Authenticate with a Cloudflare API token (Bearer auth).
 | --- | --- | --- | --- |
 | `apiToken` | secret | yes | A scoped API token. [Create one](https://dash.cloudflare.com/profile/api-tokens) with the permissions you need (e.g. Zone:Read, DNS:Edit, Cache Purge). |
 | `zoneId` | text | no | Default zone id used when a tool call omits one. |
-| `accountId` | text | no | Optional Cloudflare account id for account-scoped operations. |
 
 The token is verified against `/user/tokens/verify`. Requests go to `https://api.cloudflare.com/client/v4` with `Authorization: Bearer <apiToken>`.
 

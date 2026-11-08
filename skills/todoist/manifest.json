@@ -1,7 +1,7 @@
 {
   "name": "todoist",
-  "version": "1.0.0",
-  "description": "Todoist integration — list and manage tasks and projects: list tasks (optionally by project or filter), list projects, add tasks, complete tasks, and update tasks via the Todoist REST API v2.",
+  "version": "1.1.0",
+  "description": "Todoist integration — list and manage tasks and projects: list tasks (optionally by project or filter), list projects, add tasks, complete tasks, and update tasks via the Todoist API v1.",
   "author": "Buildersoft LLC",
   "license": "MIT",
   "category": "productivity",
@@ -26,7 +26,7 @@
         "helpUrl": "https://todoist.com/app/settings/integrations/developer"
       }
     ],
-    "testEndpoint": "/rest/v2/projects"
+    "testEndpoint": "/api/v1/projects"
   },
   "tools": [
     {
@@ -97,7 +97,7 @@
     }
   ],
   "credentials": [
-    { "service": "todoist", "scopes": ["data:read_write"], "required": true, "access": "proxy" }
+    { "service": "todoist", "scopes": ["data:read_write"], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

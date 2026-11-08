@@ -1,6 +1,6 @@
 {
   "name": "pipedrive",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Pipedrive CRM integration — search deals, people, organizations, and leads; list and update deals across pipelines and stages; look up contact details; and log notes and activities. Authenticates with your personal Pipedrive API token sent as the x-api-token header against https://{companyDomain}.pipedrive.com (v2 endpoints for deals, persons, activities, and search; v1 for notes).",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -144,7 +144,7 @@
     }
   ],
   "credentials": [
-    { "service": "pipedrive", "scopes": ["read", "write"], "required": true, "access": "proxy" }
+    { "service": "pipedrive", "scopes": ["read", "write"], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

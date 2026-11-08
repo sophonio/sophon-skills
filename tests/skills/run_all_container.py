@@ -1,6 +1,6 @@
 """Container parity smoke: run inside python:3.13-alpine with the repo mounted at /repo.
 
-Replicates the Sophon runtime's exec-with-params-global model for all 20 wave-5/6 skills:
+Replicates the Sophon runtime's exec-with-params-global model for every skill listed below:
 unknown-tool and missing-credentials paths must emit clean JSON errors on Python 3.13/alpine.
 """
 import contextlib
@@ -30,6 +30,7 @@ PAIRS = [
     ("sonarr", "sonarr.list_series"), ("seerr", "seerr.list_requests"),
     ("steam", "steam.get_player_summary"), ("twitch", "twitch.get_top_games"),
     ("ticketmaster", "ticketmaster.search_events"), ("lastfm", "lastfm.get_chart_top_artists"),
+    ("todoist", "todoist.list_tasks"),
 ]
 
 

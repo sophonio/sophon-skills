@@ -1,6 +1,6 @@
 {
   "name": "sonarqube",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "SonarQube integration — browse projects, quality gate status, issues, security hotspots, metrics, and analysis history, and assign issues, via the SonarQube Web API. Uses a static user token sent as a Bearer Authorization header (SonarQube Server 10.0+ and SonarQube Cloud); an optional organization key is appended for SonarQube Cloud. Works on the free Community Build.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -146,7 +146,7 @@
     }
   ],
   "credentials": [
-    { "service": "sonarqube", "scopes": ["read", "write"], "required": true, "access": "proxy" }
+    { "service": "sonarqube", "scopes": ["read", "write"], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

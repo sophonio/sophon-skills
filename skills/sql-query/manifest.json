@@ -1,6 +1,6 @@
 {
   "name": "sql-query",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "SQL database integration — connect to PostgreSQL, MySQL/MariaDB, or SQLite to list tables, inspect schemas, and run arbitrary read or write queries. Uses pure-Python drivers so it runs unchanged in the sandbox.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -103,7 +103,7 @@
     }
   ],
   "credentials": [
-    { "service": "sql", "scopes": ["read", "write"], "required": true, "access": "proxy" }
+    { "service": "sql", "scopes": ["read", "write"], "required": true, "access": "injected" }
   ],
   "requirements": ["pg8000==1.31.2", "PyMySQL==1.1.1"],
   "sandbox": {

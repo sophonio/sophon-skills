@@ -1,6 +1,6 @@
 {
   "name": "onedrive",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "OneDrive for Business integration via Microsoft Graph — browse folders, search and read files, create folders, upload text files, and create organization-scoped sharing links on a user's drive. Uses app-only (client-credentials) auth against https://graph.microsoft.com/v1.0/users/{userId}/drive and works with Microsoft 365 work/school accounts (not consumer OneDrive personal). Requires the Files.Read.All application permission for read tools and Files.ReadWrite.All for write tools, both with admin consent.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -141,7 +141,7 @@
     }
   ],
   "credentials": [
-    { "service": "microsoft-graph", "scopes": ["Files.Read.All", "Files.ReadWrite.All"], "required": true, "access": "proxy" }
+    { "service": "microsoft-graph", "scopes": ["Files.Read.All", "Files.ReadWrite.All"], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

@@ -1,6 +1,6 @@
 {
   "name": "datadog",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Datadog integration — query metrics timeseries and list, inspect, mute, and unmute monitors via the Datadog REST API.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -111,7 +111,7 @@
     }
   ],
   "credentials": [
-    { "service": "datadog", "scopes": ["metrics_read", "monitors_read", "monitors_write"], "required": true, "access": "proxy" }
+    { "service": "datadog", "scopes": ["metrics_read", "monitors_read", "monitors_write"], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

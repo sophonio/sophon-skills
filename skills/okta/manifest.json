@@ -1,6 +1,6 @@
 {
   "name": "okta",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Okta identity integration — search and inspect users, list groups and their members, see a user's assigned apps, query the system log, add users to groups, and suspend users. Authenticates with a static SSWS admin API token (Authorization: SSWS {apiToken}) against your Okta org's /api/v1 endpoints, with cursor pagination via Link headers.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -148,7 +148,7 @@
       "service": "okta",
       "scopes": ["okta.users.read", "okta.users.manage", "okta.groups.read", "okta.groups.manage", "okta.apps.read", "okta.logs.read"],
       "required": true,
-      "access": "proxy"
+      "access": "injected"
     }
   ],
   "requirements": [],

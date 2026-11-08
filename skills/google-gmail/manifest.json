@@ -1,6 +1,6 @@
 {
   "name": "google-gmail",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Google personal email and calendar — Gmail via IMAP/SMTP, Calendar via CalDAV. For @gmail.com accounts.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -178,7 +178,7 @@
     }
   ],
   "credentials": [
-    { "service": "google-personal", "scopes": ["email", "calendar"], "required": true, "access": "proxy" }
+    { "service": "google-personal", "scopes": ["email", "calendar"], "required": true, "access": "injected" }
   ],
   "sandbox": {
     "network": true,

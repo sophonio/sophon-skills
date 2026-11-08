@@ -1,6 +1,6 @@
 {
   "name": "dynamics-365",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Microsoft Dynamics 365 (Dataverse) integration via the Web API — query and read records with formatted values, inspect entity fields, create and update records, and attach notes. Uses app-only OAuth2 client-credentials auth against your Dataverse environment (scope {environmentUrl}/.default) through an Application User with a Dataverse security role.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -147,7 +147,7 @@
     }
   ],
   "credentials": [
-    { "service": "dynamics-365", "scopes": [".default"], "required": true, "access": "proxy" }
+    { "service": "dynamics-365", "scopes": [".default"], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {
