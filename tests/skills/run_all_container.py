@@ -30,7 +30,7 @@ PAIRS = [
     ("sonarr", "sonarr.list_series"), ("seerr", "seerr.list_requests"),
     ("steam", "steam.get_player_summary"), ("twitch", "twitch.get_top_games"),
     ("ticketmaster", "ticketmaster.search_events"), ("lastfm", "lastfm.get_chart_top_artists"),
-    ("todoist", "todoist.list_tasks"),
+    ("todoist", "todoist.list_tasks"), ("dataroot", "dataroot.list_organizations"),
 ]
 
 
