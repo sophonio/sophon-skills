@@ -1,0 +1,157 @@
+{
+  "name": "sqlite",
+  "version": "1.0.0",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "description": "SQLite named database connections with schema discovery, read-only natural-language-assisted SQL queries, and separately approved write SQL.",
+  "category": "data",
+  "tags": [
+    "sqlite",
+    "sql",
+    "database",
+    "file"
+  ],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "sqlite",
+    "displayName": "SQLite",
+    "description": "Connect named SQLite databases for schema-aware questions and SQL execution.",
+    "icon": "database",
+    "authType": "custom",
+    "category": "integration",
+    "connectionMode": "named",
+    "fields": [],
+    "testEndpoint": ""
+  },
+  "tools": [
+    {
+      "name": "sqlite.ping",
+      "description": "Test the selected database connection with SELECT 1.",
+      "riskLevel": "none",
+      "databaseAccess": "read",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "connectionId": {
+            "type": "string",
+            "description": "ID from db.list_connections; selects a named database connection"
+          }
+        },
+        "required": [
+          "connectionId"
+        ]
+      }
+    },
+    {
+      "name": "sqlite.list_tables",
+      "description": "List visible tables and views in the selected database or schema.",
+      "riskLevel": "none",
+      "databaseAccess": "read",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "connectionId": {
+            "type": "string",
+            "description": "ID from db.list_connections; selects a named database connection"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Maximum rows: default 100, maximum 1000"
+          }
+        },
+        "required": [
+          "connectionId"
+        ]
+      }
+    },
+    {
+      "name": "sqlite.describe_table",
+      "description": "Inspect columns, types, nullability, keys and relationships for a table.",
+      "riskLevel": "none",
+      "databaseAccess": "read",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "connectionId": {
+            "type": "string",
+            "description": "ID from db.list_connections; selects a named database connection"
+          },
+          "table": {
+            "type": "string",
+            "description": "Unquoted table name"
+          }
+        },
+        "required": [
+          "connectionId",
+          "table"
+        ]
+      }
+    },
+    {
+      "name": "sqlite.query",
+      "description": "Run one SELECT query with the read-only identity. Inspect metadata first; do not guess column names.",
+      "riskLevel": "low",
+      "databaseAccess": "read",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "connectionId": {
+            "type": "string",
+            "description": "ID from db.list_connections; selects a named database connection"
+          },
+          "sql": {
+            "type": "string",
+            "description": "One SELECT statement in this engine's SQL dialect"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Maximum rows: default 100, maximum 1000"
+          }
+        },
+        "required": [
+          "connectionId",
+          "sql"
+        ]
+      }
+    },
+    {
+      "name": "sqlite.execute",
+      "description": "Run one SQL statement with the separately configured write identity; may change or delete data or schema. Requires explicit user intent and approval.",
+      "riskLevel": "high",
+      "databaseAccess": "write",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "connectionId": {
+            "type": "string",
+            "description": "ID from db.list_connections; selects a named database connection"
+          },
+          "sql": {
+            "type": "string",
+            "description": "One SQL statement to execute"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Maximum rows: default 100, maximum 1000"
+          }
+        },
+        "required": [
+          "connectionId",
+          "sql"
+        ]
+      }
+    }
+  ],
+  "credentials": [],
+  "requirements": [
+    "sqlglot==30.23.0"
+  ],
+  "sandbox": {
+    "network": false,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}

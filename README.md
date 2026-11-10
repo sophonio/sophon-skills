@@ -60,6 +60,11 @@ into `.sophon-skill` artifacts, and the docs for publishing them.
 | [`fly-io`](skills/fly-io) | integration | Manage Fly.io Machines (list, start/stop/restart/destroy) |
 | [`home-assistant`](skills/home-assistant) | integration | Read entity states and call services on Home Assistant |
 | [`sql-query`](skills/sql-query) | data | Query PostgreSQL / MySQL / SQLite with schema introspection |
+| [`postgres`](skills/postgres) | data | Named PostgreSQL connections, schema discovery, and read/write SQL tools |
+| [`mssql`](skills/mssql) | data | Named SQL Server connections, schema discovery, and read/write SQL tools |
+| [`oracle`](skills/oracle) | data | Named Oracle connections, schema discovery, and read/write SQL tools |
+| [`mysql`](skills/mysql) | data | Named MySQL/MariaDB connections, schema discovery, and read/write SQL tools |
+| [`sqlite`](skills/sqlite) | data | Managed SQLite files, schema discovery, and read/write SQL tools |
 | [`airtable`](skills/airtable) | data | Read/write Airtable base records |
 | [`stripe-read`](skills/stripe-read) | data | Read-only Stripe reporting (balance, charges, customers, invoices) |
 

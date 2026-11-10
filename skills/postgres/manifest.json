@@ -1,0 +1,253 @@
+{
+  "name": "postgres",
+  "version": "1.0.0",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "description": "PostgreSQL named database connections with schema discovery, read-only natural-language-assisted SQL queries, and separately approved write SQL.",
+  "category": "data",
+  "tags": [
+    "postgres",
+    "postgresql",
+    "sql",
+    "database"
+  ],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "postgres",
+    "displayName": "PostgreSQL",
+    "description": "Connect named PostgreSQL databases for schema-aware questions and SQL execution.",
+    "icon": "database",
+    "authType": "custom",
+    "category": "integration",
+    "connectionMode": "named",
+    "fields": [
+      {
+        "key": "host",
+        "label": "Host",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "port",
+        "label": "Port",
+        "type": "number",
+        "required": false,
+        "placeholder": "5432"
+      },
+      {
+        "key": "database",
+        "label": "Database",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "tlsMode",
+        "label": "TLS",
+        "type": "select",
+        "required": true,
+        "options": [
+          "verify",
+          "disable"
+        ],
+        "helpText": "Use verify for certificate validation; disable only for a trusted local server."
+      },
+      {
+        "key": "readUsername",
+        "label": "Read username",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "readPassword",
+        "label": "Read password",
+        "type": "secret",
+        "required": true
+      },
+      {
+        "key": "writeUsername",
+        "label": "Write username",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "writePassword",
+        "label": "Write password",
+        "type": "secret",
+        "required": false
+      }
+    ],
+    "testEndpoint": ""
+  },
+  "tools": [
+    {
+      "name": "postgres.ping",
+      "description": "Test the selected database connection with SELECT 1.",
+      "riskLevel": "none",
+      "databaseAccess": "read",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "connectionId": {
+            "type": "string",
+            "description": "ID from db.list_connections; selects a named database connection"
+          }
+        },
+        "required": [
+          "connectionId"
+        ]
+      }
+    },
+    {
+      "name": "postgres.list_schemas",
+      "description": "List visible schemas or owners; use before choosing a table.",
+      "riskLevel": "none",
+      "databaseAccess": "read",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "connectionId": {
+            "type": "string",
+            "description": "ID from db.list_connections; selects a named database connection"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Maximum rows: default 100, maximum 1000"
+          }
+        },
+        "required": [
+          "connectionId"
+        ]
+      }
+    },
+    {
+      "name": "postgres.list_tables",
+      "description": "List visible tables and views in the selected database or schema.",
+      "riskLevel": "none",
+      "databaseAccess": "read",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "connectionId": {
+            "type": "string",
+            "description": "ID from db.list_connections; selects a named database connection"
+          },
+          "schema": {
+            "type": "string",
+            "description": "Schema or owner; defaults to the engine's usual schema"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Maximum rows: default 100, maximum 1000"
+          }
+        },
+        "required": [
+          "connectionId"
+        ]
+      }
+    },
+    {
+      "name": "postgres.describe_table",
+      "description": "Inspect columns, types, nullability, keys and relationships for a table.",
+      "riskLevel": "none",
+      "databaseAccess": "read",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "connectionId": {
+            "type": "string",
+            "description": "ID from db.list_connections; selects a named database connection"
+          },
+          "schema": {
+            "type": "string",
+            "description": "Schema or owner; defaults to the engine's usual schema"
+          },
+          "table": {
+            "type": "string",
+            "description": "Unquoted table name"
+          }
+        },
+        "required": [
+          "connectionId",
+          "table"
+        ]
+      }
+    },
+    {
+      "name": "postgres.query",
+      "description": "Run one SELECT query with the read-only identity. Inspect metadata first; do not guess column names.",
+      "riskLevel": "low",
+      "databaseAccess": "read",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "connectionId": {
+            "type": "string",
+            "description": "ID from db.list_connections; selects a named database connection"
+          },
+          "sql": {
+            "type": "string",
+            "description": "One SELECT statement in this engine's SQL dialect"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Maximum rows: default 100, maximum 1000"
+          }
+        },
+        "required": [
+          "connectionId",
+          "sql"
+        ]
+      }
+    },
+    {
+      "name": "postgres.execute",
+      "description": "Run one SQL statement with the separately configured write identity; may change or delete data or schema. Requires explicit user intent and approval.",
+      "riskLevel": "high",
+      "databaseAccess": "write",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "connectionId": {
+            "type": "string",
+            "description": "ID from db.list_connections; selects a named database connection"
+          },
+          "sql": {
+            "type": "string",
+            "description": "One SQL statement to execute"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Maximum rows: default 100, maximum 1000"
+          }
+        },
+        "required": [
+          "connectionId",
+          "sql"
+        ]
+      }
+    }
+  ],
+  "credentials": [
+    {
+      "service": "postgres",
+      "scopes": [
+        "read",
+        "write"
+      ],
+      "required": true,
+      "access": "injected"
+    }
+  ],
+  "requirements": [
+    "sqlglot==30.23.0",
+    "pg8000==1.31.5"
+  ],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}
