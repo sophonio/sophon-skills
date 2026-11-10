@@ -1,8 +1,15 @@
-"""Todoist integration skill — talks to the Todoist REST API v2 with an API token.
+"""Todoist integration skill — talks to the Todoist API v1 with an API token.
 
 Pure standard library (urllib) so it runs unchanged in the alpine Python sandbox with no pip
 dependencies. `params` is injected as a global by the Sophon runtime and carries the tool name,
 the tool arguments, and the connection-card credential field (apiToken).
+
+Uses the unified API at /api/v1. The former REST API v2 (/rest/v2) now answers HTTP 410
+"This endpoint is deprecated". Three things differ from v2 and shape the code below:
+  * list endpoints return {"results": [...], "next_cursor": ...} instead of a bare array;
+  * filter queries moved to their own endpoint, GET /tasks/filter?query=..., and are no longer a
+    parameter of GET /tasks;
+  * task and project objects no longer carry a `url` field, so it is derived from the id.
 """
 
 import json
@@ -12,7 +19,12 @@ import urllib.error
 
 tool_name = params.get("tool", "")
 api_token = params.get("apiToken", "")
-API_BASE = "https://api.todoist.com/rest/v2"
+
+API_BASE = "https://api.todoist.com/api/v1"
+TASK_URL = "https://app.todoist.com/app/task"
+PROJECT_URL = "https://app.todoist.com/app/project"
+INBOX_URL = "https://app.todoist.com/app/inbox"
+MAX_LIMIT = 200
 
 HEADERS = {
     "Authorization": f"Bearer {api_token}",
@@ -40,6 +52,13 @@ def request(method, path, data=None, query=None):
         raise RuntimeError(f"Todoist API error {e.code}: {detail}") from e
 
 
+def results_of(payload):
+    """Unwrap a v1 paginated list response, tolerating a bare array."""
+    if isinstance(payload, dict):
+        return payload.get("results") or []
+    return payload or []
+
+
 def clamp(value, default, maximum):
     try:
         return max(1, min(int(value), maximum))
@@ -48,43 +67,58 @@ def clamp(value, default, maximum):
 
 
 def task_summary(task):
+    task_id = task.get("id")
     return {
-        "id": task.get("id"),
+        "id": task_id,
         "content": task.get("content"),
         "due": (task.get("due") or {}).get("string") if task.get("due") else None,
         "priority": task.get("priority"),
         "projectId": task.get("project_id"),
-        "url": task.get("url"),
+        # v1 no longer returns a url; the id-only form is what the official client builds when
+        # it has no title slug to append.
+        "url": f"{TASK_URL}/{task_id}" if task_id else None,
     }
 
 
 def project_summary(project):
+    project_id = project.get("id")
+    # v1 sends `inbox_project`; `is_inbox_project` is the v2 spelling, still accepted here.
+    is_inbox = project.get("inbox_project", project.get("is_inbox_project"))
     return {
-        "id": project.get("id"),
+        "id": project_id,
         "name": project.get("name"),
         "color": project.get("color"),
         "isFavorite": project.get("is_favorite"),
-        "isInboxProject": project.get("is_inbox_project"),
-        "url": project.get("url"),
+        "isInboxProject": is_inbox,
+        "url": INBOX_URL if is_inbox else (f"{PROJECT_URL}/{project_id}" if project_id else None),
     }
 
 
 # --- Tool handlers ---------------------------------------------------------
 
 def list_tasks():
-    result = request("GET", "/tasks", query={
-        "project_id": params.get("projectId"),
-        "filter": params.get("filter"),
-    })
-    tasks = [task_summary(t) for t in (result or [])]
-    limit = clamp(params.get("limit", 30), 30, 200)
-    tasks = tasks[:limit]
+    limit = clamp(params.get("limit", 30), 30, MAX_LIMIT)
+    query = params.get("filter")
+    project_id = params.get("projectId")
+
+    if query:
+        # Filtering has its own endpoint in v1 and takes `query`, not `filter`. It accepts no
+        # project_id, so when both are supplied the project is applied to the returned tasks.
+        result = request("GET", "/tasks/filter", query={"query": query, "limit": limit})
+        tasks = results_of(result)
+        if project_id:
+            tasks = [t for t in tasks if str(t.get("project_id")) == str(project_id)]
+    else:
+        result = request("GET", "/tasks", query={"project_id": project_id, "limit": limit})
+        tasks = results_of(result)
+
+    tasks = [task_summary(t) for t in tasks][:limit]
     print(json.dumps({"count": len(tasks), "tasks": tasks}))
 
 
 def list_projects():
-    result = request("GET", "/projects")
-    projects = [project_summary(p) for p in (result or [])]
+    result = request("GET", "/projects", query={"limit": MAX_LIMIT})
+    projects = [project_summary(p) for p in results_of(result)]
     print(json.dumps({"count": len(projects), "projects": projects}))
 
 
@@ -110,7 +144,7 @@ def complete_task():
     task_id = params.get("taskId")
     if not task_id:
         raise ValueError("taskId is required")
-    request("POST", f"/tasks/{task_id}/close")
+    request("POST", f"/tasks/{urllib.parse.quote(str(task_id), safe='')}/close")
     print(json.dumps({"id": str(task_id), "closed": True}))
 
 
@@ -129,7 +163,7 @@ def update_task():
         payload["description"] = params["description"]
     if not payload:
         raise ValueError("Provide at least one field to update (content, dueString, priority, description)")
-    task = request("POST", f"/tasks/{task_id}", data=payload)
+    task = request("POST", f"/tasks/{urllib.parse.quote(str(task_id), safe='')}", data=payload)
     # Todoist returns the updated task JSON; older responses may be empty.
     if task:
         print(json.dumps(task_summary(task)))

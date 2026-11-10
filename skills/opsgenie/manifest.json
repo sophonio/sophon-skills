@@ -1,6 +1,6 @@
 {
   "name": "opsgenie",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Opsgenie integration — list, inspect, acknowledge, and close alerts, create new alerts that page on-call responders, and see who is on call for a schedule. Talks to the Opsgenie Alert API v2.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -116,7 +116,7 @@
     }
   ],
   "credentials": [
-    { "service": "opsgenie", "scopes": [], "required": true, "access": "proxy" }
+    { "service": "opsgenie", "scopes": [], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

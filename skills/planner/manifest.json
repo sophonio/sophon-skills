@@ -1,6 +1,6 @@
 {
   "name": "planner",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Microsoft Planner integration via Microsoft Graph — list plans, buckets, and tasks, read task details and checklists, and create, update, and assign tasks in a Microsoft 365 group's basic plans. Uses app-only (client-credentials) auth with Tasks.Read.All / Tasks.ReadWrite.All application permissions; task updates handle Planner's If-Match ETag concurrency automatically. Works with Microsoft 365 work/school tenants (basic plans only; Planner Premium plans are not available on Graph v1.0).",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -148,7 +148,7 @@
     }
   ],
   "credentials": [
-    { "service": "microsoft-graph", "scopes": ["Tasks.Read.All", "Tasks.ReadWrite.All"], "required": true, "access": "proxy" }
+    { "service": "microsoft-graph", "scopes": ["Tasks.Read.All", "Tasks.ReadWrite.All"], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

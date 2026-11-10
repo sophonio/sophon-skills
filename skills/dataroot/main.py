@@ -19,43 +19,16 @@ masked before output.
 """
 
 import json
-import os
 import urllib.request
 import urllib.parse
 import urllib.error
 
 tool_name = params.get("tool", "")
 
-# Credential fields normally arrive flat in `params`, keyed by the manifest's integration.fields
-# keys (baseUrl / emailAddress / password). Some runtimes instead nest them under a container
-# object (e.g. params["credentials"]["baseUrl"]) or expose them as environment variables, so
-# resolve each field defensively across the known shapes before giving up.
-_CRED_CONTAINERS = ("credentials", "connection", "connectionFields", "config", "configuration",
-                    "context", "integration", "settings", "secrets", "inputs", "fields", "dataroot")
-_SERVICE_MAPS = ("connections", "integrations", "services")
-
-
-def _lookup(name, *env_names):
-    """Find a configured field by name across flat params, nested containers, and env vars."""
-    if params.get(name):
-        return params.get(name)
-    for container in _CRED_CONTAINERS:
-        cv = params.get(container)
-        if isinstance(cv, dict) and cv.get(name):
-            return cv.get(name)
-    for container in _SERVICE_MAPS:  # e.g. params["connections"]["dataroot"]["baseUrl"]
-        cv = params.get(container)
-        if isinstance(cv, dict) and isinstance(cv.get("dataroot"), dict) and cv["dataroot"].get(name):
-            return cv["dataroot"].get(name)
-    for env_name in env_names:
-        if os.environ.get(env_name):
-            return os.environ.get(env_name)
-    return ""
-
-
-base_url = (_lookup("baseUrl", "DATAROOT_BASE_URL", "DATAROOT_BASEURL") or "").rstrip("/")
-email_address = _lookup("emailAddress", "DATAROOT_EMAIL_ADDRESS", "DATAROOT_EMAIL")
-password = _lookup("password", "DATAROOT_PASSWORD")
+# Credential fields arrive flat in `params` under their exact manifest key (integration.fields).
+base_url = (params.get("baseUrl") or "").rstrip("/")
+email_address = params.get("emailAddress", "")
+password = params.get("password", "")
 
 API_PREFIX = "/api/v1"
 USER_AGENT = "sophon-dataroot-skill"

@@ -1,6 +1,6 @@
 {
   "name": "prometheus-query",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Prometheus integration — run instant and range PromQL queries and inspect alerts, scrape targets, and label values via the Prometheus HTTP API. Works with a plain Prometheus server or a token/basic-auth proxied setup (e.g. Grafana Cloud).",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -110,7 +110,7 @@
     }
   ],
   "credentials": [
-    { "service": "prometheus", "scopes": [], "required": false, "access": "proxy" }
+    { "service": "prometheus", "scopes": [], "required": false, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

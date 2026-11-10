@@ -1,6 +1,6 @@
 {
   "name": "databricks",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Databricks workspace integration — run SQL on a SQL warehouse (Statement Execution API with inline JSON results), poll and cancel statements, browse Unity Catalog (catalogs, schemas, tables with columns), and list and trigger Lakeflow Jobs. Authenticates with a workspace Personal Access Token sent as a Bearer token.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -142,7 +142,7 @@
     }
   ],
   "credentials": [
-    { "service": "databricks", "scopes": ["all-apis"], "required": true, "access": "proxy" }
+    { "service": "databricks", "scopes": ["all-apis"], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

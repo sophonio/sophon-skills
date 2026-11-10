@@ -1,6 +1,6 @@
 {
   "name": "home-assistant",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Home Assistant integration — read entity states and history, list services, and call services to control devices via the Home Assistant REST API, authenticated with a Long-Lived Access Token.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -96,7 +96,7 @@
     }
   ],
   "credentials": [
-    { "service": "home-assistant", "scopes": [], "required": true, "access": "proxy" }
+    { "service": "home-assistant", "scopes": [], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

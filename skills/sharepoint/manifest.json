@@ -1,6 +1,6 @@
 {
   "name": "sharepoint",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "SharePoint Online integration via Microsoft Graph — search and resolve sites, browse lists, query and read list items, search document libraries, and create or update list items. Uses app-only (client-credentials) auth with an Azure AD app registration; requires Sites.Read.All application permission with admin consent (Sites.ReadWrite.All to enable the write tools).",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -153,7 +153,7 @@
     }
   ],
   "credentials": [
-    { "service": "microsoft-graph", "scopes": ["Sites.Read.All", "Sites.ReadWrite.All"], "required": true, "access": "proxy" }
+    { "service": "microsoft-graph", "scopes": ["Sites.Read.All", "Sites.ReadWrite.All"], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

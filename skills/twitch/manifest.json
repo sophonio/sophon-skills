@@ -1,6 +1,6 @@
 {
   "name": "twitch",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Twitch integration via the Helix API — search channels, browse live streams, top games, clips, videos, and channel info. Uses OAuth2 client-credentials (an app access token minted from your Twitch application's Client ID and Client Secret), which grants public/catalog data only — no followed channels, subscriptions, or chat. Tool output includes twitch.tv links for attribution; Twitch is a trademark of Twitch Interactive, Inc., and per the Twitch Developer Services Agreement API data must not be cached for more than 24 hours.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -134,7 +134,7 @@
     }
   ],
   "credentials": [
-    { "service": "twitch", "scopes": [], "required": true, "access": "proxy" }
+    { "service": "twitch", "scopes": [], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

@@ -1,6 +1,6 @@
 {
   "name": "caldav-calendar",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "CalDAV calendar integration — list calendars and events and create, update, or delete events on any CalDAV server (iCloud, Fastmail, Nextcloud, Google, and more) using an app password.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -116,7 +116,7 @@
     }
   ],
   "credentials": [
-    { "service": "caldav", "scopes": ["calendar"], "required": true, "access": "proxy" }
+    { "service": "caldav", "scopes": ["calendar"], "required": true, "access": "injected" }
   ],
   "requirements": ["caldav==1.3.9", "icalendar==6.1.0"],
   "sandbox": {

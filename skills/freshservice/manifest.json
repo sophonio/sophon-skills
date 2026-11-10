@@ -1,6 +1,6 @@
 {
   "name": "freshservice",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Freshservice IT service management integration — list, inspect, create, and update tickets, add notes, list changes, and search assets via the Freshservice REST API v2. Authenticates with an agent API key over HTTP Basic (apiKey as username, 'X' as password) against your {subdomain}.freshservice.com instance.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -36,7 +36,7 @@
     "testEndpoint": "/api/v2/tickets?per_page=1"
   },
   "credentials": [
-    { "service": "freshservice", "scopes": ["tickets", "changes", "assets"], "required": true, "access": "proxy" }
+    { "service": "freshservice", "scopes": ["tickets", "changes", "assets"], "required": true, "access": "injected" }
   ],
   "tools": [
     {

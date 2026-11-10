@@ -1,6 +1,6 @@
 {
   "name": "artifactory",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "JFrog Artifactory integration — list repositories, search artifacts (quick search or safely-constructed AQL), inspect artifact storage info and download stats, read and set item properties, browse builds, and view per-repository storage usage. Authenticates with a static JFrog access (identity) token sent as a Bearer header against {baseUrl}/artifactory/api.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -133,7 +133,7 @@
     }
   ],
   "credentials": [
-    { "service": "artifactory", "scopes": ["read", "write"], "required": true, "access": "proxy" }
+    { "service": "artifactory", "scopes": ["read", "write"], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

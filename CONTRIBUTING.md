@@ -40,9 +40,57 @@ CI; the Marketplace re-validates on upload.
 | `README.md` | must exist at the skill root, ≤ 64 KiB |
 | `LICENSE` | must exist at the skill root |
 
-Optional, free-form (stored verbatim, not column-projected by the Marketplace): `permissions`
-(`network[]` bare hostnames, `filesystem[]` relative paths, `maxMemoryMb` ≤ 4096), `integration`,
-`credentials`, `sandbox`, `requirements`.
+Stored verbatim and not column-projected by the Marketplace, but **`integration` and `credentials`
+are a real contract enforced by the build script** — see below: `permissions` (`network[]` bare
+hostnames, `filesystem[]` relative paths, `maxMemoryMb` ≤ 4096), `integration`, `credentials`,
+`sandbox`, `requirements`.
+
+### Integration & credentials contract
+
+A skill that talks to an external service declares **both** an `integration` block (the connection
+form Sophon renders) and a `credentials` entry (what the runtime looks up at call time). The
+Marketplace does not parse either block, so these rules are enforced locally and in CI by
+`build/Build-MarketplacePackages.ps1`.
+
+| Rule | Detail |
+|------|--------|
+| both or neither | `integration` and a non-empty `credentials[]` must appear together |
+| `credentials[].service` | must equal `integration.service` exactly — the runtime looks the stored credential up by this string |
+| `credentials[].access` | **must be `"injected"`** for any skill that reads credentials from `params`. See below. |
+| `integration.authType` | `custom`, `oauth2`, or `static_token`; `oauth2` also needs `authorizeUrl` + `tokenUrl` |
+| `integration.category` | `cloud`, `developer`, `integration`, or `messaging` — this is the **connections-page grouping**, a different field from the top-level marketplace `category` above |
+| `integration.fields[].type` | `text`, `secret`, `url`, `email`, `number`, or `select` (`select` needs `options[]`) |
+| `integration.fields[].key` | a valid identifier, unique within the skill, never `tool` (the runtime overwrites that key) |
+| field keys vs. code | every credential key the entrypoint reads at module scope must be declared in `integration.fields[]`; a declared field never read anywhere is warned about |
+
+**`access` is not cosmetic.** Sophon merges the stored credential's fields **flat, verbatim, at the
+top level** of the `SOPHON_PARAMS` JSON, so `main.py` reads `params.get("<fieldKey>")` using the
+exact manifest key — **casing included**. Only `"injected"` delivers them. `"proxy"` names a broker
+(the executor makes the outbound call so the sandbox never sees the secret) that **is not
+implemented**; a skill declaring it receives no credentials at all and fails at call time claiming
+it is not connected. Every skill in this repo declared `"proxy"` until 2026-08-17, which is exactly
+why the rule above is now enforced.
+
+**Where to read what.** Read credentials at **module scope** and tool arguments **inside handler
+functions** — `skills/todoist/main.py` is the reference. The validator relies on this split to tell
+credentials from tool arguments.
+
+**Tool arguments win.** A tool argument with the same name as a non-secret credential field
+overrides the stored value, which is the "pass it per call, or fall back to the connection default"
+idiom (`clickhouse` `database`, `snowflake` `role`, `tmdb` `region`). A field with a tool-argument
+twin should therefore be `required: false`. Secret-typed fields are never overridable.
+
+**Field keys are permanent.** They key the stored credential, so renaming one silently orphans every
+existing connection: the badge stays green and the tool breaks. New skills use camelCase; the
+existing snake_case skills (`jellyfin`, `lastfm`, `plex`, `radarr`, `seerr`, `sonarr`, `steam`,
+`tmdb`, `twitch`) stay snake_case. Never mix conventions within one skill.
+
+**Shared services.** Several skills may share one `integration.service` (`microsoft-graph`,
+`github`). Sophon registers one connection form per service and unions the declared fields, so a
+field only some of the sharing skills need must be `required: false`.
+
+**Versioning.** Patch-bump a skill's `version` if and only if a file inside its `skills/<name>/`
+folder changed. Bumping an unchanged skill republishes an identical artifact.
 
 ### Conventions for first-party skills
 

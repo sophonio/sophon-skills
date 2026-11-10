@@ -1,6 +1,6 @@
 {
   "name": "plex",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Plex Media Server integration — search your libraries, inspect item details, list libraries, browse recently added and On Deck items, see active playback sessions, and trigger library scans on your own Plex server. Authenticates with a static owner/admin X-Plex-Token (Plex's 'Legacy' token auth — powerful, guard it carefully) sent on every request together with Accept: application/json and a fixed X-Plex-Client-Identifier. Self-hosted: your Plex server (usually a LAN address like http://192.168.1.50:32400) must be reachable from Sophon's sandbox — LAN-only servers need a VPN, tunnel, or reverse proxy.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -37,7 +37,7 @@
     "testEndpoint": "/library/sections"
   },
   "credentials": [
-    { "service": "plex", "scopes": ["read", "scan"], "required": true, "access": "proxy" }
+    { "service": "plex", "scopes": ["read", "scan"], "required": true, "access": "injected" }
   ],
   "tools": [
     {

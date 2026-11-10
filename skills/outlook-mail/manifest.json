@@ -1,6 +1,6 @@
 {
   "name": "outlook-mail",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Microsoft 365 (Outlook) mailbox integration via Microsoft Graph — list, search, and read messages, browse mail folders, move messages, create drafts, and send mail for a mailbox. Uses app-only (client-credentials) auth and works with Microsoft 365 work/school accounts. Message bodies are read as plain text.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -144,7 +144,7 @@
     }
   ],
   "credentials": [
-    { "service": "microsoft-graph", "scopes": ["Mail.Read", "Mail.ReadWrite", "Mail.Send"], "required": true, "access": "proxy" }
+    { "service": "microsoft-graph", "scopes": ["Mail.Read", "Mail.ReadWrite", "Mail.Send"], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

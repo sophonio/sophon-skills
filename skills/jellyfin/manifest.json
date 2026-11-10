@@ -1,6 +1,6 @@
 {
   "name": "jellyfin",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Jellyfin integration for your self-hosted media server — search movies, shows, music, and episodes; inspect item metadata; list libraries; see recently added items and who is watching right now; get continue-watching / next-up episodes; and trigger metadata or library refreshes. Authenticates with a static admin API key sent in the modern Authorization: MediaBrowser header (Dashboard > API Keys). API keys are admin-scoped, so the tool set is read-only plus low-risk refresh/scan. Requires the server to be reachable from Sophon's sandbox (LAN-only or VPN-only instances need a reverse proxy or tunnel).",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -141,7 +141,7 @@
     }
   ],
   "credentials": [
-    { "service": "jellyfin", "scopes": ["read", "refresh"], "required": true, "access": "proxy" }
+    { "service": "jellyfin", "scopes": ["read", "refresh"], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

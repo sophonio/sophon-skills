@@ -1,6 +1,6 @@
 {
   "name": "snowflake",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Snowflake data warehouse integration via the Snowflake SQL API and REST catalog — run SQL statements, poll long-running statements by handle, cancel statements, and browse databases, schemas, tables, columns, and warehouses. Authenticates with a Programmatic Access Token (PAT) sent as a static bearer token; no OAuth flow or token endpoint is involved.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -156,7 +156,7 @@
     }
   ],
   "credentials": [
-    { "service": "snowflake", "scopes": ["read", "write"], "required": true, "access": "proxy" }
+    { "service": "snowflake", "scopes": ["read", "write"], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

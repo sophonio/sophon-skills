@@ -65,6 +65,24 @@ Add-Type -AssemblyName System.IO.Compression.FileSystem
 $ValidRuntimes    = @('python', 'csharp', 'sandbox')
 $ValidRiskLevels  = @('none', 'low', 'medium', 'high', 'critical')
 $ValidCategories  = @('utility', 'productivity', 'communication', 'data', 'development', 'integration', 'ai', 'automation', 'other')
+
+# --- integration / credentials contract -------------------------------------------------------
+# These mirror what the Sophon runtime actually consumes, NOT the marketplace publishing contract
+# (the marketplace stores both blocks verbatim in RawJson and never parses them). Sources:
+#   ValidFieldTypes             <- Sophon.Dashboard connections.tsx FieldDefinition.type union
+#   ValidAuthTypes              <- Sophon.Core/Credentials/IConnectionService.cs ServiceDefinition
+#   ValidIntegrationCategories  <- connections.tsx category grouping (an unlisted category renders
+#                                  in no group, making the connection card unreachable)
+#   ValidCredentialAccess       <- Sophon.Skills/CredentialAccess.cs
+$ValidFieldTypes            = @('text', 'secret', 'url', 'email', 'number', 'select')
+$ValidAuthTypes             = @('custom', 'oauth2', 'static_token')
+$ValidIntegrationCategories = @('cloud', 'developer', 'integration', 'messaging')
+$ValidCredentialAccess      = @('injected', 'proxy', 'none')
+# "proxy" parses but delivers nothing brokered — the broker described in the Sophon security docs
+# does not exist, so a skill that reads credentials from `params` must declare "injected".
+$DeliveringCredentialAccess = @('injected')
+# SandboxedTool overwrites params["tool"] unconditionally, so it can never carry a credential.
+$ReservedParamKeys          = @('tool')
 $ExcludeDirNames  = @('__pycache__', 'dist')
 $ExcludeFileNames = @('.DS_Store', 'Thumbs.db')
 $MaxReadmeBytes   = 65536
@@ -83,6 +101,224 @@ function Get-JsonProperty {
     $prop = $InputObject.PSObject.Properties[$Name]
     if ($null -eq $prop) { return $null }
     return $prop.Value
+}
+
+function Get-JsonArray {
+    # Reads an array property WITHOUT the pipeline's single-element unwrapping. This matters:
+    # every credentials[] in this repo has length 1, and many integration.fields[] do too, so
+    # returning them through the pipeline would silently hand back a scalar.
+    param(
+        [Parameter(Mandatory)] [AllowNull()] $InputObject,
+        [Parameter(Mandatory)] [string]$Name
+    )
+    if ($null -eq $InputObject) { return , @() }
+    $prop = $InputObject.PSObject.Properties[$Name]
+    if ($null -eq $prop -or $null -eq $prop.Value) { return , @() }
+    return , @($prop.Value)
+}
+
+function Test-JsonHasProperty {
+    param(
+        [Parameter(Mandatory)] [AllowNull()] $InputObject,
+        [Parameter(Mandatory)] [string]$Name
+    )
+    if ($null -eq $InputObject) { return $false }
+    return $null -ne $InputObject.PSObject.Properties[$Name]
+}
+
+function Get-PythonModuleScopeParamKeys {
+    # Deliberately a line scanner, not a Python parser. Repo convention is that credentials are
+    # read at module scope and tool arguments inside handler functions (see skills/todoist/main.py).
+    # A line counts as module scope when the most recent column-0 statement did not open a
+    # def/class block.
+    param([Parameter(Mandatory)] [string]$Path)
+
+    $keys = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { return $keys }
+
+    $inBlock = $false
+    foreach ($line in (Get-Content -LiteralPath $Path -Encoding utf8)) {
+        if ($line -match '^(async\s+def|def|class)\s') { $inBlock = $true }
+        elseif ($line -match '^\S') { $inBlock = $false }
+        if ($inBlock) { continue }
+
+        foreach ($m in [regex]::Matches($line, 'params\s*\.\s*get\(\s*["'']([^"'']+)["'']')) {
+            [void]$keys.Add($m.Groups[1].Value)
+        }
+        foreach ($m in [regex]::Matches($line, 'params\s*\[\s*["'']([^"'']+)["'']\s*\]')) {
+            [void]$keys.Add($m.Groups[1].Value)
+        }
+    }
+    return $keys
+}
+
+function Test-SkillIntegration {
+    # Validates the `integration` + `credentials` blocks against what the Sophon runtime consumes.
+    # These blocks were previously unvalidated and undocumented, which is how every skill in the
+    # catalogue ended up declaring an access mode that silently withheld its credentials.
+    param(
+        [Parameter(Mandatory)] [string]$SkillDir,
+        [Parameter(Mandatory)] [string]$FolderName,
+        [Parameter(Mandatory)] $Manifest,
+        [Parameter(Mandatory)] [AllowEmptyCollection()] [System.Collections.Generic.List[string]]$Errors,
+        [Parameter(Mandatory)] [AllowEmptyCollection()] [System.Collections.Generic.List[string]]$Warnings
+    )
+
+    $integration = Get-JsonProperty $Manifest 'integration'
+    $credentials = Get-JsonArray $Manifest 'credentials'
+    $hasIntegration = $null -ne $integration
+    $hasCredentials = $credentials.Count -gt 0
+
+    # Both or neither: an integration with no credential entry is never gated, and a credential
+    # with no integration block has no connection form to collect it.
+    if ($hasIntegration -and -not $hasCredentials) {
+        $Errors.Add('integration block is present but credentials[] is missing or empty')
+        return
+    }
+    if ($hasCredentials -and -not $hasIntegration) {
+        $Errors.Add('credentials[] is present but the integration block is missing')
+        return
+    }
+    if (-not $hasIntegration) { return }
+
+    $service = Get-JsonProperty $integration 'service'
+    if ([string]::IsNullOrWhiteSpace($service)) {
+        $Errors.Add('integration.service is missing or empty')
+    } elseif ($service -cnotmatch '^[a-z0-9][a-z0-9-]{1,63}$') {
+        $Errors.Add("integration.service '$service' does not match ^[a-z0-9][a-z0-9-]{1,63}`$")
+    }
+
+    $authType = Get-JsonProperty $integration 'authType'
+    if ([string]::IsNullOrWhiteSpace($authType)) {
+        $Errors.Add('integration.authType is missing')
+    } elseif ($ValidAuthTypes -cnotcontains $authType) {
+        $Errors.Add("integration.authType '$authType' is not one of: $($ValidAuthTypes -join ', ')")
+    } elseif ($authType -ceq 'oauth2') {
+        foreach ($required in @('authorizeUrl', 'tokenUrl')) {
+            if ([string]::IsNullOrWhiteSpace((Get-JsonProperty $integration $required))) {
+                $Errors.Add("integration.authType is 'oauth2' but integration.$required is missing")
+            }
+        }
+    }
+
+    $intCategory = Get-JsonProperty $integration 'category'
+    if ([string]::IsNullOrWhiteSpace($intCategory)) {
+        $Errors.Add('integration.category is missing')
+    } elseif ($ValidIntegrationCategories -cnotcontains $intCategory) {
+        $Errors.Add("integration.category '$intCategory' is not one of: $($ValidIntegrationCategories -join ', ') " +
+            '(note this is the connections-page grouping, not the top-level marketplace category)')
+    }
+
+    # --- fields ---
+    $fields = Get-JsonArray $integration 'fields'
+    if ($fields.Count -eq 0) {
+        $Errors.Add('integration.fields[] is missing or empty')
+    }
+
+    $fieldKeys = [System.Collections.Generic.List[string]]::new()
+    foreach ($field in $fields) {
+        $key = Get-JsonProperty $field 'key'
+        if ([string]::IsNullOrWhiteSpace($key)) {
+            $Errors.Add('integration.fields[] entry is missing key')
+            continue
+        }
+        if ($key -cnotmatch '^[A-Za-z_][A-Za-z0-9_]*$') {
+            $Errors.Add("integration.fields[].key '$key' is not a valid identifier")
+        }
+        if ($fieldKeys -ccontains $key) {
+            $Errors.Add("integration.fields[].key '$key' is declared more than once")
+        }
+        if ($ReservedParamKeys -ccontains $key) {
+            $Errors.Add("integration.fields[].key '$key' is reserved by the runtime and would be overwritten")
+        }
+        $fieldKeys.Add($key)
+
+        if ([string]::IsNullOrWhiteSpace((Get-JsonProperty $field 'label'))) {
+            $Errors.Add("integration.fields[].key '$key' is missing label")
+        }
+
+        $type = Get-JsonProperty $field 'type'
+        if ([string]::IsNullOrWhiteSpace($type)) {
+            $Errors.Add("integration.fields[].key '$key' is missing type")
+        } elseif ($ValidFieldTypes -cnotcontains $type) {
+            $Errors.Add("integration.fields[].key '$key' has type '$type'; must be one of: $($ValidFieldTypes -join ', ')")
+        } elseif ($type -ceq 'select' -and (Get-JsonArray $field 'options').Count -eq 0) {
+            $Errors.Add("integration.fields[].key '$key' has type 'select' but declares no options[]")
+        }
+    }
+
+    # --- credentials ---
+    foreach ($cred in $credentials) {
+        $credService = Get-JsonProperty $cred 'service'
+        if ([string]::IsNullOrWhiteSpace($credService)) {
+            $Errors.Add('credentials[].service is missing or empty')
+        } elseif ($credService -cne $service) {
+            $Errors.Add("credentials[].service '$credService' does not equal integration.service '$service'; " +
+                'the runtime looks the stored credential up by this exact string')
+        }
+
+        $access = Get-JsonProperty $cred 'access'
+        if ([string]::IsNullOrWhiteSpace($access)) {
+            $Errors.Add('credentials[].access is missing')
+        } elseif ($ValidCredentialAccess -cnotcontains $access) {
+            $Errors.Add("credentials[].access '$access' is not one of: $($ValidCredentialAccess -join ', ')")
+        }
+    }
+
+    # --- entrypoint cross-check ---
+    $entrypoint = Get-JsonProperty $Manifest 'entrypoint'
+    if ([string]::IsNullOrWhiteSpace($entrypoint)) { return }
+    $entrypointPath = Join-Path $SkillDir $entrypoint
+    if (-not (Test-Path -LiteralPath $entrypointPath -PathType Leaf)) { return }
+
+    $toolParamNames = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+    foreach ($tool in (Get-JsonArray $Manifest 'tools')) {
+        $props = Get-JsonProperty (Get-JsonProperty $tool 'parameters') 'properties'
+        if ($null -eq $props) { continue }
+        foreach ($p in $props.PSObject.Properties) { [void]$toolParamNames.Add($p.Name) }
+    }
+
+    $moduleKeys = Get-PythonModuleScopeParamKeys $entrypointPath
+    $credentialReads = @($moduleKeys | Where-Object {
+            $ReservedParamKeys -cnotcontains $_ -and -not $toolParamNames.Contains($_)
+        })
+
+    foreach ($read in $credentialReads) {
+        if ($fieldKeys -cnotcontains $read) {
+            $Errors.Add("$entrypoint reads params['$read'] at module scope but integration.fields[] does not declare it; " +
+                'the runtime delivers credential fields under their exact manifest key')
+        }
+    }
+
+    # The rule that would have caught this whole bug class: a skill that reads its credentials out
+    # of `params` only works when the manifest asks for them to be delivered.
+    if ($credentialReads.Count -gt 0) {
+        foreach ($cred in $credentials) {
+            $access = Get-JsonProperty $cred 'access'
+            if (-not [string]::IsNullOrWhiteSpace($access) -and $DeliveringCredentialAccess -cnotcontains $access) {
+                $Errors.Add("$entrypoint reads credential fields from params at module scope, but " +
+                    "credentials[].access is '$access'; only $($DeliveringCredentialAccess -join '/') delivers them")
+            }
+        }
+    }
+
+    $entrypointText = Get-Content -LiteralPath $entrypointPath -Raw -Encoding utf8
+    foreach ($key in $fieldKeys) {
+        if ($entrypointText -notmatch [regex]::Escape("`"$key`"") -and
+            $entrypointText -notmatch [regex]::Escape("'$key'")) {
+            $Warnings.Add("integration.fields[].key '$key' is never read by $entrypoint (dead field on the connection form)")
+        }
+    }
+
+    foreach ($field in $fields) {
+        $key = Get-JsonProperty $field 'key'
+        if ([string]::IsNullOrWhiteSpace($key)) { continue }
+        $required = Get-JsonProperty $field 'required'
+        if ($required -eq $true -and $toolParamNames.Contains($key)) {
+            $Warnings.Add("integration.fields[].key '$key' is required but a tool declares a parameter of the same name; " +
+                'a caller-supplied argument shadows the stored value for non-secret fields')
+        }
+    }
 }
 
 function Test-SkillManifest {
@@ -226,6 +462,9 @@ function Test-SkillManifest {
     if (-not (Test-Path -LiteralPath $licensePath -PathType Leaf)) {
         $Errors.Add('LICENSE does not exist')
     }
+
+    Test-SkillIntegration -SkillDir $SkillDir -FolderName $FolderName -Manifest $Manifest `
+        -Errors $Errors -Warnings $Warnings
 }
 
 function Test-ZipExclusion {

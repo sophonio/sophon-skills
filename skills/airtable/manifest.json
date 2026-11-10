@@ -1,6 +1,6 @@
 {
   "name": "airtable",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Airtable integration — list, read, create, update, and delete records in an Airtable base via the REST API.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -108,7 +108,7 @@
     }
   ],
   "credentials": [
-    { "service": "airtable", "scopes": ["data.records:read", "data.records:write"], "required": true, "access": "proxy" }
+    { "service": "airtable", "scopes": ["data.records:read", "data.records:write"], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

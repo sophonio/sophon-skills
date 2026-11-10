@@ -276,24 +276,15 @@ ok &= check("missing-creds error carries a value-free receivedParamShape diagnos
             and "password" not in out["receivedParamShape"]
             and "p@ss-SECRET-123" not in json.dumps(out), str(out.get("receivedParamShape")))
 
-# ---------------------------------------------------------------- 9b. defensive credential resolution
-print("scenario 9b: credentials nested under a container object still resolve")
+# ---------------------------------------------------------------- 9b. flat-only credential contract
+print("scenario 9b: credentials are read flat from params only (nested containers are ignored)")
 out, ex = run_tool("dataroot", {"tool": "dataroot.list_organizations",
                                 "credentials": {"baseUrl": BASE, "emailAddress": "u@x.io",
                                                 "password": "p@ss-SECRET-123"}},
-                   [LOGIN_OK, ORGS])
-ok &= check("nested credentials -> login happens (2 requests), no missing-creds error",
-            len(ex) == 2 and "organizations" in out and "error" not in out, str(out)[:200])
-ok &= check("nested creds produce the same correct login body",
-            ex[0].json == {"username": "", "emailAddress": "u@x.io",
-                           "password": "p@ss-SECRET-123"}, str(ex[0].body))
-out, ex = run_tool("dataroot", {"tool": "dataroot.list_organizations",
-                                "connections": {"dataroot": {"baseUrl": BASE,
-                                                             "emailAddress": "u@x.io",
-                                                             "password": "p@ss-SECRET-123"}}},
-                   [LOGIN_OK, ORGS])
-ok &= check("service-keyed nested map (connections.dataroot.*) also resolves",
-            len(ex) == 2 and "organizations" in out, str(out)[:200])
+                   [])
+ok &= check("nested credentials -> missing-creds error, zero requests, no secret echoed",
+            "connect" in out.get("error", "").lower() and len(ex) == 0
+            and "p@ss-SECRET-123" not in json.dumps(out), str(out)[:200])
 out, ex = run_tool("dataroot", {**CREDS, "tool": "dataroot.get_data_source",
                                 "organization": "Acme", "connectionId": "c1"},
                    [LOGIN_OK, ORGS])

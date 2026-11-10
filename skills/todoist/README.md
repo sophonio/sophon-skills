@@ -3,8 +3,9 @@
 Manage your Todoist tasks and projects from Sophon: list active tasks (optionally by project or a
 filter query), list projects, add tasks, complete tasks, and update existing tasks.
 
-Implemented with the Todoist REST API v2 over the Python standard library (no dependencies), so it
-runs in the sandbox unchanged.
+Implemented with the Todoist API v1 over the Python standard library (no dependencies), so it runs
+in the sandbox unchanged. Todoist retired the older `/rest/v2` endpoints, which now answer
+`410 This endpoint is deprecated`.
 
 ## Tools
 
@@ -33,9 +34,15 @@ written into the skill.
 
 - `todoist.list_tasks` accepts a `filter` using Todoist's
   [filter query syntax](https://todoist.com/help/articles/introduction-to-filters), e.g.
-  `today | overdue` or `p1 & #Work`. Combine with `projectId` to scope to one project.
+  `today | overdue` or `p1 & #Work`. Filtering uses the dedicated `GET /tasks/filter` endpoint,
+  which takes no project id, so combining `filter` with `projectId` narrows the returned tasks to
+  that project afterwards.
+- `limit` is passed to the API (1–200, default 30).
 - `todoist.complete_task` closes the task and returns `{"closed": true}`; Todoist's API returns no
   content for this operation.
+- API v1 no longer returns a `url` on tasks and projects, so `url` is derived from the id
+  (`https://app.todoist.com/app/task/<id>`), which is the form the official client builds when it
+  has no title slug to append.
 
 ## Trademarks
 

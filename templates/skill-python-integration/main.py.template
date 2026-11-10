@@ -1,0 +1,82 @@
+"""{{name}} integration skill — {{description}}
+
+Sophon Skill (Python). Author: {{author}}. Created: {{date}}.
+
+The Sophon runtime executes this file at module scope inside a fresh python:3.13-alpine container
+and injects a `params` global. It carries the tool name, the tool arguments, AND the connection
+credential fields, all flat at the top level under their exact `integration.fields[].key` names.
+
+Read credentials at MODULE SCOPE (as below) and tool arguments INSIDE handlers. That split is the
+repo convention and the build script relies on it to tell the two apart.
+
+Pure standard library so nothing is pip-installed on every call.
+"""
+
+import json
+import urllib.request
+import urllib.parse
+import urllib.error
+
+tool_name = params.get("tool", "")
+base_url = (params.get("baseUrl") or "").rstrip("/")
+api_token = params.get("apiToken", "")
+
+HEADERS = {
+    "Authorization": f"Bearer {api_token}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+    "User-Agent": "sophon-{{name}}-skill",
+}
+
+
+def request(method, path, data=None, query=None):
+    """Make an authenticated request. Returns parsed JSON (or None for 204)."""
+    url = f"{base_url}{path}"
+    if query:
+        clean = {k: v for k, v in query.items() if v not in (None, "")}
+        if clean:
+            url = f"{url}?{urllib.parse.urlencode(clean)}"
+    body = json.dumps(data).encode() if data is not None else None
+    req = urllib.request.Request(url, data=body, headers=HEADERS, method=method)
+    try:
+        with urllib.request.urlopen(req) as resp:
+            raw = resp.read().decode()
+            return json.loads(raw) if raw else None
+    except urllib.error.HTTPError as e:
+        detail = e.read().decode() if e.fp else ""
+        raise RuntimeError(f"{{name}} API error {e.code}: {detail}") from e
+
+
+def clamp(value, default, maximum):
+    try:
+        return max(1, min(int(value), maximum))
+    except (TypeError, ValueError):
+        return default
+
+
+# --- Tool handlers ---------------------------------------------------------
+
+def list_items():
+    result = request("GET", "/v1/items")
+    items = list(result or [])
+    limit = clamp(params.get("limit", 30), 30, 200)
+    items = items[:limit]
+    print(json.dumps({"count": len(items), "items": items}))
+
+
+HANDLERS = {
+    "{{name}}.list_items": list_items,
+}
+
+try:
+    handler = HANDLERS.get(tool_name)
+    if handler is None:
+        print(json.dumps({"error": f"Unknown tool: {tool_name}"}))
+    elif not api_token or not base_url:
+        print(json.dumps({"error": "Missing {{name}} credential: connect the {{name}} integration first."}))
+    else:
+        handler()
+except (RuntimeError, ValueError) as e:
+    print(json.dumps({"error": str(e)}))
+except Exception as e:  # noqa: BLE001
+    print(json.dumps({"error": f"Unexpected error: {type(e).__name__}: {e}"}))

@@ -1,6 +1,6 @@
 {
   "name": "sonarr",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Sonarr integration for your self-hosted TV series PVR — search TheTVDB for shows, add series, browse your library, the airing calendar, missing episodes, and the download queue, and manage season monitoring, quality profiles, and root folders. Authenticates with your instance's static API key sent as the X-Api-Key header (Sonarr Settings > General > Security); requires Sonarr v3+ and the server must be reachable from Sophon's sandbox (LAN-only or VPN-only instances need a reverse proxy or tunnel).",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -150,7 +150,7 @@
     }
   ],
   "credentials": [
-    { "service": "sonarr", "scopes": ["read", "write"], "required": true, "access": "proxy" }
+    { "service": "sonarr", "scopes": ["read", "write"], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

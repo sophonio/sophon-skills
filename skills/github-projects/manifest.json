@@ -1,6 +1,6 @@
 {
   "name": "github-projects",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "GitHub Projects (v2) integration — list projects, inspect project items, add draft issues, and update item status via the GitHub GraphQL API.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -88,7 +88,7 @@
     }
   ],
   "credentials": [
-    { "service": "github", "scopes": ["project", "repo"], "required": true, "access": "proxy" }
+    { "service": "github", "scopes": ["project", "repo"], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

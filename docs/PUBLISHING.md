@@ -5,6 +5,55 @@ How to build, validate, and publish the skills in this repo to the
 publisher account. Artifacts are built locally and uploaded manually — there is no CI job that
 publishes on merge.
 
+## TL;DR — release in five commands
+
+```powershell
+# from the repo root, PowerShell 7+
+python tests/skills/run_all.py                                   # offline skill tests (all must PASS)
+pwsh -File build/Build-MarketplacePackages.ps1 -ValidateOnly     # contract check (exit 0 = clean)
+pwsh -File build/Build-MarketplacePackages.ps1                   # writes dist/<name>-<version>.sophon-skill
+$env:SOPHON_MARKETPLACE_API_KEY = 'smk_...'                       # your publisher key (see §2)
+pwsh -File build/Publish-MarketplacePackages.ps1 -DryRun         # preview, then re-run without -DryRun
+```
+
+Bash/zsh equivalent for the key: `export SOPHON_MARKETPLACE_API_KEY='smk_...'`.
+
+## 0. Prerequisites & configuration
+
+**Tools**
+
+| Need | Why | Check |
+|------|-----|-------|
+| PowerShell **7+** (`pwsh`) | both build scripts `#Requires -Version 7.0`; Windows PowerShell 5.1 will not run them | `pwsh --version` |
+| Python **3** (runtime target is 3.13) | runs the offline skill tests in `tests/skills/` (stdlib only, no `pip install`) | `python --version` |
+| Docker *(optional)* | container parity smoke on `python:3.13-alpine` (`tests/skills/run_all_container.py`) | `docker --version` |
+
+**Configuration** — nothing is needed to build or validate; publishing needs:
+
+| Setting | Where | Required | Default / notes |
+|---------|-------|----------|-----------------|
+| `SOPHON_MARKETPLACE_API_KEY` | env var, or `-ApiKey` | **yes** (not for `-DryRun`) | `smk_…` publisher key for the Buildersoft LLC account — see §2. Never commit it. |
+| `SOPHON_MARKETPLACE_URL` | env var, or `-MarketplaceUrl` | no | `https://marketplace.sophon.buildersoft.io`; set e.g. `http://localhost:5100` for a local marketplace. The script appends `/api/v1/publish`. |
+
+For the GitHub Actions publish workflow, the same two values are configured on the repo — see
+[§5](#5-publishing-from-github-actions).
+
+**Script options at a glance**
+
+| Script | Option | Effect |
+|--------|--------|--------|
+| `Build-MarketplacePackages.ps1` | `-ValidateOnly` | validate every skill, write nothing |
+| | `-Skills a,b` | only these skill folders |
+| | `-OutputDir <path>` | write artifacts somewhere other than `dist/` |
+| `Publish-MarketplacePackages.ps1` | `-DryRun` | list what would upload; no key needed |
+| | `-Skills a,b` | only artifacts matching `<name>-*.sophon-skill` |
+| | `-ArtifactDir <path>` | read artifacts from somewhere other than `dist/` |
+| | `-MarketplaceUrl <url>` / `-ApiKey <key>` | override the env vars above |
+
+> `dist/` is not cleaned between builds. If it holds an old version of a skill, the publish
+> script uploads that too (and gets `409` for it). Clear `dist/` or use `-Skills` to stay
+> targeted.
+
 ## 1. Build artifacts
 
 ```bash
@@ -78,6 +127,35 @@ A successful publish returns `201 Created` with `{ name, version, status: "pendi
   change. Re-uploading byte-identical content returns `409 duplicate-content`.
 - There is no separate "edit metadata" endpoint — description, tags, category, etc. all come from
   whatever `manifest.json` you publish next.
+
+## 5. Publishing from GitHub Actions
+
+Two workflows live in `.github/workflows/`:
+
+- **`validate.yml`** runs `-ValidateOnly` automatically on PRs and pushes to `main` that touch
+  `skills/`, `build/`, or `templates/`. It needs no configuration.
+- **`publish.yml`** is **manual only** (Actions → *publish* → *Run workflow*). It builds every
+  skill and then runs the publish script. Inputs are `skills` (comma-separated, blank = all) and
+  `dry_run` (**defaults to `true`**, so untick it to really upload).
+
+One-time repo setup for `publish.yml` (Settings → Environments):
+
+1. Create an environment named **`marketplace`**. The job targets it, so you can add required
+   reviewers there as an approval gate.
+2. Add the **secret** `SOPHON_MARKETPLACE_API_KEY` = your `smk_…` key, either on that environment
+   or as a repo secret.
+3. *(Optional)* Add the **variable** `SOPHON_MARKETPLACE_URL` to target a non-production
+   marketplace. If it's empty, the script uses production.
+
+## 6. Release checklist
+
+1. Bump `version` in every changed skill's `manifest.json`. It must be strictly greater than the
+   last published version.
+2. `python tests/skills/run_all.py` shows every file as PASS.
+3. `pwsh -File build/Build-MarketplacePackages.ps1 -ValidateOnly` exits `0`.
+4. Build with `-Skills <changed skills>`, then publish with `-DryRun` and check the list.
+5. Publish for real. Confirm every response is `201` / `pendingReview`, then ask a super-admin to
+   approve.
 
 ## Common failures
 

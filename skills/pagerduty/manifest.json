@@ -1,6 +1,6 @@
 {
   "name": "pagerduty",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "PagerDuty integration — list and inspect incidents, acknowledge and resolve them, create new incidents, and see who is on call, via the PagerDuty REST API.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -126,7 +126,7 @@
     }
   ],
   "credentials": [
-    { "service": "pagerduty", "scopes": ["incidents.read", "incidents.write", "oncalls.read"], "required": true, "access": "proxy" }
+    { "service": "pagerduty", "scopes": ["incidents.read", "incidents.write", "oncalls.read"], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

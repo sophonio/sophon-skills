@@ -1,6 +1,6 @@
 {
   "name": "jenkins",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Jenkins CI/CD integration — list jobs (including folder-nested jobs), inspect job health and build details, read console logs, view the build queue, and trigger builds with or without parameters. Authenticates with a per-user Jenkins API token sent as HTTP Basic auth (username:apiToken); API-token requests are CSRF-exempt so no crumb is needed. All read responses are bounded with tree= field selection so large instances stay fast.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -43,7 +43,7 @@
     "testEndpoint": "/me/api/json"
   },
   "credentials": [
-    { "service": "jenkins", "scopes": ["read", "build"], "required": true, "access": "proxy" }
+    { "service": "jenkins", "scopes": ["read", "build"], "required": true, "access": "injected" }
   ],
   "tools": [
     {

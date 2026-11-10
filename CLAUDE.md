@@ -19,6 +19,17 @@ none|low|medium|high|critical), optional `tags[]` (≤10, ≤32) and `category` 
 communication|data|development|integration|ai|automation|other). `README.md` (≤64 KiB) and `LICENSE`
 must exist at the skill root. Full table: [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
+## Integration skills (`integration` + `credentials`)
+
+Enforced by the build script only — the marketplace stores both blocks verbatim without parsing
+them. Declare both or neither; `credentials[].service` must equal `integration.service`;
+**`access` must be `"injected"`** (`"proxy"` names a broker that does not exist, so the skill
+receives no credentials and reports itself not connected at call time — this silently disabled
+every skill in the catalogue until 2026-08-17). Credential fields land **flat in `params` under
+their exact manifest key, casing included**; read them at module scope and tool arguments inside
+handlers (`skills/todoist/main.py` is the reference). Field keys are permanent — renaming one
+orphans every stored credential. Details: [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
 ## Commands
 
 - Validate: `pwsh -File build/Build-MarketplacePackages.ps1 -ValidateOnly`

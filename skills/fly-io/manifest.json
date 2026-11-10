@@ -1,6 +1,6 @@
 {
   "name": "fly-io",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Fly.io integration — list, inspect, start, stop, restart, and destroy Fly Machines for an app through the Fly.io Machines REST API using an app-scoped API token.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -27,10 +27,10 @@
       },
       {
         "key": "appName",
-        "label": "App Name",
+        "label": "Default App Name",
         "type": "text",
-        "required": true,
-        "helpText": "The Fly app these machines belong to, e.g. my-app.",
+        "required": false,
+        "helpText": "Default Fly app used when a tool call does not pass appName, e.g. my-app.",
         "placeholder": "my-app"
       }
     ],
@@ -116,7 +116,7 @@
     }
   ],
   "credentials": [
-    { "service": "fly", "scopes": ["machines"], "required": true, "access": "proxy" }
+    { "service": "fly", "scopes": ["machines"], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

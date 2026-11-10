@@ -1,0 +1,6 @@
+# {{name}} - Python dependencies
+#
+# Keep this empty if you can. The Sophon sandbox pip-installs these into a fresh
+# python:3.13-alpine container on EVERY tool call, so each dependency is paid for on every
+# invocation and counts against the manifest's sandbox.timeoutSeconds. Every skill in this
+# repo talks HTTP with urllib from the standard library instead.

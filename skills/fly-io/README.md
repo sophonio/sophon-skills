@@ -24,7 +24,7 @@ Authenticate with a Fly API token (Bearer auth).
 | Field | Type | Required | Notes |
 | --- | --- | --- | --- |
 | `token` | secret | yes | A Fly API token — run `fly tokens create`. An app-scoped deploy token is recommended. |
-| `appName` | text | yes | The Fly app these machines belong to, e.g. `my-app`. |
+| `appName` | text | no | Default Fly app used when a tool call omits `appName`, e.g. `my-app`. |
 
 Requests go to `https://api.machines.dev/v1` with `Authorization: Bearer <token>`.
 

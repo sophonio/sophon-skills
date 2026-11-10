@@ -1,6 +1,6 @@
 {
   "name": "splunk",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Splunk integration via the management REST API (typically port 8089) — run oneshot SPL searches, dispatch and poll asynchronous search jobs, fetch job results, list and run saved searches, and list indexes. Authenticates with a static Splunk authentication token (JWT) sent as a Bearer header; an optional insecure-TLS toggle supports self-signed management certificates. All requests use output_mode=json.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -136,7 +136,7 @@
     }
   ],
   "credentials": [
-    { "service": "splunk", "scopes": ["search"], "required": true, "access": "proxy" }
+    { "service": "splunk", "scopes": ["search"], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

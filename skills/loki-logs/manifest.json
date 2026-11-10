@@ -1,6 +1,6 @@
 {
   "name": "loki-logs",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Grafana Loki integration — query logs with LogQL, run instant and range queries, and inspect label names and values via the Loki HTTP API. Works with a plain Loki server or a token/basic-auth setup, and supports multi-tenant Loki via X-Scope-OrgID.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -116,7 +116,7 @@
     }
   ],
   "credentials": [
-    { "service": "loki", "scopes": [], "required": false, "access": "proxy" }
+    { "service": "loki", "scopes": [], "required": false, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

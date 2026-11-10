@@ -1,6 +1,6 @@
 {
   "name": "tmdb",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "The Movie Database (TMDB) integration — search movies, TV shows, and people; get movie/TV details, seasons, trending titles, discover by genre/year/rating, streaming watch providers (JustWatch data), and recommendations. Authenticates with either a TMDB v3 API key or a v4 API Read Access Token (the skill detects which you pasted). This product uses the TMDB API but is not endorsed or certified by TMDB; TMDB's API is free for non-commercial use only. Watch provider data is provided by JustWatch.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -136,7 +136,7 @@
     }
   ],
   "credentials": [
-    { "service": "tmdb", "scopes": ["read"], "required": true, "access": "proxy" }
+    { "service": "tmdb", "scopes": ["read"], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

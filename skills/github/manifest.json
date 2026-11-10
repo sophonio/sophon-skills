@@ -1,6 +1,6 @@
 {
   "name": "github",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "GitHub integration — manage issues, pull requests, and Actions workflow runs, with a raw REST/GraphQL passthrough for anything else.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -198,7 +198,7 @@
     }
   ],
   "credentials": [
-    { "service": "github", "scopes": ["repo", "workflow"], "required": true, "access": "proxy" }
+    { "service": "github", "scopes": ["repo", "workflow"], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

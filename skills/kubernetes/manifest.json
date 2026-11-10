@@ -1,6 +1,6 @@
 {
   "name": "kubernetes",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Kubernetes integration — inspect and operate a cluster through the Kubernetes REST API using a ServiceAccount bearer token. List namespaces, pods, deployments, services and nodes, read pod logs, and scale deployments. Pure standard library with custom TLS (private CA) support.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -132,7 +132,7 @@
     }
   ],
   "credentials": [
-    { "service": "kubernetes", "scopes": [], "required": true, "access": "proxy" }
+    { "service": "kubernetes", "scopes": [], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

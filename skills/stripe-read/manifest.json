@@ -1,6 +1,6 @@
 {
   "name": "stripe-read",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Stripe read-only reporting — inspect your balance, charges, customers, invoices, and subscriptions via the Stripe REST API. Read-only by design: use a restricted read key (rk_...) so it can never mutate your account.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -103,7 +103,7 @@
     }
   ],
   "credentials": [
-    { "service": "stripe", "scopes": ["read"], "required": true, "access": "proxy" }
+    { "service": "stripe", "scopes": ["read"], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

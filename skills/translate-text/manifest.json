@@ -1,6 +1,6 @@
 {
   "name": "translate-text",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Machine translation via the DeepL REST API — translate text into 30+ languages with optional formality control, list supported languages, and check your account usage.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -71,7 +71,7 @@
     }
   ],
   "credentials": [
-    { "service": "deepl", "scopes": [], "required": true, "access": "proxy" }
+    { "service": "deepl", "scopes": [], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

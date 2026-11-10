@@ -1,6 +1,6 @@
 {
   "name": "code-search",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Search GitHub for code, repositories, and commits through the GitHub search API. A GitHub personal access token is optional but required for code search and to raise rate limits; repository and commit search work anonymously.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -71,7 +71,7 @@
     }
   ],
   "credentials": [
-    { "service": "github", "scopes": ["repo"], "required": false, "access": "proxy" }
+    { "service": "github", "scopes": ["repo"], "required": false, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

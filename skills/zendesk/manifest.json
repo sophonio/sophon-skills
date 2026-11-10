@@ -1,6 +1,6 @@
 {
   "name": "zendesk",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Zendesk Support integration — search across tickets, users, and organizations, list and inspect tickets with their comment threads, look up users, search Help Center articles, and create or update tickets and comments. Uses OAuth2 client-credentials auth against a confidential OAuth client in your Zendesk Admin Center (a short-lived access token is minted fresh on every invocation); API-token basic auth is not used because Zendesk is sunsetting API tokens starting 2026-07-28.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -162,7 +162,7 @@
     }
   ],
   "credentials": [
-    { "service": "zendesk", "scopes": ["read", "write"], "required": true, "access": "proxy" }
+    { "service": "zendesk", "scopes": ["read", "write"], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

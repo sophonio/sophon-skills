@@ -1,6 +1,6 @@
 {
   "name": "gitlab",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "GitLab integration — manage issues, merge requests, and CI/CD pipelines via the REST API v4, with a raw REST passthrough for anything else. Works with gitlab.com and self-managed instances.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -154,7 +154,7 @@
     }
   ],
   "credentials": [
-    { "service": "gitlab", "scopes": ["api"], "required": true, "access": "proxy" }
+    { "service": "gitlab", "scopes": ["api"], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

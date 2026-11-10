@@ -1,6 +1,6 @@
 {
   "name": "intercom",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Intercom customer-messaging integration — search and read conversations and contacts, list Help Center articles, add internal notes, reply to customers, and close/snooze/assign conversations. Authenticates with a static internal-app Access Token (Authorization: Bearer) pinned to Intercom API version 2.15, with a regional base URL (api.intercom.io, api.eu.intercom.io, or api.au.intercom.io).",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -151,7 +151,7 @@
     }
   ],
   "credentials": [
-    { "service": "intercom", "scopes": ["read", "write"], "required": true, "access": "proxy" }
+    { "service": "intercom", "scopes": ["read", "write"], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

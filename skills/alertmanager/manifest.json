@@ -1,6 +1,6 @@
 {
   "name": "alertmanager",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Prometheus Alertmanager integration — list active alerts and silences, inspect cluster status, and create or expire silences via the Alertmanager v2 REST API. Works with a plain Alertmanager or a token/basic-auth proxied setup.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -123,7 +123,7 @@
     }
   ],
   "credentials": [
-    { "service": "alertmanager", "scopes": [], "required": false, "access": "proxy" }
+    { "service": "alertmanager", "scopes": [], "required": false, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

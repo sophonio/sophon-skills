@@ -1,6 +1,6 @@
 {
   "name": "mongodb-atlas",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MongoDB Atlas control-plane integration via the Atlas Administration API v2 — list projects and clusters, inspect cluster configuration and connection strings, monitor open alerts and acknowledge them, pull process metrics (CPU, connections, opcounters), review project activity events, and list database users. Uses OAuth2 client-credentials auth with an Atlas Service Account (short-lived tokens minted per call) against a pinned API version (2025-03-12). Control-plane/ops only: the Atlas Data API reached end-of-life in September 2025, so this skill includes no document CRUD tools.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -153,7 +153,7 @@
     }
   ],
   "credentials": [
-    { "service": "mongodb-atlas", "scopes": ["ORG_READ_ONLY", "GROUP_READ_ONLY", "GROUP_ALERT_ACKNOWLEDGER"], "required": true, "access": "proxy" }
+    { "service": "mongodb-atlas", "scopes": ["ORG_READ_ONLY", "GROUP_READ_ONLY", "GROUP_ALERT_ACKNOWLEDGER"], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

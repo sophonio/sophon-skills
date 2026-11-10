@@ -1,6 +1,6 @@
 {
   "name": "notion",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Notion integration — search workspace content, read pages and blocks, query databases, and create or update pages via the Notion REST API.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -126,7 +126,7 @@
     }
   ],
   "credentials": [
-    { "service": "notion", "scopes": ["read", "write"], "required": true, "access": "proxy" }
+    { "service": "notion", "scopes": ["read", "write"], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

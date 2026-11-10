@@ -1,6 +1,6 @@
 {
   "name": "seerr",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Overseerr / Jellyseerr media request management for your Plex or Jellyfin ecosystem — search movies and TV shows, check availability and request status, browse trending and popular titles, and create, approve, or decline media requests. Authenticates with your instance's admin-scoped API key (X-Api-Key header, Settings > General > API Key), so request approval and creation act with admin rights. Self-hosted: your Overseerr/Jellyseerr server must be reachable from Sophon's sandbox (LAN/VPN-only hosts usually need a reverse proxy or tunnel). Media metadata originates from TMDB via your server.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -130,7 +130,7 @@
     }
   ],
   "credentials": [
-    { "service": "overseerr", "scopes": ["read", "write"], "required": true, "access": "proxy" }
+    { "service": "overseerr", "scopes": ["read", "write"], "required": true, "access": "injected" }
   ],
   "requirements": [],
   "sandbox": {

@@ -1,0 +1,61 @@
+{
+  "name": "{{name}}",
+  "version": "1.0.0",
+  "description": "{{description}}",
+  "author": "{{author}}",
+  "license": "MIT",
+  "category": "integration",
+  "tags": [],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "integration": {
+    "service": "{{name}}",
+    "displayName": "{{name}}",
+    "description": "{{description}}",
+    "icon": "{{name}}",
+    "authType": "custom",
+    "category": "integration",
+    "fields": [
+      {
+        "key": "baseUrl",
+        "label": "Base URL",
+        "type": "url",
+        "required": true,
+        "placeholder": "https://api.example.com"
+      },
+      {
+        "key": "apiToken",
+        "label": "API Token",
+        "type": "secret",
+        "required": true,
+        "helpText": "Where to find this token in the provider's UI.",
+        "helpUrl": "https://example.com/docs/api-tokens"
+      }
+    ],
+    "testEndpoint": "/v1/me"
+  },
+  "tools": [
+    {
+      "name": "{{name}}.list_items",
+      "description": "List items.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "limit": { "type": "integer", "description": "Max items to return (default 30, max 200)" }
+        }
+      }
+    }
+  ],
+  "credentials": [
+    { "service": "{{name}}", "scopes": ["read"], "required": true, "access": "injected" }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}
