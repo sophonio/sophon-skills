@@ -1,6 +1,6 @@
 # Sophon Skills
 
-Open-source **Skills** (and, later, **Plugins**) that [Buildersoft](https://buildersoft.io)
+Open-source **Skills and Agents** (and, later, **Plugins**) that [Buildersoft](https://buildersoft.io)
 publishes to the [Sophon Marketplace](https://marketplace.sophon.buildersoft.io).
 
 A **Skill** is a self-contained folder — a `manifest.json` describing the skill and its tools, an
@@ -10,6 +10,34 @@ into `.sophon-skill` artifacts, and the docs for publishing them.
 
 > These are **Sophon** skills (`manifest.json` format), not Claude Code / Anthropic `SKILL.md`
 > plugins — a different ecosystem with a different manifest.
+
+## Development agents
+
+Six existing Sophon development-team personas are available as native `.sophon-agent` packages,
+all version **1.0.0**, authored by **Buildersoft LLC**, licensed **MIT**, requiring **Sophon 2.2.0+**:
+
+| Agent | Purpose |
+|-------|---------|
+| [Developer](agents/developer) | Scoped implementation and root-cause debugging with tests |
+| [Lead Developer](agents/lead-developer) | Scoping, specialist coordination, integration, and evidence |
+| [QA Engineer](agents/qa-engineer) | Independent verification, defects, and release risks |
+| [Researcher](agents/researcher) | Cited, version-aware technical investigations |
+| [Software Architect](agents/software-architect) | Repository-grounded designs, contracts, and trade-offs |
+| [UI/UX Designer](agents/ui-ux-designer) | UX flows, states, accessibility annotations, and handoff |
+
+Their original `SOUL.md` files are preserved. Build with Sophon's canonical CLI via:
+
+```powershell
+# Review the known QA accessibility-line warning first; see docs/AGENTS.md.
+pwsh -File build/Build-AgentPackages.ps1 -ValidateOnly -AllowWarnings
+pwsh -File build/Build-AgentPackages.ps1 -AllowWarnings
+pwsh -File tests/agents/Test-AgentPackages.ps1
+```
+
+Upload artifacts are in **`dist/agents/`**, with a `SHA256SUMS` index. Nothing is uploaded by
+these commands. See [agent packaging and upload notes](docs/AGENTS.md), including the required
+manual Lead Developer delegation allow-list setup and the reviewed QA validation warning.
+The existing skill build/publish scripts remain skill-only.
 
 ## Skills in this repo
 
@@ -146,11 +174,12 @@ standard library (`urllib`, `hashlib`); a few pin small, pure-Python or musllinu
 
 ```
 skills/<name>/        A skill: manifest.json + entrypoint + README.md + LICENSE
+agents/<name>/        An agent: manifest.json + SOUL.md + README.md + LICENSE
 plugins/              Sophon plugins (.sophon-plugin, .NET gRPC) — scaffolded, none yet
 templates/            Contributor scaffolds (skill-python, skill-csharp, plugin-*)
 build/                Build-MarketplacePackages.ps1, Publish-MarketplacePackages.ps1
 docs/PUBLISHING.md    How to build, validate, and publish to the Marketplace
-dist/                 Built .sophon-skill artifacts (git-ignored)
+dist/                 Built .sophon-skill artifacts; dist/agents/ holds .sophon-agent (git-ignored)
 ```
 
 ## Quick start

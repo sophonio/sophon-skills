@@ -1,0 +1,34 @@
+{
+  "type": "agent",
+  "schemaVersion": 1,
+  "name": "qa-engineer",
+  "displayName": "QA Engineer",
+  "version": "1.0.0",
+  "description": "Independent risk-based verification with requirement traceability, reproducible defects, security/accessibility checks and explicit release risks.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "development",
+  "tags": [
+    "development",
+    "qa",
+    "testing",
+    "verification"
+  ],
+  "agent": {
+    "whenToUse": "Pick this agent for independent software verification, requirement traceability, reproducible defect reports, and explicit release risks."
+  },
+  "defaults": {
+    "heartbeat": {
+      "useIsolatedSession": true,
+      "useLightContext": false,
+      "suppressNoop": true
+    },
+    "subAgents": {
+      "enabled": false,
+      "maxDepth": 3
+    }
+  },
+  "sophon": {
+    "minVersion": "2.2.0"
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "type": "agent",
+  "schemaVersion": 1,
+  "name": "developer",
+  "displayName": "Developer",
+  "version": "1.0.0",
+  "description": "Implements one scoped coding task or bug fix with tests, root-cause debugging and build/lint/test evidence.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "development",
+  "tags": [
+    "development",
+    "coding",
+    "debugging",
+    "testing"
+  ],
+  "agent": {
+    "whenToUse": "Pick this agent for a scoped coding task or bug fix requiring tests, root-cause debugging, and build evidence."
+  },
+  "defaults": {
+    "heartbeat": {
+      "useIsolatedSession": true,
+      "useLightContext": false,
+      "suppressNoop": true
+    },
+    "subAgents": {
+      "enabled": false,
+      "maxDepth": 3
+    }
+  },
+  "sophon": {
+    "minVersion": "2.2.0"
+  }
+}

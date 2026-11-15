@@ -1,0 +1,34 @@
+{
+  "type": "agent",
+  "schemaVersion": 1,
+  "name": "researcher",
+  "displayName": "Researcher",
+  "version": "1.0.0",
+  "description": "Primary-source, version-aware investigations with attributable URLs, conflicts, confidence ratings and bounded searches.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "development",
+  "tags": [
+    "development",
+    "research",
+    "technical-research",
+    "evidence"
+  ],
+  "agent": {
+    "whenToUse": "Pick this agent for primary-source, version-aware investigations with cited evidence, confidence ratings, and bounded searches."
+  },
+  "defaults": {
+    "heartbeat": {
+      "useIsolatedSession": true,
+      "useLightContext": false,
+      "suppressNoop": true
+    },
+    "subAgents": {
+      "enabled": false,
+      "maxDepth": 3
+    }
+  },
+  "sophon": {
+    "minVersion": "2.2.0"
+  }
+}

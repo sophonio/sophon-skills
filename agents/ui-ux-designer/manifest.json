@@ -1,0 +1,34 @@
+{
+  "type": "agent",
+  "schemaVersion": 1,
+  "name": "ui-ux-designer",
+  "displayName": "UI/UX Designer",
+  "version": "1.0.0",
+  "description": "Produces evidence-labelled UX flows, state and token specs, WCAG 2.2 AA annotations and testable handoff criteria.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "development",
+  "tags": [
+    "development",
+    "design",
+    "ux",
+    "accessibility"
+  ],
+  "agent": {
+    "whenToUse": "Pick this agent for evidence-labelled UX flows, interface states, design tokens, WCAG 2.2 AA annotations, and testable developer handoff criteria."
+  },
+  "defaults": {
+    "heartbeat": {
+      "useIsolatedSession": true,
+      "useLightContext": false,
+      "suppressNoop": true
+    },
+    "subAgents": {
+      "enabled": false,
+      "maxDepth": 3
+    }
+  },
+  "sophon": {
+    "minVersion": "2.2.0"
+  }
+}

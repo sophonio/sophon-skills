@@ -1,0 +1,34 @@
+{
+  "type": "agent",
+  "schemaVersion": 1,
+  "name": "lead-developer",
+  "displayName": "Lead Developer",
+  "version": "1.0.0",
+  "description": "Scopes software work, delegates dependency-aware briefs to specialist agents, integrates and reviews results, and delivers final evidence.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "development",
+  "tags": [
+    "development",
+    "leadership",
+    "orchestration",
+    "code-review"
+  ],
+  "agent": {
+    "whenToUse": "Pick this agent to scope software work, coordinate development specialists, integrate changes, and deliver reviewed verification evidence."
+  },
+  "defaults": {
+    "heartbeat": {
+      "useIsolatedSession": true,
+      "useLightContext": false,
+      "suppressNoop": true
+    },
+    "subAgents": {
+      "enabled": true,
+      "maxDepth": 2
+    }
+  },
+  "sophon": {
+    "minVersion": "2.2.0"
+  }
+}

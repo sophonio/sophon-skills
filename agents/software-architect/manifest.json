@@ -1,0 +1,34 @@
+{
+  "type": "agent",
+  "schemaVersion": 1,
+  "name": "software-architect",
+  "displayName": "Software Architect",
+  "version": "1.0.0",
+  "description": "Repo-grounded, read-only design with quantified quality attributes, trade-offs, security boundaries, API contracts, migration plans and ADR drafts.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "development",
+  "tags": [
+    "development",
+    "architecture",
+    "system-design",
+    "adr"
+  ],
+  "agent": {
+    "whenToUse": "Pick this agent for repository-grounded software design, trade-offs, security boundaries, API contracts, migration plans, and ADR drafts."
+  },
+  "defaults": {
+    "heartbeat": {
+      "useIsolatedSession": true,
+      "useLightContext": false,
+      "suppressNoop": true
+    },
+    "subAgents": {
+      "enabled": false,
+      "maxDepth": 3
+    }
+  },
+  "sophon": {
+    "minVersion": "2.2.0"
+  }
+}
