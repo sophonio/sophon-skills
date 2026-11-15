@@ -46,3 +46,7 @@ Dockerfile text eol=lf
 *.zip binary
 *.tar.gz binary
 *.nupkg binary
+
+# Vendored upstream files are byte-identical copies locked by sha256
+# (skills/ffmpeg-video/vendor.lock.json): never normalize them.
+skills/ffmpeg-video/vendor/** -text

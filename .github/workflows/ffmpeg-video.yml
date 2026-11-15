@@ -1,0 +1,223 @@
+name: ffmpeg-video
+
+# The ffmpeg-video skill (skills/ffmpeg-video) wraps the vendored kajisho5/ffmpeg-skill and drives the
+# FFmpeg installed on the host, on Sophon's process sandbox backend only. These jobs cover what
+# validate.yml cannot: other Python versions, the Python-floor refusal, real FFmpeg on Linux and
+# Windows, and the provenance of the vendored files. Design: docs/plans/2026-11-15-ffmpeg-video-design.md;
+# vendoring policy: docs/VENDORING.md.
+#
+#   static       generator drift, unit and fake-FFmpeg tests, the package build (Python 3.10 and 3.13)
+#   py-floor     Python 3.8 only (no newer interpreter anywhere): every call must be PYTHON_UNSUPPORTED
+#   linux-floor  Ubuntu 24.04 with its apt FFmpeg 6.1, the oldest supported FFmpeg, on Python 3.10
+#   windows      FFmpeg from Chocolatey (taskkill, cp1252 consoles, Windows paths)
+#   provenance   Sync-FfmpegSkill.ps1 -Check against a fresh clone of the pinned upstream tag
+#   macos        Homebrew FFmpeg; manual runs only (Actions -> ffmpeg-video -> Run workflow)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'skills/ffmpeg-video/**'
+      - 'build/ffmpeg-video/**'
+      - 'build/SkillLint.psm1'
+      - 'build/catalog/**'
+      - 'build/Build-MarketplacePackages.ps1'
+      - 'tests/skills/*ffmpeg_video*'
+      - 'tests/skills/sandboxsim.py'
+      - '.github/workflows/ffmpeg-video.yml'
+  pull_request:
+    paths:
+      - 'skills/ffmpeg-video/**'
+      - 'build/ffmpeg-video/**'
+      - 'build/SkillLint.psm1'
+      - 'build/catalog/**'
+      - 'build/Build-MarketplacePackages.ps1'
+      - 'tests/skills/*ffmpeg_video*'
+      - 'tests/skills/sandboxsim.py'
+      - '.github/workflows/ffmpeg-video.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  static:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.10', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Generated files are up to date (generate.py --check)
+        run: python -B build/ffmpeg-video/generate.py --check
+      - name: Unit tests (no FFmpeg)
+        if: ${{ !cancelled() }}
+        run: python tests/skills/test_ffmpeg_video.py
+      - name: Fake-FFmpeg tests (version floor, dry runs, timeout cleanup)
+        if: ${{ !cancelled() }}
+        run: python tests/skills/test_ffmpeg_video_fake.py
+      - name: Build the package
+        if: ${{ !cancelled() }}
+        shell: pwsh
+        run: pwsh -File build/Build-MarketplacePackages.ps1 -Skills ffmpeg-video -OutputDir "$env:RUNNER_TEMP/dist"
+
+  py-floor:
+    # A container, not setup-python: the bootstrap also searches /usr/bin, where the Ubuntu runner
+    # image has Python 3.12, so only an image with nothing newer than 3.8 proves the refusal.
+    runs-on: ubuntu-latest
+    container: python:3.8-slim
+    steps:
+      - uses: actions/checkout@v4
+      - name: Every call on Python 3.8 is PYTHON_UNSUPPORTED (exit 0, one JSON line)
+        shell: sh
+        run: |
+          python -B - <<'PY'
+          # The Sophon process-backend shape, by hand (tests/skills/sandboxsim.py needs 3.10+):
+          # an installed copy under <data>/skills/installed, a <32 hex> workspace, the preamble.
+          import json, os, pathlib, shutil, subprocess, sys, tempfile, uuid
+          repo = pathlib.Path(os.environ.get("GITHUB_WORKSPACE", ".")).resolve()
+          skill = repo / "skills" / "ffmpeg-video"
+          data = pathlib.Path(tempfile.mkdtemp(prefix="sophon-floor-"))
+          for part in ("skills/installed", "sandbox/workspaces", "documents"):
+              (data / part).mkdir(parents=True)
+          shutil.copytree(str(skill), str(data / "skills" / "installed" / "ffmpeg-video"))
+          preamble = "import json, os\nparams = json.loads(os.environ['SOPHON_PARAMS'])\n"
+          entry = (skill / "main.py").read_text(encoding="utf-8")
+
+          def call(params):
+              ws = data / "sandbox" / "workspaces" / uuid.uuid4().hex
+              ws.mkdir()
+              (ws / "script.py").write_bytes((preamble + entry).encode("utf-8"))
+              env = {k: v for k, v in os.environ.items() if not k.startswith(("FFMPEG_VIDEO_", "SOPHON_"))}
+              env["SOPHON_PARAMS"] = json.dumps(params)
+              proc = subprocess.run([sys.executable, "script.py"], cwd=str(ws), env=env,
+                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+              lines = proc.stdout.decode("utf-8", "replace").strip().splitlines()
+              print("%s: exit %d, %s" % (params["tool"], proc.returncode, lines[-1][:1500] if lines else "(no output)"))
+              if proc.stderr:
+                  print(proc.stderr.decode("utf-8", "replace")[-2000:])
+              return proc.returncode, (json.loads(lines[-1]) if lines else None)
+
+          print("python", sys.version.split()[0], sys.executable)
+          code, doc = call({"tool": "ffmpeg.setup.contract"})
+          dcode, ddoc = call({"tool": "ffmpeg.setup.doctor"})
+          ucode, udoc = call({"tool": "ffmpeg.nope"})
+          failures = []
+          if sys.version_info >= (3, 10):
+              failures.append("this job must run on Python older than 3.10")
+          for name, c, d in (("contract", code, doc), ("doctor", dcode, ddoc)):
+              if c != 0 or not d or d.get("ok") is not False or d.get("code") != "PYTHON_UNSUPPORTED":
+                  failures.append(name + ": expected exit 0 with code PYTHON_UNSUPPORTED")
+          if ucode != 0 or udoc != {"error": "Unknown tool: ffmpeg.nope"}:
+              failures.append('unknown tool: expected exactly {"error": "Unknown tool: ffmpeg.nope"}')
+          shutil.rmtree(str(data), ignore_errors=True)
+          for line in failures:
+              print("FAIL", line)
+          sys.exit(1 if failures else 0)
+          PY
+
+  linux-floor:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Install FFmpeg 6.1 (Ubuntu 24.04 apt) and fonts
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ffmpeg fontconfig fonts-dejavu-core
+          ffmpeg -hide_banner -version | head -n 1
+          ffprobe -hide_banner -version | head -n 1
+          ffmpeg -hide_banner -version | head -n 1 | grep -Eq '^ffmpeg version (n)?6\.1' \
+            || { echo "expected the FFmpeg 6.1 floor from Ubuntu 24.04"; exit 1; }
+      - name: Fake-FFmpeg tests
+        run: python tests/skills/test_ffmpeg_video_fake.py
+      - name: Real-media tests
+        if: ${{ !cancelled() }}
+        env:
+          CI_REQUIRE_FFMPEG: '1'
+        run: python tests/skills/ffmpeg_video_media.py
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install FFmpeg (Chocolatey, with retries)
+        shell: pwsh
+        run: |
+          for ($attempt = 1; $attempt -le 3; $attempt++) {
+            choco install ffmpeg -y --no-progress
+            if ($LASTEXITCODE -eq 0) { break }
+            if ($attempt -eq 3) { Write-Host "choco install ffmpeg failed 3 times"; exit 1 }
+            Write-Host "choco install ffmpeg failed (attempt $attempt); retrying in $(30 * $attempt) s"
+            Start-Sleep -Seconds (30 * $attempt)
+          }
+          foreach ($exe in 'ffmpeg', 'ffprobe') {
+            $lines = & $exe -hide_banner -version
+            if ($LASTEXITCODE -ne 0) { Write-Host "$exe -version failed"; exit 1 }
+            Write-Host ($lines | Select-Object -First 1)
+          }
+      - name: Unit tests
+        run: python tests/skills/test_ffmpeg_video.py
+      - name: Fake-FFmpeg tests
+        if: ${{ !cancelled() }}
+        run: python tests/skills/test_ffmpeg_video_fake.py
+      - name: Real-media tests
+        if: ${{ !cancelled() }}
+        env:
+          CI_REQUIRE_FFMPEG: '1'
+        run: python tests/skills/ffmpeg_video_media.py
+
+  provenance:
+    # Re-derives every vendored file, vendor.lock.json and THIRD_PARTY_NOTICES.md from the upstream tag.
+    # The tag and commit come from vendor.lock.json; the repository URL is fixed here, so a lock that
+    # names another repository fails the check.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Sync-FfmpegSkill.ps1 -Check against a fresh clone of the pinned tag
+        shell: pwsh
+        run: |
+          $lock = Get-Content -LiteralPath skills/ffmpeg-video/vendor.lock.json -Raw -Encoding utf8 | ConvertFrom-Json
+          $tag = [string]$lock.upstream.tag
+          $commit = [string]$lock.upstream.commit
+          Write-Host "pinned: $tag = $commit"
+          $clone = Join-Path $env:RUNNER_TEMP 'ffmpeg-skill'
+          git clone --quiet --no-checkout --depth 1 --branch $tag https://github.com/kajisho5/ffmpeg-skill $clone
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          pwsh -NoProfile -File build/ffmpeg-video/Sync-FfmpegSkill.ps1 -Tag $tag -ExpectedCommit $commit -Source $clone -Check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+  macos:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install FFmpeg (Homebrew)
+        run: |
+          brew install ffmpeg
+          ffmpeg -hide_banner -version | head -n 1
+      - name: Unit tests
+        run: python tests/skills/test_ffmpeg_video.py
+      - name: Fake-FFmpeg tests
+        if: ${{ !cancelled() }}
+        run: python tests/skills/test_ffmpeg_video_fake.py
+      - name: Real-media tests
+        if: ${{ !cancelled() }}
+        env:
+          CI_REQUIRE_FFMPEG: '1'
+        run: python tests/skills/ffmpeg_video_media.py
