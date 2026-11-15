@@ -3,29 +3,42 @@
   "schemaVersion": 1,
   "name": "lead-developer",
   "displayName": "Lead Developer",
-  "version": "1.0.0",
-  "description": "Scopes software work, delegates dependency-aware briefs to specialist agents, integrates and reviews results, and delivers final evidence.",
+  "version": "2.0.0",
+  "description": "Runs a code change end to end in a repository bound with the Sophon CLI. Small fixes are made directly; larger work gets a plan file in docs/plans that you approve, then is carried out task by task with a live checklist, real build and test runs and one verified commit per task on a feature branch. Asks once per task before using specialist sub-agents and says what they cost. Say \"ultracode\" for multi-agent research, design, review and verification, or \"no subagents\" to keep one thread. Offers Push + PR, Keep local or Discard at the end; never pushes silently.",
   "author": "Buildersoft LLC",
   "license": "MIT",
   "category": "development",
   "tags": [
     "development",
-    "leadership",
     "orchestration",
-    "code-review"
+    "planning",
+    "plan-mode",
+    "multi-agent",
+    "git",
+    "pull-request",
+    "verification",
+    "ultracode"
   ],
   "agent": {
-    "whenToUse": "Pick this agent to scope software work, coordinate development specialists, integrate changes, and deliver reviewed verification evidence."
+    "whenToUse": "Pick this agent to plan and deliver a code change in a bound repository: a feature, a multi-file fix, a refactor, a migration, or a review-and-fix pass. It plans in a markdown file you approve, tracks todos, asks before using sub-agents, verifies with real commands, commits each task on a branch and offers a pull request. Triggers: implement, build, add a feature, refactor, plan and execute, continue the plan, ultracode. Not for: questions about how code works (researcher), a design without implementation (software-architect), one scoped task from a lead (developer), review of an existing diff (code-reviewer), an unknown bug cause (debugger). Family role: lead-developer."
+  },
+  "requires": {
+    "tools": [
+      "agent.list",
+      "fs.find",
+      "fs.search",
+      "session.history",
+      "todo.write",
+      "web.scrape"
+    ]
   },
   "defaults": {
-    "heartbeat": {
-      "useIsolatedSession": true,
-      "useLightContext": false,
-      "suppressNoop": true
-    },
     "subAgents": {
       "enabled": true,
-      "maxDepth": 2
+      "maxDepth": 1
+    },
+    "modelRouting": {
+      "mode": "inherit"
     }
   },
   "sophon": {
