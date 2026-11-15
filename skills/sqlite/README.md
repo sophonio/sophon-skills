@@ -15,15 +15,14 @@ Every tool takes `connectionId` from `db.list_connections`. Queries return colum
 
 ## Connection
 
-Create one or more named connections in Sophon's Connections settings. Server connections need
-host, port, database or service name, verified TLS, and a database account with read-only grants.
-To enable `sqlite.execute`, configure a separate write account. SQLite uses a managed uploaded
-database file; Sophon mounts it read-only for read tools and writable only for the high-risk tool.
-Credentials are stored in Sophon's vault, and only the selected role's credentials reach a call.
+SQLite needs no credentials, so this skill declares no connection form. It opens the database
+file that Sophon's named-connection runtime mounts at `SOPHON_DATABASE_PATH` (default
+`/database/database.sqlite`): read-only for the read tools, writable only for the high-risk
+`sqlite.execute`.
 
-This integration supports password authentication in its first release. TLS verification is on
-unless explicitly disabled for a trusted local server. The database server's own grants are the
-final authority for which statements can run.
+That runtime, and the `db.list_connections` tool that supplies `connectionId`, are not available in
+Sophon yet. Until they are, every call that reaches the database returns
+`OperationalError: unable to open database file`.
 
 ## Third-party software and trademarks
 

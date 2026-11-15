@@ -14,17 +14,6 @@
   "runtime": "sandbox",
   "language": "python",
   "entrypoint": "main.py",
-  "integration": {
-    "service": "sqlite",
-    "displayName": "SQLite",
-    "description": "Connect named SQLite databases for schema-aware questions and SQL execution.",
-    "icon": "database",
-    "authType": "custom",
-    "category": "integration",
-    "connectionMode": "named",
-    "fields": [],
-    "testEndpoint": ""
-  },
   "tools": [
     {
       "name": "sqlite.ping",
@@ -144,7 +133,6 @@
       }
     }
   ],
-  "credentials": [],
   "requirements": [
     "sqlglot==30.23.0"
   ],

@@ -86,28 +86,57 @@ def manifest(engine, info):
         requirements.append(info["driver"])
     if engine == "mssql":
         requirements.append("pyOpenSSL==26.4.0")
-    return {
+    result = {
         "name": engine, "version": "1.0.0", "author": "Buildersoft LLC", "license": "MIT",
         "description": f"{info['label']} named database connections with schema discovery, read-only natural-language-assisted SQL queries, and separately approved write SQL.",
         "category": "data", "tags": info["tags"], "runtime": "sandbox", "language": "python",
         "entrypoint": "main.py",
-        "integration": {
+    }
+    # SQLite has no secrets, so it declares neither an integration nor a credential
+    # ("both or neither", CONTRIBUTING.md). A zero-field connection form cannot be saved in
+    # Sophon, and an integration without a credential entry is never gated.
+    if fields:
+        result["integration"] = {
             "service": engine, "displayName": info["label"], "description":
             f"Connect named {info['label']} databases for schema-aware questions and SQL execution.",
             "icon": "database", "authType": "custom", "category": "integration",
             "connectionMode": "named", "fields": fields, "testEndpoint": "",
-        },
-        "tools": tools,
-        "credentials": [] if engine == "sqlite" else [
-            {"service": engine, "scopes": ["read", "write"], "required": True, "access": "injected"}],
-        "requirements": requirements,
-        "sandbox": {"network": engine != "sqlite", "timeoutSeconds": 30, "maxMemoryMb": 256},
-        "platforms": [],
-    }
+        }
+    result["tools"] = tools
+    if fields:
+        result["credentials"] = [
+            {"service": engine, "scopes": ["read", "write"], "required": True, "access": "injected"}]
+    result["requirements"] = requirements
+    result["sandbox"] = {"network": engine != "sqlite", "timeoutSeconds": 30, "maxMemoryMb": 256}
+    result["platforms"] = []
+    return result
+
+
+SERVER_CONNECTION = """Create one or more named connections in Sophon's Connections settings. Server connections need
+host, port, database or service name, verified TLS, and a database account with read-only grants.
+To enable `{engine}.execute`, configure a separate write account. SQLite uses a managed uploaded
+database file; Sophon mounts it read-only for read tools and writable only for the high-risk tool.
+Credentials are stored in Sophon's vault, and only the selected role's credentials reach a call.
+
+This integration supports password authentication in its first release. TLS verification is on
+unless explicitly disabled for a trusted local server. The database server's own grants are the
+final authority for which statements can run.
+"""
+
+SQLITE_CONNECTION = """SQLite needs no credentials, so this skill declares no connection form. It opens the database
+file that Sophon's named-connection runtime mounts at `SOPHON_DATABASE_PATH` (default
+`/database/database.sqlite`): read-only for the read tools, writable only for the high-risk
+`sqlite.execute`.
+
+That runtime, and the `db.list_connections` tool that supplies `connectionId`, are not available in
+Sophon yet. Until they are, every call that reaches the database returns
+`OperationalError: unable to open database file`.
+"""
 
 
 def readme(engine, info):
     target = "an uploaded SQLite file" if engine == "sqlite" else "a named server connection"
+    connection = SQLITE_CONNECTION if engine == "sqlite" else SERVER_CONNECTION.format(engine=engine)
     return f"""# {info['label']} database skill
 
 Connect {target} to Sophon, inspect its schema, and answer questions using {info['label']} SQL.
@@ -125,16 +154,7 @@ Every tool takes `connectionId` from `db.list_connections`. Queries return colum
 
 ## Connection
 
-Create one or more named connections in Sophon's Connections settings. Server connections need
-host, port, database or service name, verified TLS, and a database account with read-only grants.
-To enable `{engine}.execute`, configure a separate write account. SQLite uses a managed uploaded
-database file; Sophon mounts it read-only for read tools and writable only for the high-risk tool.
-Credentials are stored in Sophon's vault, and only the selected role's credentials reach a call.
-
-This integration supports password authentication in its first release. TLS verification is on
-unless explicitly disabled for a trusted local server. The database server's own grants are the
-final authority for which statements can run.
-
+{connection}
 ## Third-party software and trademarks
 
 This skill uses the pinned Python dependencies in `manifest.json`. {info['label']} is a trademark
