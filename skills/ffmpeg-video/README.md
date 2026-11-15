@@ -89,6 +89,10 @@ batch recipes and brand files:
 - **Sophon's own data is off limits**: nothing under the data folder may be read or written except
   inside `documents/` (so `vault/`, `config/`, `skills/`, `sessions/` and the rest are refused),
   and no file of the skill itself.
+- **Credential stores are off limits as inputs**: anything under `~/.ssh`, `~/.aws`, `~/.azure`,
+  `~/.gnupg`, `~/.docker`, `~/.kube`, `~/.config`, `~/Library/Keychains`, `%APPDATA%\Microsoft`, and
+  files such as `.env`, `.env.*`, `~/.netrc`, `~/.git-credentials`, `~/.npmrc`, `~/.pypirc` and `~/.pgpass`.
+  This applies to every tool, including caption text and report notes.
 - **Outputs** must land inside a write root (the output root, plus `FFMPEG_VIDEO_WRITE_ROOTS`), need
   an extension, and may not climb out with `..` or through a symbolic link. Folders are created
   only inside the output root.
@@ -255,7 +259,9 @@ A failure:
 `3f8ba63cc8eb991c1730d57b0215e6127765399a`): the 42 tool scripts, their shared `_common` package,
 the contract, the platform templates, the MCP server module whose argument mapping the wrapper
 reuses, the upstream `SKILL.md` and its `LICENSE`. Each file is pinned by sha256 in
-`vendor.lock.json` and checked on every call. Nothing in it is patched: the wrapper
+`vendor.lock.json` and checked on every call; `main.py` pins the lock's own sha256 and that of
+`lib/bridge.py`, and loads the skill only from a folder whose files match both (never from
+`skills/self-authored`). Nothing in it is patched: the wrapper
 (`main.py` and `lib/bridge.py`) adds the Sophon bootstrap, the path policy and the result
 envelope around it. `lib/tool-map.json` and this file's tool table are generated from the
 upstream contract by `build/ffmpeg-video/generate.py` in the sophon-skills repository; new

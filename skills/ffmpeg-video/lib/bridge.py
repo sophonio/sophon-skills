@@ -67,6 +67,12 @@ TEXT_KEYS = ("text", "transcript", "words", "cues", "lines")
 LIFTED_KEYS = ("status", "output", "verified", "dry_run", "summary", "warnings", "notes", "exit_code")
 CASE_INSENSITIVE = os.name == "nt" or sys.platform == "darwin"
 URL_RE = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]+:")
+# Credential stores refused as inputs for every tool (relative to the user's home, then env folders).
+SECRET_HOME_ENTRIES = (".ssh", ".aws", ".azure", ".gnupg", ".docker", ".kube", ".config", ".netrc",
+                       ".git-credentials", ".npmrc", ".pypirc", ".pgpass", ".vault-token",
+                       os.path.join("Library", "Keychains"))
+SECRET_ENV_ENTRIES = (("APPDATA", ("Microsoft",)), ("LOCALAPPDATA", ("Microsoft", "Credentials")),
+                      ("LOCALAPPDATA", ("Microsoft", "Vault")))
 LANG_SUFFIX_RE = re.compile(r"^(.*[^:]):([A-Za-z]{2,3}(?:-[A-Za-z0-9]{1,8})*)$")
 TRUE_WORDS = ("true", "yes", "on", "1")
 FALSE_WORDS = ("false", "no", "off", "0")
@@ -365,6 +371,7 @@ class Call:
         self.doc = None            # the child's result document
         self.watch_dirs = set()    # folders whose new .ffskill siblings this run may leave
         self.notes = []
+        self._secret_roots = None
         self.dry_run = False
         self.ok = False
         self.output_root = None
@@ -678,6 +685,26 @@ class Call:
             return "sophon_data"
         return None
 
+    def secret_roots(self):
+        if self._secret_roots is None:
+            user = os.path.expanduser("~")
+            roots = [os.path.join(user, name) for name in SECRET_HOME_ENTRIES]
+            for var, parts in SECRET_ENV_ENTRIES:
+                base = os.environ.get(var)
+                if base:
+                    roots.append(os.path.join(base, *parts))
+            self._secret_roots = [plain_path(os.path.realpath(root)) for root in roots]
+        return self._secret_roots
+
+    def secret_reason(self, real):
+        """Well-known credential stores and .env files are never media, captions or notes."""
+        name = os.path.basename(real).lower()
+        if name == ".env" or name.startswith(".env."):
+            return "credential_store"
+        if any(within(real, root) for root in self.secret_roots()):
+            return "credential_store"
+        return None
+
     def refuse_path(self, name, value, reason, why):
         return BridgeError("PATH_NOT_ALLOWED", f"{name}: {why}", reason=reason, param=name, path=str(value))
 
@@ -717,6 +744,10 @@ class Call:
             raise self.refuse_path(name, value, reason, "files of the ffmpeg-video skill itself cannot be used as media")
         if reason == "sophon_data":
             raise self.refuse_path(name, value, reason, "Sophon's own data folder is off limits (only its documents folder is readable)")
+        if self.secret_reason(real) and not self.in_write_root(real) and not (
+                self.data_dir and within(real, os.path.join(self.real_data_dir, "documents"))):
+            raise self.refuse_path(name, value, "credential_store",
+                                   "credential and key folders (.ssh, .aws, .config, ...) and .env files cannot be used as inputs")
         exists = os.path.isfile(real) if kind == "file" else os.path.isdir(real) if kind == "dir" else os.path.exists(real)
         if not exists:
             what = {"file": "file", "dir": "folder"}.get(kind, "file or folder")

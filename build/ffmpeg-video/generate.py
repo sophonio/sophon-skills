@@ -785,7 +785,7 @@ class Surface:
         lines.append(README_END)
         return "\n".join(lines)
 
-    def main_block(self, lock_sha: str) -> str:
+    def main_block(self, lock_sha: str, bridge_sha: str) -> str:
         upstream = self.lock["upstream"]
         lines = [MAIN_BEGIN,
                  "# Written by build/ffmpeg-video/generate.py; edit policy.json or manifest.base.json instead.",
@@ -794,6 +794,8 @@ class Surface:
                  f"VENDOR_TAG = {json.dumps(upstream['tag'])}",
                  f"VENDOR_COMMIT = {json.dumps(upstream['commit'])}",
                  f"VENDOR_LOCK_SHA256 = {json.dumps(lock_sha)}",
+                 "# sha256 of lib/bridge.py; main.py loads no bridge whose bytes differ (rerun generate.py after editing it)",
+                 f"BRIDGE_SHA256 = {json.dumps(bridge_sha)}",
                  "TOOLS = ["]
         for _, full in self.order:
             lines.append(f"    {json.dumps(full)},")
@@ -1009,12 +1011,16 @@ def generate(args: argparse.Namespace) -> int:
     lock_out["generated"] = [{"path": TOOL_MAP_REL, "sha256": sha256_bytes(tool_map_text.encode("utf-8"))}]
     lock_text = json_text(lock_out, indent=2, ascii_only=True)
     lock_sha = sha256_bytes(lock_text.encode("utf-8"))
+    bridge_path = MAIN_PATH.parent / "lib" / "bridge.py"
+    if not bridge_path.is_file():
+        raise GenerationError([f"{bridge_path.relative_to(REPO).as_posix()} is missing"])
+    bridge_sha = sha256_bytes(bridge_path.read_bytes())
     outputs = {
         TOOL_MAP_PATH: tool_map_text,
         LOCK_PATH: lock_text,
         MANIFEST_PATH: json_text(surface.manifest_doc(), indent=2),
         README_PATH: render_marker_file(README_PATH, README_BEGIN, README_END, surface.readme_block(), "README.md"),
-        MAIN_PATH: render_marker_file(MAIN_PATH, MAIN_BEGIN, MAIN_END, surface.main_block(lock_sha), "main.py"),
+        MAIN_PATH: render_marker_file(MAIN_PATH, MAIN_BEGIN, MAIN_END, surface.main_block(lock_sha, bridge_sha), "main.py"),
     }
 
     if args.check:

@@ -354,6 +354,23 @@ with FakeDataDir() as data:
           doc and doc.get("code") == "VENDOR_NOT_FOUND"
           and any("vendor.lock.json does not match" in c.get("reason", "") for c in doc.get("candidates") or []), out[:500])
     check("VENDOR_NOT_FOUND lists the data folder", doc and doc.get("dataDir"))
+    shutil.rmtree(wrong)
+
+    # The lock pins vendor/ and the tool map; BRIDGE_SHA256 pins the bridge itself.
+    evil = data.install("ffmpeg-video", folder="evilbridge")
+    with open(evil / "lib" / "bridge.py", "ab") as fh:
+        fh.write(b"\nraise SystemExit('loaded a changed bridge')\n")
+    doc, out, err, rc = run_process(data, evil, {"tool": "ffmpeg.setup.contract"}, env=sim_env(data))
+    check("a changed lib/bridge.py is never loaded: VENDOR_NOT_FOUND",
+          doc and doc.get("code") == "VENDOR_NOT_FOUND" and "loaded a changed bridge" not in out + err
+          and any("lib/bridge.py does not match" in c.get("reason", "") for c in doc.get("candidates") or []), out[:500])
+    shutil.rmtree(evil)
+
+    authored = data.install("ffmpeg-video", folder="ffmpeg-video", root="self-authored")
+    doc, out, err, rc = run_process(data, authored, {"tool": "ffmpeg.setup.doctor"}, env=sim_env(data))
+    check("a copy under skills/self-authored is not used", doc and doc.get("code") == "VENDOR_NOT_FOUND"
+          and not any("self-authored" in c.get("path", "") for c in doc.get("candidates") or []), out[:400])
+    shutil.rmtree(authored)
 
 # ---------------------------------------------------------------------------------------------
 print("scenario: interpreter selection")
@@ -561,6 +578,31 @@ with FakeDataDir() as data:
         args, err, c = outcome("ffmpeg.setup.verify", {"paths": [str(clip)], "quick": True}, data)
         check("verify: --out forced into <root>/verify", err is None and
               os.path.normcase(args["out"]).startswith(os.path.normcase(str(root / "verify"))), err and err.message)
+
+        # credential stores and .env files are refused as inputs, for media and text roles alike
+        uhome = pathlib.Path(tempfile.mkdtemp(prefix="ffv-home-")).resolve()  # outside the data folder
+        secrets = {"~/.ssh": uhome / ".ssh" / "id_ed25519.png", "~/.aws": uhome / ".aws" / "credentials.srt",
+                   "~/.config": uhome / ".config" / "gh" / "hosts.txt", ".env": uhome / "proj" / ".env",
+                   ".env.local": uhome / "proj" / ".env.local"}
+        for path in secrets.values():
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(b"x")
+        henv = {"HOME": str(uhome), "USERPROFILE": str(uhome)}
+        for label, path in secrets.items():
+            r = outcome("ffmpeg.inspect.probe", {"inputs": [str(path)]}, data, env=henv)
+            check(f"an input under {label} is refused (credential_store)",
+                  code_of(r) == "PATH_NOT_ALLOWED" and reason_of(r) == "credential_store", r[1] and r[1].message)
+        r = outcome("ffmpeg.layer.caption", {"input": str(clip), "output": "c3.mp4", "text": str(secrets["~/.aws"]),
+                                             "write_srt": "leak2.srt"}, data, env=henv)
+        check("a caption text file under ~/.aws is refused", code_of(r) == "PATH_NOT_ALLOWED"
+              and reason_of(r) == "credential_store")
+        r = outcome("ffmpeg.inspect.report", {"after": str(clip), "notes": str(secrets[".env"]), "output": "r2.html"},
+                    data, env=henv)
+        check("report notes from a .env file are refused", code_of(r) == "PATH_NOT_ALLOWED"
+              and reason_of(r) == "credential_store")
+        args, err, c = outcome("ffmpeg.inspect.probe", {"inputs": [str(clip)]}, data, env=henv)
+        check("an ordinary input is still accepted", err is None, err and err.message)
+        shutil.rmtree(uhome, ignore_errors=True)
 
         # network and device spellings: refused before any filesystem call, inputs and outputs alike
         vault = data.root / "vault" / "secret.png"

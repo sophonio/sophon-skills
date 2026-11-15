@@ -30,6 +30,8 @@ SKILL_VERSION = "1.0.0"
 VENDOR_TAG = "v3.9.2"
 VENDOR_COMMIT = "3f8ba63cc8eb991c1730d57b0215e6127765399a"
 VENDOR_LOCK_SHA256 = "b9bfdd058d2430721fb03e312e782653bb10afb3a389e599288cc85b7c8fa35c"
+# sha256 of lib/bridge.py; main.py loads no bridge whose bytes differ (rerun generate.py after editing it)
+BRIDGE_SHA256 = "6163bbfa9867516c9e08d5d827d3f68012648920a8c4547dd344c1ae1a4ef3d5"
 TOOLS = [
     "ffmpeg.inspect.probe",
     "ffmpeg.inspect.cropdetect",
@@ -79,7 +81,8 @@ TOOLS = [
 # --- GENERATED CONSTANTS END ---
 
 MIN_PYTHON = (3, 10)
-SKILL_ROOTS = ("installed", "bundled", "organization", "self-authored")
+# Not self-authored: agents write there, and a released copy of this skill never lives there.
+SKILL_ROOTS = ("installed", "bundled", "organization")
 WORKSPACE_RE = re.compile(r"^(.+?)[\\/]+sandbox[\\/]+workspaces[\\/]+[0-9A-Fa-f]{32}[\\/]*$")
 
 BACKEND_HINT = (
@@ -201,8 +204,15 @@ def check_home(path):
         return "vendor.lock.json is unreadable (%s)" % exc
     if digest != VENDOR_LOCK_SHA256:
         return "vendor.lock.json does not match this release (sha256 %s)" % digest[:12]
-    if not os.path.isfile(os.path.join(path, "lib", "bridge.py")):
+    bridge = os.path.join(path, "lib", "bridge.py")
+    if not os.path.isfile(bridge):
         return "lib/bridge.py is missing"
+    try:
+        digest = sha256_file(bridge)
+    except OSError as exc:
+        return "lib/bridge.py is unreadable (%s)" % exc
+    if digest != BRIDGE_SHA256:
+        return "lib/bridge.py does not match this release (sha256 %s)" % digest[:12]
     return None
 
 
@@ -333,11 +343,17 @@ def run_reexec(tool, command, home, payload):
 
 
 def load_bridge(home):
+    # Run exactly the bytes whose hash matches, not whatever the file holds a moment later.
     path = os.path.join(home, "lib", "bridge.py")
-    spec = importlib.util.spec_from_file_location("ffvideo_bridge", path)
+    with open(path, "rb") as handle:
+        source = handle.read()
+    if hashlib.sha256(source).hexdigest() != BRIDGE_SHA256:
+        raise RuntimeError("lib/bridge.py changed after it was verified")
+    spec = importlib.util.spec_from_loader("ffvideo_bridge", loader=None, origin=path)
     module = importlib.util.module_from_spec(spec)
+    module.__file__ = path
     sys.modules["ffvideo_bridge"] = module
-    spec.loader.exec_module(module)
+    exec(compile(source, path, "exec"), module.__dict__)
     return module
 
 
