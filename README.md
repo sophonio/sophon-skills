@@ -13,31 +13,40 @@ into `.sophon-skill` artifacts, and the docs for publishing them.
 
 ## Development agents
 
-Six existing Sophon development-team personas are available as native `.sophon-agent` packages,
-all version **1.0.0**, authored by **Buildersoft LLC**, licensed **MIT**, requiring **Sophon 2.2.0+**:
+The **Buildersoft development family 2.0.0**: nine `.sophon-agent` packages that work on a
+repository the way Claude Code does. They plan in a markdown file you approve, execute it task by
+task with a live todo list, verify with real commands, commit each verified task on a feature
+branch and offer a pull request. All are authored by **Buildersoft LLC**, licensed **MIT** and
+require **Sophon 2.2.0+**. Only Lead Developer starts sub-agents, and only with your consent.
 
-| Agent | Purpose |
-|-------|---------|
-| [Developer](agents/developer) | Scoped implementation and root-cause debugging with tests |
-| [Lead Developer](agents/lead-developer) | Scoping, specialist coordination, integration, and evidence |
-| [QA Engineer](agents/qa-engineer) | Independent verification, defects, and release risks |
-| [Researcher](agents/researcher) | Cited, version-aware technical investigations |
-| [Software Architect](agents/software-architect) | Repository-grounded designs, contracts, and trade-offs |
-| [UI/UX Designer](agents/ui-ux-designer) | UX flows, states, accessibility annotations, and handoff |
+| Agent | Role | Delegates | Read-only |
+|-------|------|-----------|-----------|
+| [Lead Developer](agents/lead-developer) | Sizes, plans, builds (alone or with consented sub-agents), verifies, commits, offers a PR | yes | no |
+| [Developer](agents/developer) | One scoped change, test first, verified | no | no |
+| [Researcher](agents/researcher) | Codebase and web facts, every claim cited | no | yes |
+| [Software Architect](agents/software-architect) | One decisive blueprint, ADRs, plans the lead can run | no | yes (saves only its plan or ADR) |
+| [Code Reviewer](agents/code-reviewer) | Defects it can show: line, failing case, fix | no | yes |
+| [QA Engineer](agents/qa-engineer) | PASS / FAIL gates with fresh evidence, red/green proofs, tests | no | no |
+| [Debugger](agents/debugger) | Reproduce, one hypothesis at a time, proven root cause | no | no |
+| [Security Reviewer](agents/security-reviewer) | Exploitable vulnerabilities a change introduces | no | yes |
+| [UI/UX Designer](agents/ui-ux-designer) | Design direction, accessible build, critique, interface copy | no | no |
 
-Their original `SOUL.md` files are preserved. Build with Sophon's canonical CLI via:
+Each `agents/<id>/SOUL.md` is generated from `build/agent-src/`; never edit it by hand. Compose,
+check and build with Sophon CLI 2.2.x on PATH:
 
 ```powershell
-# Review the known QA accessibility-line warning first; see docs/AGENTS.md.
-pwsh -File build/Build-AgentPackages.ps1 -ValidateOnly -AllowWarnings
-pwsh -File build/Build-AgentPackages.ps1 -AllowWarnings
-pwsh -File tests/agents/Test-AgentPackages.ps1
+pwsh -NoProfile -File build/Compose-AgentSouls.ps1                # regenerate agents/*/SOUL.md
+pwsh -NoProfile -File build/Test-AgentSources.ps1                 # lint, preflight, budgets, manifests (no CLI)
+pwsh -NoProfile -File build/Build-AgentPackages.ps1 -ValidateOnly # adds sophon dev validate: 0 errors, 0 warnings
+pwsh -NoProfile -File build/Build-AgentPackages.ps1               # dist/agents/<id>-2.0.0.sophon-agent + SHA256SUMS
+pwsh -NoProfile -File tests/agents/Test-AgentPackages.ps1         # sections A-K
 ```
 
 Upload artifacts are in **`dist/agents/`**, with a `SHA256SUMS` index. Nothing is uploaded by
-these commands. See [agent packaging and upload notes](docs/AGENTS.md), including the required
-manual Lead Developer delegation allow-list setup and the reviewed QA validation warning.
-The existing skill build/publish scripts remain skill-only.
+these commands: agents are published manually, one file at a time, in the Marketplace wizard. See
+[docs/AGENTS.md](docs/AGENTS.md) for install order, the settings a package cannot carry, the
+approval cards to expect and the maintainer runbook. The skill build/publish scripts remain
+skill-only.
 
 ## Skills in this repo
 
@@ -174,11 +183,15 @@ standard library (`urllib`, `hashlib`); a few pin small, pure-Python or musllinu
 
 ```
 skills/<name>/        A skill: manifest.json + entrypoint + README.md + LICENSE
-agents/<name>/        An agent: manifest.json + SOUL.md + README.md + LICENSE
+agents/<id>/          An agent: manifest.json + SOUL.md (generated) + TOOLS.md + README.md + LICENSE
 plugins/              Sophon plugins (.sophon-plugin, .NET gRPC) — scaffolded, none yet
 templates/            Contributor scaffolds (skill-python, skill-csharp, plugin-*)
-build/                Build-MarketplacePackages.ps1, Publish-MarketplacePackages.ps1
+build/                Build-MarketplacePackages.ps1, Publish-MarketplacePackages.ps1 (skills);
+                      Compose-AgentSouls.ps1, Test-AgentSources.ps1, Build-AgentPackages.ps1 (agents)
+build/agent-src/      Agent sources: family.psd1, souls/<id>.md, shared fragments, tool catalogue
+tests/agents/         Agent package tests (Test-AgentPackages.ps1), fixtures, manual eval scenarios
 docs/PUBLISHING.md    How to build, validate, and publish to the Marketplace
+docs/AGENTS.md        The development agents: install, settings, cards, maintainer runbook
 dist/                 Built .sophon-skill artifacts; dist/agents/ holds .sophon-agent (git-ignored)
 ```
 
@@ -213,3 +226,6 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the full contract and PR checklist,
 ## License
 
 Licensed under the MIT License. © 2026 Buildersoft LLC. Each skill also carries its own LICENSE.
+
+The development agents' workflow patterns are adapted, not copied, from obra/superpowers (MIT,
+© 2025 Jesse Vincent) and Anthropic's Claude Code plugins (Apache-2.0).

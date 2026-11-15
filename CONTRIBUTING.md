@@ -118,6 +118,22 @@ without `-ValidateOnly`.
 - [ ] Every tool declares an accurate `riskLevel`.
 - [ ] `README.md` explains what the skill does, its tools, and any credentials it needs.
 
+## Agents
+
+The development agents in `agents/` are Sophon agent packages, not skills, and follow their own
+rules:
+
+- Each `agents/<id>/SOUL.md` is generated. Edit the sources in `build/agent-src/`, then run
+  `pwsh -File build/Compose-AgentSouls.ps1`. Never edit a SOUL.md by hand.
+- Before a PR, run `pwsh -NoProfile -File build/Test-AgentSources.ps1` (CI runs it together with
+  `Compose-AgentSouls.ps1 -Check`). With Sophon CLI 2.2.x installed, also run
+  `pwsh -NoProfile -File tests/agents/Test-AgentPackages.ps1`.
+- Agents are published by hand through the Marketplace wizard, never with
+  `Publish-MarketplacePackages.ps1`.
+
+The full rules (allowed files, real tool names, safe phrasing, versioning) are in
+[`CLAUDE.md`](CLAUDE.md) and [`docs/AGENTS.md`](docs/AGENTS.md).
+
 ## Publishing
 
 Merging does **not** publish. Publishing to the Marketplace is a deliberate manual step — see
