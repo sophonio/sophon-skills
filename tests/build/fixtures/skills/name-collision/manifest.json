@@ -1,0 +1,72 @@
+{
+  "name": "name-collision",
+  "version": "1.0.0",
+  "description": "Fixture skill name-collision for tests/build/Test-SkillLint.ps1.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "development",
+  "tags": [
+    "fixture"
+  ],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "requirements": [],
+  "sandbox": {
+    "network": false,
+    "timeoutSeconds": 30
+  },
+  "platforms": [],
+  "tools": [
+    {
+      "name": "web.search",
+      "description": "Fixture tool web.search.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "name": "fixture.collision.dup",
+      "description": "Fixture tool fixture.collision.dup.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "name": "fixture.collision.dup",
+      "description": "Fixture tool fixture.collision.dup.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "name": "web.fetch",
+      "description": "Fixture tool web.fetch.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "name": "Fixture.BadCase",
+      "description": "Fixture tool Fixture.BadCase.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  ]
+}

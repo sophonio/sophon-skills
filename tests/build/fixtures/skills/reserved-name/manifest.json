@@ -1,0 +1,32 @@
+{
+  "name": "marketplace",
+  "version": "1.0.0",
+  "description": "Fixture skill marketplace for tests/build/Test-SkillLint.ps1.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "development",
+  "tags": [
+    "fixture"
+  ],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "requirements": [],
+  "sandbox": {
+    "network": false,
+    "timeoutSeconds": 30
+  },
+  "platforms": [],
+  "tools": [
+    {
+      "name": "fixture.reserved.ping",
+      "description": "Fixture tool fixture.reserved.ping.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  ]
+}
