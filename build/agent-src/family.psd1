@@ -7,7 +7,10 @@
 # SoulCap: lead 43008, writers 32768, ARC/CR/SEC 22528, RES 18432. The design set 36864/28672 for the lead and writers on an
 # estimate of 17.5 KB of shared writer text; the mandated fragments measure about 25 KB, so those two caps were raised to fit
 # them with about 1 KiB of headroom instead of cutting the runtime workarounds (design section 11, ruling on issue 3/37/64).
+# Id, RequiredTag, Category, CreditsSentence and ReadmeCaps are the family keys build/Test-AgentSources.ps1 reads
+# (build/agent-src/families.psd1 lists every family; build/AgentFamily.psm1 documents the optional keys).
 @{
+  Id = 'development'
   FamilyMajor = 2
   FamilyVersion = '2.0.0'
   SophonCli = '^2\.2\.\d+'
@@ -15,7 +18,10 @@
   Author = 'Buildersoft LLC'
   License = 'MIT'
   Category = 'development'
+  RequiredTag = 'development'
   Lead = 'lead-developer'
+  CreditsSentence = 'Workflow patterns adapted, not copied, from obra/superpowers (MIT, © 2025 Jesse Vincent) and Anthropic''s Claude Code plugins (feature-dev, pr-review-toolkit, code-review, security-review, frontend-design; Apache-2.0).'
+  ReadmeCaps = @{ Lead = 24576; Other = 12288 }
   Values = @{
     CommitTrailer = 'Co-Authored-By: Sophon <noreply@buildersoft.io>'
     PrFooter = '🤖 Generated with [Sophon](https://sophon.buildersoft.io)'
