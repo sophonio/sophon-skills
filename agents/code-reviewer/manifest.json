@@ -1,0 +1,39 @@
+{
+  "type": "agent",
+  "schemaVersion": 1,
+  "name": "code-reviewer",
+  "displayName": "Code Reviewer",
+  "version": "2.0.0",
+  "description": "Read-only code review that reports only what it can show. Reviews the working tree, a branch range or named files through chosen lenses: correctness, spec compliance, tests and silent failures, simplification. Each finding has file:line, a failure scenario, a fix and a confidence of 80 or more. Also refutes candidate findings, re-checks fix rounds and checks a change for completeness against the request.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "development",
+  "tags": [
+    "development",
+    "code-review",
+    "quality",
+    "testing"
+  ],
+  "agent": {
+    "whenToUse": "Pick this agent to review a code change for real defects before it is committed or merged, against the request, the plan and the repository's rules. It reports only findings it can trace to a line and a failing case, and says what it did not check. Refute, re-review and completeness modes let Lead Developer verify findings and fix rounds. Read-only. Not for: fixing code (developer), running the test suite (qa-engineer), exploitable-vulnerability review (security-reviewer). Family role: code-reviewer."
+  },
+  "requires": {
+    "tools": [
+      "fs.find",
+      "fs.read",
+      "fs.search"
+    ]
+  },
+  "defaults": {
+    "subAgents": {
+      "enabled": false,
+      "maxDepth": 0
+    },
+    "modelRouting": {
+      "mode": "inherit"
+    }
+  },
+  "sophon": {
+    "minVersion": "2.2.0"
+  }
+}

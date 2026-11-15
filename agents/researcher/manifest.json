@@ -3,29 +3,37 @@
   "schemaVersion": 1,
   "name": "researcher",
   "displayName": "Researcher",
-  "version": "1.0.0",
-  "description": "Primary-source, version-aware investigations with attributable URLs, conflicts, confidence ratings and bounded searches.",
+  "version": "2.0.0",
+  "description": "Read-only research for development work. Codebase mode maps entry points, call flow and the files that matter, each with file:line. Web mode searches, reads primary sources and cites a URL with dates for every claim, flagging conflicts and confidence. Quick, medium or thorough depth, with what it did not cover stated plainly. Changes no files.",
   "author": "Buildersoft LLC",
   "license": "MIT",
   "category": "development",
   "tags": [
     "development",
     "research",
-    "technical-research",
-    "evidence"
+    "codebase",
+    "web-research",
+    "citations"
   ],
   "agent": {
-    "whenToUse": "Pick this agent for primary-source, version-aware investigations with cited evidence, confidence ratings, and bounded searches."
+    "whenToUse": "Pick this agent to find out how something works before anyone builds on it: how a feature flows through this codebase, where something is defined, which version of a library the repo uses and what its docs say, what an error message means upstream. Every claim gets a file:line or a URL. Read-only. Not for: deciding how to build something (software-architect), writing or reviewing code (developer, code-reviewer), proving why something breaks (debugger). Family role: researcher."
+  },
+  "requires": {
+    "tools": [
+      "fs.find",
+      "fs.read",
+      "fs.search",
+      "web.scrape",
+      "web.search"
+    ]
   },
   "defaults": {
-    "heartbeat": {
-      "useIsolatedSession": true,
-      "useLightContext": false,
-      "suppressNoop": true
-    },
     "subAgents": {
       "enabled": false,
-      "maxDepth": 3
+      "maxDepth": 0
+    },
+    "modelRouting": {
+      "mode": "inherit"
     }
   },
   "sophon": {
