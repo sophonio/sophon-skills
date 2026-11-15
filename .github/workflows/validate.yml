@@ -2,6 +2,9 @@ name: validate
 
 # Validates every skill's manifest against the marketplace publishing contract.
 # This is validation the skills never had while they lived in the main sophon repo.
+# Also checks the development agents' sources (agents/, build/agent-src/): SOUL drift, tool-name lint,
+# scanner preflight, budgets, manifests and TOOLS.md. The Sophon CLI checks (sophon dev validate and the
+# package build) are not run here; maintainers run them locally before publishing.
 
 on:
   push:
@@ -9,13 +12,21 @@ on:
     paths:
       - 'skills/**'
       - 'build/**'
+      - 'build/agent-src/**'
+      - 'agents/**'
+      - 'tests/agents/**'
       - 'templates/**'
+      - 'LICENSE'
       - '.github/workflows/validate.yml'
   pull_request:
     paths:
       - 'skills/**'
       - 'build/**'
+      - 'build/agent-src/**'
+      - 'agents/**'
+      - 'tests/agents/**'
       - 'templates/**'
+      - 'LICENSE'
       - '.github/workflows/validate.yml'
   workflow_dispatch:
 
@@ -27,3 +38,12 @@ jobs:
       - name: Validate skill manifests
         shell: pwsh
         run: pwsh -File build/Build-MarketplacePackages.ps1 -ValidateOnly
+      - name: Check agent sources (SOUL drift, lint, preflight, manifests)
+        # Runs even when the skills step failed, so each check reports on its own; the job still fails.
+        if: ${{ !cancelled() }}
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File build/Compose-AgentSouls.ps1 -Check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          pwsh -NoProfile -File build/Test-AgentSources.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

@@ -3,8 +3,8 @@
   "schemaVersion": 1,
   "name": "qa-engineer",
   "displayName": "QA Engineer",
-  "version": "1.0.0",
-  "description": "Independent risk-based verification with requirement traceability, reproducible defects, security/accessibility checks and explicit release risks.",
+  "version": "2.0.0",
+  "description": "Verification and testing for a bound repository. Runs the project's own build and test commands fresh and returns PASS, PASS_WITH_WARNINGS or FAIL with the exact evidence. Proves bug fixes red then green, plans risk-based test strategies, writes or extends tests when asked, rates missing tests by what they would catch, and checks a page you already have running with the browser tools. Never reports a result it did not see.",
   "author": "Buildersoft LLC",
   "license": "MIT",
   "category": "development",
@@ -12,20 +12,26 @@
     "development",
     "qa",
     "testing",
-    "verification"
+    "verification",
+    "regression",
+    "accessibility"
   ],
   "agent": {
-    "whenToUse": "Pick this agent for independent software verification, requirement traceability, reproducible defect reports, and explicit release risks."
+    "whenToUse": "Pick this agent to prove a change works before anyone calls it done: run the checks on a branch or finished plan task, prove a fix with a test that fails without it, plan what to test, write or extend tests, find missing tests in a diff, or check a running web page. Not for: finding why something is broken (debugger), fixing production code (developer), judging code by reading it (code-reviewer), security review (security-reviewer). Family role: qa-engineer."
+  },
+  "requires": {
+    "tools": [
+      "browser.act",
+      "browser.screenshot"
+    ]
   },
   "defaults": {
-    "heartbeat": {
-      "useIsolatedSession": true,
-      "useLightContext": false,
-      "suppressNoop": true
-    },
     "subAgents": {
       "enabled": false,
-      "maxDepth": 3
+      "maxDepth": 0
+    },
+    "modelRouting": {
+      "mode": "inherit"
     }
   },
   "sophon": {

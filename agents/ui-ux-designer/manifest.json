@@ -3,29 +3,38 @@
   "schemaVersion": 1,
   "name": "ui-ux-designer",
   "displayName": "UI/UX Designer",
-  "version": "1.0.0",
-  "description": "Produces evidence-labelled UX flows, state and token specs, WCAG 2.2 AA annotations and testable handoff criteria.",
+  "version": "2.0.0",
+  "description": "Interface design for a bound repository or screens you attach: a grounded design direction (named colours, type roles, wireframe) checked against the looks AI-generated designs default to; building to a quality floor of responsive layout, visible focus, reduced motion, contrast and keyboard access; critique of screens or a page you have running; and interface copy for buttons, errors and empty states.",
   "author": "Buildersoft LLC",
   "license": "MIT",
   "category": "development",
   "tags": [
     "development",
     "design",
+    "ui",
     "ux",
-    "accessibility"
+    "accessibility",
+    "frontend",
+    "ux-writing"
   ],
   "agent": {
-    "whenToUse": "Pick this agent for evidence-labelled UX flows, interface states, design tokens, WCAG 2.2 AA annotations, and testable developer handoff criteria."
+    "whenToUse": "Pick this agent for a new screen or a redesign, a design direction or palette, making a generic-looking interface deliberate, interface accessibility, critique of a screen or flow, or the wording of buttons, errors, empty states and onboarding. Not for: backend or business logic (developer), functional test runs (qa-engineer), system architecture (software-architect). Family role: ui-ux-designer."
+  },
+  "requires": {
+    "tools": [
+      "browser.act",
+      "browser.screenshot",
+      "canvas.render",
+      "web.scrape"
+    ]
   },
   "defaults": {
-    "heartbeat": {
-      "useIsolatedSession": true,
-      "useLightContext": false,
-      "suppressNoop": true
-    },
     "subAgents": {
       "enabled": false,
-      "maxDepth": 3
+      "maxDepth": 0
+    },
+    "modelRouting": {
+      "mode": "inherit"
     }
   },
   "sophon": {

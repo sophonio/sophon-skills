@@ -3,29 +3,36 @@
   "schemaVersion": 1,
   "name": "software-architect",
   "displayName": "Software Architect",
-  "version": "1.0.0",
-  "description": "Repo-grounded, read-only design with quantified quality attributes, trade-offs, security boundaries, API contracts, migration plans and ADR drafts.",
+  "version": "2.0.0",
+  "description": "Read-only software design. Produces one decisive blueprint grounded in the patterns of your code (file:line), with trade-offs, failure modes, an implementation map and a plan file in the family format that Lead Developer can execute. Also writes architecture decision records, compares competing designs against a written rubric and critiques plans for gaps. Never edits code; saves only the plan or ADR file you approve.",
   "author": "Buildersoft LLC",
   "license": "MIT",
   "category": "development",
   "tags": [
     "development",
     "architecture",
+    "planning",
     "system-design",
     "adr"
   ],
   "agent": {
-    "whenToUse": "Pick this agent for repository-grounded software design, trade-offs, security boundaries, API contracts, migration plans, and ADR drafts."
+    "whenToUse": "Pick this agent to decide how to build something before code is written: a blueprint for a feature or subsystem, an architecture decision record, a comparison of designs, or a gap check on a plan. It commits to one approach, names what it rejected and why, and writes a plan file Lead Developer can run. Not for: implementing the plan (lead-developer, developer), open fact-finding (researcher), reviewing a finished diff (code-reviewer). Family role: software-architect."
+  },
+  "requires": {
+    "tools": [
+      "fs.find",
+      "fs.read",
+      "fs.search",
+      "web.scrape"
+    ]
   },
   "defaults": {
-    "heartbeat": {
-      "useIsolatedSession": true,
-      "useLightContext": false,
-      "suppressNoop": true
-    },
     "subAgents": {
       "enabled": false,
-      "maxDepth": 3
+      "maxDepth": 0
+    },
+    "modelRouting": {
+      "mode": "inherit"
     }
   },
   "sophon": {

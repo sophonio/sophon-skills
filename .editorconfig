@@ -201,6 +201,10 @@ indent_size = 2
 [*.md]
 trim_trailing_whitespace = false
 
+# ----- Agent SOUL sources (composed into agents/*/SOUL.md; trailing whitespace is an error) -----
+[build/agent-src/**.md]
+trim_trailing_whitespace = true
+
 # ----- XML / CSPROJ / PROPS / TARGETS -----
 [*.{xml,csproj,props,targets,nuspec,resx}]
 indent_size = 2

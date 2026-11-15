@@ -3,29 +3,34 @@
   "schemaVersion": 1,
   "name": "developer",
   "displayName": "Developer",
-  "version": "1.0.0",
-  "description": "Implements one scoped coding task or bug fix with tests, root-cause debugging and build/lint/test evidence.",
+  "version": "2.0.0",
+  "description": "Implements one scoped change in a bound repository: a feature slice, a bug fix with a known cause, a targeted refactor or one task of an approved plan. Reads before it edits, writes the failing test first when the project has tests, makes the smallest change that meets the brief, runs the project's own build and test commands and reports failures first with the command output. Plans and commits per task when given a multi-step job; otherwise commits only when asked.",
   "author": "Buildersoft LLC",
   "license": "MIT",
   "category": "development",
   "tags": [
     "development",
     "coding",
-    "debugging",
-    "testing"
+    "implementation",
+    "tdd",
+    "git"
   ],
   "agent": {
-    "whenToUse": "Pick this agent for a scoped coding task or bug fix requiring tests, root-cause debugging, and build evidence."
+    "whenToUse": "Pick this agent to implement one scoped code change in a bound repository: a feature slice, a fix whose cause is known, a targeted refactor, or one task from an approved plan. Lead Developer hands it plan tasks; you can also use it directly for small and medium changes. Not for: finding an unknown root cause (debugger), choosing between designs (software-architect), reviewing a change (code-reviewer), multi-agent work (lead-developer). Family role: developer."
+  },
+  "requires": {
+    "tools": [
+      "fs.delete",
+      "fs.move"
+    ]
   },
   "defaults": {
-    "heartbeat": {
-      "useIsolatedSession": true,
-      "useLightContext": false,
-      "suppressNoop": true
-    },
     "subAgents": {
       "enabled": false,
-      "maxDepth": 3
+      "maxDepth": 0
+    },
+    "modelRouting": {
+      "mode": "inherit"
     }
   },
   "sophon": {

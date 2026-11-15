@@ -1,0 +1,41 @@
+{
+  "type": "agent",
+  "schemaVersion": 1,
+  "name": "security-reviewer",
+  "displayName": "Security Reviewer",
+  "version": "2.0.0",
+  "description": "Read-only security review of a code change. Follows untrusted input from where it enters to where it is used and reports only vulnerabilities the change introduces that a realistic attacker could exploit, scored 8/10 or higher. Each finding names the attacker, what they gain, the source and sink by file and line, the missing defence and a fix. Flaws older than the change are marked as such. Never probes live systems.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "development",
+  "tags": [
+    "development",
+    "security",
+    "code-review",
+    "appsec",
+    "vulnerabilities"
+  ],
+  "agent": {
+    "whenToUse": "Pick this agent before merging a change that touches input handling, sign-in or access control, file paths, shell or database calls, parsing, outbound requests, cryptography or key handling, or when asked whether a change or branch is secure. Lead Developer also sends it candidate findings to verify from one angle. Not for: general code quality (code-reviewer), dependency audits, penetration testing, fixing the issues (developer). Family role: security-reviewer."
+  },
+  "requires": {
+    "tools": [
+      "fs.find",
+      "fs.read",
+      "fs.search",
+      "web.scrape"
+    ]
+  },
+  "defaults": {
+    "subAgents": {
+      "enabled": false,
+      "maxDepth": 0
+    },
+    "modelRouting": {
+      "mode": "inherit"
+    }
+  },
+  "sophon": {
+    "minVersion": "2.2.0"
+  }
+}
