@@ -1,6 +1,6 @@
 {
   "name": "todoist",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Todoist integration — list and manage tasks and projects: list tasks (optionally by project or filter), list projects, add tasks, complete tasks, and update tasks via the Todoist API v1.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -61,7 +61,7 @@
           "content": { "type": "string", "description": "Task content (the task text; supports Markdown)" },
           "projectId": { "type": "string", "description": "Project id to add the task to (defaults to Inbox)" },
           "dueString": { "type": "string", "description": "Human-readable due date, e.g. 'tomorrow at 4pm' or 'every Monday'" },
-          "priority": { "type": "integer", "description": "Priority from 1 (normal) to 4 (urgent)", "enum": [1, 2, 3, 4] },
+          "priority": { "type": "integer", "description": "Priority from 1 (normal) to 4 (urgent)", "minimum": 1, "maximum": 4 },
           "description": { "type": "string", "description": "Longer task description/notes" }
         },
         "required": ["content"]
@@ -89,7 +89,7 @@
           "taskId": { "type": "string", "description": "Id of the task to update" },
           "content": { "type": "string", "description": "New task content" },
           "dueString": { "type": "string", "description": "New human-readable due date, e.g. 'next Friday'" },
-          "priority": { "type": "integer", "description": "New priority from 1 (normal) to 4 (urgent)", "enum": [1, 2, 3, 4] },
+          "priority": { "type": "integer", "description": "New priority from 1 (normal) to 4 (urgent)", "minimum": 1, "maximum": 4 },
           "description": { "type": "string", "description": "New task description/notes" }
         },
         "required": ["taskId"]
