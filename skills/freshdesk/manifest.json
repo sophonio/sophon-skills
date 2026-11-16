@@ -1,6 +1,6 @@
 {
   "name": "freshdesk",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Freshdesk helpdesk integration via the Freshdesk REST API v2 — list, search, create, and update support tickets, read ticket conversations, add private/public notes, and look up contacts. Authenticates with a personal Freshdesk API key sent as HTTP Basic auth against your portal URL. Ticket status and priority codes are mapped to readable names (Open/Pending/Resolved/Closed, Low/Medium/High/Urgent) in results.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -100,8 +100,8 @@
           "subject": { "type": "string", "description": "Ticket subject line" },
           "description": { "type": "string", "description": "Ticket body (HTML allowed)" },
           "email": { "type": "string", "description": "Requester's email address (a contact is created if it does not exist)" },
-          "priority": { "type": "integer", "description": "Priority: 1=Low, 2=Medium, 3=High, 4=Urgent (default 1)", "enum": [1, 2, 3, 4] },
-          "status": { "type": "integer", "description": "Status: 2=Open, 3=Pending, 4=Resolved, 5=Closed (default 2)", "enum": [2, 3, 4, 5] },
+          "priority": { "type": "integer", "description": "Priority: 1=Low, 2=Medium, 3=High, 4=Urgent (default 1)", "minimum": 1, "maximum": 4 },
+          "status": { "type": "integer", "description": "Status: 2=Open, 3=Pending, 4=Resolved, 5=Closed (default 2)", "minimum": 2, "maximum": 5 },
           "tags": { "type": "array", "items": { "type": "string" }, "description": "Tags to attach to the ticket" }
         },
         "required": ["subject", "description", "email"]
@@ -115,8 +115,8 @@
         "type": "object",
         "properties": {
           "ticketId": { "type": "integer", "description": "The numeric ticket id to update" },
-          "status": { "type": "integer", "description": "New status: 2=Open, 3=Pending, 4=Resolved, 5=Closed", "enum": [2, 3, 4, 5] },
-          "priority": { "type": "integer", "description": "New priority: 1=Low, 2=Medium, 3=High, 4=Urgent", "enum": [1, 2, 3, 4] },
+          "status": { "type": "integer", "description": "New status: 2=Open, 3=Pending, 4=Resolved, 5=Closed", "minimum": 2, "maximum": 5 },
+          "priority": { "type": "integer", "description": "New priority: 1=Low, 2=Medium, 3=High, 4=Urgent", "minimum": 1, "maximum": 4 },
           "responderId": { "type": "integer", "description": "Agent id to assign the ticket to" },
           "tags": { "type": "array", "items": { "type": "string" }, "description": "Replacement tag list for the ticket" }
         },

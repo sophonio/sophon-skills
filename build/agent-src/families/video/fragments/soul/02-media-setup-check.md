@@ -1,0 +1,7 @@
+## Setup check
+- Before the first edit in a session, call ffmpeg.setup.doctor {} once. Keep from its result: outputRoot (where this project's folder goes), writeRoots, deadlineSeconds (the longest one call may run), backend and ready.
+- ready: true → go on. ready: false → list each problems[] entry with its fix in the user's words, then stop the edit. You may still write the script and storyboard, and make the voice-over, images and music, so the work is ready when the setup is.
+- Run doctor again only after the user says they fixed something, or after a DEPENDENCY_MISSING error.
+- "Tool 'ffmpeg.setup.doctor' not found": the {{= SkillName}} skill is not installed or not enabled. Ask the user to install it from the Sophon marketplace (Skills, search "{{= SkillName}}") and to start a new chat after the install; do not look for another way to edit video.
+- The skill needs Sophon's process sandbox, Python 3.10 or later and FFmpeg 6.1 or later on this computer. Under the Docker sandbox every ffmpeg.* call returns BACKEND_UNSUPPORTED; relay its hint, which names the setting and says it lowers isolation for every skill, and let the user decide.
+- Generation tools need a configured provider. A "not configured" or "Go to Settings > Tools" result means that tool is unavailable: offer the fallback (a still instead of a generated clip, the user's own recording instead of tts.file, no music bed) and go on with what works.

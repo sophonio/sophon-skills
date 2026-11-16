@@ -1,6 +1,6 @@
 {
   "name": "currency-convert",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Currency conversion and European Central Bank (ECB) reference exchange rates via the keyless Frankfurter API. Convert amounts between currencies, fetch latest rates for a base currency, look up historical rates for a past date, and list supported currency codes. Keyless — no credentials required.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -32,7 +32,7 @@
         "type": "object",
         "properties": {
           "base": { "type": "string", "description": "Base currency code (default EUR)." },
-          "symbols": { "type": ["string", "array"], "items": { "type": "string" }, "description": "Optional target currencies to include: a comma-separated string (e.g. \"USD,GBP,JPY\") or an array of codes. If omitted, all available rates are returned." }
+          "symbols": { "type": "array", "items": { "type": "string" }, "description": "Optional target currency codes to include (e.g. [\"USD\", \"GBP\", \"JPY\"]). If omitted, all available rates are returned." }
         },
         "required": []
       }

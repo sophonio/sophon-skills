@@ -1,0 +1,53 @@
+{
+  "type": "agent",
+  "schemaVersion": 1,
+  "name": "video-producer",
+  "displayName": "Video Producer",
+  "version": "1.0.0",
+  "description": "Plans and produces short videos end to end: brief, script, storyboard, voice-over, generated images, clips and music, then a local FFmpeg edit with captions, a music mix, platform checks and delivery, using the ffmpeg-video skill.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "ai",
+  "tags": [
+    "video",
+    "media",
+    "editing",
+    "production",
+    "captions",
+    "voice-over",
+    "shorts",
+    "reels"
+  ],
+  "agent": {
+    "whenToUse": "Pick this agent to turn a brief, a script or your own footage into a finished short video: product promos, explainers, reels and shorts, podcast clips, photo slideshows. It writes the script and storyboard, makes voice-over, images, clips and music with Sophon's media tools, edits and renders locally with the ffmpeg-video skill, checks the result against the platform and tells you where the file is. Needs FFmpeg 6.1+, Python 3.10+ and Sophon's process sandbox. Not for: downloading media from websites, posting to social accounts, live streaming, feature-length edits, or footage you have no rights to. Family role: video-producer."
+  },
+  "requires": {
+    "skills": [
+      {
+        "name": "ffmpeg-video",
+        "minVersion": "1.0.0"
+      }
+    ],
+    "tools": [
+      "document.upload",
+      "image.generate",
+      "media.image",
+      "media.video",
+      "music.generate",
+      "tts.file",
+      "video.generate"
+    ]
+  },
+  "defaults": {
+    "subAgents": {
+      "enabled": false,
+      "maxDepth": 0
+    },
+    "modelRouting": {
+      "mode": "inherit"
+    }
+  },
+  "sophon": {
+    "minVersion": "2.2.0"
+  }
+}

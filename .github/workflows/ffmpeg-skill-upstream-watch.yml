@@ -1,0 +1,157 @@
+name: ffmpeg-skill-upstream-watch
+
+# Weekly: compares the upstream kajisho5/ffmpeg-skill release tags with the tag vendored into
+# skills/ffmpeg-video (vendor.lock.json) and keeps ONE open issue listing the newer tags, their dates,
+# a soak-rule candidate and their CHANGELOG headings. Closes that issue when the pin is current.
+# It never opens a pull request and never syncs: a re-sync is a reviewed, manual step
+# (docs/VENDORING.md, build/ffmpeg-video/Sync-FfmpegSkill.ps1).
+
+on:
+  schedule:
+    - cron: '23 6 * * 1'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Print the issue body only; create, edit or close no issue'
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: ffmpeg-skill-upstream-watch
+  cancel-in-progress: false
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compare upstream tags with the vendored pin and update the watch issue
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          UPSTREAM_REPO: https://github.com/kajisho5/ffmpeg-skill
+          DRY_RUN: ${{ github.event.inputs.dry_run == 'true' }}
+        run: |
+          Set-StrictMode -Version Latest
+          $ErrorActionPreference = 'Stop'
+          $title = 'ffmpeg-skill: upstream release tags newer than the vendored pin'
+          $soakHours = 48
+          $maxVersions = 40
+          $maxBodyChars = 60000
+
+          $lock = Get-Content -LiteralPath skills/ffmpeg-video/vendor.lock.json -Raw -Encoding utf8 | ConvertFrom-Json
+          $pinTag = [string]$lock.upstream.tag
+          $pinCommit = [string]$lock.upstream.commit
+          if ($pinTag -notmatch '^v\d+\.\d+\.\d+$') { throw "vendor.lock.json upstream.tag '$pinTag' is not vX.Y.Z" }
+          $pin = [version]$pinTag.Substring(1)
+          Write-Host "pin: $pinTag ($pinCommit)"
+
+          # Commits and trees only; the one CHANGELOG blob is fetched on demand.
+          $mirror = Join-Path $env:RUNNER_TEMP 'ffmpeg-skill.git'
+          git clone --quiet --bare --filter=blob:none $env:UPSTREAM_REPO $mirror
+          if ($LASTEXITCODE -ne 0) { throw 'cloning the upstream repository failed' }
+          $format = '%(refname:short)%09%(*objectname)%09%(objectname)%09%(creatordate:iso-strict)'
+          $tags = @(git -C $mirror for-each-ref refs/tags --format=$format | ForEach-Object {
+              $f = $_ -split "`t"
+              if ($f[0] -match '^v\d+\.\d+\.\d+$') {
+                [pscustomobject]@{
+                  Tag     = $f[0]
+                  Version = [version]$f[0].Substring(1)
+                  Commit  = if ($f[1]) { $f[1] } else { $f[2] }
+                  Date    = [datetimeoffset]::Parse($f[3], [cultureinfo]::InvariantCulture)
+                }
+              }
+            } | Sort-Object Version)
+          if ($LASTEXITCODE -ne 0) { throw 'listing the upstream tags failed' }
+          if (-not ($tags | Where-Object Tag -eq $pinTag)) { Write-Host "::warning::the pinned tag $pinTag is not an upstream tag any more" }
+
+          $now = [datetimeoffset]::UtcNow
+          $newer = @($tags | Where-Object { $_.Version -gt $pin })
+          for ($i = 0; $i -lt $newer.Count; $i++) {
+            $next = if ($i + 1 -lt $newer.Count) { $newer[$i + 1] } else { $null }
+            $quiet = if ($next) { ($next.Date - $newer[$i].Date).TotalHours } else { ($now - $newer[$i].Date).TotalHours }
+            $newer[$i] | Add-Member -NotePropertyName Soaked -NotePropertyValue ($quiet -ge $soakHours)
+          }
+          Write-Host "newer tags: $($newer.Count)"
+
+          $existing = @(gh issue list --repo $env:GITHUB_REPOSITORY --state open --limit 200 --json 'number,title' |
+            ConvertFrom-Json | Where-Object { $_.title -ceq $title })
+          if ($LASTEXITCODE -ne 0) { throw 'listing issues failed' }
+
+          if ($newer.Count -eq 0) {
+            Write-Host "the pin $pinTag is the newest upstream release tag"
+            foreach ($issue in $existing) {
+              if ($env:DRY_RUN -eq 'true') { Write-Host "dry run: would close #$($issue.number)"; continue }
+              gh issue close $issue.number --repo $env:GITHUB_REPOSITORY --comment "The vendored pin $pinTag is the newest upstream release tag; closing."
+              if ($LASTEXITCODE -ne 0) { throw "closing issue #$($issue.number) failed" }
+            }
+            exit 0
+          }
+
+          $newest = $newer[-1]
+          $changelog = @(git -C $mirror show "$($newest.Tag):CHANGELOG.md")
+          if ($LASTEXITCODE -ne 0) { $changelog = @(); Write-Host "::warning::no CHANGELOG.md at $($newest.Tag)" }
+          $sections = @{}
+          $current = $null
+          foreach ($line in $changelog) {
+            if ($line -match '^## (\d+\.\d+\.\d+)\s*$') { $current = $Matches[1]; $sections[$current] = [System.Collections.Generic.List[string]]::new(); continue }
+            if ($line -match '^## ') { $current = $null; continue }
+            if (-not $current) { continue }
+            if ($line -match '^### (.+)$') { $sections[$current].Add("- *$($Matches[1].Trim())*") }
+            elseif ($line -match '^- \*\*(.+?)\*\*') { $sections[$current].Add("  - $($Matches[1].Trim())") }
+          }
+
+          $candidate = @($newer | Where-Object Soaked | Select-Object -Last 1)
+          $body = [System.Text.StringBuilder]::new()
+          [void]$body.AppendLine("``skills/ffmpeg-video`` vendors [kajisho5/ffmpeg-skill]($($env:UPSTREAM_REPO)) at **$pinTag** (``$pinCommit``). Upstream has **$($newer.Count)** newer release tag(s).")
+          [void]$body.AppendLine()
+          if ($candidate) {
+            [void]$body.AppendLine("Soak-rule candidate (no follow-up release for $soakHours h): **$($candidate[0].Tag)** (``$($candidate[0].Commit)``).")
+          } else {
+            [void]$body.AppendLine("No newer tag has gone $soakHours h without a follow-up release yet.")
+          }
+          [void]$body.AppendLine()
+          [void]$body.AppendLine('A re-sync is a deliberate, reviewed step: follow docs/VENDORING.md (Sync-FfmpegSkill.ps1 -Tag -ExpectedCommit, the review checklist, a version bump). This issue is updated weekly by the ffmpeg-skill-upstream-watch workflow and closed when the pin is current; it never opens a pull request.')
+          [void]$body.AppendLine()
+          [void]$body.AppendLine('| Tag | Date (UTC) | Commit | Soaked |')
+          [void]$body.AppendLine('|---|---|---|---|')
+          foreach ($t in ($newer | Sort-Object Version -Descending | Select-Object -First $maxVersions)) {
+            [void]$body.AppendLine("| $($t.Tag) | $($t.Date.UtcDateTime.ToString('yyyy-MM-dd HH:mm')) | ``$($t.Commit.Substring(0, 12))`` | $(if ($t.Soaked) { 'yes' } else { 'no' }) |")
+          }
+          if ($newer.Count -gt $maxVersions) { [void]$body.AppendLine("| ... | $($newer.Count - $maxVersions) older tag(s) not shown | | |") }
+          [void]$body.AppendLine()
+          [void]$body.AppendLine("## CHANGELOG headings (from $($newest.Tag))")
+          foreach ($t in ($newer | Sort-Object Version -Descending | Select-Object -First $maxVersions)) {
+            $key = $t.Version.ToString()
+            [void]$body.AppendLine()
+            [void]$body.AppendLine("### $key")
+            if ($sections.ContainsKey($key) -and $sections[$key].Count -gt 0) {
+              foreach ($entry in ($sections[$key] | Select-Object -First 15)) { [void]$body.AppendLine($entry) }
+              if ($sections[$key].Count -gt 15) { [void]$body.AppendLine("- ... $($sections[$key].Count - 15) more") }
+            } else {
+              [void]$body.AppendLine('- (no CHANGELOG section)')
+            }
+          }
+          $text = $body.ToString()
+          if ($text.Length -gt $maxBodyChars) { $text = $text.Substring(0, $maxBodyChars) + "`n`n(truncated)" }
+          $bodyFile = Join-Path $env:RUNNER_TEMP 'watch-issue.md'
+          [System.IO.File]::WriteAllText($bodyFile, $text, [System.Text.UTF8Encoding]::new($false))
+
+          if ($env:DRY_RUN -eq 'true') {
+            Write-Host "dry run: would $(if ($existing) { "edit #$($existing[0].number)" } else { 'create an issue' }) with this body:"
+            Write-Host $text
+            exit 0
+          }
+          if ($existing) {
+            gh issue edit $existing[0].number --repo $env:GITHUB_REPOSITORY --body-file $bodyFile
+            if ($LASTEXITCODE -ne 0) { throw "editing issue #$($existing[0].number) failed" }
+            Write-Host "updated #$($existing[0].number)"
+          } else {
+            gh issue create --repo $env:GITHUB_REPOSITORY --title $title --body-file $bodyFile
+            if ($LASTEXITCODE -ne 0) { throw 'creating the issue failed' }
+          }

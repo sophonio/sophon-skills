@@ -8,7 +8,9 @@ app itself lives in the separate `sophon` repo.
 
 A skill is a flat folder `skills/<name>/` containing `manifest.json` + an entrypoint (e.g.
 `main.py`) + `README.md` + `LICENSE`. This is **Sophon's** skill format (`manifest.json`), NOT
-Claude Code / Anthropic `SKILL.md`. The folder name must equal the manifest `name`.
+Claude Code / Anthropic `SKILL.md`. The folder name must equal the manifest `name`. Only two
+subfolders are allowed: a flat `lib/` (first-party `.py`/`.json`) and `vendor/` (only next to a
+`vendor.lock.json`, plus `THIRD_PARTY_NOTICES.md`). No dotfiles, no symlinks.
 
 ## The contract (enforced by the build script AND the marketplace)
 
@@ -18,6 +20,29 @@ republish), `author`, `license`, `description` (≤2000), `runtime` (`python`|`c
 none|low|medium|high|critical), optional `tags[]` (≤10, ≤32) and `category` (utility|productivity|
 communication|data|development|integration|ai|automation|other). `README.md` (≤64 KiB) and `LICENSE`
 must exist at the skill root. Full table: [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
+**Build checks beyond the contract** (`build/SkillLint.psm1`, every skill, ids `SKILL-*`; data in
+`build/catalog/`). The ones that bite:
+- With `requirements` empty, any line starting `import X` / `from X` (docstrings and strings
+  included) with X not stdlib makes Sophon pip-install X: reword the line. No `__future__` imports
+  (Sophon prepends `import json, os`).
+- Tool names are unique across the repo and the built-in catalogue, also after `.`→`_`.
+- Schema subset: no `oneOf`/`anyOf`/`allOf`/`$ref`/`not`, string-only enums (use
+  `minimum`/`maximum` for integers), `items` on every array, never a parameter named `tool`.
+- The built zip is re-checked (≤5000 entries, no symlinks, no case-only duplicates).
+
+## Vendored skills (`skills/ffmpeg-video`)
+
+`vendor/ffmpeg-skill/**` is byte-identical upstream code (kajisho5/ffmpeg-skill, pinned tag and
+commit) locked by sha256 in `vendor.lock.json`. **Never edit `vendor/`, `vendor.lock.json`,
+`lib/tool-map.json`, the manifest `tools[]`, the `main.py` GENERATED block or the README tools
+table by hand**: change `build/ffmpeg-video/{manifest.base.json,policy.json}` and regenerate.
+- Regenerate: `python -B build/ffmpeg-video/generate.py` (`--check` for drift, `--summary` for the surface)
+- Re-sync: `pwsh -NoProfile -File build/ffmpeg-video/Sync-FfmpegSkill.ps1 -Tag vX.Y.Z -ExpectedCommit <sha> [-Source <clone>]`
+  (`-Check` verifies only). Bump `version` in `manifest.base.json` on every sync. Policy:
+  [`docs/VENDORING.md`](docs/VENDORING.md).
+- Tests (no FFmpeg needed): `python tests/skills/test_ffmpeg_video.py`, `test_ffmpeg_video_fake.py`;
+  real FFmpeg: `python tests/skills/ffmpeg_video_media.py`.
 
 ## Integration skills (`integration` + `credentials`)
 
@@ -35,6 +60,7 @@ orphans every stored credential. Details: [`CONTRIBUTING.md`](CONTRIBUTING.md).
 - Validate: `pwsh -File build/Build-MarketplacePackages.ps1 -ValidateOnly`
 - Build:    `pwsh -File build/Build-MarketplacePackages.ps1`  → `dist/<name>-<version>.sophon-skill`
 - Publish:  `pwsh -File build/Publish-MarketplacePackages.ps1`  (needs `SOPHON_MARKETPLACE_API_KEY`)
+- Tests:    `python tests/skills/run_all.py`; lint tests `pwsh -NoProfile -File tests/build/Test-SkillLint.ps1`
 
 ## Package shape
 
@@ -45,17 +71,27 @@ wrapping folder); excludes `__pycache__/`, `dist/`, `.DS_Store`, `Thumbs.db`, `*
 
 ## Agent packages (`agents/`)
 
-Nine `.sophon-agent` packages, the Buildersoft development family (roster, ids and fragment order in
-`build/agent-src/family.psd1`). Full guide: [`docs/AGENTS.md`](docs/AGENTS.md); design:
-`docs/plans/2026-11-15-agents-v2-design.md`.
+Ten `.sophon-agent` packages in two families, listed in the registry
+`build/agent-src/families.psd1`: **development** (nine agents, `build/agent-src/family.psd1`,
+souls and fragments beside it) and **video** (`video-producer`,
+`build/agent-src/families/video/family.psd1`, its own `souls/` and `fragments/soul/`). Families
+share no templates or fragments; an id belongs to one family; `agents/` holds exactly the union of
+the rosters. The tools take `-Family <id>` to work on one family (default: all). Full guide:
+[`docs/AGENTS.md`](docs/AGENTS.md); designs: `docs/plans/2026-11-15-agents-v2-design.md`,
+`docs/plans/2026-11-15-ffmpeg-video-design.md`.
 
+- **SkillPolicy is the only way an agent uses skill tools.** A family's `SkillPolicy` names skills
+  (`requires.skills` must equal it); only their tools may be named or pinned, and they never go in
+  `requires.tools` (sorted built-in pins plus `ExtraRequiredTools`). The development family has none,
+  so a skill tool there fails `LINT-SKILL`. `AllowRestrictedMentions` lets a family name a
+  restricted tool (video: `message.send`), never pin it.
 - **Files.** Only the 7 package files may live in `agents/<id>/` (`manifest.json`, `SOUL.md`,
   `VOICE.md`, `HEARTBEAT.md`, `TOOLS.md`, `README.md`, `LICENSE`); anything else is `not_packaged`
-  and fails the build. This family uses exactly 5 (no VOICE, no HEARTBEAT), and `LICENSE` is a
+  and fails the build. Both families use exactly 5 (no VOICE, no HEARTBEAT), and `LICENSE` is a
   byte-identical copy of the root `LICENSE`. UTF-8 without BOM, LF, no tabs, no trailing whitespace,
   one final newline.
-- **Never hand-edit `agents/*/SOUL.md`.** It is generated: edit `build/agent-src/` (`souls/<id>.md`
-  for role text, `fragments/soul/<NN-id>.md` for shared protocol) and run
+- **Never hand-edit `agents/*/SOUL.md`.** It is generated: edit the family's sources beside its
+  family file (`souls/<id>.md` for role text, `fragments/soul/<NN-id>.md` for shared protocol) and run
   `pwsh -File build/Compose-AgentSouls.ps1`. CI fails on drift. Manifests, TOOLS.md and READMEs
   are hand-written.
 - **Commands.**
@@ -85,12 +121,12 @@ Nine `.sophon-agent` packages, the Buildersoft development family (roster, ids a
   | hosts other than sophon.buildersoft.io, marketplace.sophon.buildersoft.io, github.com | — |
   | headings Sophon appends itself (`## Interaction`, `## Tool Access`, `## Workspace`, `## Memory Knowledge Graph`, `### Available tool index`) | another heading |
 
-- **Attribution strings live only in `family.psd1`** (`Values.CommitTrailer`, `Values.PrFooter`,
+- **Attribution strings live only in a family file** (`Values.CommitTrailer`, `Values.PrFooter`,
   `Values.PlanDir`). Templates and fragments write `{{= CommitTrailer}}`, `{{= PrFooter}}` and
-  `{{= PlanDir}}`, never the literal text.
-- **Versions.** Major 2 in lockstep across the family; minor and patch per agent. Any content change
-  bumps every affected agent (strictly greater SemVer); a shared-fragment change bumps every agent
-  that includes it.
+  `{{= PlanDir}}`, never the literal text. The video family commits nothing and has none.
+- **Versions.** One major in lockstep per family (`FamilyMajor`: development 2, video 1); minor and
+  patch per agent. Any content change bumps every affected agent (strictly greater SemVer); a
+  shared-fragment change bumps every agent that includes it.
 - **Publishing is manual:** each `.sophon-agent` is uploaded on its own through the Marketplace
   wizard. `build/Publish-MarketplacePackages.ps1` stays skills-only; never point it at agents.
 

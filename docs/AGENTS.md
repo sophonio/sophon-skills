@@ -9,6 +9,11 @@ Nine Sophon Marketplace agents that work on a code repository the way Claude Cod
 
 Only Lead Developer starts sub-agents, and only with your consent.
 
+This repository also holds a second, separate family: **video**, with one agent, Video Producer
+(`agents/video-producer`), which drives the `ffmpeg-video` skill. Sections 1-12 are about the
+development family; section 14 covers families, the video family and how the tooling keeps them
+apart.
+
 ## 1. What these are
 
 - **Sophon agent packages**, format v1 (`.sophon-agent`), not skills, plugins or Claude Code agents. Each package holds one persona and no executable code: `manifest.json`, `SOUL.md`, `TOOLS.md`, `README.md` and `LICENSE`.
@@ -264,18 +269,20 @@ The agents read the project instructions as trusted conventions, and they sugges
 
 ```
 build/agent-src/
-  family.psd1                 roster, fragment order, SoulCap, SubAgents, Effort, Credits,
+  families.psd1               the family registry (section 14)
+  family.psd1                 development roster, fragment order, SoulCap, SubAgents, Effort, Credits,
                               Values (commit trailer, PR footer, plan folder), AllowedHosts
   souls/<id>.md               role text + include lines ({{> soul/<NN-id>}})
   fragments/soul/<NN-id>.md   21 shared fragments, at most 4,096 bytes each
+  families/video/             the video family: family.psd1, souls/, fragments/soul/
   catalog/sophon-tools.psd1   real Sophon tool names (pinned to sophon a431e1a64, v2.2.2)
   catalog/scan-rules.psd1     the marketplace and runtime scanner rules the preflight replays
-build/AgentFamily.psm1        roster and composer
+build/AgentFamily.psm1        registry, roster and composer
 build/AgentLint.psm1          tool-name lint, scanner preflight, TOOLS.md parser, manifest checks
-build/Compose-AgentSouls.ps1  [-RepoRoot] [-Agents] [-Check] [-OutDir] [-Explain]
-build/Test-AgentSources.ps1   sections A-I, no Sophon CLI needed (CI runs it)
-build/Build-AgentPackages.ps1 [-RepoRoot] [-OutputDir] [-Agents] [-ValidateOnly]
-tests/agents/                 Test-AgentPackages.ps1 (A-K), fixtures/, evals/
+build/Compose-AgentSouls.ps1  [-RepoRoot] [-Agents] [-Check] [-OutDir] [-Explain] [-Family]
+build/Test-AgentSources.ps1   sections A-I per family, no Sophon CLI needed (CI runs it) [-Agents] [-Family]
+build/Build-AgentPackages.ps1 [-RepoRoot] [-OutputDir] [-Agents] [-ValidateOnly] [-Family]
+tests/agents/                 Test-AgentPackages.ps1 (A-L), fixtures/, evals/
 ```
 
 **Budgets** (`Test-AgentSources.ps1` section E fails over any of them and prints a headroom table):
@@ -292,9 +299,9 @@ pwsh -NoProfile -File build/Compose-AgentSouls.ps1                # regenerate a
 pwsh -NoProfile -File build/Compose-AgentSouls.ps1 -Check         # exit 0, no drift
 pwsh -NoProfile -File build/Test-AgentSources.ps1                 # lint, preflight, budgets, manifests, TOOLS.md
 pwsh -NoProfile -File build/Build-AgentPackages.ps1 -ValidateOnly # sophon dev validate: 0 errors, 0 warnings
-pwsh -NoProfile -File build/Build-AgentPackages.ps1               # 9 x <id>-2.0.0.sophon-agent + SHA256SUMS
+pwsh -NoProfile -File build/Build-AgentPackages.ps1               # 9 x <id>-2.0.0 + video-producer-1.0.0 + SHA256SUMS
 Get-Content dist/agents/SHA256SUMS
-pwsh -NoProfile -File tests/agents/Test-AgentPackages.ps1         # sections A-K
+pwsh -NoProfile -File tests/agents/Test-AgentPackages.ps1         # sections A-L
 pwsh -File build/Build-MarketplacePackages.ps1 -ValidateOnly      # skills unaffected
 git status --porcelain                                            # only intended sources + generated SOULs
 ```
@@ -302,7 +309,7 @@ git status --porcelain                                            # only intende
 - **The builder** checks the folders against the roster, the CLI version, the composer (`-Check`; drift fails with "SOUL drift — run the composer"), `Test-AgentSources.ps1` and `sophon dev validate --json` per agent. Any CLI error **or warning** fails the build. It then writes `dist/agents/<id>-<version>.sophon-agent` and `dist/agents/SHA256SUMS`.
   - It removes stale packages: all of them on a full build, only the selected ids' on a subset build, which prints "SHA256SUMS covers only: …".
   - A failed build leaves no SHA256SUMS. It never installs or publishes.
-- **The tests.** `tests/agents/Test-AgentPackages.ps1 -SourceOnly` runs sections A-I without the CLI. See [`tests/README.md`](../tests/README.md).
+- **The tests.** `tests/agents/Test-AgentPackages.ps1 -SourceOnly` runs sections A-I and L without the CLI. See [`tests/README.md`](../tests/README.md).
 - **Package shape** (made by `sophon dev build`): a zip with `manifest.json` first, then the other files in ordinal order, at the root, each entry stamped 1980-01-01 00:00:00. Repeat builds are byte-identical.
 
 **Versioning.**
@@ -324,7 +331,77 @@ Prerequisite outside the repo: the `noreply@buildersoft.io` mailbox for the comm
 
 **Deferred to 2.1:** a catalogue drift checker, a full port of the runtime's argument-redaction rules (the CLI covers them now), release reproducibility against published hashes, a headless eval runner, the local-install export script, and README composition.
 
-## 14. Credits
+## 14. Families
+
+The repository holds two agent families. A family is one family file: its roster, versions,
+values, hosts and credits. Its `souls/` and `fragments/soul/` folders sit beside the family file,
+so families never share templates or fragments.
+
+| Family | Family file | Agents | Major | Tag, category |
+|---|---|---|---|---|
+| development | `build/agent-src/family.psd1` | the nine in section 2 | 2 | `development`, `development` |
+| video | `build/agent-src/families/video/family.psd1` | `video-producer` | 1 | `video`, `ai` |
+
+**The registry.** `build/agent-src/families.psd1` lists every family as `@{ Id; Path }`. All
+agents still live in `agents/<id>/`; an id belongs to exactly one family, and `agents/` must hold
+exactly the union of the rosters. Without a registry (the composer fixtures, for example) the
+tooling falls back to the single family in `build/agent-src/family.psd1`.
+
+**Running one family.** Every tool loops over the registry by default. `-Family <id>` limits it:
+
+```powershell
+pwsh -NoProfile -File build/Compose-AgentSouls.ps1 -Family video -Check
+pwsh -NoProfile -File build/Test-AgentSources.ps1 -Family development
+pwsh -NoProfile -File build/Build-AgentPackages.ps1 -Family development -OutputDir <folder>
+```
+
+Without `-Family`, `Test-AgentSources.ps1` first checks `agents/` against the roster union, then
+re-runs itself once per family; the composer writes nothing unless every family composes cleanly.
+A build of fewer families than the registry lists is a subset build.
+
+**Family keys beyond the development set** (all optional; the defaults reproduce the development
+family):
+
+| Key | Meaning | video |
+|---|---|---|
+| `Id` | must equal the registry id | `video` |
+| `RequiredTag`, `Category` | MAN-TAGS and MAN-META check them in every manifest | `video`, `ai` |
+| `CreditsSentence` | the sentence every README must carry; absent means no check | none |
+| `ReadmeCaps` | `@{Lead; Other}` README byte caps | 12,288 and 12,288 |
+| `SkillPolicy` | `Skills` (name and `MinVersion`) and `ExtraRequiredTools` | `ffmpeg-video` 1.0.0; document.upload, media.image, media.video, music.generate, video.generate |
+| `AllowRestrictedMentions` | restricted tools the text may name (never pin) | `message.send` |
+
+**SkillPolicy** is the only way an agent uses a skill's tools:
+- `requires.skills` must equal `SkillPolicy.Skills` exactly, sorted by name, and comes first in
+  `requires`. `requires.tools` is the sorted union of the built-in pins and `ExtraRequiredTools`
+  and never holds a skill tool (the installer would report it missing until the skill is
+  installed). Each extra must be an allowed tool, not core and not restricted.
+- The tool lint (`LINT-SKILL`) and the pin check (`TOOLS-PIN-UNKNOWN`) are waived only for the
+  tools of those skills, read from `skills/<name>/manifest.json`. A restricted pin still fails.
+- MAN-SKILL-VERSION checks that `skills/<name>/manifest.json` exists at `MinVersion` or later.
+- The development family has no SkillPolicy, so a skill tool name there still fails `LINT-SKILL`.
+
+**Derived rules.** The attribution checks apply only to an agent whose sources use
+`{{= CommitTrailer}}` or `{{= PrFooter}}`, and the `whenToUse` sibling rule only when the roster
+has more than one agent. Video Producer commits nothing and has no sibling, so neither applies.
+
+**The video family.** One agent, Video Producer 1.0.0. It plans and produces short videos with
+Sophon's media tools and renders them locally with the `ffmpeg-video` skill. Its SOUL is composed
+from `families/video/souls/video-producer.md` and six fragments (`01-media-ground-rules` to
+`06-media-failures`); its TOOLS.md pins six `ffmpeg.*` tools plus image.generate and tts.file.
+Install order, requirements and limits are in [its README](../agents/video-producer/README.md);
+the manual evals are in [`tests/agents/evals/video-producer.md`](../tests/agents/evals/video-producer.md);
+the design is [`docs/plans/2026-11-15-ffmpeg-video-design.md`](plans/2026-11-15-ffmpeg-video-design.md).
+
+**Publishing order.** The marketplace refuses an agent whose required skill is not approved, so
+publish `ffmpeg-video` and get it approved before uploading `video-producer` (see
+[PUBLISHING.md](PUBLISHING.md#7-skills-that-agents-require)).
+
+**Regression gate.** A change to the multi-family tooling must leave the nine development
+packages byte-identical: compare `dist/agents/SHA256SUMS` before and after, and
+`Compose-AgentSouls.ps1 -Check` must show no drift.
+
+## 15. Credits
 
 Workflow patterns adapted, not copied, from obra/superpowers (MIT, © 2025 Jesse Vincent) and Anthropic's Claude Code plugins (feature-dev, pr-review-toolkit, code-review, security-review, frontend-design; Apache-2.0). Every package README carries this line and its license note.
 

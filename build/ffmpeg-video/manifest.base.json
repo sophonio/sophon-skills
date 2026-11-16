@@ -1,0 +1,20 @@
+{
+  "name": "ffmpeg-video",
+  "version": "1.0.0",
+  "description": "Edit, assemble, caption, mix, check and render video on this computer with FFmpeg (wraps the MIT-licensed ffmpeg-skill by kajisho5). Runs only on Sophon's process sandbox backend; needs Python 3.10+ and FFmpeg/ffprobe 6.1+ installed on the host. Refuses the Docker sandbox. No network, no credentials.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "utility",
+  "tags": ["video", "ffmpeg", "editing", "captions", "render", "audio", "export", "subtitles", "reels", "shorts"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "requirements": [],
+  "sandbox": {
+    "network": false,
+    "timeoutSeconds": 1800,
+    "maxMemoryMb": 2048,
+    "maxCpuPercent": 100
+  },
+  "platforms": []
+}

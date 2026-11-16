@@ -1,0 +1,25 @@
+# Upstream files vendored into skills/ffmpeg-video/vendor/ffmpeg-skill/.
+#
+# One glob per line, relative to the upstream repository root. `*` matches within one path
+# segment only (it never crosses `/`). Every pattern must match at least one file at the pinned
+# commit, or Sync-FfmpegSkill.ps1 fails. The deny rules in Sync-FfmpegSkill.ps1 (shell, batch,
+# PowerShell and native-binary extensions, dotfiles, excluded folder names, symlinks) apply on
+# top of this list, so a pattern can never pull one of those in.
+#
+# Changing this list changes the vendored surface: review it like a code change.
+
+# Licence and version metadata (_contract.py reads package.json for the version and SKILL.md
+# for the per-tool examples).
+LICENSE
+package.json
+SKILL.md
+
+# The MCP transport: build_argv() is reused by lib/bridge.py.
+mcp/server.py
+
+# The 42 public tools, the private helpers and the shared package.
+scripts/*.py
+scripts/_common/*.py
+
+# Delivery templates used by render.py --template.
+templates/*.json

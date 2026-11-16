@@ -1,6 +1,6 @@
 {
   "name": "linear",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Linear integration — search, read, create, and update issues, list teams, and add comments via the Linear GraphQL API.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -73,7 +73,7 @@
           "teamId": { "type": "string", "description": "UUID of the team to create the issue in" },
           "title": { "type": "string", "description": "Issue title" },
           "description": { "type": "string", "description": "Issue description (Markdown)" },
-          "priority": { "type": "integer", "description": "Priority: 0 none, 1 urgent, 2 high, 3 normal, 4 low", "enum": [0, 1, 2, 3, 4] },
+          "priority": { "type": "integer", "description": "Priority: 0 none, 1 urgent, 2 high, 3 normal, 4 low", "minimum": 0, "maximum": 4 },
           "assigneeId": { "type": "string", "description": "UUID of the user to assign" }
         },
         "required": ["teamId", "title"]
@@ -90,7 +90,7 @@
           "title": { "type": "string", "description": "New issue title" },
           "description": { "type": "string", "description": "New issue description (Markdown)" },
           "stateId": { "type": "string", "description": "UUID of the workflow state to move the issue to" },
-          "priority": { "type": "integer", "description": "Priority: 0 none, 1 urgent, 2 high, 3 normal, 4 low", "enum": [0, 1, 2, 3, 4] },
+          "priority": { "type": "integer", "description": "Priority: 0 none, 1 urgent, 2 high, 3 normal, 4 low", "minimum": 0, "maximum": 4 },
           "assigneeId": { "type": "string", "description": "UUID of the user to assign" }
         },
         "required": ["id"]

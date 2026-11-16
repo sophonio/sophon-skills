@@ -229,8 +229,10 @@ def create_request():
     if seasons is not None:
         if media_type != "tv":
             raise ValueError("seasons only applies to mediaType 'tv'")
-        if seasons == "all":
+        if isinstance(seasons, str) and seasons.strip().lower() == "all":
             payload["seasons"] = "all"
+        elif isinstance(seasons, str) and seasons.replace(",", "").strip():
+            payload["seasons"] = [require_int(s, "seasons") for s in seasons.split(",") if s.strip()]
         elif isinstance(seasons, list):
             payload["seasons"] = [require_int(s, "seasons") for s in seasons]
         else:

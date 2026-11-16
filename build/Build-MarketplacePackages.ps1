@@ -11,6 +11,13 @@
     tools/tags/category/README/LICENSE), then — only if that skill validates clean — zips the
     folder CONTENTS (no wrapping folder) into <OutputDir>/<name>-<version>.sophon-skill.
 
+    Each skill then goes through the repo-wide checks in build/SkillLint.psm1 (entrypoint import scan,
+    tool-name and wire-name collisions across every skill and the built-in catalogue, the parameter
+    schema subset, reserved names and permissions, the folder rule, the vendor lock, description
+    injection literals). A skill that passes is zipped and the archive is checked against the Sophon
+    installer's and the marketplace's zip rules; with -ValidateOnly the archive goes to a temporary
+    folder and is deleted afterwards.
+
     Validation collects ALL errors per skill (does not stop at the first). Skills that fail
     validation are skipped for packaging but the run continues to build every other skill.
 
@@ -31,8 +38,9 @@
     Optional list of skill folder names (under skills/) to build. Empty (default) means every
     directory under skills/ that contains a manifest.json.
 .PARAMETER ValidateOnly
-    Validate every skill and print the summary, but do NOT produce .sophon-skill archives. Used by
-    CI to fail a PR on any manifest/contract violation without writing build output. Exit code is
+    Validate every skill and print the summary, but do NOT produce .sophon-skill archives in
+    -OutputDir (each archive is built in a temporary folder for the zip checks, then deleted). Used
+    by CI to fail a PR on any manifest/contract violation without writing build output. Exit code is
     still 1 if any skill failed validation.
 .EXAMPLE
     pwsh -File build/Build-MarketplacePackages.ps1
@@ -62,6 +70,8 @@ $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.IO.Compression
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
+Import-Module (Join-Path $PSScriptRoot 'SkillLint.psm1') -Force
+
 $ValidRuntimes    = @('python', 'csharp', 'sandbox')
 $ValidRiskLevels  = @('none', 'low', 'medium', 'high', 'critical')
 $ValidCategories  = @('utility', 'productivity', 'communication', 'data', 'development', 'integration', 'ai', 'automation', 'other')
@@ -81,10 +91,9 @@ $ValidCredentialAccess      = @('injected', 'proxy', 'none')
 # "proxy" parses but delivers nothing brokered — the broker described in the Sophon security docs
 # does not exist, so a skill that reads credentials from `params` must declare "injected".
 $DeliveringCredentialAccess = @('injected')
-# SandboxedTool overwrites params["tool"] unconditionally, so it can never carry a credential.
+# SandboxedTool overwrites params["tool"] unconditionally, so it can never carry a credential (nor a
+# tool argument: SkillLint reports a parameter named `tool` as SKILL-TOOLPARAM).
 $ReservedParamKeys          = @('tool')
-$ExcludeDirNames  = @('__pycache__', 'dist')
-$ExcludeFileNames = @('.DS_Store', 'Thumbs.db')
 $MaxReadmeBytes   = 65536
 $MaxDescriptionLength = 2000
 $MaxTagCount      = 10
@@ -468,19 +477,10 @@ function Test-SkillManifest {
 }
 
 function Test-ZipExclusion {
-    # $RelativePath uses forward slashes already.
+    # $RelativePath uses forward slashes already. The exclusion list (__pycache__/, dist/, .DS_Store,
+    # Thumbs.db, *.pyc) lives in SkillLint.psm1 so the folder rule and the vendor lock see the same set.
     param([Parameter(Mandatory)] [string]$RelativePath)
-
-    $segments = $RelativePath.Split('/')
-    if ($segments.Length -gt 1) {
-        for ($i = 0; $i -lt ($segments.Length - 1); $i++) {
-            if ($ExcludeDirNames -contains $segments[$i]) { return $true }
-        }
-    }
-    $leaf = $segments[$segments.Length - 1]
-    if ($ExcludeFileNames -contains $leaf) { return $true }
-    if ($leaf -like '*.pyc') { return $true }
-    return $false
+    return Test-SkillPackageExclusion -RelativePath $RelativePath
 }
 
 function New-SkillArchive {
@@ -494,18 +494,19 @@ function New-SkillArchive {
     }
 
     $skillDirFull = (Resolve-Path -LiteralPath $SkillDir).Path
-    $files = Get-ChildItem -LiteralPath $skillDirFull -Recurse -File -Force
+    # Forward-slash relative paths in ordinal order, already filtered by Test-ZipExclusion.
+    $relativePaths = Get-SkillPackageFiles -SkillDir $skillDirFull
 
     $archive = [System.IO.Compression.ZipFile]::Open($OutputPath, [System.IO.Compression.ZipArchiveMode]::Create)
     try {
-        foreach ($file in $files) {
-            $relativePath = $file.FullName.Substring($skillDirFull.Length).TrimStart('\', '/').Replace('\', '/')
-            if (Test-ZipExclusion -RelativePath $relativePath) { continue }
-            [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($archive, $file.FullName, $relativePath, [System.IO.Compression.CompressionLevel]::Optimal) | Out-Null
+        foreach ($relativePath in $relativePaths) {
+            $sourcePath = Join-Path $skillDirFull $relativePath
+            [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($archive, $sourcePath, $relativePath, [System.IO.Compression.CompressionLevel]::Optimal) | Out-Null
         }
     } finally {
         $archive.Dispose()
     }
+    return , $relativePaths
 }
 
 # ---------------------------------------------------------------------------
@@ -523,6 +524,13 @@ if (-not $ValidateOnly -and -not (Test-Path -LiteralPath $OutputDir)) {
     New-Item -ItemType Directory -Path $OutputDir -Force | Out-Null
 }
 
+# Catalogues plus every skill's tool names (for the cross-skill collision checks), loaded once. It always
+# reads every skills/*/manifest.json, also when -Skills limits what is built.
+$lintContext = New-SkillLintContext -SkillsRoot $skillsDir
+
+# -ValidateOnly still builds each archive for the zip checks, in a scratch folder removed at the end.
+$scratchDir = Join-Path ([System.IO.Path]::GetTempPath()) ("sophon-skill-validate-" + [guid]::NewGuid().ToString('N'))
+
 # Resolve the set of skill folder names to process (each an immediate subdir of skills/ with a
 # manifest.json). With an explicit -Skills list, unknown names are still processed so the
 # "does not exist" error below fires.
@@ -539,79 +547,101 @@ $results = [System.Collections.Generic.List[object]]::new()
 $allWarnings = [System.Collections.Generic.List[string]]::new()
 $anyFailed = $false
 
-foreach ($folderName in $skillNames) {
-    $skillDir = Join-Path $skillsDir $folderName
-    $manifestPath = Join-Path $skillDir 'manifest.json'
+try {
+    foreach ($folderName in $skillNames) {
+        $skillDir = Join-Path $skillsDir $folderName
+        $manifestPath = Join-Path $skillDir 'manifest.json'
 
-    $errors = [System.Collections.Generic.List[string]]::new()
-    $warnings = [System.Collections.Generic.List[string]]::new()
-    $manifest = $null
+        $errors = [System.Collections.Generic.List[string]]::new()
+        $warnings = [System.Collections.Generic.List[string]]::new()
+        $manifest = $null
 
-    if (-not (Test-Path -LiteralPath $skillDir -PathType Container)) {
-        $errors.Add("skill folder does not exist under skills/: $skillDir")
-    } elseif (-not (Test-Path -LiteralPath $manifestPath -PathType Leaf)) {
-        $errors.Add('manifest.json does not exist')
-    } else {
-        $rawManifest = Get-Content -LiteralPath $manifestPath -Raw -Encoding utf8
-        try {
-            $manifest = $rawManifest | ConvertFrom-Json
-        } catch {
-            $errors.Add("manifest.json is not valid JSON: $($_.Exception.Message)")
+        if (-not (Test-Path -LiteralPath $skillDir -PathType Container)) {
+            $errors.Add("skill folder does not exist under skills/: $skillDir")
+        } elseif (-not (Test-Path -LiteralPath $manifestPath -PathType Leaf)) {
+            $errors.Add('manifest.json does not exist')
+        } else {
+            $rawManifest = Get-Content -LiteralPath $manifestPath -Raw -Encoding utf8
+            try {
+                $manifest = $rawManifest | ConvertFrom-Json
+            } catch {
+                $errors.Add("manifest.json is not valid JSON: $($_.Exception.Message)")
+            }
+            # Bare `null`, a scalar, or an array all parse fine but are not skill manifests;
+            # without this guard, Test-SkillManifest's Mandatory $Manifest binding would throw
+            # and abort the whole run instead of failing just this skill.
+            if ($errors.Count -eq 0 -and ($null -eq $manifest -or $manifest -isnot [System.Management.Automation.PSCustomObject])) {
+                $errors.Add('manifest.json is not a JSON object')
+                $manifest = $null
+            }
         }
-        # Bare `null`, a scalar, or an array all parse fine but are not skill manifests;
-        # without this guard, Test-SkillManifest's Mandatory $Manifest binding would throw
-        # and abort the whole run instead of failing just this skill.
-        if ($errors.Count -eq 0 -and ($null -eq $manifest -or $manifest -isnot [System.Management.Automation.PSCustomObject])) {
-            $errors.Add('manifest.json is not a JSON object')
-            $manifest = $null
+
+        if ($errors.Count -eq 0) {
+            Test-SkillManifest -SkillDir $skillDir -FolderName $folderName -Manifest $manifest -Errors $errors -Warnings $warnings
+            Invoke-SkillLint -SkillDir $skillDir -FolderName $folderName -Context $lintContext -Errors $errors -Warnings $warnings
         }
-    }
 
-    if ($errors.Count -eq 0) {
-        Test-SkillManifest -SkillDir $skillDir -FolderName $folderName -Manifest $manifest -Errors $errors -Warnings $warnings
-    }
+        $version = Get-JsonProperty $manifest 'version'
+        $artifactName = if ([string]::IsNullOrWhiteSpace($version)) { '' } else { "$folderName-$version.sophon-skill" }
+        $artifactPath = if ($artifactName -ne '') { Join-Path $OutputDir $artifactName } else { '' }
 
-    foreach ($w in $warnings) {
-        $allWarnings.Add("[$folderName] $w")
-    }
+        # Zip mirror: build the archive (to the scratch folder under -ValidateOnly) and replay the installer's
+        # and the marketplace's zip checks on it. A failing archive is deleted so it can never be published.
+        if ($errors.Count -eq 0) {
+            $archivePath = $artifactPath
+            if ($ValidateOnly) {
+                New-Item -ItemType Directory -Path $scratchDir -Force | Out-Null
+                $archivePath = Join-Path $scratchDir $artifactName
+            }
+            $packaged = New-SkillArchive -SkillDir $skillDir -OutputPath $archivePath
+            Test-SkillArchive -ArchivePath $archivePath -Context $lintContext -Errors $errors -ExpectedEntries $packaged
+            if ($ValidateOnly -or $errors.Count -gt 0) {
+                Remove-Item -LiteralPath $archivePath -Force
+            }
+        }
 
-    $version = Get-JsonProperty $manifest 'version'
-    $artifactName = if ([string]::IsNullOrWhiteSpace($version)) { '' } else { "$folderName-$version.sophon-skill" }
-    $artifactPath = if ($artifactName -ne '') { Join-Path $OutputDir $artifactName } else { '' }
+        foreach ($w in $warnings) {
+            $allWarnings.Add("[$folderName] $w")
+        }
 
-    if ($errors.Count -gt 0) {
-        $anyFailed = $true
-        $results.Add([pscustomobject]@{
-            Skill    = $folderName
-            Version  = if ([string]::IsNullOrWhiteSpace($version)) { '-' } else { $version }
-            Artifact = '-'
-            SHA256   = '-'
-            Status   = 'FAILED: ' + ($errors -join '; ')
-        })
-        continue
-    }
+        if ($errors.Count -gt 0) {
+            $anyFailed = $true
+            $results.Add([pscustomobject]@{
+                Skill    = $folderName
+                Version  = if ([string]::IsNullOrWhiteSpace($version)) { '-' } else { $version }
+                Artifact = '-'
+                SHA256   = '-'
+                Status   = 'FAILED: ' + ($errors -join '; ')
+            })
+            continue
+        }
 
-    if ($ValidateOnly) {
+        if ($ValidateOnly) {
+            $results.Add([pscustomobject]@{
+                Skill    = $folderName
+                Version  = $version
+                Artifact = '(validate-only)'
+                SHA256   = '-'
+                Status   = 'OK'
+            })
+            continue
+        }
+
+        $hash = (Get-FileHash -LiteralPath $artifactPath -Algorithm SHA256).Hash.ToLowerInvariant()
+
         $results.Add([pscustomobject]@{
             Skill    = $folderName
             Version  = $version
-            Artifact = '(validate-only)'
-            SHA256   = '-'
+            Artifact = $artifactName
+            SHA256   = $hash
             Status   = 'OK'
         })
-        continue
     }
-
-    New-SkillArchive -SkillDir $skillDir -OutputPath $artifactPath
-    $hash = (Get-FileHash -LiteralPath $artifactPath -Algorithm SHA256).Hash.ToLowerInvariant()
-
-    $results.Add([pscustomobject]@{
-        Skill    = $folderName
-        Version  = $version
-        Artifact = $artifactName
-        SHA256   = $hash
-        Status   = 'OK'
-    })
+} finally {
+    # The scratch folder exists only under -ValidateOnly; remove it even when a check throws.
+    if (Test-Path -LiteralPath $scratchDir) {
+        Remove-Item -LiteralPath $scratchDir -Recurse -Force
+    }
 }
 
 Write-Output ''

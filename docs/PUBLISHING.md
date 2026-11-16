@@ -25,7 +25,9 @@ Bash/zsh equivalent for the key: `export SOPHON_MARKETPLACE_API_KEY='smk_...'`.
 | Need | Why | Check |
 |------|-----|-------|
 | PowerShell **7+** (`pwsh`) | both build scripts `#Requires -Version 7.0`; Windows PowerShell 5.1 will not run them | `pwsh --version` |
-| Python **3** (runtime target is 3.13) | runs the offline skill tests in `tests/skills/` (stdlib only, no `pip install`) | `python --version` |
+| Python **3.10+** (runtime target is 3.13) | runs the offline skill tests in `tests/skills/` and the `ffmpeg-video` generator (stdlib only, no `pip install`) | `python --version` |
+| git | `Sync-FfmpegSkill.ps1` reads the upstream repository (only when re-vendoring `ffmpeg-video`) | `git --version` |
+| FFmpeg **6.1+** *(optional)* | the real-media tests of `ffmpeg-video` (`tests/skills/ffmpeg_video_media.py`); without it they print SKIP | `ffmpeg -version` |
 | Docker *(optional)* | container parity smoke on `python:3.13-alpine` (`tests/skills/run_all_container.py`) | `docker --version` |
 
 **Configuration** — nothing is needed to build or validate; publishing needs:
@@ -65,12 +67,15 @@ pwsh -File build/Build-MarketplacePackages.ps1
 ```
 
 For each skill under `skills/`, the script validates `manifest.json` against the
-[manifest contract](../CONTRIBUTING.md#manifest-contract) — collecting **all** errors per skill
-rather than stopping at the first — and, for skills that validate clean, writes
+[manifest contract](../CONTRIBUTING.md#manifest-contract) and the
+[build checks](../CONTRIBUTING.md#build-checks-beyond-the-contract) (`build/SkillLint.psm1`) —
+collecting **all** errors per skill rather than stopping at the first — and, for skills that
+validate clean, writes
 `dist/<name>-<version>.sophon-skill`: a zip of the skill folder's **contents** (`manifest.json` at
 the zip root, no wrapping folder), excluding `__pycache__/`, `dist/`, `.DS_Store`, `Thumbs.db`, and
-`*.pyc`. The run exits `1` if any skill failed validation (packages that did validate are still
-written). Each artifact's SHA256 is printed — use it to verify the upload against the registry's
+`*.pyc`. Entries are written in ordinal path order with forward slashes, and each archive is
+re-checked against the zip rules (`SKILL-ZIP`); a failing archive is deleted. The run exits `1` if
+any skill failed validation (packages that did validate are still written). Each artifact's SHA256 is printed — use it to verify the upload against the registry's
 recorded hash and the download endpoint's `X-Checksum-Sha256` header.
 
 `dist/` is git-ignored — artifacts are build output, not checked in.
@@ -132,8 +137,18 @@ A successful publish returns `201 Created` with `{ name, version, status: "pendi
 
 Two workflows live in `.github/workflows/`:
 
-- **`validate.yml`** runs `-ValidateOnly` automatically on PRs and pushes to `main` that touch
-  `skills/`, `build/`, or `templates/`. It needs no configuration.
+- **`validate.yml`** runs automatically on PRs and pushes to `main` that touch `skills/`, `build/`,
+  `agents/`, `tests/skills/`, `tests/build/`, `tests/agents/` or `templates/`: `-ValidateOnly`,
+  `generate.py --check`, `Test-SkillLint.ps1`, `run_all.py`, then the agent source checks. It needs
+  no configuration.
+- **`ffmpeg-video.yml`** runs on changes to the `ffmpeg-video` skill, its build folder, the skill
+  lint or its tests: unit tests on Python 3.10 and 3.13, the Python-floor refusal, real-FFmpeg
+  tests on Ubuntu 24.04 (FFmpeg 6.1) and Windows, and the provenance check (`Sync-FfmpegSkill.ps1
+  -Check` against a fresh clone of the pinned upstream tag). The macOS job runs only when the
+  workflow is started by hand.
+- **`ffmpeg-skill-upstream-watch.yml`** runs weekly (and by hand). It keeps one open issue listing
+  the upstream ffmpeg-skill tags newer than the vendored pin, and closes it when the pin is
+  current. It never opens a pull request; re-syncing stays a deliberate step (§8).
 - **`publish.yml`** is **manual only** (Actions → *publish* → *Run workflow*). It builds every
   skill and then runs the publish script. Inputs are `skills` (comma-separated, blank = all) and
   `dry_run` (**defaults to `true`**, so untick it to really upload).
@@ -149,6 +164,10 @@ One-time repo setup for `publish.yml` (Settings → Environments):
 
 ## 6. Release checklist
 
+0. For a **new** skill, check the slug is free while signed in: `sophon skills search <slug>`,
+   `sophon agents search <slug>` (names are shared across package types) and
+   `GET https://marketplace.sophon.buildersoft.io/api/v1/packages/<slug>`. A hit not owned by
+   Buildersoft stops the release.
 1. Bump `version` in every changed skill's `manifest.json`. It must be strictly greater than the
    last published version.
 2. `python tests/skills/run_all.py` shows every file as PASS.
@@ -156,6 +175,59 @@ One-time repo setup for `publish.yml` (Settings → Environments):
 4. Build with `-Skills <changed skills>`, then publish with `-DryRun` and check the list.
 5. Publish for real. Confirm every response is `201` / `pendingReview`, then ask a super-admin to
    approve.
+
+## 7. Skills that agents require
+
+An agent package can name marketplace skills in `requires.skills`; Sophon offers to install them
+with the agent. The marketplace refuses an agent whose required skill is not approved, so the
+order is fixed:
+
+1. Publish the skill (`pwsh -File build/Publish-MarketplacePackages.ps1 -Skills ffmpeg-video`).
+2. Wait until a super-admin has **approved** that version (not just `pendingReview`).
+3. Only then upload the agent (`dist/agents/video-producer-<version>.sophon-agent`) in the
+   Marketplace wizard, as described in [AGENTS.md](AGENTS.md) section 13. Agents are never
+   uploaded with `Publish-MarketplacePackages.ps1`.
+
+The agent's `requires.skills[].minVersion` must be a version that is approved and live. Raise it
+only after the newer skill version is approved, and bump the agent version when you do.
+
+## 8. Releasing a vendored skill (ffmpeg-video)
+
+`ffmpeg-video` ships [kajisho5/ffmpeg-skill](https://github.com/kajisho5/ffmpeg-skill) unchanged
+under `vendor/ffmpeg-skill/`. A re-sync is a release of its own; the policy (when to sync, which
+tag, how to review) is in [VENDORING.md](VENDORING.md). The steps:
+
+1. Pick the tag and its full commit sha (the upstream watch issue lists newer tags).
+2. Re-vendor and regenerate (needs git, Python 3.10+ and network access to GitHub, or a local
+   clone passed as `-Source`):
+
+   ```powershell
+   pwsh -NoProfile -File build/ffmpeg-video/Sync-FfmpegSkill.ps1 -Tag vX.Y.Z -ExpectedCommit <sha>
+   ```
+
+   It prints the tool-surface diff and a review checklist, and fails on anything that needs a
+   person (an unclassified path parameter, a tool with no policy entry, a contract change).
+3. Work through the checklist. Bump `version` in `build/ffmpeg-video/manifest.base.json` (patch
+   when the surface diff is empty, minor for added tools, parameters or values, major for removed
+   or renamed ones), update the tag and commit in `skills/ffmpeg-video/THIRD_PARTY_NOTICES.md`,
+   then run `python -B build/ffmpeg-video/generate.py`.
+4. Verify:
+
+   ```powershell
+   pwsh -NoProfile -File build/ffmpeg-video/Sync-FfmpegSkill.ps1 -Tag vX.Y.Z -ExpectedCommit <sha> -Check
+   python -B build/ffmpeg-video/generate.py --check
+   python tests/skills/run_all.py
+   python tests/skills/ffmpeg_video_media.py            # with FFmpeg 6.1+ installed
+   pwsh -File build/Build-MarketplacePackages.ps1 -ValidateOnly
+   ```
+
+5. On a major bump, update the Video Producer sources and pins (and `SkillPolicy.MinVersion` if the
+   old skill no longer works with it), then rebuild the agent packages.
+6. Build with `-Skills ffmpeg-video`, publish, and get it approved. Then publish the agent if it
+   changed (§7).
+
+The archive holds about 80 entries (the 74 vendored files plus the skill's own), all forward-slash
+names, with the vendored `LICENSE` and no `.sh` file, so the marketplace raises no scripts flag.
 
 ## Common failures
 
