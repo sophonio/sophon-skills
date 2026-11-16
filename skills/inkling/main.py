@@ -213,6 +213,9 @@ def list_todos():
         raise ValueError("list_todos does not accept limit")
     query = optional_query(("view", "tag", "cursor"))
     check_text_query(query, ("tag", "cursor"))
+    # Empty optional cursors mean no pagination and must not reach the API.
+    if query.get("cursor") == "":
+        query.pop("cursor")
     if not isinstance(query.get("view", "open"), str) or query.get("view", "open") not in ("open", "done", "assigned"):
         raise ValueError("view must be open, done or assigned")
     if "cursor" in query and query.get("view", "open") != "done":

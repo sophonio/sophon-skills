@@ -93,6 +93,38 @@ class InklingTests(unittest.TestCase):
         _, calls, _ = call('list_todos', {'view': 'done', 'cursor': 'c'})
         self.assertEqual(parse_qs(urlsplit(calls[0][0].full_url).query), {'view': ['done'], 'cursor': ['c']})
 
+    def test_todo_empty_or_absent_cursor_is_not_sent(self):
+        for view in (None, 'open', 'assigned', 'done'):
+            for cursor_args in ({}, {'cursor': None}, {'cursor': ''}):
+                with self.subTest(view=view, cursor_args=cursor_args):
+                    args = {'tag': '', **cursor_args}
+                    expected = {'tag': ['']}
+                    if view is not None:
+                        args['view'] = view
+                        expected['view'] = [view]
+                    out, calls, _ = call('list_todos', args)
+                    self.assertNotIn('error', out)
+                    self.assertEqual(len(calls), 1)
+                    query = parse_qs(urlsplit(calls[0][0].full_url).query, keep_blank_values=True)
+                    self.assertEqual(query, expected)
+
+    def test_todo_nonempty_cursor_requires_done_view(self):
+        for view_args in ({}, {'view': 'open'}, {'view': 'assigned'}):
+            with self.subTest(view_args=view_args):
+                out, calls, _ = call('list_todos', {**view_args, 'cursor': 'next-page'})
+                self.assertEqual(out, {'error': 'cursor is only supported for the done view'})
+                self.assertEqual(calls, [])
+        _, calls, _ = call('list_todos', {'view': 'done', 'cursor': 'a+b/='})
+        query = parse_qs(urlsplit(calls[0][0].full_url).query, keep_blank_values=True)
+        self.assertEqual(query, {'view': ['done'], 'cursor': ['a+b/=']})
+
+    def test_todo_invalid_cursor_types_make_no_request(self):
+        for cursor in (False, 0, [], {}):
+            with self.subTest(cursor=cursor):
+                out, calls, _ = call('list_todos', {'view': 'done', 'cursor': cursor})
+                self.assertEqual(out, {'error': 'cursor must be a string'})
+                self.assertEqual(calls, [])
+
     def test_conditional_and_idempotency_headers(self):
         for tool, args in [('create_note', {'title': 'x'}), ('append_note', {'id': 'n', 'body': 'x'}), ('create_todo', {'text': 'x'})]:
             with self.subTest(tool=tool):

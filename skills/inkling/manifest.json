@@ -1,6 +1,6 @@
 {
   "name": "inkling",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Read and manage Inkling notes, todos, discussions and sourced answers.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -22,7 +22,7 @@
     {"name":"inkling.usage","description":"Read account usage and key information.","riskLevel":"none","parameters":{"type":"object","properties":{}}},
     {"name":"inkling.list_notes","description":"List notes with filters and cursor pagination.","riskLevel":"none","parameters":{"type":"object","properties":{"limit":{"type":"integer","description":"Page size; the API clamps it to 1-50, and 0 or less means the default of 20."},"cursor":{"type":"string"},"q":{"type":"string","maxLength":200},"tag":{"type":"string"},"status":{"type":"string","enum":["not_started","in_progress","waiting","done"]},"archived":{"type":"boolean"}}}},
     {"name":"inkling.get_note","description":"Read a note and its stored revision.","riskLevel":"none","parameters":{"type":"object","properties":{"id":{"type":"string"}},"required":["id"]}},
-    {"name":"inkling.list_todos","description":"List todos; only the done view accepts a cursor and limit is refused. Open and assigned can be truncated.","riskLevel":"none","parameters":{"type":"object","properties":{"view":{"type":"string","enum":["open","done","assigned"]},"tag":{"type":"string"},"cursor":{"type":"string","description":"Only for the done view."}}}},
+    {"name":"inkling.list_todos","description":"List todos; only the done view accepts a cursor and limit is refused. Open and assigned can be truncated.","riskLevel":"none","parameters":{"type":"object","properties":{"view":{"type":"string","enum":["open","done","assigned"]},"tag":{"type":"string"},"cursor":{"type":"string","description":"Previous next_cursor for the done view only. Omit for the first page or other views; an empty string is treated as omitted."}}}},
     {"name":"inkling.ask","description":"Start an asynchronous sourced answer or continue a discussion.","riskLevel":"medium","parameters":{"type":"object","properties":{"query":{"type":"string","minLength":1,"maxLength":4000},"discussion_id":{"type":["string","null"],"description":"A discussion to continue; null or omitted starts a new one."}},"required":["query"]}},
     {"name":"inkling.get_answer","description":"Read or wait for an asynchronous answer.","riskLevel":"none","parameters":{"type":"object","properties":{"id":{"type":"string"},"wait":{"type":"integer","minimum":0,"maximum":20}},"required":["id"]}},
     {"name":"inkling.list_discussions","description":"List discussions with cursor pagination.","riskLevel":"none","parameters":{"type":"object","properties":{"limit":{"type":"integer","description":"Page size; the API clamps it to 1-50, and 0 or less means the default of 20."},"cursor":{"type":"string"},"archived":{"type":"boolean"}}}},

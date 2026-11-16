@@ -65,7 +65,7 @@ The skill checks these rules locally and makes no request when one fails; the er
 
 Notes and discussions accept a `cursor` and an integer `limit`. The skill forwards `limit` as given and the API clamps it to 1–50; omitted, `null` or 0 and below means 20. Booleans, strings and decimals are rejected. Use the returned `next_cursor` to request the next page. Notes additionally support `q` (at most 200 characters), `tag`, `status` and `archived`; discussions support `archived`.
 
-Todos accept `view` and `tag`, but not `limit`. Only the `done` view accepts a cursor. The `open` and `assigned` views return at most 1,000 items and indicate whether the result was truncated. Preserve and inspect the API's pagination and truncation fields.
+Todos accept `view` and `tag`, but not `limit`. Only the `done` view accepts a nonempty cursor. Omit `cursor` for the first page or for other views; an empty string is treated as omitted and is not sent to the API. For example, `{"view":"open","tag":"","cursor":""}` no longer fails local cursor validation. The `open` and `assigned` views return at most 1,000 items and indicate whether the result was truncated. Preserve and inspect the API's pagination and truncation fields.
 
 Ask returns an answer ID immediately; its answer is written asynchronously, so read it with `get_answer`.
 
