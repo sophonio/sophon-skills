@@ -1,7 +1,7 @@
 # Agent smoke evals (manual)
 
-Fifteen scenarios that exercise the behaviour the static tests cannot: sizing, plan approval,
-consent, sub-agent waves, verification, commits, the git menu and each specialist's core move. The
+Twenty-four scenarios that exercise the behaviour the static tests cannot: sizing, plan approval,
+consent, sub-agent waves, verification, commits, the git menu, specialist work and artifact creation. The
 owner runs them once per release, after a clean build and a green
 `tests/agents/Test-AgentPackages.ps1`, and before uploading anything. They are in
 [`scenarios.md`](scenarios.md), with the card-count check at the end.
@@ -30,6 +30,8 @@ sophon agents install --file dist/agents/lead-developer-2.0.0.sophon-agent --sho
 sophon agents install --file dist/agents/developer-2.0.0.sophon-agent --allow-delegation-from lead-developer --show-files
 # ... the same for researcher, software-architect, code-reviewer, qa-engineer, debugger,
 #     security-reviewer and ui-ux-designer
+# Install artifact-creator separately; it does not delegate and need not be a lead target.
+sophon agents install --file dist/agents/artifact-creator-2.0.0.sophon-agent --show-files
 ```
 
 For each install preview:

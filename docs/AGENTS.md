@@ -1,4 +1,4 @@
-# Development agents: the Buildersoft development family 2.0.0
+# Buildersoft agents 2.0.0
 
 Nine Sophon Marketplace agents that work on a code repository the way Claude Code does:
 
@@ -9,11 +9,15 @@ Nine Sophon Marketplace agents that work on a code repository the way Claude Cod
 
 Only Lead Developer starts sub-agents, and only with your consent.
 
+The tenth package, Artifact Creator, is a standalone productivity agent for grounded documents,
+diagrams and presentations across subjects. It does not need a repository, delegate or build
+interactive applications; its creation tools and permissions depend on the session.
+
 ## 1. What these are
 
 - **Sophon agent packages**, format v1 (`.sophon-agent`), not skills, plugins or Claude Code agents. Each package holds one persona and no executable code: `manifest.json`, `SOUL.md`, `TOOLS.md`, `README.md` and `LICENSE`.
-- **Family 2.x.** All nine ship at **2.0.0** and are rewritten from scratch. The six 1.0.0 personas are replaced.
-- **License:** MIT, © 2026 Buildersoft LLC. **Requires** Sophon 2.2.0 or later.
+- **Family 2.x.** All ten packages are version **2.0.0**. The nine development personas are rewritten from scratch, replacing the six 1.0.0 personas.
+- **License:** the nine development agents use MIT; Artifact Creator uses Apache-2.0. All are authored by Buildersoft LLC and require Sophon 2.2.0 or later.
 - **Built on Sophon's own tools**, not on this repository's integration skills: fs.read, fs.write, code.git, os.execute, plan.propose, todo.write, info.request, agent.delegate and the rest of the coding tools.
 - **Claude Code analogues:**
 
@@ -38,6 +42,7 @@ Only Lead Developer starts sub-agents, and only with your consent.
 | [debugger](../agents/debugger) | investigate / hypothesis / fix | no | no (fix + regression test, when asked) | high | one per reproduction or check run |
 | [security-reviewer](../agents/security-reviewer) | review / verify (exploitability 8/10 or higher) | no | yes | high | 1-2 (the diff, a branch range) |
 | [ui-ux-designer](../agents/ui-ux-designer) | direction / build / critique / copy / judge | no | no (UI files) | default | direction none; build as for developer; browser checks one each |
+| [artifact-creator](../agents/artifact-creator) | grounded reports, explainers, guides, diagrams and presentations | no | no (artifact files) | default | depends on the available creation tools |
 
 The four read-only roles never commit. Software Architect saves only a plan or ADR file, and only after you approve it. The writers (developer, qa-engineer, debugger, ui-ux-designer) use the same sizing, plan and git rules as the lead when you talk to them directly.
 
@@ -67,6 +72,8 @@ sophon agents install ui-ux-designer --allow-delegation-from lead-developer
 
 4. Confirm that **Effective targets** lists every companion you installed.
 5. Keep each agent id equal to its package name. The lead finds companions through the `Family role: <id>.` line in each one's when-to-use text, then by id, then by display name. A `-2` suffix still matches, but avoid it.
+
+Install Artifact Creator separately when needed: `sophon agents install artifact-creator`. It is a standalone productivity agent, not a required lead companion.
 
 A missing companion is not fatal. The lead runs a stand-in (its own rules plus a pasted role checklist), at most 2 per wave, labels the result lower confidence and tells you once which agent to install.
 
@@ -153,7 +160,7 @@ The lead scans your own messages, newest first; the first match wins.
 - The keyword decides consent only. Size still decides the phases: a trivial change stays inline even with ultracode on, and a standing yes still needs plan approval.
 - Without a standing answer, the lead asks once per task (header "Agents") and only when delegation clearly helps. The recommended option comes first, Solo is always offered, and each option states agents, waves, cards and "≈N× Solo tokens".
 - No answer, or a skipped question, means Solo. The answer is written on the plan's `Consent:` line.
-- The other eight agents cannot start sub-agents. Asked for "ultracode", they say that Lead Developer runs multi-agent work, then do the task themselves.
+- The other eight development agents cannot start sub-agents. Asked for "ultracode", they say that Lead Developer runs multi-agent work, then do the task themselves. Artifact Creator also cannot delegate.
 
 **Ultracode-lite phases** (lead, with consent): Understand (2-5 researchers), Design (2-3 architects judged on a written 14-point rubric), Implement (one developer per task, or up to 3 in parallel on disjoint files), Review (3-5 lenses over one diff file), Refute (3 votes per finding; 2 of 3 must confirm), Fix, Re-review until dry (at most 3 rounds) and a Completeness critic.
 
@@ -262,6 +269,12 @@ The agents read the project instructions as trusted conventions, and they sugges
 
 **Sources.** `agents/<id>/` holds only the 5 package files. Each `SOUL.md` is generated: never edit it by hand.
 
+Each agent's `LICENSE` must be byte-identical to its canonical source: the root `LICENSE` for MIT,
+and `build/licenses/Apache-2.0.txt` for Apache-2.0. The roster can override the family license,
+category and required tags per agent; the source checker resolves the canonical license from the
+declared license rather than accepting arbitrary paths. Empty credits require a license sentence;
+nonempty credits retain the canonical attribution and license ordering checks.
+
 ```
 build/agent-src/
   family.psd1                 roster, fragment order, SoulCap, SubAgents, Effort, Credits,
@@ -279,7 +292,7 @@ tests/agents/                 Test-AgentPackages.ps1 (A-K), fixtures/, evals/
 ```
 
 **Budgets** (`Test-AgentSources.ps1` section E fails over any of them and prints a headroom table):
-- Composed SOUL, `SoulCap` in `family.psd1`: lead-developer 43,008 B; developer, qa-engineer, debugger and ui-ux-designer 32,768 B; software-architect, code-reviewer and security-reviewer 22,528 B; researcher 18,432 B.
+- Composed SOUL, `SoulCap` in `family.psd1`: lead-developer 43,008 B; developer, qa-engineer, debugger and ui-ux-designer 32,768 B; software-architect, code-reviewer and security-reviewer 22,528 B; researcher and artifact-creator 18,432 B.
 - Each fragment at most 4,096 B, each TOOLS.md at most 2,048 B, each README at most 12 KiB (the lead's 24 KiB).
 - The design planned 36,864 B and 28,672 B for the lead and the writers on an estimate of about 17.5 KB of shared writer text. The fragments it mandates measure about 25 KB, so those two caps were raised rather than cutting runtime workarounds. Every child pays for its whole SOUL, uncached: keep role text terse and cut before you raise a cap again.
 
@@ -292,7 +305,7 @@ pwsh -NoProfile -File build/Compose-AgentSouls.ps1                # regenerate a
 pwsh -NoProfile -File build/Compose-AgentSouls.ps1 -Check         # exit 0, no drift
 pwsh -NoProfile -File build/Test-AgentSources.ps1                 # lint, preflight, budgets, manifests, TOOLS.md
 pwsh -NoProfile -File build/Build-AgentPackages.ps1 -ValidateOnly # sophon dev validate: 0 errors, 0 warnings
-pwsh -NoProfile -File build/Build-AgentPackages.ps1               # 9 x <id>-2.0.0.sophon-agent + SHA256SUMS
+pwsh -NoProfile -File build/Build-AgentPackages.ps1               # 10 x <id>-2.0.0.sophon-agent + SHA256SUMS
 Get-Content dist/agents/SHA256SUMS
 pwsh -NoProfile -File tests/agents/Test-AgentPackages.ps1         # sections A-K
 pwsh -File build/Build-MarketplacePackages.ps1 -ValidateOnly      # skills unaffected
@@ -316,8 +329,8 @@ git status --porcelain                                            # only intende
 2. Run a clean build and the full test suite above.
 3. Preview each install on a throwaway Gateway or `SOPHON_DATA_DIR`, with the injection-scan mode not off: `sophon agents install --file dist/agents/<id>-2.0.0.sophon-agent --show-files`, check the verdict and that no `expects tool:` line appears, then answer `n`.
 4. Run the smoke scenarios in [`tests/agents/evals/`](../tests/agents/evals/README.md), including the card-count check.
-5. In the Marketplace wizard, upload each of the 9 `.sophon-agent` files from `dist/agents/` one at a time. Never upload a zip of all of them, and never use `Publish-MarketplacePackages.ps1`, which stays skills-only. The preview must show no possible-secret finding to acknowledge and a clean moderator flag list.
-6. Every version starts `pendingReview`. Announce only after all 9 are approved. Optionally tag `agents-v2.0.0`.
+5. In the Marketplace wizard, upload each of the 10 `.sophon-agent` files from `dist/agents/` one at a time. Never upload a zip of all of them, and never use `Publish-MarketplacePackages.ps1`, which stays skills-only. The preview must show no possible-secret finding to acknowledge and a clean moderator flag list.
+6. Every version starts `pendingReview`. Announce only after all 10 are approved. Optionally tag `agents-v2.0.0`.
 7. Withdraw or reject developer's pending 1.0.0 in My packages, so the old persona is never approved.
 
 Prerequisite outside the repo: the `noreply@buildersoft.io` mailbox for the commit trailer.
@@ -326,9 +339,9 @@ Prerequisite outside the repo: the `noreply@buildersoft.io` mailbox for the comm
 
 ## 14. Credits
 
-Workflow patterns adapted, not copied, from obra/superpowers (MIT, © 2025 Jesse Vincent) and Anthropic's Claude Code plugins (feature-dev, pr-review-toolkit, code-review, security-review, frontend-design; Apache-2.0). Every package README carries this line and its license note.
+Workflow patterns adapted, not copied, from obra/superpowers (MIT, © 2025 Jesse Vincent) and Anthropic's Claude Code plugins (feature-dev, pr-review-toolkit, code-review, security-review, frontend-design; Apache-2.0). The development package READMEs carry this line and their license note; Artifact Creator has no upstream workflow credits and carries its own license note.
 
 - The software-architect README also credits backend-design and system-design-skills (both MIT, third party), and the debugger README credits backend-design.
 - The security-reviewer exclusion list follows ideas from anthropics/claude-code-security-review in original wording. Its README will credit that project once its license is confirmed, which is an owner item before publishing.
 
-The packages are licensed under the MIT License; see [`LICENSE`](../LICENSE).
+The development packages are licensed under MIT; see [`LICENSE`](../LICENSE). Artifact Creator is licensed under Apache-2.0; see [`build/licenses/Apache-2.0.txt`](../build/licenses/Apache-2.0.txt).

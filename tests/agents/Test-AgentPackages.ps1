@@ -278,11 +278,120 @@ try {
         }
     }
 
+    # ---- A: optional per-agent metadata schema -------------------------------------------------------------
+    Import-Module (Join-Path $RepoRoot 'build/AgentFamily.psm1') -Force
+    $schemaFamily = Get-AgentFamily -RepoRoot $RepoRoot
+    $schemaAgent = $schemaFamily['Agents'][0]
+    $schemaAgent['License'] = 'Apache-2.0'
+    $schemaAgent['Category'] = 'productivity'
+    $schemaAgent['RequiredTags'] = @('productivity')
+    $schemaErrors = @(Test-AgentFamilyData -RepoRoot $RepoRoot -Family $schemaFamily)
+    $null = Test-Check 'A' ($schemaErrors.Count -eq 0) 'valid per-agent metadata overrides pass the family schema'
+    foreach ($case in @(
+            @{ Key = 'License'; Value = 'GPL-3.0' },
+            @{ Key = 'Category'; Value = 'unknown' },
+            @{ Key = 'RequiredTags'; Value = @() },
+            @{ Key = 'RequiredTags'; Value = @('Bad Tag') },
+            @{ Key = 'RequiredTags'; Value = @("productivity`n") },
+            @{ Key = 'RequiredTags'; Value = @('valid', 'valid') },
+            @{ Key = 'RequiredTags'; Value = 'productivity' },
+            @{ Key = 'LicenseSource'; Value = '../LICENSE' },
+            @{ Key = 'UnknownKey'; Value = 'value' })) {
+        $badFamily = Get-AgentFamily -RepoRoot $RepoRoot
+        $badFamily['Agents'][0][$case.Key] = $case.Value
+        $errors = @(Test-AgentFamilyData -RepoRoot $RepoRoot -Family $badFamily)
+        $null = Test-Check 'A' ($errors.Count -gt 0) "family schema rejects invalid $($case.Key)"
+    }
+
+    # Synthetic canonical bytes exercise resolution independently of the real license text.
+    try {
+        $licenseCase = Join-Path $tempRoot 'case-license-overrides'
+        New-RepoCopy $licenseCase
+        $familyPath = Join-Path $licenseCase 'build/agent-src/family.psd1'
+        $familyText = [IO.File]::ReadAllText($familyPath)
+        $familyText = $familyText.Replace("Id = 'code-reviewer'", "Id = 'code-reviewer'`n      License = 'Apache-2.0'`n      Category = 'productivity'`n      RequiredTags = @('productivity')")
+        Write-Utf8 $familyPath $familyText
+        $manifestPath = Join-Path $licenseCase 'agents/code-reviewer/manifest.json'
+        $manifestText = [IO.File]::ReadAllText($manifestPath).Replace('"license": "MIT"', '"license": "Apache-2.0"').Replace('"category": "development"', '"category": "productivity"').Replace('"development"', '"productivity"')
+        Write-Utf8 $manifestPath $manifestText
+        $readmePath = Join-Path $licenseCase 'agents/code-reviewer/README.md'
+        $readmeText = [IO.File]::ReadAllText($readmePath).Replace('Licensed under the MIT License; see LICENSE.', 'Licensed under the Apache-2.0 License; see LICENSE.')
+        Write-Utf8 $readmePath $readmeText
+        $canonicalPath = Join-Path $licenseCase 'build/licenses/Apache-2.0.txt'
+        New-Item -ItemType Directory -Path (Split-Path $canonicalPath) -Force | Out-Null
+        Write-Utf8 $canonicalPath "synthetic canonical bytes`n"
+        $packageLicense = Join-Path $licenseCase 'agents/code-reviewer/LICENSE'
+        Write-Utf8 $packageLicense "synthetic canonical bytes`n"
+        $sourceArgs = @('-NoProfile', '-NonInteractive', '-File', (Join-Path $licenseCase 'build/Test-AgentSources.ps1'), '-RepoRoot', $licenseCase, '-Agents', 'code-reviewer')
+        $result = Invoke-Native $pwsh $sourceArgs
+        $null = Test-Check 'A' ($result.Code -eq 0) "matching synthetic Apache bytes and README pass source checks$(if ($result.Code -ne 0) { ': ' + (Get-Tail $result.Lines 12) })"
+        Write-Utf8 $packageLicense "wrong bytes`n"
+        $result = Invoke-Native $pwsh $sourceArgs
+        $null = Test-Check 'A' ($result.Code -ne 0 -and $result.Text.Contains('ERROR LAYOUT-LICENSE agents/code-reviewer/LICENSE:', $ord)) 'incorrect Apache package license bytes fail'
+        Write-Utf8 $packageLicense "synthetic canonical bytes`n"
+        Write-Utf8 $readmePath ($readmeText.Replace('Licensed under the Apache-2.0 License; see LICENSE.', 'Licensed under the MIT License; see LICENSE.'))
+        $result = Invoke-Native $pwsh $sourceArgs
+        $null = Test-Check 'I' ($result.Code -ne 0 -and $result.Text.Contains('ERROR CREDITS-SENTENCE agents/code-reviewer/README.md:', $ord)) 'incorrect Apache README license sentence fails'
+    } catch {
+        Add-Fail 'A' "license override cases failed to run: $($_.Exception.Message)"
+    }
+
+    # Empty Credits: only the license sentence is enforced; non-empty Credits stay strict.
+    try {
+        $creditsCase = Join-Path $tempRoot 'case-credits'
+        New-RepoCopy $creditsCase
+        $creditsSourceScript = Join-Path $creditsCase 'build/Test-AgentSources.ps1'
+        $upstreamSentence = 'Workflow patterns adapted, not copied, from obra/superpowers'
+        $apacheSentence = 'Licensed under the Apache-2.0 License; see LICENSE.'
+
+        $creditArgs = @('-NoProfile', '-NonInteractive', '-File', $creditsSourceScript, '-RepoRoot', $creditsCase, '-Agents', 'artifact-creator')
+        $result = Invoke-Native $pwsh $creditArgs
+        $null = Test-Check 'I' ($result.Code -eq 0) "empty Credits with the Apache license sentence passes without an upstream credit sentence$(if ($result.Code -ne 0) { ': ' + (Get-Tail $result.Lines 12) })"
+
+        $acReadme = Join-Path $creditsCase 'agents/artifact-creator/README.md'
+        $acText = [IO.File]::ReadAllText($acReadme)
+        $null = Test-Check 'I' ($acText.Contains($apacheSentence, $ord) -and -not $acText.Contains($upstreamSentence, $ord)) 'artifact-creator README has the Apache sentence and no upstream credit sentence'
+
+        Write-Utf8 $acReadme ($acText.Replace($apacheSentence, 'Licensed under the MIT License; see LICENSE.'))
+        $result = Invoke-Native $pwsh $creditArgs
+        $null = Test-Check 'I' ($result.Code -ne 0 -and $result.Text.Contains('ERROR CREDITS-SENTENCE agents/artifact-creator/README.md:', $ord) -and -not $result.Text.Contains('verbatim credits sentence', $ord)) 'empty Credits with a wrong license sentence fails on the license sentence only'
+
+        Write-Utf8 $acReadme ($acText.Replace($apacheSentence, ''))
+        $result = Invoke-Native $pwsh $creditArgs
+        $null = Test-Check 'I' ($result.Code -ne 0 -and $result.Text.Contains('ERROR CREDITS-SENTENCE agents/artifact-creator/README.md:', $ord)) 'empty Credits with no license sentence fails'
+
+        Write-Utf8 $acReadme $acText
+        $crReadme = Join-Path $creditsCase 'agents/code-reviewer/README.md'
+        $crText = [IO.File]::ReadAllText($crReadme)
+        $crStart = $crText.IndexOf($upstreamSentence, $ord)
+        $null = Test-Check 'I' ($crStart -ge 0) 'code-reviewer README carries the upstream credit sentence before the strictness probe'
+        if ($crStart -ge 0) {
+            $crEnd = $crText.IndexOf("`n", $crStart, $ord)
+            Write-Utf8 $crReadme ($crText.Remove($crStart, $crEnd - $crStart))
+            $result = Invoke-Native $pwsh @('-NoProfile', '-NonInteractive', '-File', $creditsSourceScript, '-RepoRoot', $creditsCase, '-Agents', 'code-reviewer')
+            $null = Test-Check 'I' ($result.Code -ne 0 -and $result.Text.Contains('ERROR CREDITS-SENTENCE agents/code-reviewer/README.md:', $ord)) 'non-empty Credits still require the upstream credit sentence'
+        }
+    } catch {
+        Add-Fail 'I' "credits regression cases failed to run: $($_.Exception.Message)"
+    }
     # ---- C D F G: lint, scan, manifest and TOOLS.md fixture suites ------------------------------------------
     Write-Host 'Running the lint, scan, manifest and toolsmd fixture suites ...'
     $suiteSection = @{ lint = 'C'; scan = 'D'; manifest = 'F'; toolsmd = 'G' }
     try {
         Import-Module (Join-Path $RepoRoot 'build/AgentLint.psm1') -Force
+        $metadataFamily = Get-AgentLintTestFamily
+        $metadataAgent = @($metadataFamily.Agents | Where-Object { $_.Id -eq 'lead-developer' })[0]
+        $metadataAgent.License = 'Apache-2.0'
+        $metadataAgent.Category = 'productivity'
+        $metadataAgent.RequiredTags = @('productivity')
+        $fixture = Import-PowerShellDataFile -LiteralPath (Join-Path $RepoRoot 'tests/agents/fixtures/manifest/cases.psd1')
+        $raw = $fixture.Base.Replace('"license": "MIT"', '"license": "Apache-2.0"').Replace('"category": "development"', '"category": "productivity"').Replace('"development"', '"productivity"')
+        $tools = Read-ToolsMd -Text $fixture.BaseTools
+        $issues = @(Test-AgentManifest -Raw $raw -Id 'lead-developer' -Family $metadataFamily -ToolsMd $tools)
+        $null = Test-Check 'F' ($issues.Count -eq 0) 'Apache productivity manifest accepts matching overrides'
+        $wrong = $raw.Replace('"Apache-2.0"', '"MIT"').Replace('"productivity"', '"development"')
+        $issues = @(Test-AgentManifest -Raw $wrong -Id 'lead-developer' -Family $metadataFamily -ToolsMd $tools)
+        $null = Test-Check 'F' (@($issues | Where-Object Rule -eq 'MAN-META').Count -ge 2 -and @($issues | Where-Object Rule -eq 'MAN-TAGS').Count -gt 0) 'override manifest rejects incorrect license, category and required tags'
         $fixtureFailures = @(Invoke-AgentLintFixtures -RepoRoot $RepoRoot)
         foreach ($suite in 'lint', 'scan', 'manifest', 'toolsmd') {
             $section = $suiteSection[$suite]

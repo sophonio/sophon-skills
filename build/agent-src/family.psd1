@@ -32,6 +32,19 @@
   }
   Agents = @(
     @{
+      Id = 'artifact-creator'
+      DisplayName = 'Artifact Creator'
+      SoulCap = 18432
+      Writer = $false
+      License = 'Apache-2.0'
+      Category = 'productivity'
+      RequiredTags = @('productivity')
+      SubAgents = @{ enabled = $false; maxDepth = 0 }
+      Effort = 'default'
+      Fragments = @('13-data-hygiene')
+      Credits = @()
+    }
+    @{
       Id = 'code-reviewer'
       DisplayName = 'Code Reviewer'
       SoulCap = 22528

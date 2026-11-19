@@ -105,6 +105,10 @@ agent.list finds companions; web.scrape reads docs; session.history restores con
            Replace = @(, @('Runs a code change end to end in a bound repository', '{REPEAT:Runs a change :50}')) }
         @{ Name = 'wrong author'; Expect = 'fail'; Rule = 'MAN-META'
            Replace = @(, @('"author": "Buildersoft LLC"', '"author": "Someone Else"')) }
+        @{ Name = 'default wrong license'; Expect = 'fail'; Rule = 'MAN-META'
+           Replace = @(, @('"license": "MIT"', '"license": "Apache-2.0"')) }
+        @{ Name = 'default wrong category'; Expect = 'fail'; Rule = 'MAN-META'
+           Replace = @(, @('"category": "development"', '"category": "productivity"')) }
         @{ Name = 'tags without development'; Expect = 'fail'; Rule = 'MAN-TAGS'
            Replace = @(, @('    "development",{U+000A}', '')) }
         @{ Name = 'tag not kebab-case'; Expect = 'fail'; Rule = 'MAN-TAGS'

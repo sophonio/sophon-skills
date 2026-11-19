@@ -151,10 +151,25 @@ if ($requested.Count -eq 0) {
     }
 }
 
-$rootLicensePath = Join-Path $RepoRoot 'LICENSE'
-$rootLicense = $null
-if (Test-Path -LiteralPath $rootLicensePath -PathType Leaf) { $rootLicense = [IO.File]::ReadAllBytes($rootLicensePath) }
-if ($null -eq $rootLicense) { Add-SourceError 'LAYOUT-LICENSE' 'LICENSE' 0 'the repository root LICENSE is missing' }
+$licenseSources = @{}
+$agentLicenseSources = @{}
+foreach ($id in $selected) {
+    $license = [string](Get-AgentField $agentById[$id] 'License' (Get-AgentField $family 'License' 'MIT'))
+    try { $source = AgentFamily\Resolve-AgentLicenseSource -License $license }
+    catch {
+        Add-SourceError 'LAYOUT-LICENSE' 'build/agent-src/family.psd1' 0 "agent '$id' has unsupported license '$license'"
+        continue
+    }
+    $agentLicenseSources[$id] = $source
+    if (-not $licenseSources.ContainsKey($source)) {
+        $path = Join-Path $RepoRoot $source
+        if (Test-Path -LiteralPath $path -PathType Leaf) { $licenseSources[$source] = [IO.File]::ReadAllBytes($path) }
+        else {
+            $licenseSources[$source] = $null
+            Add-SourceError 'LAYOUT-LICENSE' $source 0 'canonical license source is missing'
+        }
+    }
+}
 
 # texts[id][file] = decoded text (only files that decoded as strict UTF-8); bytes[id][file] = raw bytes.
 $texts = @{}
@@ -206,10 +221,12 @@ foreach ($id in $selected) {
     }
     if ($total -gt 524288) { Add-SourceError 'LAYOUT-SIZE' "agents/$id" 0 "package is $total bytes; at most 524,288" }
 
-    if ($null -ne $rootLicense -and $bytes[$id].ContainsKey('LICENSE')) {
+    $source = $agentLicenseSources[$id]
+    $canonical = if ($null -ne $source) { $licenseSources[$source] } else { $null }
+    if ($null -ne $canonical -and $bytes[$id].ContainsKey('LICENSE')) {
         $mine = $bytes[$id]['LICENSE']
-        if ($mine.Length -ne $rootLicense.Length -or -not [System.Linq.Enumerable]::SequenceEqual([byte[]]$mine, [byte[]]$rootLicense)) {
-            Add-SourceError 'LAYOUT-LICENSE' "agents/$id/LICENSE" 0 'must be a byte-identical copy of the repository root LICENSE'
+        if ($mine.Length -ne $canonical.Length -or -not [System.Linq.Enumerable]::SequenceEqual([byte[]]$mine, [byte[]]$canonical)) {
+            Add-SourceError 'LAYOUT-LICENSE' "agents/$id/LICENSE" 0 "must be a byte-identical copy of $source"
         }
     }
 }
@@ -464,22 +481,29 @@ Enter-Section 'I' 'Credits'
 
 $creditSentence = 'Workflow patterns adapted, not copied, from obra/superpowers (MIT, ' + [char]0xA9 + ' 2025 Jesse Vincent) and ' +
     'Anthropic''s Claude Code plugins (feature-dev, pr-review-toolkit, code-review, security-review, frontend-design; Apache-2.0).'
-$licenseSentence = 'Licensed under the MIT License; see LICENSE.'
 $credits = Get-AgentField $family 'Credits' @{}
 foreach ($id in $selected) {
+    $license = [string](Get-AgentField $agentById[$id] 'License' (Get-AgentField $family 'License' 'MIT'))
+    $licenseSentence = "Licensed under the $license License; see LICENSE."
     $readme = $texts[$id]['README.md']
     if ($null -eq $readme) { continue }
     $rel = "agents/$id/README.md"
-    foreach ($key in @(Get-AgentField $agentById[$id] 'Credits' @())) {
+    $agentCredits = @(Get-AgentField $agentById[$id] 'Credits' @())
+    foreach ($key in $agentCredits) {
         $credit = Get-AgentField $credits ([string]$key)
         if ($null -eq $credit) { Add-SourceError 'CREDITS-KEY' 'build/agent-src/family.psd1' 1 "agent '$id' lists credit '$key', which Credits does not define"; continue }
         if (-not $readme.Contains([string]$credit, $ord)) { Add-SourceError 'CREDITS-MISSING' $rel 0 "missing the credit '$credit'" }
     }
-    $sentenceAt = $readme.IndexOf($creditSentence, $ord)
-    if ($sentenceAt -lt 0) { Add-SourceError 'CREDITS-SENTENCE' $rel 0 "missing the verbatim credits sentence '$creditSentence'" }
+    if ($agentCredits.Count -eq 0) {
+        if ($readme.IndexOf($licenseSentence, $ord) -lt 0) { Add-SourceError 'CREDITS-SENTENCE' $rel 0 "missing the license sentence '$licenseSentence'" }
+    }
     else {
-        $licenseAt = $readme.IndexOf($licenseSentence, $sentenceAt, $ord)
-        if ($licenseAt -lt 0) { Add-SourceError 'CREDITS-SENTENCE' $rel (Get-LineAt $readme $sentenceAt) "the credits sentence must be followed by '$licenseSentence'" }
+        $sentenceAt = $readme.IndexOf($creditSentence, $ord)
+        if ($sentenceAt -lt 0) { Add-SourceError 'CREDITS-SENTENCE' $rel 0 "missing the verbatim credits sentence '$creditSentence'" }
+        else {
+            $licenseAt = $readme.IndexOf($licenseSentence, $sentenceAt, $ord)
+            if ($licenseAt -lt 0) { Add-SourceError 'CREDITS-SENTENCE' $rel (Get-LineAt $readme $sentenceAt) "the credits sentence must be followed by '$licenseSentence'" }
+        }
     }
 }
 
