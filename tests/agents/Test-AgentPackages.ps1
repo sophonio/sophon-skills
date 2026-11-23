@@ -31,7 +31,8 @@
            AllowRestrictedMentions, and the development
            family still failing LINT-SKILL and MAN-REQUIRES as before. Needs no Sophon CLI.
       M    the Method registry: tests/agents/fixtures/method/cases.psd1 (Invoke-AgentMethodFixtures) for METHOD-CONTROLLER,
-           METHOD-EXCUSES and METHOD-REFERENCE, then a temporary copy whose development family gains a Method key.
+           METHOD-EXCUSES and METHOD-REFERENCE, then a temporary copy whose development family gains a Method key;
+           in-memory anchor cases (ANCHOR-MISSING, ANCHOR-GONE, data errors); a smoke run of Compare-AgentSouls.ps1.
       N    documents: DOC-COUNT from the repository pass of Test-AgentSources, plus a temporary copy with planted counts:
            number words and digits, qualifiers, a History phrase, and -Release turning the warning into an error.
 
@@ -792,6 +793,17 @@ try {
         $null = Test-Check 'M' (@($bad['Errors']).Count -eq 3) "an unknown agent id, a bad File and an anchor also under Removed are data errors ($(@($bad['Errors']).Count) error(s))"
     } catch {
         Add-Fail 'M' "the anchor cases failed to run: $($_.Exception.Message) (line $($_.InvocationInfo.ScriptLineNumber))"
+    }
+
+    # ---- M: lost-lines report (smoke) ---------------------------------------------------------------------
+    $compareScript = Join-Path $RepoRoot 'tests/agents/Compare-AgentSouls.ps1'
+    $gitTool = Get-Command 'git' -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($null -eq $gitTool -or -not (Test-Path -LiteralPath (Join-Path $RepoRoot '.git'))) {
+        Add-Note 'M' 'Compare-AgentSouls.ps1 smoke skipped: no git repository'
+    } else {
+        $compare = Invoke-Native $pwsh @('-NoProfile', '-NonInteractive', '-File', $compareScript, '-RepoRoot', $RepoRoot, '-Base', 'HEAD', '-Summary')
+        $badBase = Invoke-Native $pwsh @('-NoProfile', '-NonInteractive', '-File', $compareScript, '-RepoRoot', $RepoRoot, '-Base', 'no-such-ref-for-the-test', '-Summary')
+        $null = Test-Check 'M' ($compare.Code -eq 0 -and $compare.Text.Contains('lost line(s) in', $ord) -and $badBase.Code -eq 1) "Compare-AgentSouls.ps1 reports against HEAD (exit $($compare.Code)) and fails on an unknown base (exit $($badBase.Code))"
     }
 
     # ---- N: document counts -------------------------------------------------------------------------------
