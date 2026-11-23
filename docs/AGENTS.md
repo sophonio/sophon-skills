@@ -312,7 +312,7 @@ build/agent-src/
 build/licenses/Apache-2.0.txt the LICENSE the Apache-2.0 agents ship
 build/AgentFamily.psm1        registry, roster and composer
 build/AgentLint.psm1          tool-name lint, scanner preflight, TOOLS.md parser, manifest checks
-build/Compose-AgentSouls.ps1  [-RepoRoot] [-Agents] [-Check] [-OutDir] [-Explain] [-Family]
+build/Compose-AgentSouls.ps1  [-RepoRoot] [-Agents] [-Check] [-OutDir] [-Explain] [-Family] [-Omit]
 build/Test-AgentSources.ps1   sections A-I and M per family, no Sophon CLI needed (CI runs it) [-Agents] [-Family] [-Release]
 build/Build-AgentPackages.ps1 [-RepoRoot] [-OutputDir] [-Agents] [-ValidateOnly] [-Family] [-Release]
 tests/agents/                 Test-AgentPackages.ps1 (A-M), fixtures/, evals/
@@ -323,6 +323,7 @@ tests/agents/                 Test-AgentPackages.ps1 (A-M), fixtures/, evals/
 - Headroom: under 8% of the cap free prints `WARN BUDGET-HEADROOM`; under 5% free is an error only with `-Release` (alias `-StrictHeadroom`, on `Test-AgentSources.ps1` and `Build-AgentPackages.ps1`). Warnings never change the exit code. An optional per-agent `RoleCap` caps the role text (the template without include and comment lines; `BUDGET-ROLE`). The table also shows the change against `build/agent-src/catalog/soul-baseline.psd1` (the 2.1.0 sizes).
 - Each fragment at most 4,096 B, each TOOLS.md at most 2,048 B, each README at most 12 KiB (the lead's 24 KiB).
 - **Method registry** (section M of `Test-AgentSources.ps1`, each check only when its data exists): the optional family key `Method` lists the tested rules (a whole fragment, or a block from an `Anchor` line to the end of its `| Excuse | Reality |` table) and the controller/worker split. `METHOD-CONTROLLER` keeps controller fragments and terms out of agents that do not delegate and requires the worker fragments; `METHOD-EXCUSES` requires exactly one canonical excuse table (3-6 rows) per rule and none outside a rule; `METHOD-REFERENCE` keeps a skill's tools inside the reference fragment its `SkillPolicy` entry names. The development family does not set `Method` yet; the fixtures are `tests/agents/fixtures/method/cases.psd1`.
+- **Control arms.** `Compose-AgentSouls.ps1 -Agents <id> -Omit <rule or fragment id> -OutDir <folder>` composes an agent without a registered rule (or a fragment) for a pressure scenario. It is refused without `-OutDir`, with `-Check`, for an `-OutDir` inside `agents/`, and for an agent that does not carry the id; it prints the source, line range, lines and bytes it removed.
 - Every child pays for its whole SOUL, uncached: keep role text terse and cut before you raise a cap again.
 
 **Verification sequence** (from the repository root; needs PowerShell 7 and Sophon CLI 2.2.x):

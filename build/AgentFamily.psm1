@@ -1180,9 +1180,22 @@ function Expand-AgentSource {
     param([hashtable]$State, [string]$RelativePath, [string[]]$Stack = @())
     $source = Get-AgentCachedSource -State $State -RelativePath $RelativePath
     foreach ($e in $source['Errors']) { $State['Errors'].Add($e) }
+    # -Omit (control arms): the lines of a block rule in this source, and the include lines of omitted fragments.
+    $dropLines = $null
+    $dropRecord = $null
+    if ($State.ContainsKey('OmitLines') -and $State['OmitLines'].ContainsKey($RelativePath)) {
+        $dropLines = $State['OmitLines'][$RelativePath]['Lines']
+        $dropRecord = $State['OmitLines'][$RelativePath]['Record']
+    }
     foreach ($entry in $source['Lines']) {
         $text = [string]$entry['Text']
         $lineNo = [int]$entry['Line']
+        if ($null -ne $dropLines -and $dropLines.Contains($lineNo)) {
+            $dropRecord['Hit'] = $true
+            $dropRecord['Lines']++
+            $dropRecord['Bytes'] += $script:LenientUtf8.GetByteCount((Expand-AgentValues -State $State -Text $text -Path $RelativePath -Line $lineNo)) + 1
+            continue
+        }
         $include = $script:IncludeRegex.Match($text)
         if (-not $include.Success) {
             $State['Lines'].Add((Expand-AgentValues -State $State -Text $text -Path $RelativePath -Line $lineNo))
@@ -1196,10 +1209,32 @@ function Expand-AgentSource {
             continue
         }
         $fragmentId = $refMatch.Groups['id'].Value
+        $fragmentRel = "$($script:FragmentsRelDir)/$fragmentId.md"
+        if ($State.ContainsKey('OmitFragments') -and $State['OmitFragments'].ContainsKey($fragmentId) -and $State['Cache']['FragmentIds'].Contains($fragmentId)) {
+            # Measure what the include would have added, in a scratch state, then drop the include line.
+            $record = $State['OmitFragments'][$fragmentId]
+            $scratch = @{
+                Root = $State['Root']; Id = $State['Id']; Cache = $State['Cache']; ValueMap = $State['ValueMap']
+                Errors = [System.Collections.Generic.List[object]]::new()
+                Lines = [System.Collections.Generic.List[string]]::new()
+                Map = [System.Collections.Generic.List[object]]::new()
+                Included = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+                IncludedOrder = [System.Collections.Generic.List[string]]::new()
+                TopLevel = [System.Collections.Generic.List[object]]::new()
+            }
+            Expand-AgentSource -State $scratch -RelativePath $fragmentRel -Stack ([string[]](@($Stack) + $fragmentId))
+            $record['Hit'] = $true
+            $record['From'] = $lineNo
+            $record['To'] = $lineNo
+            $record['Include'] = $RelativePath
+            $record['Covers'] = [string[]](@($fragmentId) + @($scratch['IncludedOrder']))
+            $record['Lines'] += $scratch['Lines'].Count
+            foreach ($l in $scratch['Lines']) { $record['Bytes'] += $script:LenientUtf8.GetByteCount($l) + 1 }
+            continue
+        }
         if ($Stack.Count -eq 0) {
             $State['TopLevel'].Add(@{ Id = $fragmentId; Line = $lineNo })
         }
-        $fragmentRel = "$($script:FragmentsRelDir)/$fragmentId.md"
         if (-not $State['Cache']['FragmentIds'].Contains($fragmentId)) {
             $State['Errors'].Add((New-AgentComposeError $RelativePath $lineNo "unknown fragment $fragmentId (no file $fragmentRel)"))
             continue
@@ -1215,6 +1250,68 @@ function Expand-AgentSource {
         }
         $State['IncludedOrder'].Add($fragmentId)
         Expand-AgentSource -State $State -RelativePath $fragmentRel -Stack ([string[]](@($Stack) + $fragmentId))
+    }
+}
+
+function Initialize-AgentOmit {
+    # Resolves -Omit ids for one composition (control arms). A fragment id (two digits first) or a whole-fragment
+    # Method rule drops that include line; a block rule drops its lines from its source, and when a blank line
+    # stands on both sides of the block, the one after it goes too. Sets State.OmitFragments and State.OmitLines
+    # and returns one record per id: @{ Id; Rule; Source; From; To; Lines; Bytes; Hit }.
+    param([hashtable]$State, [hashtable]$Family, [string[]]$Omit)
+    $ids = [System.Collections.Generic.List[string]]::new()
+    foreach ($entry in @(Get-AgentItems $Omit)) {
+        foreach ($part in ([string]$entry).Split(',')) { $name = $part.Trim(); if ($name -and -not $ids.Contains($name)) { $ids.Add($name) } }
+    }
+    if ($ids.Count -eq 0) { return }
+    $State['OmitFragments'] = @{}
+    $State['OmitLines'] = @{}
+    $method = $Family['Method']
+    $rules = @(if ($method -is [hashtable]) { @(Get-AgentItems $method['Rules']) | Where-Object { $_ -is [hashtable] } })
+    $methodLine = Get-AgentFamilyLine -RepoRoot $State['Root'] -Key 'Method'
+    foreach ($id in $ids) {
+        $record = @{ Id = $id; Rule = ''; Source = ''; From = 0; To = 0; Lines = 0; Bytes = 0; Hit = $false; Include = ''; Covers = [string[]]@() }
+        if ($script:FragmentIdRegex.IsMatch($id)) {
+            $record['Source'] = "$($script:FragmentsRelDir)/$id.md"
+            $State['OmitFragments'][$id] = $record
+            $record
+            continue
+        }
+        $rule = @($rules | Where-Object { Test-AgentSame $_['Id'] $id }) | Select-Object -First 1
+        if ($null -eq $rule) {
+            $State['Errors'].Add((New-AgentComposeError $script:FamilyRelPath $methodLine "-Omit $($id): not a fragment id (NN-name) and not a Method rule id of this family"))
+            continue
+        }
+        $record['Rule'] = $id
+        $path = Get-AgentMethodRuleSource -Rule $rule -SoulsDir $script:SoulsRelDir -FragmentsDir $script:FragmentsRelDir
+        $record['Source'] = $path
+        if (-not $rule.ContainsKey('Anchor')) {
+            $State['OmitFragments'][[string]$rule['Fragment']] = $record
+            $record
+            continue
+        }
+        $source = Get-AgentCachedSource -State $State -RelativePath $path
+        $lines = @($source['Lines'])
+        $span = @(Get-AgentMethodSpans -Method @{ Rules = @($rule) } -SourceLines @{ $path = $lines }) | Select-Object -First 1
+        if ($null -eq $span -or @($span['Errors']).Count -gt 0 -or $span['Start'] -le 0) {
+            foreach ($e in @($span['Errors'])) { $State['Errors'].Add($e) }
+            if ($null -eq $span -or @($span['Errors']).Count -eq 0) { $State['Errors'].Add((New-AgentComposeError $path 0 "-Omit $($id): the rule's block was not found")) }
+            continue
+        }
+        $drop = [System.Collections.Generic.HashSet[int]]::new()
+        $first = -1
+        $last = -1
+        for ($i = 0; $i -lt $lines.Count; $i++) {
+            $n = [int]$lines[$i]['Line']
+            if ($n -ge $span['Start'] -and $n -le $span['End']) { [void]$drop.Add($n); if ($first -lt 0) { $first = $i }; $last = $i }
+        }
+        if ($first -gt 0 -and $last + 1 -lt $lines.Count -and $lines[$first - 1]['Text'].Length -eq 0 -and $lines[$last + 1]['Text'].Length -eq 0) {
+            [void]$drop.Add([int]$lines[$last + 1]['Line'])
+        }
+        $record['From'] = $span['Start']
+        $record['To'] = $span['End']
+        $State['OmitLines'][$path] = @{ Lines = $drop; Record = $record }
+        $record
     }
 }
 
@@ -1341,7 +1438,8 @@ function Invoke-AgentCompose {
         [Parameter(Mandatory)][string]$RepoRoot,
         [Parameter(Mandatory)][string]$Id,
         [hashtable]$Family,
-        [hashtable]$Cache
+        [hashtable]$Cache,
+        [string[]]$Omit = @()
     )
     $root = Resolve-AgentFullPath -Path $RepoRoot
     if ($null -eq $Family) { $Family = Get-AgentFamily -RepoRoot $root }
@@ -1366,6 +1464,7 @@ function Invoke-AgentCompose {
         IncludedOrder = [System.Collections.Generic.List[string]]::new()
         TopLevel = [System.Collections.Generic.List[object]]::new()
     }
+    $omitRecords = @(Initialize-AgentOmit -State $state -Family $Family -Omit $Omit)
 
     $templateRel = "$($script:SoulsRelDir)/$Id.md"
     $displayName = ''
@@ -1377,7 +1476,7 @@ function Invoke-AgentCompose {
     else {
         if ($agent['DisplayName'] -is [string]) { $displayName = [string]$agent['DisplayName'] }
         if ($agent['SoulCap'] -is [int]) { $soulCap = [int]$agent['SoulCap'] }
-        $listed = [string[]]@(foreach ($f in @(Get-AgentItems $agent['Fragments'])) { [string]$f })
+        $listed = [string[]]@(foreach ($f in @(Get-AgentItems $agent['Fragments'])) { if (-not ($state.ContainsKey('OmitFragments') -and $state['OmitFragments'].ContainsKey([string]$f))) { [string]$f } })
         if (-not $Cache['TemplateIds'].Contains($Id)) {
             $line = Get-AgentFamilyLine -RepoRoot $root -AgentId $Id
             $state['Errors'].Add((New-AgentComposeError $script:FamilyRelPath $line "missing template $templateRel for agent $Id"))
@@ -1387,6 +1486,11 @@ function Invoke-AgentCompose {
             $templateLineCount = [int]$Cache['Sources'][$templateRel]['LineCount']
             Test-AgentIncludeOrder -State $state -TemplateRel $templateRel -Listed $listed -TemplateLineCount $templateLineCount
             Test-AgentComposedOutput -State $state -TemplateRel $templateRel -DisplayName $displayName -TemplateLineCount $templateLineCount
+            foreach ($record in $omitRecords) {
+                if (-not $record['Hit']) {
+                    $state['Errors'].Add((New-AgentComposeError $script:FamilyRelPath (Get-AgentFamilyLine -RepoRoot $root -AgentId $Id) "-Omit $($record['Id']): agent $Id does not carry it ($($record['Source'])); a control arm equal to the treatment proves nothing"))
+                }
+            }
         }
     }
 
@@ -1413,6 +1517,7 @@ function Invoke-AgentCompose {
         Errors = $state['Errors'].ToArray()
         Fragments = $topIds
         Included = $state['IncludedOrder'].ToArray()
+        Omitted = [object[]]@($omitRecords | Where-Object { $_['Hit'] })
     }
 }
 
@@ -1433,7 +1538,8 @@ function Invoke-AgentFamilyCompose {
     param(
         [Parameter(Mandatory)][string]$RepoRoot,
         [string[]]$Agents = @(),
-        [hashtable]$Family
+        [hashtable]$Family,
+        [string[]]$Omit = @()
     )
     $root = Resolve-AgentFullPath -Path $RepoRoot
     if ($null -eq $Family) { $Family = Get-AgentFamily -RepoRoot $root }
@@ -1479,7 +1585,7 @@ function Invoke-AgentFamilyCompose {
 
     $results = [System.Collections.Generic.List[object]]::new()
     foreach ($agentId in $selected) {
-        $results.Add((Invoke-AgentCompose -RepoRoot $root -Id $agentId -Family $Family -Cache $cache))
+        $results.Add((Invoke-AgentCompose -RepoRoot $root -Id $agentId -Family $Family -Cache $cache -Omit $Omit))
     }
 
     $fullRoster = ($roster.Count -gt 0 -and $selected.Count -eq $roster.Count)
@@ -1487,6 +1593,8 @@ function Invoke-AgentFamilyCompose {
         $used = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
         foreach ($result in $results) {
             foreach ($fragmentId in $result['Included']) { [void]$used.Add($fragmentId) }
+            # A fragment left out by -Omit still counts as used.
+            foreach ($record in @($result['Omitted'])) { foreach ($fragmentId in @($record['Covers'])) { [void]$used.Add([string]$fragmentId) } }
         }
         $fragmentIds = [string[]]@($cache['FragmentIds'])
         [Array]::Sort($fragmentIds, [StringComparer]::Ordinal)

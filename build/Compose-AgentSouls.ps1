@@ -30,6 +30,12 @@
     (a missing file is drift too), then exit 1 if any drifted.
 .PARAMETER OutDir
     Write (or, with -Check, compare against) <OutDir>/<id>/SOUL.md instead of agents/<id>/SOUL.md.
+.PARAMETER Omit
+    Control arms for the instruction tests: compose without these ids (comma-separated values are accepted).
+    A fragment id (NN-name) or a whole-fragment Method rule drops that include line; a block rule (Anchor)
+    drops its lines, and one of two blank lines around it. Valid only with -OutDir and never with -Check,
+    so an ablated SOUL cannot reach agents/. Every selected agent must carry every id. The script prints
+    what it removed: the id, the source and line range, the lines and the bytes.
 .PARAMETER Explain
     Also print each agent's fragment list, the source of every output line, and which agents
     include each fragment.
@@ -41,6 +47,8 @@
     pwsh -NoProfile -File build/Compose-AgentSouls.ps1 -Family development -Check
 .EXAMPLE
     pwsh -NoProfile -File build/Compose-AgentSouls.ps1 -Agents developer -OutDir $env:TEMP/souls -Explain
+.EXAMPLE
+    pwsh -NoProfile -File build/Compose-AgentSouls.ps1 -Agents developer -Omit test-first -OutDir $env:TEMP/ctl
 #>
 [CmdletBinding()]
 param(
@@ -49,7 +57,8 @@ param(
     [switch]$Check,
     [string]$OutDir = '',
     [switch]$Explain,
-    [string[]]$Family = @()
+    [string[]]$Family = @(),
+    [string[]]$Omit = @()
 )
 
 Set-StrictMode -Version Latest
@@ -64,6 +73,11 @@ try {
         exit 1
     }
     $root = Resolve-AgentFullPath -Path $RepoRoot
+    $omitIds = [string[]]@(foreach ($entry in $Omit) { foreach ($part in ([string]$entry).Split(',')) { if ($part.Trim()) { $part.Trim() } } })
+    if ($omitIds.Length -gt 0 -and (-not $OutDir -or $Check)) {
+        Write-Output "ERROR build/Compose-AgentSouls.ps1:0: -Omit is valid only with -OutDir and never with -Check (an ablated SOUL must not reach agents/)"
+        exit 1
+    }
 
     # Families: every registered family, or the -Family selection (the legacy single family without a registry).
     $registry = Get-AgentFamilyRegistry -RepoRoot $root
@@ -139,7 +153,7 @@ try {
         if ($multi) {
             $familyAgents = if ($agentsByFamily.ContainsKey([string]$entry['Id'])) { [string[]]$agentsByFamily[[string]$entry['Id']].ToArray() } else { [string[]]@() }
         }
-        $run = Invoke-AgentFamilyCompose -RepoRoot $root -Agents $familyAgents -Family $familyData
+        $run = Invoke-AgentFamilyCompose -RepoRoot $root -Agents $familyAgents -Family $familyData -Omit $omitIds
         foreach ($item in @($run['AllErrors'])) {
             Format-AgentComposeError -Item $item
             $allErrors.Add($item)
@@ -149,8 +163,24 @@ try {
 
     $outRoot = ''
     if ($OutDir) { $outRoot = Resolve-AgentFullPath -Path $OutDir }
+    if ($omitIds.Length -gt 0) {
+        $agentsRoot = [IO.Path]::Combine($root, 'agents')
+        $relOut = [IO.Path]::GetRelativePath($agentsRoot, $outRoot)
+        if ($relOut -eq '.' -or -not ($relOut.StartsWith('..') -or [IO.Path]::IsPathRooted($relOut))) {
+            Write-Output "ERROR build/Compose-AgentSouls.ps1:0: -Omit writes to -OutDir, which must be outside agents/ (got $outRoot)"
+            exit 1
+        }
+    }
     $results = @(foreach ($r in $runs) { @($r['Run']['Results']) })
     $clean = @($results | Where-Object { @($_['Errors']).Count -eq 0 })
+
+    foreach ($result in $clean) {
+        foreach ($record in @($result['Omitted'])) {
+            $what = if ($record['Rule']) { "rule $($record['Rule'])" } else { "fragment $($record['Id'])" }
+            $where = if ($record['Include']) { "include line $($record['Include']):$($record['From'])" } else { "$($record['Source']):$($record['From'])-$($record['To'])" }
+            Write-Output "omit $($result['Id']): $what from $($record['Source']) ($where), $($record['Lines']) line(s), $($record['Bytes']) byte(s)"
+        }
+    }
 
     # Phase 2: compare or write.
     $drift = 0

@@ -8,8 +8,10 @@
     Sections (docs/plans/2026-11-15-agents-v2-design.md section 7.5):
       A-I  build/Test-AgentSources.ps1 on the real tree (every family): layout, composer -Check, tool-name lint,
            preflight, budgets (with the headroom table), manifests, TOOLS.md, attribution, credits.
-      B    plus every tests/agents/fixtures/compose/<case> through Compose-AgentSouls.ps1 -RepoRoot <case> -Check,
-           compared with its EXPECT file, and two -OutDir builds of the real tree that must be byte-identical.
+      B    plus every tests/agents/fixtures/compose/<case> through Compose-AgentSouls.ps1 -RepoRoot <case> -Check (or the
+           arguments in its ARGS file, one per line, {OUT} a fresh folder), compared with its EXPECT file (OK, 'OK: <text>'
+           for exit 0 with that text, else the text of an exit 1), and two -OutDir builds of the real tree that must be
+           byte-identical.
       C D F G plus the lint, scan, manifest and toolsmd fixture suites (Invoke-AgentLintFixtures in AgentLint.psm1).
       D    plus a temporary copy with one fragment given a second heading and one stripped of its heading,
            which Test-AgentSources must fail with FRAGMENT-HEADING.
@@ -261,10 +263,20 @@ try {
             $expectPath = Join-Path $case.FullName 'EXPECT'
             if (-not (Test-Path -LiteralPath $expectPath -PathType Leaf)) { Add-Fail 'B' "compose fixture $($case.Name): no EXPECT file"; continue }
             $expect = ([IO.File]::ReadAllText($expectPath, $utf8Strict)).TrimEnd("`n")
-            $result = Invoke-Native $pwsh @('-NoProfile', '-NonInteractive', '-File', $composer, '-RepoRoot', $case.FullName, '-Check')
+            # ARGS (optional): the composer arguments, one per line, instead of -Check; {OUT} is a fresh folder.
+            $composeArgs = @('-Check')
+            $argsPath = Join-Path $case.FullName 'ARGS'
+            if (Test-Path -LiteralPath $argsPath -PathType Leaf) {
+                $caseOut = Join-Path $tempRoot "compose-case-$($case.Name)"
+                $composeArgs = @(([IO.File]::ReadAllText($argsPath, $utf8Strict)).TrimEnd("`n").Split("`n") | Where-Object { $_ } | ForEach-Object { $_.Replace('{OUT}', $caseOut) })
+            }
+            $result = Invoke-Native $pwsh (@('-NoProfile', '-NonInteractive', '-File', $composer, '-RepoRoot', $case.FullName) + $composeArgs)
             if ([string]::Equals($expect, 'OK', $ord)) {
                 $good = $result.Code -eq 0
                 $want = 'exit 0'
+            } elseif ($expect.StartsWith('OK: ', $ord)) {
+                $good = $result.Code -eq 0 -and $result.Text.Contains($expect.Substring(4), $ord)
+                $want = "exit 0 with '$($expect.Substring(4))'"
             } else {
                 $good = $result.Code -eq 1 -and $result.Text.Contains($expect, $ord)
                 $want = "exit 1 with '$expect'"
