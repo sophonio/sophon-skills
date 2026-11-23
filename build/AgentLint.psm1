@@ -49,6 +49,13 @@ $script:RoleDisplayNames = @{
     'debugger'           = 'Debugger'
     'security-reviewer'  = 'Security Reviewer'
     'ui-ux-designer'     = 'UI/UX Designer'
+    'accessibility-reviewer'   = 'Accessibility Reviewer'
+    'design-system-engineer'   = 'Design System Engineer'
+    'e2e-test-engineer'        = 'E2E Test Engineer'
+    'frontend-developer'       = 'Frontend Developer'
+    'mcp-integration-engineer' = 'MCP Integration Engineer'
+    'technical-writer'         = 'Technical Writer'
+    'visual-designer'          = 'Visual Designer'
 }
 
 $script:ManifestKeyOrder = @(
@@ -1221,6 +1228,7 @@ function Test-AgentManifest {
     # author, license, category.
     foreach ($pair in @(@('author', 'Author', 'Buildersoft LLC'), @('license', 'License', 'MIT'), @('category', 'Category', 'development'))) {
         $want = [string](Get-AgentField $Family $pair[1] $pair[2])
+        if ($pair[1] -ceq 'License' -and $null -ne $agentEntry) { $want = [string](Get-AgentField $agentEntry 'License' $want) }
         if (-not (Test-OrdinalEqual (& $get $Manifest $pair[0]) $want)) { & $add 'MAN-META' $pair[0] "$($pair[0]) must be '$want'" }
     }
 
@@ -1260,7 +1268,11 @@ function Test-AgentManifest {
     if ($null -ne $requires) {
         $reqKeys = @(Get-FieldNames $requires)
         foreach ($key in $reqKeys) { if ($key -cne 'tools') { & $add 'MAN-REQUIRES' $key "requires.$key is not allowed (requires holds tools only)" } }
-        $tools = & $get $requires 'tools'
+        # Read the property directly: returning a one-element array through a function unrolls it to a scalar.
+        $tools = $null
+        if ($requires -is [System.Collections.IDictionary]) { if ($requires.Contains('tools')) { $tools = $requires['tools'] } }
+        elseif ($null -ne $requires.PSObject.Properties['tools']) { $tools = $requires.PSObject.Properties['tools'].Value }
+        if ($tools -is [System.Collections.IList] -and $tools -isnot [System.Array]) { $tools = [object[]]@($tools) }
         if ($tools -isnot [System.Array]) { & $add 'MAN-REQUIRES' 'requires' 'requires.tools must be an array' }
         elseif (-not (Test-OrdinalEqual ([string]::Join(',', [string[]]@($tools))) ([string]::Join(',', $pins)))) {
             & $add 'MAN-REQUIRES' 'requires' "requires.tools must equal the sorted union of TOOLS.md pins: [$([string]::Join(', ', $pins))]"
@@ -1315,6 +1327,8 @@ function Get-AgentLintTestFamily {
         $lead = $id -ceq 'lead-developer'
         @{ Id = $id; DisplayName = $script:RoleDisplayNames[$id]; SubAgents = @{ enabled = $lead; maxDepth = $(if ($lead) { 1 } else { 0 }) } }
     }
+    # One agent with its own license, for the per-agent License override.
+    $agents = @($agents) + @(@{ Id = 'frontend-developer'; DisplayName = 'Frontend Developer'; License = 'Apache-2.0'; SubAgents = @{ enabled = $false; maxDepth = 0 } })
     @{
         FamilyMajor      = 2
         MinSophonVersion = '2.2.0'

@@ -1,6 +1,6 @@
-# Development agents: the Buildersoft development family 2.0.0
+# Development agents: the Buildersoft development family 2.1.0
 
-Nine Sophon Marketplace agents that work on a code repository the way Claude Code does:
+Sixteen Sophon Marketplace agents that work on a code repository the way Claude Code does:
 
 1. They size the request.
 2. They plan in a markdown file you approve, then carry it out task by task with a live todo list.
@@ -12,8 +12,8 @@ Only Lead Developer starts sub-agents, and only with your consent.
 ## 1. What these are
 
 - **Sophon agent packages**, format v1 (`.sophon-agent`), not skills, plugins or Claude Code agents. Each package holds one persona and no executable code: `manifest.json`, `SOUL.md`, `TOOLS.md`, `README.md` and `LICENSE`.
-- **Family 2.x.** All nine ship at **2.0.0** and are rewritten from scratch. The six 1.0.0 personas are replaced.
-- **License:** MIT, © 2026 Buildersoft LLC. **Requires** Sophon 2.2.0 or later.
+- **Family 2.x.** Release **2.1.0**. The nine original agents, rewritten from scratch in 2.0.0 to replace the six 1.0.0 personas, are now at **2.1.0**. The seven agents added in 2.1 (frontend-developer, design-system-engineer, visual-designer, e2e-test-engineer, accessibility-reviewer, mcp-integration-engineer, technical-writer) start at **2.0.0**.
+- **License:** © 2026 Buildersoft LLC. The nine original agents are MIT. The seven added in 2.1 are Apache-2.0, because they adapt Apache-2.0 text from Anthropic's anthropics/skills (section 14). Each package's `LICENSE` says which. **Requires** Sophon 2.2.0 or later.
 - **Built on Sophon's own tools**, not on this repository's integration skills: fs.read, fs.write, code.git, os.execute, plan.propose, todo.write, info.request, agent.delegate and the rest of the coding tools.
 - **Claude Code analogues:**
 
@@ -37,9 +37,18 @@ Only Lead Developer starts sub-agents, and only with your consent.
 | [qa-engineer](../agents/qa-engineer) | gate / regression / write-tests / strategy / gaps / ui | no | no (tests, when asked) | default | one per chained check; browser checks up to 6 |
 | [debugger](../agents/debugger) | investigate / hypothesis / fix | no | no (fix + regression test, when asked) | high | one per reproduction or check run |
 | [security-reviewer](../agents/security-reviewer) | review / verify (exploitability 8/10 or higher) | no | yes | high | 1-2 (the diff, a branch range) |
-| [ui-ux-designer](../agents/ui-ux-designer) | direction / build / critique / copy / judge | no | no (UI files) | default | direction none; build as for developer; browser checks one each |
+| [ui-ux-designer](../agents/ui-ux-designer) | direction / build (presentation layer) / critique / copy / judge | no | no (UI presentation files) | default | direction none; build as for developer; browser checks one each |
+| [frontend-developer](../agents/frontend-developer) | UI implementer: component / direct / artifact / perf | no | no | default | files edited + 1-2 runs; plans as for the lead |
+| [design-system-engineer](../agents/design-system-engineer) | audit / tokens / theme / playground / brand-check | no | no (tokens, themes, components) | default | audit none; token or theme changes as for developer |
+| [visual-designer](../agents/visual-designer) | concept / art / generative / image / motion (image.generate opt-in) | no | no (asset files) | default | concept none; one per asset file written, plus one per render or check run |
+| [e2e-test-engineer](../agents/e2e-test-engineer) | browser end-to-end tests: write / visual / flake | no | no (e2e tests) | default | per test: its edits + a red and a green run; flake: one per repeat or bisection run |
+| [accessibility-reviewer](../agents/accessibility-reviewer) | WCAG 2.2 AA: audit / review, findings block, VERDICT `CONFORMS` or `GAPS` | no | yes | high | 1 for the working tree (the diff); browser checks one each |
+| [mcp-integration-engineer](../agents/mcp-integration-engineer) | MCP servers: design / build / evals | no | no | default | files edited + 1-2 runs; plans as for the lead |
+| [technical-writer](../agents/technical-writer) | documentation: draft / edit / reader-test | no | no (documentation files) | default | draft: the skeleton + one per section; edit: one per file; reader-test one per harmless command |
 
-The four read-only roles never commit. Software Architect saves only a plan or ADR file, and only after you approve it. The writers (developer, qa-engineer, debugger, ui-ux-designer) use the same sizing, plan and git rules as the lead when you talk to them directly.
+The five read-only roles (researcher, software-architect, code-reviewer, security-reviewer, accessibility-reviewer) never commit. Software Architect saves only a plan or ADR file, and only after you approve it. The writers (developer, qa-engineer, debugger, ui-ux-designer, frontend-developer, design-system-engineer, visual-designer, e2e-test-engineer, mcp-integration-engineer, technical-writer) use the same sizing, plan and git rules as the lead when you talk to them directly.
+
+UI/UX Designer's build mode covers the presentation layer only: component logic goes to frontend-developer, token systems to design-system-engineer and imagery to visual-designer. The lead hands UI implementation tasks to frontend-developer and can add accessibility-reviewer as an optional review lens on UI changes. Visual Designer calls image.generate only when you opt in.
 
 ## 3. Where they work
 
@@ -63,6 +72,13 @@ sophon agents install qa-engineer --allow-delegation-from lead-developer
 sophon agents install debugger --allow-delegation-from lead-developer
 sophon agents install security-reviewer --allow-delegation-from lead-developer
 sophon agents install ui-ux-designer --allow-delegation-from lead-developer
+sophon agents install frontend-developer --allow-delegation-from lead-developer
+sophon agents install design-system-engineer --allow-delegation-from lead-developer
+sophon agents install visual-designer --allow-delegation-from lead-developer
+sophon agents install e2e-test-engineer --allow-delegation-from lead-developer
+sophon agents install accessibility-reviewer --allow-delegation-from lead-developer
+sophon agents install mcp-integration-engineer --allow-delegation-from lead-developer
+sophon agents install technical-writer --allow-delegation-from lead-developer
 ```
 
 4. Confirm that **Effective targets** lists every companion you installed.
@@ -78,7 +94,8 @@ A package can set only `defaults.subAgents` (applied on the first install) and m
   - Set it in Dashboard → Agents → Lead Developer → Delegation, or with `PUT /api/agents/lead-developer/subagents`.
   - Depth 1 keeps every consent question and card estimate at the top level, where the lead can ask you.
   - Add the new companions (code-reviewer, debugger, security-reviewer) to an existing allow list.
-- **Effort.** Recommended `high` for lead-developer, software-architect, code-reviewer, security-reviewer and debugger; leave the rest at the default:
+- **Upgraders from 2.0.0:** install the seven new companions with `--allow-delegation-from lead-developer` (step 3 of section 4) so the lead can delegate to them.
+- **Effort.** Recommended `high` for lead-developer, software-architect, code-reviewer, security-reviewer, debugger and accessibility-reviewer; leave the rest at the default:
 
 ```
 sophon agents models lead-developer --effort high
@@ -86,6 +103,7 @@ sophon agents models software-architect --effort high
 sophon agents models code-reviewer --effort high
 sophon agents models security-reviewer --effort high
 sophon agents models debugger --effort high
+sophon agents models accessibility-reviewer --effort high
 ```
 
   A companion's effort reaches its delegated runs only while the lead's chat has no effort of its own (`/effort reset` in that chat).
@@ -153,7 +171,7 @@ The lead scans your own messages, newest first; the first match wins.
 - The keyword decides consent only. Size still decides the phases: a trivial change stays inline even with ultracode on, and a standing yes still needs plan approval.
 - Without a standing answer, the lead asks once per task (header "Agents") and only when delegation clearly helps. The recommended option comes first, Solo is always offered, and each option states agents, waves, cards and "≈N× Solo tokens".
 - No answer, or a skipped question, means Solo. The answer is written on the plan's `Consent:` line.
-- The other eight agents cannot start sub-agents. Asked for "ultracode", they say that Lead Developer runs multi-agent work, then do the task themselves.
+- The other fifteen agents cannot start sub-agents. Asked for "ultracode", they say that Lead Developer runs multi-agent work, then do the task themselves.
 
 **Ultracode-lite phases** (lead, with consent): Understand (2-5 researchers), Design (2-3 architects judged on a written 14-point rubric), Implement (one developer per task, or up to 3 in parallel on disjoint files), Review (3-5 lenses over one diff file), Refute (3 votes per finding; 2 of 3 must confirm), Fix, Re-review until dry (at most 3 rounds) and a Completeness critic.
 
@@ -208,7 +226,7 @@ An agent you create yourself from these files, instead of installing it from the
 - Keep to one form per agent id. Never mix a Marketplace lead with local companions of the same ids, or the other way round.
 - A local agent reports no version. The lead still matches it through the `Family role:` line.
 - You take over updates: a local copy never receives Marketplace updates.
-- A step-by-step recipe and an export script are planned for 2.1.
+- A step-by-step recipe and an export script are planned for a later release.
 
 ## 11. An AGENTS.md starter for your repository
 
@@ -264,12 +282,14 @@ The agents read the project instructions as trusted conventions, and they sugges
 
 ```
 build/agent-src/
-  family.psd1                 roster, fragment order, SoulCap, SubAgents, Effort, Credits,
-                              Values (commit trailer, PR footer, plan folder), AllowedHosts
+  family.psd1                 roster, fragment order, SoulCap, SubAgents, Effort, License and
+                              LicenseFile, Credits, Values (commit trailer, PR footer, plan
+                              folder), AllowedHosts
   souls/<id>.md               role text + include lines ({{> soul/<NN-id>}})
   fragments/soul/<NN-id>.md   21 shared fragments, at most 4,096 bytes each
   catalog/sophon-tools.psd1   real Sophon tool names (pinned to sophon a431e1a64, v2.2.2)
   catalog/scan-rules.psd1     the marketplace and runtime scanner rules the preflight replays
+  licenses/Apache-2.0.txt     the LICENSE the Apache-2.0 agents ship
 build/AgentFamily.psm1        roster and composer
 build/AgentLint.psm1          tool-name lint, scanner preflight, TOOLS.md parser, manifest checks
 build/Compose-AgentSouls.ps1  [-RepoRoot] [-Agents] [-Check] [-OutDir] [-Explain]
@@ -279,7 +299,7 @@ tests/agents/                 Test-AgentPackages.ps1 (A-K), fixtures/, evals/
 ```
 
 **Budgets** (`Test-AgentSources.ps1` section E fails over any of them and prints a headroom table):
-- Composed SOUL, `SoulCap` in `family.psd1`: lead-developer 43,008 B; developer, qa-engineer, debugger and ui-ux-designer 32,768 B; software-architect, code-reviewer and security-reviewer 22,528 B; researcher 18,432 B.
+- Composed SOUL, `SoulCap` in `family.psd1`: lead-developer 43,008 B; developer, qa-engineer, debugger, ui-ux-designer, frontend-developer, design-system-engineer, visual-designer, e2e-test-engineer, mcp-integration-engineer and technical-writer 32,768 B; software-architect, code-reviewer, security-reviewer and accessibility-reviewer 22,528 B; researcher 18,432 B.
 - Each fragment at most 4,096 B, each TOOLS.md at most 2,048 B, each README at most 12 KiB (the lead's 24 KiB).
 - The design planned 36,864 B and 28,672 B for the lead and the writers on an estimate of about 17.5 KB of shared writer text. The fragments it mandates measure about 25 KB, so those two caps were raised rather than cutting runtime workarounds. Every child pays for its whole SOUL, uncached: keep role text terse and cut before you raise a cap again.
 
@@ -292,7 +312,7 @@ pwsh -NoProfile -File build/Compose-AgentSouls.ps1                # regenerate a
 pwsh -NoProfile -File build/Compose-AgentSouls.ps1 -Check         # exit 0, no drift
 pwsh -NoProfile -File build/Test-AgentSources.ps1                 # lint, preflight, budgets, manifests, TOOLS.md
 pwsh -NoProfile -File build/Build-AgentPackages.ps1 -ValidateOnly # sophon dev validate: 0 errors, 0 warnings
-pwsh -NoProfile -File build/Build-AgentPackages.ps1               # 9 x <id>-2.0.0.sophon-agent + SHA256SUMS
+pwsh -NoProfile -File build/Build-AgentPackages.ps1               # 16 x <id>-<version>.sophon-agent + SHA256SUMS
 Get-Content dist/agents/SHA256SUMS
 pwsh -NoProfile -File tests/agents/Test-AgentPackages.ps1         # sections A-K
 pwsh -File build/Build-MarketplacePackages.ps1 -ValidateOnly      # skills unaffected
@@ -309,20 +329,27 @@ git status --porcelain                                            # only intende
 - Major 2 in lockstep across the family. Minor and patch move per agent.
 - A shared-fragment change bumps every agent that includes it (`Compose-AgentSouls.ps1 -Explain` lists them).
 - The marketplace refuses a version that is not greater than every version ever uploaded, rejected ones included.
-- code-reviewer, debugger and security-reviewer start at 2.0.0 too, so the family has one generation number.
+- code-reviewer, debugger and security-reviewer started at 2.0.0 too, so the family has one generation number.
+- In 2.1.0 the nine original agents move to 2.1.0, and the seven new ones start at 2.0.0.
+
+**Licenses.**
+- An agent entry in `family.psd1` may set `License` and `LicenseFile` together, for example `License = 'Apache-2.0'` and `LicenseFile = 'build/agent-src/licenses/Apache-2.0.txt'`. Without them the agent takes the family default: MIT and the root `LICENSE`.
+- AgentLint checks that the manifest `license` equals the agent's License.
+- `Test-AgentSources.ps1` requires `agents/<id>/LICENSE` to be byte-identical to the agent's LicenseFile (else the root `LICENSE`), and the README's license sentence to match: "Licensed under the MIT License; see LICENSE." or "Licensed under the Apache License, Version 2.0; see LICENSE."
+- Agents that adapt anthropics/skills text list the `anthropicSkills` key in their `Credits`.
 
 **Publishing (manual, owner only).**
 1. Check the slugs, signed in: `sophon agents search <slug>`, `sophon skills search <slug>` and `GET https://marketplace.sophon.buildersoft.io/api/v1/packages/<slug>`. Any hit not owned by Buildersoft stops the release.
 2. Run a clean build and the full test suite above.
-3. Preview each install on a throwaway Gateway or `SOPHON_DATA_DIR`, with the injection-scan mode not off: `sophon agents install --file dist/agents/<id>-2.0.0.sophon-agent --show-files`, check the verdict and that no `expects tool:` line appears, then answer `n`.
+3. Preview each install on a throwaway Gateway or `SOPHON_DATA_DIR`, with the injection-scan mode not off: `sophon agents install --file dist/agents/<id>-<version>.sophon-agent --show-files`, check the verdict and that no `expects tool:` line appears, then answer `n`.
 4. Run the smoke scenarios in [`tests/agents/evals/`](../tests/agents/evals/README.md), including the card-count check.
-5. In the Marketplace wizard, upload each of the 9 `.sophon-agent` files from `dist/agents/` one at a time. Never upload a zip of all of them, and never use `Publish-MarketplacePackages.ps1`, which stays skills-only. The preview must show no possible-secret finding to acknowledge and a clean moderator flag list.
-6. Every version starts `pendingReview`. Announce only after all 9 are approved. Optionally tag `agents-v2.0.0`.
+5. In the Marketplace wizard, upload each of the 16 `.sophon-agent` files from `dist/agents/` one at a time: the nine original agents at 2.1.0 and the seven new ones at 2.0.0. Never upload a zip of all of them, and never use `Publish-MarketplacePackages.ps1`, which stays skills-only. The preview must show no possible-secret finding to acknowledge and a clean moderator flag list.
+6. Every version starts `pendingReview`. Announce only after all 16 are approved. Optionally tag `agents-v2.1.0`.
 7. Withdraw or reject developer's pending 1.0.0 in My packages, so the old persona is never approved.
 
 Prerequisite outside the repo: the `noreply@buildersoft.io` mailbox for the commit trailer.
 
-**Deferred to 2.1:** a catalogue drift checker, a full port of the runtime's argument-redaction rules (the CLI covers them now), release reproducibility against published hashes, a headless eval runner, the local-install export script, and README composition.
+**Deferred to a later release** (not in 2.1.0): a catalogue drift checker, a full port of the runtime's argument-redaction rules (the CLI covers them now), release reproducibility against published hashes, a headless eval runner, the local-install export script, and README composition.
 
 ## 14. Credits
 
@@ -331,4 +358,9 @@ Workflow patterns adapted, not copied, from obra/superpowers (MIT, © 2025 Jesse
 - The software-architect README also credits backend-design and system-design-skills (both MIT, third party), and the debugger README credits backend-design.
 - The security-reviewer exclusion list follows ideas from anthropics/claude-code-security-review in original wording. Its README will credit that project once its license is confirmed, which is an owner item before publishing.
 
-The packages are licensed under the MIT License; see [`LICENSE`](../LICENSE).
+Portions of the agents added in 2.1 are adapted from Anthropic's agent skills, anthropics/skills (Apache-2.0, © 2026 Anthropic, PBC): frontend-design, web-artifacts-builder, webapp-testing, theme-factory, brand-guidelines (the pattern only), canvas-design, algorithmic-art, slack-gif-creator (the motion vocabulary only) and mcp-builder.
+
+- **Modification notice:** Buildersoft LLC changed that text, rewriting it for Sophon tools and removing its scripts and branding. The README of every agent that uses it carries this notice.
+- Technical Writer was written independently. It is inspired by doc-coauthoring, which has no license, and copies none of its text.
+
+The nine original packages are licensed under the MIT License; see [`LICENSE`](../LICENSE). The seven added in 2.1 are licensed under the Apache License, Version 2.0; see [`build/agent-src/licenses/Apache-2.0.txt`](../build/agent-src/licenses/Apache-2.0.txt). Every package carries its own `LICENSE`.

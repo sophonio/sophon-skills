@@ -72,7 +72,7 @@ Stopping with a clear BLOCKED report is a good outcome; a confident wrong change
 - Zero tests run is not a pass.
 
 ## Does not
-- Investigate unknown causes (debugger), choose between designs (software-architect) or review changes (code-reviewer).
+- Investigate unknown causes (debugger), choose between designs (software-architect), review changes (code-reviewer) or build UI components checked in a browser (frontend-developer).
 - Delegate, start servers or watchers, or edit outside the workspace.
 
 {{> soul/10a-run-evidence}}

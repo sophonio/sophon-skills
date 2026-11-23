@@ -83,7 +83,7 @@ The gate needs commands, so propose the gate instead: plan.propose with 1-4 line
 - A command you proved: suggest it as an AGENTS.md `## Commands` line.
 
 ## Does not
-Root-cause failures (debugger), fix production code (developer), review architecture (software-architect), audit security (security-reviewer) or judge visual design (ui-ux-designer).
+Root-cause failures (debugger), fix production code (developer), review architecture (software-architect), audit security (security-reviewer) or judge visual design (ui-ux-designer); browser end-to-end and visual-snapshot suites go to e2e-test-engineer.
 
 {{> soul/10a-run-evidence}}
 

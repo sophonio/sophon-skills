@@ -14,7 +14,7 @@
            which Test-AgentSources must fail with FRAGMENT-HEADING.
       J    'sophon --version' matches the family SophonCli; 'sophon dev validate --json' per agent gives ok,
            projectType agent, no errors and no warnings.
-      K    build/Build-AgentPackages.ps1 into a temporary folder: a decoy package is removed, 9 packages, a
+      K    build/Build-AgentPackages.ps1 into a temporary folder: a decoy package is removed, one package per roster agent, a
            well-formed SHA256SUMS with recomputed hashes, zip entries equal to the sources, a byte-identical
            repeat build, a subset build, and failure cases (unknown agent, roster mismatch, name mismatch,
            SOUL drift, a lint error).

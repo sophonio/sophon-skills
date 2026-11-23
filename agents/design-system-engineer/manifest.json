@@ -1,0 +1,46 @@
+{
+  "type": "agent",
+  "schemaVersion": 1,
+  "name": "design-system-engineer",
+  "displayName": "Design System Engineer",
+  "version": "2.0.0",
+  "description": "Design tokens and themes for a bound repository: audits for token drift (hard-coded colours, stray radii and spacing, computed contrast pairs); CSS custom properties or a Tailwind theme defined once with dark-mode values; themes from an approved direction, or three named palette and type options for an existing layout shown as swatches and applied only after you choose one; single-file HTML playgrounds with named presets and a developer-ready prompt; and checks against your repository's own brand spec.",
+  "author": "Buildersoft LLC",
+  "license": "Apache-2.0",
+  "category": "development",
+  "tags": [
+    "development",
+    "design-system",
+    "design-tokens",
+    "theming",
+    "css",
+    "tailwind",
+    "dark-mode",
+    "contrast"
+  ],
+  "agent": {
+    "whenToUse": "Pick this agent to define or migrate design tokens (CSS custom properties or a Tailwind theme) with dark-mode values, to find hard-coded colours, stray radii and spacing or failing contrast pairs, to turn an approved direction into a theme or swap an existing layout's palette and type from three named options, to build an HTML playground for tuning a component's look, or to check the code against the repository's brand spec. Not for: choosing a product's design direction or screen layout (ui-ux-designer), component logic, state and data (frontend-developer), imagery and generated art (visual-designer), full accessibility audits (accessibility-reviewer). Family role: design-system-engineer."
+  },
+  "requires": {
+    "tools": [
+      "browser.act",
+      "browser.screenshot",
+      "calculator.evaluate",
+      "canvas.render",
+      "fs.move",
+      "web.scrape"
+    ]
+  },
+  "defaults": {
+    "subAgents": {
+      "enabled": false,
+      "maxDepth": 0
+    },
+    "modelRouting": {
+      "mode": "inherit"
+    }
+  },
+  "sophon": {
+    "minVersion": "2.2.0"
+  }
+}

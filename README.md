@@ -13,11 +13,13 @@ into `.sophon-skill` artifacts, and the docs for publishing them.
 
 ## Development agents
 
-The **Buildersoft development family 2.0.0**: nine `.sophon-agent` packages that work on a
+The **Buildersoft development family 2.1.0**: sixteen `.sophon-agent` packages that work on a
 repository the way Claude Code does. They plan in a markdown file you approve, execute it task by
 task with a live todo list, verify with real commands, commit each verified task on a feature
-branch and offer a pull request. All are authored by **Buildersoft LLC**, licensed **MIT** and
-require **Sophon 2.2.0+**. Only Lead Developer starts sub-agents, and only with your consent.
+branch and offer a pull request. All are authored by **Buildersoft LLC** and require **Sophon
+2.2.0+**. The nine original agents are licensed **MIT**; the seven frontend, design, testing, MCP
+and docs agents added in 2.1 are licensed **Apache-2.0**. Only Lead Developer starts sub-agents,
+and only with your consent.
 
 | Agent | Role | Delegates | Read-only |
 |-------|------|-----------|-----------|
@@ -29,7 +31,14 @@ require **Sophon 2.2.0+**. Only Lead Developer starts sub-agents, and only with 
 | [QA Engineer](agents/qa-engineer) | PASS / FAIL gates with fresh evidence, red/green proofs, tests | no | no |
 | [Debugger](agents/debugger) | Reproduce, one hypothesis at a time, proven root cause | no | no |
 | [Security Reviewer](agents/security-reviewer) | Exploitable vulnerabilities a change introduces | no | yes |
-| [UI/UX Designer](agents/ui-ux-designer) | Design direction, accessible build, critique, interface copy | no | no |
+| [UI/UX Designer](agents/ui-ux-designer) | Design direction, presentation-layer build, critique, interface copy | no | no |
+| [Frontend Developer](agents/frontend-developer) | UI implementation: components, direct edits, artifacts, performance | no | no |
+| [Design System Engineer](agents/design-system-engineer) | Design-system audits, tokens, themes, playgrounds, brand checks | no | no |
+| [Visual Designer](agents/visual-designer) | Concepts, art, generative pieces, images (image generation only if you opt in), motion | no | no |
+| [E2E Test Engineer](agents/e2e-test-engineer) | Browser end-to-end and visual tests, red then green, flaky tests made deterministic | no | no |
+| [Accessibility Reviewer](agents/accessibility-reviewer) | WCAG 2.2 AA audits and reviews, verdict CONFORMS or GAPS | no | yes |
+| [MCP Integration Engineer](agents/mcp-integration-engineer) | MCP servers: design, build, evals | no | no |
+| [Technical Writer](agents/technical-writer) | Documentation drafted with you, edited or reader-tested; every command checked | no | no |
 
 Each `agents/<id>/SOUL.md` is generated from `build/agent-src/`; never edit it by hand. Compose,
 check and build with Sophon CLI 2.2.x on PATH:
@@ -38,7 +47,7 @@ check and build with Sophon CLI 2.2.x on PATH:
 pwsh -NoProfile -File build/Compose-AgentSouls.ps1                # regenerate agents/*/SOUL.md
 pwsh -NoProfile -File build/Test-AgentSources.ps1                 # lint, preflight, budgets, manifests (no CLI)
 pwsh -NoProfile -File build/Build-AgentPackages.ps1 -ValidateOnly # adds sophon dev validate: 0 errors, 0 warnings
-pwsh -NoProfile -File build/Build-AgentPackages.ps1               # dist/agents/<id>-2.0.0.sophon-agent + SHA256SUMS
+pwsh -NoProfile -File build/Build-AgentPackages.ps1               # dist/agents/<id>-<version>.sophon-agent + SHA256SUMS
 pwsh -NoProfile -File tests/agents/Test-AgentPackages.ps1         # sections A-K
 ```
 
@@ -227,5 +236,10 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the full contract and PR checklist,
 
 Licensed under the MIT License. © 2026 Buildersoft LLC. Each skill also carries its own LICENSE.
 
+The development agents each carry their own LICENSE too: the nine original agents are MIT, and the
+seven added in 2.1 are licensed under the Apache License, Version 2.0.
+
 The development agents' workflow patterns are adapted, not copied, from obra/superpowers (MIT,
-© 2025 Jesse Vincent) and Anthropic's Claude Code plugins (Apache-2.0).
+© 2025 Jesse Vincent) and Anthropic's Claude Code plugins (Apache-2.0). Portions of the agents
+added in 2.1 are adapted from Anthropic's agent skills, anthropics/skills (Apache-2.0, © 2026
+Anthropic, PBC), and changed by Buildersoft LLC.

@@ -35,6 +35,9 @@ $script:ValueRegex = [regex]::new('\{\{= (?<key>[A-Za-z][A-Za-z0-9]*)\}\}')
 $script:ValueKeyRegex = [regex]::new('^[A-Za-z][A-Za-z0-9]*$')
 $script:AgentIdRegex = [regex]::new('^[a-z0-9][a-z0-9-]{1,63}$')
 $script:AgentKeys = @('Id', 'DisplayName', 'SoulCap', 'Writer', 'SubAgents', 'Effort', 'Fragments', 'Credits')
+# Optional per-agent keys: License (the manifest license string) and LicenseFile (repository-relative path of the
+# text the agent's LICENSE must copy). Both or neither; without them the family License and the root LICENSE apply.
+$script:AgentOptionalKeys = @('License', 'LicenseFile')
 $script:EffortValues = @('high', 'default')
 $script:BytesPerToken = 3.8
 
@@ -437,8 +440,21 @@ function Test-AgentFamilyData {
         $agentKeys = [string[]]@($agent.Keys)
         [Array]::Sort($agentKeys, [StringComparer]::Ordinal)
         foreach ($key in $agentKeys) {
-            if (-not (Test-AgentInList $script:AgentKeys $key)) {
+            if (-not (Test-AgentInList $script:AgentKeys $key) -and -not (Test-AgentInList $script:AgentOptionalKeys $key)) {
                 $errors.Add((New-AgentComposeError $p $line "agent '$id' has unknown key $key"))
+            }
+        }
+        if ($agent.ContainsKey('License') -ne $agent.ContainsKey('LicenseFile')) {
+            $errors.Add((New-AgentComposeError $p $line "agent '$id': declare both License and LicenseFile, or neither"))
+        }
+        elseif ($agent.ContainsKey('License')) {
+            if ($agent['License'] -isnot [string] -or [string]::IsNullOrWhiteSpace($agent['License'])) {
+                $errors.Add((New-AgentComposeError $p $line "agent '$id': License must be a non-empty string"))
+            }
+            $licenseFile = $agent['LicenseFile']
+            if ($licenseFile -isnot [string] -or [string]::IsNullOrWhiteSpace($licenseFile) -or
+                -not [System.IO.File]::Exists((Join-AgentRepoPath $root $licenseFile))) {
+                $errors.Add((New-AgentComposeError $p $line "agent '$id': LicenseFile '$licenseFile' must name an existing repository file"))
             }
         }
         if ($agent.ContainsKey('DisplayName') -and

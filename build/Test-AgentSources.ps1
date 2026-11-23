@@ -206,10 +206,21 @@ foreach ($id in $selected) {
     }
     if ($total -gt 524288) { Add-SourceError 'LAYOUT-SIZE' "agents/$id" 0 "package is $total bytes; at most 524,288" }
 
-    if ($null -ne $rootLicense -and $bytes[$id].ContainsKey('LICENSE')) {
+    # An agent with its own LicenseFile (family.psd1) copies that file; every other agent copies the root LICENSE.
+    $licenseRel = [string](Get-AgentField $agentById[$id] 'LicenseFile' '')
+    $expectedLicense = $rootLicense
+    $licenseSource = 'the repository root LICENSE'
+    if ($licenseRel) {
+        $licenseSource = $licenseRel
+        $licensePath = Join-Path $RepoRoot $licenseRel
+        $expectedLicense = $null
+        if (Test-Path -LiteralPath $licensePath -PathType Leaf) { $expectedLicense = [IO.File]::ReadAllBytes($licensePath) }
+        else { Add-SourceError 'LAYOUT-LICENSE' $licenseRel 0 "LicenseFile of agent '$id' is missing" }
+    }
+    if ($null -ne $expectedLicense -and $bytes[$id].ContainsKey('LICENSE')) {
         $mine = $bytes[$id]['LICENSE']
-        if ($mine.Length -ne $rootLicense.Length -or -not [System.Linq.Enumerable]::SequenceEqual([byte[]]$mine, [byte[]]$rootLicense)) {
-            Add-SourceError 'LAYOUT-LICENSE' "agents/$id/LICENSE" 0 'must be a byte-identical copy of the repository root LICENSE'
+        if ($mine.Length -ne $expectedLicense.Length -or -not [System.Linq.Enumerable]::SequenceEqual([byte[]]$mine, [byte[]]$expectedLicense)) {
+            Add-SourceError 'LAYOUT-LICENSE' "agents/$id/LICENSE" 0 "must be a byte-identical copy of $licenseSource"
         }
     }
 }
@@ -464,11 +475,21 @@ Enter-Section 'I' 'Credits'
 
 $creditSentence = 'Workflow patterns adapted, not copied, from obra/superpowers (MIT, ' + [char]0xA9 + ' 2025 Jesse Vincent) and ' +
     'Anthropic''s Claude Code plugins (feature-dev, pr-review-toolkit, code-review, security-review, frontend-design; Apache-2.0).'
-$licenseSentence = 'Licensed under the MIT License; see LICENSE.'
+$licenseSentences = @{
+    'MIT'        = 'Licensed under the MIT License; see LICENSE.'
+    'Apache-2.0' = 'Licensed under the Apache License, Version 2.0; see LICENSE.'
+}
+$familyLicense = [string](Get-AgentField $family 'License' 'MIT')
 $credits = Get-AgentField $family 'Credits' @{}
 foreach ($id in $selected) {
     $readme = $texts[$id]['README.md']
     if ($null -eq $readme) { continue }
+    $agentLicense = [string](Get-AgentField $agentById[$id] 'License' $familyLicense)
+    $licenseSentence = $licenseSentences[$agentLicense]
+    if ($null -eq $licenseSentence) {
+        Add-SourceError 'CREDITS-LICENSE' 'build/agent-src/family.psd1' 1 "agent '$id' has license '$agentLicense', which has no README sentence (known: $(@($licenseSentences.Keys | Sort-Object) -join ', '))"
+        continue
+    }
     $rel = "agents/$id/README.md"
     foreach ($key in @(Get-AgentField $agentById[$id] 'Credits' @())) {
         $credit = Get-AgentField $credits ([string]$key)

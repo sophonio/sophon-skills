@@ -45,15 +45,21 @@ wrapping folder); excludes `__pycache__/`, `dist/`, `.DS_Store`, `Thumbs.db`, `*
 
 ## Agent packages (`agents/`)
 
-Nine `.sophon-agent` packages, the Buildersoft development family (roster, ids and fragment order in
+Sixteen `.sophon-agent` packages, the Buildersoft development family (roster, ids and fragment order in
 `build/agent-src/family.psd1`). Full guide: [`docs/AGENTS.md`](docs/AGENTS.md); design:
 `docs/plans/2026-11-15-agents-v2-design.md`.
 
 - **Files.** Only the 7 package files may live in `agents/<id>/` (`manifest.json`, `SOUL.md`,
   `VOICE.md`, `HEARTBEAT.md`, `TOOLS.md`, `README.md`, `LICENSE`); anything else is `not_packaged`
   and fails the build. This family uses exactly 5 (no VOICE, no HEARTBEAT), and `LICENSE` is a
-  byte-identical copy of the root `LICENSE`. UTF-8 without BOM, LF, no tabs, no trailing whitespace,
-  one final newline.
+  byte-identical copy of the agent's `LicenseFile`, else of the root `LICENSE`. UTF-8 without BOM,
+  LF, no tabs, no trailing whitespace, one final newline.
+- **Licenses.** An agent entry in `family.psd1` may set `License` and `LicenseFile` together
+  (`License = 'Apache-2.0'`, `LicenseFile = 'build/agent-src/licenses/Apache-2.0.txt'`); without
+  them it is MIT with the root `LICENSE`. The nine original agents stay MIT; the seven added in 2.1
+  are Apache-2.0 because they adapt anthropics/skills text (Credits key `anthropicSkills`). The
+  manifest `license` and the README sentence ("Licensed under the MIT License; see LICENSE." or
+  "Licensed under the Apache License, Version 2.0; see LICENSE.") must match it.
 - **Never hand-edit `agents/*/SOUL.md`.** It is generated: edit `build/agent-src/` (`souls/<id>.md`
   for role text, `fragments/soul/<NN-id>.md` for shared protocol) and run
   `pwsh -File build/Compose-AgentSouls.ps1`. CI fails on drift. Manifests, TOOLS.md and READMEs

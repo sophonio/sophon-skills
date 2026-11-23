@@ -32,7 +32,7 @@ docker run --rm --memory=256m -v "<repo>:/repo:ro" \
 
 ## Agent package tests (`tests/agents/`)
 
-`Test-AgentPackages.ps1` checks the nine development-agent packages in `agents/` end to end. It
+`Test-AgentPackages.ps1` checks the sixteen development-agent packages in `agents/` end to end. It
 needs PowerShell 7; sections J and K also need Sophon CLI 2.2.x on PATH.
 
 ```powershell
@@ -48,7 +48,7 @@ pwsh -NoProfile -File build/Test-AgentSources.ps1
 
 | Section | What it checks |
 |---|---|
-| A | roster and layout: `agents/` folders equal the roster, 5 files each, strict UTF-8, LF, size limits, LICENSE equals the root LICENSE |
+| A | roster and layout: `agents/` folders equal the roster, 5 files each, strict UTF-8, LF, size limits, LICENSE equals the agent's LicenseFile, else the root LICENSE |
 | B | composer: `-Check` on the real tree, every composer fixture against its EXPECT, two byte-identical `-OutDir` composes |
 | C | tool-name lint on the packages, plus the lint fixtures |
 | D | scanner preflight (P1-P6) on the packages, plus the scan fixtures; fragment rules (at most 4,096 B, one `## ` heading on line 1), plus a planted-heading case |
@@ -58,7 +58,7 @@ pwsh -NoProfile -File build/Test-AgentSources.ps1
 | H | attribution: exact commit trailer and PR footer bytes in every committing agent, none in the read-only ones |
 | I | README credits |
 | J | `sophon --version` matches; `sophon dev validate --json` per agent: ok, projectType agent, no errors, no warnings |
-| K | `build/Build-AgentPackages.ps1` into a temp folder: a decoy package removed; 9 `<id>-<version>.sophon-agent` (each version from its manifest); SHA256SUMS (9 lines, ordinal file-name order, LF, hashes recomputed); zip entries `manifest.json` first then ordinal, equal to the sources byte for byte, stamped 1980-01-01 00:00:00; identical repeat build; a subset build; failure cases (unknown agent, roster mismatch, name mismatch, SOUL drift, a lint error) |
+| K | `build/Build-AgentPackages.ps1` into a temp folder: a decoy package removed; 16 `<id>-<version>.sophon-agent` (each version from its manifest); SHA256SUMS (16 lines, ordinal file-name order, LF, hashes recomputed); zip entries `manifest.json` first then ordinal, equal to the sources byte for byte, stamped 1980-01-01 00:00:00; identical repeat build; a subset build; failure cases (unknown agent, roster mismatch, name mismatch, SOUL drift, a lint error) |
 
 Each section prints PASS, FAIL or SKIP, and the script exits 1 on any failure. Temporary folders
 live under the system temp folder and are removed at the end; nothing in the repository is written.
