@@ -4,9 +4,13 @@
 # Fragments is each agent's list of top-level includes, in template order; the composer
 # (build/Compose-AgentSouls.ps1) fails when a template's includes differ from it.
 # Values are substituted for {{= Key}} in templates and fragments; never write them literally.
-# SoulCap: lead 43008, writers 32768, ARC/CR/SEC 22528, RES 18432. The design set 36864/28672 for the lead and writers on an
-# estimate of 17.5 KB of shared writer text; the mandated fragments measure about 25 KB, so those two caps were raised to fit
-# them with about 1 KiB of headroom instead of cutting the runtime workarounds (design section 11, ruling on issue 3/37/64).
+# SoulCap (bytes of the composed SOUL.md; data only, not packaged), by tier, option A of the 3.0 ledger
+# (docs/plans/2026-11-23-agents-v3-design.md, "Fragment matrix and byte ledger"): lead 62464; design writers
+# (ui-ux-designer, frontend-developer, design-system-engineer, visual-designer) 51200; writers 44032; readers
+# (software-architect, code-reviewer, security-reviewer, accessibility-reviewer) 28672; researcher and
+# artifact-creator 22528. Each agent keeps at least 5% of its cap free: under 8% free warns (BUDGET-HEADROOM),
+# under 5% fails a release build (Test-AgentSources.ps1 -Release), and over the cap always fails (BUDGET-SOUL).
+# The platform limit is 65536. Raising a cap is a change to this file and this comment only.
 # License: the family default (MIT, the root LICENSE). An agent may set License = 'Apache-2.0' (LICENSE copies
 # build/licenses/Apache-2.0.txt); the frontend and design agents added in 2.1 are Apache-2.0 because they adapt
 # Apache-2.0 upstream text.
@@ -44,7 +48,7 @@
     @{
       Id = 'accessibility-reviewer'
       DisplayName = 'Accessibility Reviewer'
-      SoulCap = 22528
+      SoulCap = 28672
       Writer = $false
       SubAgents = @{ enabled = $false; maxDepth = 0 }
       Effort = 'high'
@@ -70,7 +74,7 @@
     @{
       Id = 'artifact-creator'
       DisplayName = 'Artifact Creator'
-      SoulCap = 18432
+      SoulCap = 22528
       Writer = $false
       License = 'Apache-2.0'
       Category = 'productivity'
@@ -83,7 +87,7 @@
     @{
       Id = 'code-reviewer'
       DisplayName = 'Code Reviewer'
-      SoulCap = 22528
+      SoulCap = 28672
       Writer = $false
       SubAgents = @{ enabled = $false; maxDepth = 0 }
       Effort = 'high'
@@ -108,7 +112,7 @@
     @{
       Id = 'debugger'
       DisplayName = 'Debugger'
-      SoulCap = 32768
+      SoulCap = 44032
       Writer = $true
       SubAgents = @{ enabled = $false; maxDepth = 0 }
       Effort = 'high'
@@ -136,7 +140,7 @@
     @{
       Id = 'design-system-engineer'
       DisplayName = 'Design System Engineer'
-      SoulCap = 32768
+      SoulCap = 51200
       Writer = $true
       SubAgents = @{ enabled = $false; maxDepth = 0 }
       Effort = 'default'
@@ -165,7 +169,7 @@
     @{
       Id = 'developer'
       DisplayName = 'Developer'
-      SoulCap = 32768
+      SoulCap = 44032
       Writer = $true
       SubAgents = @{ enabled = $false; maxDepth = 0 }
       Effort = 'default'
@@ -193,7 +197,7 @@
     @{
       Id = 'e2e-test-engineer'
       DisplayName = 'E2E Test Engineer'
-      SoulCap = 32768
+      SoulCap = 44032
       Writer = $true
       SubAgents = @{ enabled = $false; maxDepth = 0 }
       Effort = 'default'
@@ -222,7 +226,7 @@
     @{
       Id = 'frontend-developer'
       DisplayName = 'Frontend Developer'
-      SoulCap = 32768
+      SoulCap = 51200
       Writer = $true
       SubAgents = @{ enabled = $false; maxDepth = 0 }
       Effort = 'default'
@@ -251,7 +255,7 @@
     @{
       Id = 'lead-developer'
       DisplayName = 'Lead Developer'
-      SoulCap = 43008
+      SoulCap = 62464
       Writer = $true
       SubAgents = @{ enabled = $true; maxDepth = 1 }
       Effort = 'high'
@@ -280,7 +284,7 @@
     @{
       Id = 'mcp-integration-engineer'
       DisplayName = 'MCP Integration Engineer'
-      SoulCap = 32768
+      SoulCap = 44032
       Writer = $true
       SubAgents = @{ enabled = $false; maxDepth = 0 }
       Effort = 'default'
@@ -309,7 +313,7 @@
     @{
       Id = 'qa-engineer'
       DisplayName = 'QA Engineer'
-      SoulCap = 32768
+      SoulCap = 44032
       Writer = $true
       SubAgents = @{ enabled = $false; maxDepth = 0 }
       Effort = 'default'
@@ -337,7 +341,7 @@
     @{
       Id = 'researcher'
       DisplayName = 'Researcher'
-      SoulCap = 18432
+      SoulCap = 22528
       Writer = $false
       SubAgents = @{ enabled = $false; maxDepth = 0 }
       Effort = 'default'
@@ -361,7 +365,7 @@
     @{
       Id = 'security-reviewer'
       DisplayName = 'Security Reviewer'
-      SoulCap = 22528
+      SoulCap = 28672
       Writer = $false
       SubAgents = @{ enabled = $false; maxDepth = 0 }
       Effort = 'high'
@@ -386,7 +390,7 @@
     @{
       Id = 'software-architect'
       DisplayName = 'Software Architect'
-      SoulCap = 22528
+      SoulCap = 28672
       Writer = $false
       SubAgents = @{ enabled = $false; maxDepth = 0 }
       Effort = 'high'
@@ -410,7 +414,7 @@
     @{
       Id = 'technical-writer'
       DisplayName = 'Technical Writer'
-      SoulCap = 32768
+      SoulCap = 44032
       Writer = $true
       SubAgents = @{ enabled = $false; maxDepth = 0 }
       Effort = 'default'
@@ -439,7 +443,7 @@
     @{
       Id = 'ui-ux-designer'
       DisplayName = 'UI/UX Designer'
-      SoulCap = 32768
+      SoulCap = 51200
       Writer = $true
       SubAgents = @{ enabled = $false; maxDepth = 0 }
       Effort = 'default'
@@ -467,7 +471,7 @@
     @{
       Id = 'visual-designer'
       DisplayName = 'Visual Designer'
-      SoulCap = 32768
+      SoulCap = 51200
       Writer = $true
       SubAgents = @{ enabled = $false; maxDepth = 0 }
       Effort = 'default'

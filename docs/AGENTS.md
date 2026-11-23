@@ -319,9 +319,9 @@ tests/agents/                 Test-AgentPackages.ps1 (A-L), fixtures/, evals/
 ```
 
 **Budgets** (`Test-AgentSources.ps1` section E fails over any of them and prints a headroom table):
-- Composed SOUL, `SoulCap` in `family.psd1`: lead-developer 43,008 B; developer, qa-engineer, debugger, ui-ux-designer, frontend-developer, design-system-engineer, visual-designer, e2e-test-engineer, mcp-integration-engineer and technical-writer 32,768 B; software-architect, code-reviewer, security-reviewer and accessibility-reviewer 22,528 B; researcher and artifact-creator 18,432 B.
+- Composed SOUL, `SoulCap` in `family.psd1` (the 3.0 tiers, option A of the design's byte ledger): lead-developer 62,464 B; ui-ux-designer, frontend-developer, design-system-engineer and visual-designer 51,200 B; developer, debugger, qa-engineer, e2e-test-engineer, mcp-integration-engineer and technical-writer 44,032 B; software-architect, code-reviewer, security-reviewer and accessibility-reviewer 28,672 B; researcher and artifact-creator 22,528 B. Caps are data: raising one changes the family file and its header comment, never code.
 - Each fragment at most 4,096 B, each TOOLS.md at most 2,048 B, each README at most 12 KiB (the lead's 24 KiB).
-- The design planned 36,864 B and 28,672 B for the lead and the writers on an estimate of about 17.5 KB of shared writer text. The fragments it mandates measure about 25 KB, so those two caps were raised rather than cutting runtime workarounds. Every child pays for its whole SOUL, uncached: keep role text terse and cut before you raise a cap again.
+- Every child pays for its whole SOUL, uncached: keep role text terse and cut before you raise a cap again.
 
 **Verification sequence** (from the repository root; needs PowerShell 7 and Sophon CLI 2.2.x):
 
