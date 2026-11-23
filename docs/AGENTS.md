@@ -290,7 +290,7 @@ The agents read the project instructions as trusted conventions, and they sugges
 
 ## 13. Maintainers: build, test and publish
 
-**Sources.** `agents/<id>/` holds only the 5 package files. Each `SOUL.md` is generated: never edit it by hand.
+**Sources.** `agents/<id>/` holds only the 5 package files. Each `SOUL.md` is generated, and so is the `README.md` of every development agent: never edit them by hand. `build/Compose-AgentSouls.ps1` composes the READMEs after the SOULs, from `readmes/<id>.md` and the shared `fragments/readme/<NN-id>.md` blocks (`{{> readme/<NN-id>}}`; a source includes only fragments of its own kind). Besides the family values a README source may use `{{= FamilyVersion}}`, `{{= Id}}`, `{{= DisplayName}}`, `{{= License}}`, `{{= SoulTokens}}` and `{{= SoulTokensDelta}}` (composed SOUL bytes / 3.8, and the growth against the 2.1.0 baseline, each to the nearest hundred); a digit before "tokens" is a compose error. A line `{{# roster}}` becomes the roster table (rows from `RosterOrder` and each agent's `Summary`, `Changes` and `Commits`, Delegates from `SubAgents`, the agent's own row in bold) and `{{# credits}}` its credit lines and licence sentence. `-Check` reports README drift like SOUL drift. The video family has no `readmes/` folder, so its README stays hand-written.
 
 Each agent's `LICENSE` must be byte-identical to its canonical source: the root `LICENSE` for MIT,
 and `build/licenses/Apache-2.0.txt` for Apache-2.0. The roster can override the family license,
@@ -303,12 +303,16 @@ build/agent-src/
   families.psd1               the family registry (section 14)
   family.psd1                 development roster, fragment order, SoulCap, SubAgents, Effort, License,
                               Category, RequiredTags, Credits, Values (commit trailer, PR footer,
-                              plan folder), AllowedHosts
+                              plan folder), AllowedHosts, RosterOrder and the roster-table cells
   souls/<id>.md               role text + include lines ({{> soul/<NN-id>}})
   fragments/soul/<NN-id>.md   21 shared fragments, at most 4,096 bytes each
+  readmes/<id>.md             README source per development agent ({{> readme/<NN-id>}}, {{# roster}})
+  fragments/readme/<NN-id>.md shared README blocks (none yet)
   families/video/             the video family: family.psd1, souls/, fragments/soul/
   catalog/sophon-tools.psd1   real Sophon tool names (pinned to sophon a431e1a64, v2.2.2)
   catalog/scan-rules.psd1     the marketplace and runtime scanner rules the preflight replays
+  catalog/soul-baseline.psd1  the composed SOUL sizes at 2.1.0 (budget table, SoulTokensDelta)
+  catalog/doc-counts.psd1     DOC-COUNT documents, allowed numbers and history phrases
 build/licenses/Apache-2.0.txt the LICENSE the Apache-2.0 agents ship
 build/AgentFamily.psm1        registry, roster and composer
 build/AgentLint.psm1          tool-name lint, scanner preflight, TOOLS.md parser, manifest checks
@@ -322,17 +326,19 @@ tests/agents/                 Test-AgentPackages.ps1 (A-N), fixtures/, evals/
 - Composed SOUL, `SoulCap` in `family.psd1` (the 3.0 tiers, option A of the design's byte ledger): lead-developer 62,464 B; ui-ux-designer, frontend-developer, design-system-engineer and visual-designer 51,200 B; developer, debugger, qa-engineer, e2e-test-engineer, mcp-integration-engineer and technical-writer 44,032 B; software-architect, code-reviewer, security-reviewer and accessibility-reviewer 28,672 B; researcher and artifact-creator 22,528 B. Caps are data: raising one changes the family file and its header comment, never code.
 - Headroom: under 8% of the cap free prints `WARN BUDGET-HEADROOM`; under 5% free is an error only with `-Release` (alias `-StrictHeadroom`, on `Test-AgentSources.ps1` and `Build-AgentPackages.ps1`). Warnings never change the exit code. An optional per-agent `RoleCap` caps the role text (the template without include and comment lines; `BUDGET-ROLE`). The table also shows the change against `build/agent-src/catalog/soul-baseline.psd1` (the 2.1.0 sizes).
 - Each fragment at most 4,096 B, each TOOLS.md at most 2,048 B, each README at most 12 KiB (the lead's 24 KiB).
+- Every child pays for its whole SOUL, uncached: keep role text terse and cut before you raise a cap again.
+
+**Other source checks.**
 - **Method registry** (section M of `Test-AgentSources.ps1`, each check only when its data exists): the optional family key `Method` lists the tested rules (a whole fragment, or a block from an `Anchor` line to the end of its `| Excuse | Reality |` table) and the controller/worker split. `METHOD-CONTROLLER` keeps controller fragments and terms out of agents that do not delegate and requires the worker fragments; `METHOD-EXCUSES` requires exactly one canonical excuse table (3-6 rows) per rule and none outside a rule; `METHOD-REFERENCE` keeps a skill's tools inside the reference fragment its `SkillPolicy` entry names. The development family does not set `Method` yet; the fixtures are `tests/agents/fixtures/method/cases.psd1`.
 - **Document counts** (`DOC-COUNT`, section N, once per repository): a number of 10 or more before "agents", "packages" or "companions" in the documents listed in `build/agent-src/catalog/doc-counts.psd1` must be a roster count derived from the families (all packages, a family roster, the `RosterOrder` table, the lead's companions) or an allowed value; an intended older count goes under `History`. It warns, and fails only with `-Release`.
 - **Control arms.** `Compose-AgentSouls.ps1 -Agents <id> -Omit <rule or fragment id> -OutDir <folder>` composes an agent without a registered rule (or a fragment) for a pressure scenario. It is refused without `-OutDir`, with `-Check`, for an `-OutDir` inside `agents/`, and for an agent that does not carry the id; it prints the source, line range, lines and bytes it removed.
-- Every child pays for its whole SOUL, uncached: keep role text terse and cut before you raise a cap again.
 
 **Verification sequence** (from the repository root; needs PowerShell 7 and Sophon CLI 2.2.x):
 
 ```powershell
 pwsh --version                                                    # 7.x
 sophon --version                                                  # 2.2.x (2.2.2+a431e1a64 known)
-pwsh -NoProfile -File build/Compose-AgentSouls.ps1                # regenerate agents/*/SOUL.md
+pwsh -NoProfile -File build/Compose-AgentSouls.ps1                # regenerate SOUL.md and development README.md
 pwsh -NoProfile -File build/Compose-AgentSouls.ps1 -Check         # exit 0, no drift
 pwsh -NoProfile -File build/Test-AgentSources.ps1                 # lint, preflight, budgets, manifests, TOOLS.md
 pwsh -NoProfile -File build/Build-AgentPackages.ps1 -ValidateOnly # sophon dev validate: 0 errors, 0 warnings
@@ -340,10 +346,10 @@ pwsh -NoProfile -File build/Build-AgentPackages.ps1               # 18 x <id>-<v
 Get-Content dist/agents/SHA256SUMS
 pwsh -NoProfile -File tests/agents/Test-AgentPackages.ps1         # sections A-N
 pwsh -File build/Build-MarketplacePackages.ps1 -ValidateOnly      # skills unaffected
-git status --porcelain                                            # only intended sources + generated SOULs
+git status --porcelain                                            # only intended sources + generated files
 ```
 
-- **The builder** checks the folders against the roster, the CLI version, the composer (`-Check`; drift fails with "SOUL drift — run the composer"), `Test-AgentSources.ps1` and `sophon dev validate --json` per agent. Any CLI error **or warning** fails the build. It then writes `dist/agents/<id>-<version>.sophon-agent` and `dist/agents/SHA256SUMS`.
+- **The builder** checks the folders against the roster, the CLI version, the composer (`-Check`; drift fails with "SOUL or README drift — run the composer"), `Test-AgentSources.ps1` and `sophon dev validate --json` per agent. Any CLI error **or warning** fails the build. It then writes `dist/agents/<id>-<version>.sophon-agent` and `dist/agents/SHA256SUMS`.
   - It removes stale packages: all of them on a full build, only the selected ids' on a subset build, which prints "SHA256SUMS covers only: …".
   - A failed build leaves no SHA256SUMS. It never installs or publishes.
 - **The tests.** `tests/agents/Test-AgentPackages.ps1 -SourceOnly` runs sections A-I, L, M and N without the CLI. See [`tests/README.md`](../tests/README.md).

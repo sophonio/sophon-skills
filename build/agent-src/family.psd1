@@ -4,6 +4,8 @@
 # Fragments is each agent's list of top-level includes, in template order; the composer
 # (build/Compose-AgentSouls.ps1) fails when a template's includes differ from it.
 # Values are substituted for {{= Key}} in templates and fragments; never write them literally.
+# READMEs are generated too: build/agent-src/readmes/<id>.md (plus fragments/readme/) composes agents/<id>/README.md;
+# RosterOrder and each agent's Summary, Changes and Commits feed its {{# roster}} table.
 # SoulCap (bytes of the composed SOUL.md; data only, not packaged), by tier, option A of the 3.0 ledger
 # (docs/plans/2026-11-23-agents-v3-design.md, "Fragment matrix and byte ledger"): lead 62464; design writers
 # (ui-ux-designer, frontend-developer, design-system-engineer, visual-designer) 51200; writers 44032; readers
@@ -68,6 +70,9 @@
     @{
       Id = 'accessibility-reviewer'
       DisplayName = 'Accessibility Reviewer'
+      Summary = 'WCAG 2.2 AA: audit / review'
+      Changes = 'no'
+      Commits = 'no'
       SoulCap = 28672
       Writer = $false
       SubAgents = @{ enabled = $false; maxDepth = 0 }
@@ -107,6 +112,9 @@
     @{
       Id = 'code-reviewer'
       DisplayName = 'Code Reviewer'
+      Summary = 'review / refute / re-review / completeness'
+      Changes = 'no'
+      Commits = 'no'
       SoulCap = 28672
       Writer = $false
       SubAgents = @{ enabled = $false; maxDepth = 0 }
@@ -132,6 +140,9 @@
     @{
       Id = 'debugger'
       DisplayName = 'Debugger'
+      Summary = 'root cause first, then a fix when asked'
+      Changes = 'fix + regression test, when asked'
+      Commits = 'yes'
       SoulCap = 44032
       Writer = $true
       SubAgents = @{ enabled = $false; maxDepth = 0 }
@@ -160,6 +171,9 @@
     @{
       Id = 'design-system-engineer'
       DisplayName = 'Design System Engineer'
+      Summary = 'audit / tokens / theme / playground / brand-check'
+      Changes = 'tokens, themes, components'
+      Commits = 'yes'
       SoulCap = 51200
       Writer = $true
       SubAgents = @{ enabled = $false; maxDepth = 0 }
@@ -189,6 +203,9 @@
     @{
       Id = 'developer'
       DisplayName = 'Developer'
+      Summary = 'implementer: tdd / direct / debug'
+      Changes = 'yes'
+      Commits = 'yes'
       SoulCap = 44032
       Writer = $true
       SubAgents = @{ enabled = $false; maxDepth = 0 }
@@ -217,6 +234,9 @@
     @{
       Id = 'e2e-test-engineer'
       DisplayName = 'E2E Test Engineer'
+      Summary = 'browser end-to-end tests: write / visual / flake'
+      Changes = 'e2e tests'
+      Commits = 'yes'
       SoulCap = 44032
       Writer = $true
       SubAgents = @{ enabled = $false; maxDepth = 0 }
@@ -246,6 +266,9 @@
     @{
       Id = 'frontend-developer'
       DisplayName = 'Frontend Developer'
+      Summary = 'UI implementer: component / direct / artifact / perf'
+      Changes = 'yes'
+      Commits = 'yes'
       SoulCap = 51200
       Writer = $true
       SubAgents = @{ enabled = $false; maxDepth = 0 }
@@ -275,6 +298,9 @@
     @{
       Id = 'lead-developer'
       DisplayName = 'Lead Developer'
+      Summary = 'orchestrator: sizes, plans, builds, verifies, commits'
+      Changes = 'yes'
+      Commits = 'yes'
       SoulCap = 62464
       Writer = $true
       SubAgents = @{ enabled = $true; maxDepth = 1 }
@@ -304,6 +330,9 @@
     @{
       Id = 'mcp-integration-engineer'
       DisplayName = 'MCP Integration Engineer'
+      Summary = 'MCP servers: design / build / evals'
+      Changes = 'yes'
+      Commits = 'yes'
       SoulCap = 44032
       Writer = $true
       SubAgents = @{ enabled = $false; maxDepth = 0 }
@@ -333,6 +362,9 @@
     @{
       Id = 'qa-engineer'
       DisplayName = 'QA Engineer'
+      Summary = 'verification gate, regression checks, tests'
+      Changes = 'tests, when asked'
+      Commits = 'yes'
       SoulCap = 44032
       Writer = $true
       SubAgents = @{ enabled = $false; maxDepth = 0 }
@@ -361,6 +393,9 @@
     @{
       Id = 'researcher'
       DisplayName = 'Researcher'
+      Summary = 'codebase and web facts, every claim cited'
+      Changes = 'no'
+      Commits = 'no'
       SoulCap = 22528
       Writer = $false
       SubAgents = @{ enabled = $false; maxDepth = 0 }
@@ -385,6 +420,9 @@
     @{
       Id = 'security-reviewer'
       DisplayName = 'Security Reviewer'
+      Summary = 'exploitable vulnerabilities only'
+      Changes = 'no'
+      Commits = 'no'
       SoulCap = 28672
       Writer = $false
       SubAgents = @{ enabled = $false; maxDepth = 0 }
@@ -410,6 +448,9 @@
     @{
       Id = 'software-architect'
       DisplayName = 'Software Architect'
+      Summary = 'blueprint / ADR / greenfield / compare / critique'
+      Changes = 'its plan or ADR file only'
+      Commits = 'no'
       SoulCap = 28672
       Writer = $false
       SubAgents = @{ enabled = $false; maxDepth = 0 }
@@ -434,6 +475,9 @@
     @{
       Id = 'technical-writer'
       DisplayName = 'Technical Writer'
+      Summary = 'documentation: draft / edit / reader-test'
+      Changes = 'documentation files'
+      Commits = 'yes'
       SoulCap = 44032
       Writer = $true
       SubAgents = @{ enabled = $false; maxDepth = 0 }
@@ -463,6 +507,9 @@
     @{
       Id = 'ui-ux-designer'
       DisplayName = 'UI/UX Designer'
+      Summary = 'direction / build / critique / copy / judge'
+      Changes = 'UI presentation files'
+      Commits = 'yes'
       SoulCap = 51200
       Writer = $true
       SubAgents = @{ enabled = $false; maxDepth = 0 }
@@ -491,6 +538,9 @@
     @{
       Id = 'visual-designer'
       DisplayName = 'Visual Designer'
+      Summary = 'concept / art / generative / image / motion'
+      Changes = 'asset files'
+      Commits = 'yes'
       SoulCap = 51200
       Writer = $true
       SubAgents = @{ enabled = $false; maxDepth = 0 }

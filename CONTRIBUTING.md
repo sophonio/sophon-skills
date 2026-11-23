@@ -205,10 +205,10 @@ come in two families, registered in `build/agent-src/families.psd1`: **developme
 agents and Artifact Creator, `build/agent-src/family.psd1`) and **video** (`video-producer`,
 `build/agent-src/families/video/family.psd1`).
 
-- Each `agents/<id>/SOUL.md` is generated. Edit the sources of its family (the `souls/` and
-  `fragments/soul/` folders beside its family file), then run
-  `pwsh -File build/Compose-AgentSouls.ps1`. Never edit a SOUL.md by hand. Families share no
-  fragments.
+- Each `agents/<id>/SOUL.md` is generated, and so is each development agent's `README.md`. Edit the
+  sources of its family (the `souls/`, `fragments/soul/`, `readmes/` and `fragments/readme/`
+  folders beside its family file), then run `pwsh -File build/Compose-AgentSouls.ps1`. Never edit a
+  SOUL.md or a generated README.md by hand. Families share no fragments.
 - An agent may use a skill's tools only through its family's `SkillPolicy`: the skill goes in
   `requires.skills`, its tools may be named and pinned, and they never go in `requires.tools`.
 - Before a PR, run `pwsh -NoProfile -File build/Test-AgentSources.ps1` (CI runs it together with

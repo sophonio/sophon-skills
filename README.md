@@ -45,7 +45,8 @@ All seventeen are authored by **Buildersoft LLC** and require **Sophon 2.2.0+**.
 | [MCP Integration Engineer](agents/mcp-integration-engineer) | MCP servers: design, build, evals | no | no |
 | [Technical Writer](agents/technical-writer) | Documentation drafted with you, edited or reader-tested; every command checked | no | no |
 
-Each `agents/<id>/SOUL.md` is generated from `build/agent-src/`; never edit it by hand. Compose,
+Each `agents/<id>/SOUL.md`, and each development agent's `README.md`, is generated from
+`build/agent-src/`; never edit them by hand. Compose,
 check and build with Sophon CLI 2.2.x on PATH:
 
 Each package's `LICENSE` matches its canonical source byte for byte: the root `LICENSE` for MIT,

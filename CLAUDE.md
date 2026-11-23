@@ -99,14 +99,18 @@ the rosters. The tools take `-Family <id>` to work on one family (default: all).
   `anthropicSkills`), and so is Artifact Creator. The manifest `license` and the README sentence
   ("Licensed under the MIT License; see LICENSE." or "Licensed under the Apache-2.0 License; see
   LICENSE.") must match it.
-- **Never hand-edit `agents/*/SOUL.md`.** It is generated: edit the family's sources beside its
-  family file (`souls/<id>.md` for role text, `fragments/soul/<NN-id>.md` for shared protocol) and run
-  `pwsh -File build/Compose-AgentSouls.ps1`. CI fails on drift. Manifests, TOOLS.md and READMEs
-  are hand-written.
+- **Never hand-edit `agents/*/SOUL.md`, nor a development agent's `README.md`.** Both are generated:
+  edit the family's sources beside its family file (`souls/<id>.md` for role text,
+  `fragments/soul/<NN-id>.md` for shared protocol, `readmes/<id>.md` and `fragments/readme/<NN-id>.md`
+  for README text; the roster table comes from `RosterOrder` and each agent's `Summary`, `Changes`
+  and `Commits`) and run `pwsh -File build/Compose-AgentSouls.ps1`. CI fails on drift. Manifests and
+  TOOLS.md are hand-written, and so is the README of a family without a `readmes/` folder (video).
 - **Commands.**
   - Compose: `pwsh -NoProfile -File build/Compose-AgentSouls.ps1` (`-Check` for drift, `-Explain`
-    for line provenance and which agents include each fragment)
-  - Source checks, no CLI: `pwsh -NoProfile -File build/Test-AgentSources.ps1`
+    for line provenance and which agents include each fragment, `-Omit <id> -OutDir <dir>` for a
+    control arm)
+  - Source checks, no CLI: `pwsh -NoProfile -File build/Test-AgentSources.ps1` (`-Release` makes
+    headroom under 5%, a missing RoleCap and DOC-COUNT errors instead of warnings)
   - Validate: `pwsh -NoProfile -File build/Build-AgentPackages.ps1 -ValidateOnly` (Sophon CLI
     2.2.x; any CLI warning fails)
   - Build: `pwsh -NoProfile -File build/Build-AgentPackages.ps1` → `dist/agents/<id>-<version>.sophon-agent` + `SHA256SUMS`
