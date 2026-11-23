@@ -86,7 +86,10 @@ $script:LenientUtf8 = [System.Text.UTF8Encoding]::new($false, $false)
 $script:IncludeRegex = [regex]::new('^\{\{> (?<ref>[^{}\s]+)\}\}$')
 $script:KindRefRegex = [regex]::new('^(?<kind>soul|readme)/(?<id>[0-9]{2}[a-z]?-[a-z0-9]+(?:-[a-z0-9]+)*)$')
 $script:DirectiveRegex = [regex]::new('^\{\{# (?<name>[a-z]+)\}\}$')
-$script:TokenFigureRegex = [regex]::new('\d[\d,.]*\s+tokens\b', 'IgnoreCase, CultureInvariant')
+# A hand-written figure: a number (with an optional k suffix) up to three words before "tokens", so
+# "4,300 tokens", "about 4,300 more tokens" and "8k tokens" all fail. It runs on the raw source line,
+# so "{{= SoulTokensDelta}} more tokens" passes.
+$script:TokenFigureRegex = [regex]::new('\b\d[\d,.]*k?\b(?:\s+[A-Za-z-]+){0,3}\s+tokens\b', 'IgnoreCase, CultureInvariant')
 $script:FragmentRefRegex = [regex]::new('^soul/(?<id>[0-9]{2}[a-z]?-[a-z0-9]+(?:-[a-z0-9]+)*)$')
 $script:FragmentIdRegex = [regex]::new('^[0-9]{2}[a-z]?-[a-z0-9]+(?:-[a-z0-9]+)*$')
 $script:ValueRegex = [regex]::new('\{\{= (?<key>[A-Za-z][A-Za-z0-9]*)\}\}')
