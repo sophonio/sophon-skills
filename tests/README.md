@@ -83,9 +83,9 @@ otherwise.
 
 ## Agent package tests (`tests/agents/`)
 
-`Test-AgentPackages.ps1` checks the eleven agent packages in `agents/` end to end: the development
-family's nine MIT development agents and the Apache-2.0 productivity agent `artifact-creator`, and
-the video family's `video-producer`. It needs PowerShell 7; sections J and K also
+`Test-AgentPackages.ps1` checks the eighteen agent packages in `agents/` end to end: the development
+family's sixteen development agents (nine MIT, seven Apache-2.0) and the Apache-2.0 productivity
+agent `artifact-creator`, and the video family's `video-producer`. It needs PowerShell 7; sections J and K also
 need Sophon CLI 2.2.x on PATH.
 
 ```powershell
@@ -111,7 +111,7 @@ pwsh -NoProfile -File build/Test-AgentSources.ps1
 | H | attribution: exact commit trailer and PR footer bytes in every committing agent, none in the read-only ones |
 | I | README credits |
 | J | `sophon --version` matches each family's `SophonCli`; `sophon dev validate --json` per agent: ok, projectType agent, no errors, no warnings |
-| K | `build/Build-AgentPackages.ps1` into a temp folder: a decoy package removed; 10 `<id>-<version>.sophon-agent` (each version from its manifest); SHA256SUMS (10 lines, ordinal file-name order, LF, hashes recomputed); zip entries `manifest.json` first then ordinal, equal to the sources byte for byte, stamped 1980-01-01 00:00:00; identical repeat build; a subset build; failure cases (unknown agent, roster mismatch, name mismatch, SOUL drift, a lint error) |
+| K | `build/Build-AgentPackages.ps1` into a temp folder: a decoy package removed; 18 `<id>-<version>.sophon-agent` (each version from its manifest); SHA256SUMS (18 lines, ordinal file-name order, LF, hashes recomputed); zip entries `manifest.json` first then ordinal, equal to the sources byte for byte, stamped 1980-01-01 00:00:00; identical repeat build; a subset build; failure cases (unknown agent, roster mismatch, name mismatch, SOUL drift, a lint error) |
 | L | families: a temporary copy with the fixture family `tests/agents/fixtures/families/media/` installed composes, lints and checks on its own (`-Family`); the roster union, and an id in two families fails; the legacy single family without a registry; `SkillPolicy` allows exactly its skill's tools (and the development family none: `LINT-SKILL`, `TOOLS-PIN-UNKNOWN`); `message.send` named only where `AllowRestrictedMentions` allows it and never pinned; `requires.skills` and `requires.tools` variants against `MAN-REQUIRES`; a skill below `MinVersion` fails `MAN-SKILL-VERSION` |
 
 Each section prints PASS, FAIL or SKIP, and the script exits 1 on any failure. Temporary folders

@@ -2,7 +2,7 @@
 
 Takes a code change from request to a ready-to-merge branch: sizes it, plans it with you, builds it (alone or with specialist sub-agents you agree to), proves it with real commands, commits each verified task and offers a pull request.
 
-Part of the Buildersoft development family 2.0.0.
+Part of the Buildersoft development family 2.1.0.
 
 | Agent | Role | Delegates | Changes files | Commits |
 |---|---|---|---|---|
@@ -14,8 +14,14 @@ Part of the Buildersoft development family 2.0.0.
 | qa-engineer | verification gate, regression checks, tests | no | tests, when asked | yes |
 | debugger | root cause first, then a fix when asked | no | fix + regression test, when asked | yes |
 | security-reviewer | exploitable vulnerabilities only | no | no | no |
-| ui-ux-designer | direction / build / critique / copy / judge | no | UI files | yes |
-
+| ui-ux-designer | direction / build / critique / copy / judge | no | UI presentation files | yes |
+| frontend-developer | UI implementer: component / direct / artifact / perf | no | yes | yes |
+| design-system-engineer | audit / tokens / theme / playground / brand-check | no | tokens, themes, components | yes |
+| visual-designer | concept / art / generative / image / motion | no | asset files | yes |
+| e2e-test-engineer | browser end-to-end tests: write / visual / flake | no | e2e tests | yes |
+| accessibility-reviewer | WCAG 2.2 AA: audit / review | no | no | no |
+| mcp-integration-engineer | MCP servers: design / build / evals | no | yes | yes |
+| technical-writer | documentation: draft / edit / reader-test | no | documentation files | yes |
 Only Lead Developer starts sub-agents. The others work alone when you talk to them directly, and as the lead's specialists when it delegates to them.
 
 ## When to use
@@ -95,6 +101,18 @@ sophon agents install security-reviewer --allow-delegation-from lead-developer
 sophon agents install ui-ux-designer --allow-delegation-from lead-developer
 ```
 
+The frontend and design companions added in 2.1.0 install the same way; add only the ones you use:
+
+```
+sophon agents install frontend-developer --allow-delegation-from lead-developer
+sophon agents install design-system-engineer --allow-delegation-from lead-developer
+sophon agents install visual-designer --allow-delegation-from lead-developer
+sophon agents install e2e-test-engineer --allow-delegation-from lead-developer
+sophon agents install accessibility-reviewer --allow-delegation-from lead-developer
+sophon agents install mcp-integration-engineer --allow-delegation-from lead-developer
+sophon agents install technical-writer --allow-delegation-from lead-developer
+```
+
 Then check that **Effective targets** lists the companions. Keep each agent id equal to its package name: a `-2` suffix still matches, but avoid it. The lead finds companions through the `Family role: <slug>.` line in each one's when-to-use text; a missing companion is replaced by a stand-in that runs the lead's own rules with a pasted checklist, labelled lower confidence.
 
 **3. Set effort.** A package cannot set effort. Recommended:
@@ -103,7 +121,7 @@ Then check that **Effective targets** lists the companions. Keep each agent id e
 sophon agents models lead-developer --effort high
 ```
 
-Do the same for software-architect, code-reviewer, security-reviewer and debugger; leave the rest at the default. A companion's effort reaches its delegated runs only while the lead's chat has no effort of its own (`/effort reset`).
+Do the same for software-architect, code-reviewer, security-reviewer, debugger and accessibility-reviewer; leave the rest at the default. A companion's effort reaches its delegated runs only while the lead's chat has no effort of its own (`/effort reset`).
 
 **4. Upgrading from 1.0.0: set the delegation depth to 1.** Updating a package never changes its delegation settings, so a 1.0.0 lead keeps depth 2. Set it in Dashboard → Agents → Lead Developer → Delegation → Max depth, or with `PUT /api/agents/lead-developer/subagents`. Depth 1 keeps every consent question and card estimate at the top level, where the lead can ask you. Add the new companions (code-reviewer, debugger, security-reviewer) to an existing allow list.
 
@@ -136,6 +154,9 @@ The keyword decides consent only. Size still decides the phases, so a trivial ch
 - **qa-engineer**: test-strategy gaps in Large reviews.
 - **debugger**: one read-only hypothesis check when a repair keeps failing.
 - **ui-ux-designer**: a UX critique lens for UI changes.
+- **frontend-developer**: Implement waves for UI tasks: components, state, forms and browser checks.
+- **accessibility-reviewer**: a WCAG 2.2 AA lens for UI changes.
+- **design-system-engineer**, **visual-designer**, **e2e-test-engineer**, **mcp-integration-engineer** and **technical-writer**: plan tasks in their own areas, briefed by mode.
 
 ## Limits
 
@@ -156,6 +177,11 @@ The keyword decides consent only. Size still decides the phases, so a trivial ch
 - Install agents or split work with Sophon workflows.
 - Ask for a token in chat, or repeat secret values in plans, commits, PR bodies or briefs.
 - Run `git init` in a folder that is not a repository.
+
+## What's new in 2.1.0
+
+- Seven companions joined the family: `frontend-developer`, `design-system-engineer`, `visual-designer`, `e2e-test-engineer`, `accessibility-reviewer`, `mcp-integration-engineer` and `technical-writer`. They are licensed Apache-2.0; this agent stays MIT. Add the ones you install to an existing Lead Developer allow-list.
+- Delegates UI code to `frontend-developer`, adds `accessibility-reviewer` as a UI review lens, and knows each new companion's modes and brief keys.
 
 ## What's new in 2.0.0
 

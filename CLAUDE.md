@@ -71,8 +71,8 @@ wrapping folder); excludes `__pycache__/`, `dist/`, `.DS_Store`, `Thumbs.db`, `*
 
 ## Agent packages (`agents/`)
 
-Eleven `.sophon-agent` packages in two families, listed in the registry
-`build/agent-src/families.psd1`: **development** (nine development agents plus the Artifact
+Eighteen `.sophon-agent` packages in two families, listed in the registry
+`build/agent-src/families.psd1`: **development** (sixteen development agents plus the Artifact
 Creator productivity agent, `build/agent-src/family.psd1`, souls and fragments beside it) and
 **video** (`video-producer`, `build/agent-src/families/video/family.psd1`, its own `souls/` and
 `fragments/soul/`). Families
@@ -93,6 +93,12 @@ the rosters. The tools take `-Family <id>` to work on one family (default: all).
   Apache-2.0. The roster may override the family license, category and required tags per agent.
   UTF-8 without BOM, LF, no tabs, no trailing whitespace,
   one final newline.
+- **Licenses.** An agent entry in `family.psd1` may set `License = 'Apache-2.0'`; without it the
+  agent takes the family license (MIT). The nine original development agents stay MIT; the seven
+  added in 2.1 are Apache-2.0 because they adapt anthropics/skills text (Credits key
+  `anthropicSkills`), and so is Artifact Creator. The manifest `license` and the README sentence
+  ("Licensed under the MIT License; see LICENSE." or "Licensed under the Apache-2.0 License; see
+  LICENSE.") must match it.
 - **Never hand-edit `agents/*/SOUL.md`.** It is generated: edit the family's sources beside its
   family file (`souls/<id>.md` for role text, `fragments/soul/<NN-id>.md` for shared protocol) and run
   `pwsh -File build/Compose-AgentSouls.ps1`. CI fails on drift. Manifests, TOOLS.md and READMEs

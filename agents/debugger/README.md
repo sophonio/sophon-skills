@@ -2,7 +2,7 @@
 
 Turns a symptom into a proven root cause: it reproduces the problem, tests one hypothesis at a time and shows the evidence before anyone changes code.
 
-Part of the Buildersoft development family 2.0.0.
+Part of the Buildersoft development family 2.1.0.
 
 | Agent | Role | Delegates | Changes files | Commits |
 |---|---|---|---|---|
@@ -14,8 +14,14 @@ Part of the Buildersoft development family 2.0.0.
 | qa-engineer | verification gate, regression checks, tests | no | tests, when asked | yes |
 | **debugger** (this one) | root cause first, then a fix when asked | no | fix + regression test, when asked | yes |
 | security-reviewer | exploitable vulnerabilities only | no | no | no |
-| ui-ux-designer | direction / build / critique / copy / judge | no | UI files | yes |
-
+| ui-ux-designer | direction / build / critique / copy / judge | no | UI presentation files | yes |
+| frontend-developer | UI implementer: component / direct / artifact / perf | no | yes | yes |
+| design-system-engineer | audit / tokens / theme / playground / brand-check | no | tokens, themes, components | yes |
+| visual-designer | concept / art / generative / image / motion | no | asset files | yes |
+| e2e-test-engineer | browser end-to-end tests: write / visual / flake | no | e2e tests | yes |
+| accessibility-reviewer | WCAG 2.2 AA: audit / review | no | no | no |
+| mcp-integration-engineer | MCP servers: design / build / evals | no | yes | yes |
+| technical-writer | documentation: draft / edit / reader-test | no | documentation files | yes |
 ## When to use
 
 - An error or stack trace you can't explain.
@@ -78,6 +84,10 @@ Part of the Buildersoft development family 2.0.0.
 - Run commands copied from logs, issues or forums; it reads and explains them instead.
 - Touch production systems or deploy.
 - Push or open a pull request without your choice in the Git menu, or commit outside an approved plan unless you ask.
+
+## What's new in 2.1.0
+
+- Seven companions joined the family: `frontend-developer`, `design-system-engineer`, `visual-designer`, `e2e-test-engineer`, `accessibility-reviewer`, `mcp-integration-engineer` and `technical-writer`. They are licensed Apache-2.0; this agent stays MIT. Add the ones you install to an existing Lead Developer allow-list.
 
 ## What's new in 2.0.0
 

@@ -79,8 +79,25 @@ agent.list finds companions; web.scrape reads docs; session.history restores con
                @('Family role: lead-developer.', 'Family role: developer.'),
                @('"enabled": true,', '"enabled": false,'),
                @('"maxDepth": 1', '"maxDepth": 0')) }
+        @{ Name = 'agent with its own Apache-2.0 license'; Id = 'frontend-developer'; Expect = 'pass'
+           Replace = @(
+               @('"name": "lead-developer"', '"name": "frontend-developer"'),
+               @('"displayName": "Lead Developer"', '"displayName": "Frontend Developer"'),
+               @('"license": "MIT"', '"license": "Apache-2.0"'),
+               @('Family role: lead-developer.', 'Family role: frontend-developer.'),
+               @('"enabled": true,', '"enabled": false,'),
+               @('"maxDepth": 1', '"maxDepth": 0')) }
 
         # ---- must fail ----
+        @{ Name = 'Apache-2.0 agent declaring the family MIT license'; Id = 'frontend-developer'; Expect = 'fail'; Rule = 'MAN-META'
+           Replace = @(
+               @('"name": "lead-developer"', '"name": "frontend-developer"'),
+               @('"displayName": "Lead Developer"', '"displayName": "Frontend Developer"'),
+               @('Family role: lead-developer.', 'Family role: frontend-developer.'),
+               @('"enabled": true,', '"enabled": false,'),
+               @('"maxDepth": 1', '"maxDepth": 0')) }
+        @{ Name = 'MIT agent declaring Apache-2.0'; Expect = 'fail'; Rule = 'MAN-META'
+           Replace = @(, @('"license": "MIT"', '"license": "Apache-2.0"')) }
         @{ Name = 'not JSON'; Expect = 'fail'; Rule = 'MAN-JSON'
            Replace = @(, @('"type": "agent",', '"type": "agent"')) }
         @{ Name = 'CR line ending'; Expect = 'fail'; Rule = 'MAN-FORMAT'

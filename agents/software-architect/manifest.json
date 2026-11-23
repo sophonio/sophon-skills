@@ -3,7 +3,7 @@
   "schemaVersion": 1,
   "name": "software-architect",
   "displayName": "Software Architect",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Read-only software design. Produces one decisive blueprint grounded in the patterns of your code (file:line), with trade-offs, failure modes, an implementation map and a plan file in the family format that Lead Developer can execute. Also writes architecture decision records, compares competing designs against a written rubric and critiques plans for gaps. Never edits code; saves only the plan or ADR file you approve.",
   "author": "Buildersoft LLC",
   "license": "MIT",

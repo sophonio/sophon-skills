@@ -1,13 +1,14 @@
 # Agent smoke evals (manual)
 
-Twenty-four scenarios that exercise the behaviour the static tests cannot: sizing, plan approval,
-consent, sub-agent waves, verification, commits, the git menu, specialist work and artifact creation. The
+Thirty-one scenarios that exercise the behaviour the static tests cannot: sizing, plan approval,
+consent, sub-agent waves, verification, commits, the git menu, each specialist's core move and
+artifact creation. The
 owner runs them once per release, after a clean build and a green
 `tests/agents/Test-AgentPackages.ps1`, and before uploading anything. They are in
 [`scenarios.md`](scenarios.md), with the card-count check at the end.
 
-In 2.0.0 they are run by hand in an interactive CLI. A headless runner is deferred to 2.1 (see the
-last section).
+In 2.1.0 they are still run by hand in an interactive CLI. A headless runner is deferred to a later
+release (see the last section).
 
 ## 1. Prepare a throwaway Sophon
 
@@ -24,12 +25,15 @@ Install exactly what will be uploaded: the built `.sophon-agent` files, not the 
 pwsh -NoProfile -File build/Build-AgentPackages.ps1
 Get-Content dist/agents/SHA256SUMS
 
-sophon agents install --file dist/agents/lead-developer-2.0.0.sophon-agent --show-files
+sophon agents install --file dist/agents/lead-developer-2.1.0.sophon-agent --show-files
 # Now turn on Restrict to allow list for Lead Developer (Dashboard → Agents → Lead Developer →
 # Delegation) and save: --allow-delegation-from adds to the list only while it is on.
-sophon agents install --file dist/agents/developer-2.0.0.sophon-agent --allow-delegation-from lead-developer --show-files
-# ... the same for researcher, software-architect, code-reviewer, qa-engineer, debugger,
+sophon agents install --file dist/agents/developer-2.1.0.sophon-agent --allow-delegation-from lead-developer --show-files
+# ... the same at 2.1.0 for researcher, software-architect, code-reviewer, qa-engineer, debugger,
 #     security-reviewer and ui-ux-designer
+sophon agents install --file dist/agents/frontend-developer-2.0.0.sophon-agent --allow-delegation-from lead-developer --show-files
+# ... the same at 2.0.0 for design-system-engineer, visual-designer, e2e-test-engineer,
+#     accessibility-reviewer, mcp-integration-engineer and technical-writer
 # Install artifact-creator separately; it does not delegate and need not be a lead target.
 sophon agents install --file dist/agents/artifact-creator-2.0.0.sophon-agent --show-files
 ```
@@ -41,7 +45,7 @@ For each install preview:
 
 Then:
 - Check that **Effective targets** for Lead Developer (Dashboard → Agents → Lead Developer → Delegation) lists every companion.
-- Set effort high for lead-developer, software-architect, code-reviewer, security-reviewer and debugger: `sophon agents models <id> --effort high`.
+- Set effort high for lead-developer, software-architect, code-reviewer, security-reviewer, debugger and accessibility-reviewer: `sophon agents models <id> --effort high`.
 - Leave allowed Medium-risk calls for the session at the default (off) unless a scenario says otherwise, so the card counts are comparable.
 
 ## 3. Prepare a small repository
@@ -51,7 +55,7 @@ One small git repository is enough for all scenarios:
 - a test suite that passes;
 - a test command written in its AGENTS.md (see the starter in [`docs/AGENTS.md`](../../../docs/AGENTS.md), section 11).
 
-Each scenario in `scenarios.md` lists the extra setup it needs: a planted bug, an insecure handler, a landing page.
+Each scenario in `scenarios.md` lists the extra setup it needs: a planted bug, an insecure handler, a landing page, a small web app with a component folder and an end-to-end runner, a README with planted mistakes.
 
 - Give it a remote. A GitHub fork lets you see the full menu, but answer **Keep local** everywhere except the one push in section 4.
 - Commit the baseline on `main` and note its sha, so you can return to it between scenarios.
@@ -84,9 +88,9 @@ While you run D2, L3 and Q1, also confirm the assumptions that were accepted wit
 - gh and Git Credential Manager authenticate from the bound shell (with `gh auth setup-git` done first);
 - an SSH remote on Windows. For these two, repeat L3's git menu once with **Push + open PR (Recommended)** against a scratch remote, never a shared one.
 
-## 5. Headless runner (deferred to 2.1)
+## 5. Headless runner (deferred)
 
-`Invoke-AgentEvals.ps1` and eval fixtures are planned for 2.1. Notes for it, from the review:
+`Invoke-AgentEvals.ps1` and eval fixtures are planned for a later release. Notes for it, from the review:
 
 - Pipe the prompt on stdin instead of quoting it on the command line: `Get-Content -Raw prompt.md | sophon exec … -`.
 - Headless runs skip every question (`Answer: (skipped)`), so the agents take the non-acting option. Plan approval, consent and the git menu must therefore be scripted or checked as "did not start".

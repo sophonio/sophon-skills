@@ -201,7 +201,7 @@ offline test file (see [`tests/README.md`](tests/README.md)).
 ## Agents
 
 The agents in `agents/` are Sophon agent packages, not skills, and follow their own rules. They
-come in two families, registered in `build/agent-src/families.psd1`: **development** (nine development
+come in two families, registered in `build/agent-src/families.psd1`: **development** (sixteen development
 agents and Artifact Creator, `build/agent-src/family.psd1`) and **video** (`video-producer`,
 `build/agent-src/families/video/family.psd1`).
 

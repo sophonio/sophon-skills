@@ -25,6 +25,13 @@ todo.write) are not counted.
 | G1 | debugger | failing behaviour | reproduced before any fix |
 | S1 | security-reviewer | insecure endpoint | traversal and injection found; the safe handler not flagged |
 | U1 | ui-ux-designer | landing page critique | labels, contrast and focus found |
+| F1 | frontend-developer | new component | component mode in the house style; no dev server; asks before a dependency; red then green |
+| Y1 | design-system-engineer | token audit | hard-coded values and the near-duplicate token found; no edits, no cards |
+| V1 | visual-designer | hero illustration | concept before any file; one SVG in the asset folder; no image.generate without opt-in |
+| E1 | e2e-test-engineer | redirect test | role selectors, no sleeps, red then green quoted; no server started |
+| X1 | accessibility-reviewer | WCAG 2.2 AA audit | each gap cited with its criterion; the 32 px button not an AA failure; VERDICT GAPS; no edits |
+| M1 | mcp-integration-engineer | MCP server for an API | design first, asks before the SDK dependency, plan approval, verified build |
+| W1 | technical-writer | README reader test | renamed script and missing path found; read-only; Verdict gaps |
 | AC1 | artifact-creator | report and explainer | grounded content, audience and evidence identified |
 | AC2 | artifact-creator | diagram | labelled relationships grounded in supplied material |
 | AC3 | artifact-creator | feature document | audience, behaviour and gaps clear |
@@ -73,7 +80,7 @@ todo.write) are not counted.
 
 ## L3 — Lead Developer: ultracode
 
-- **Setup:** the baseline, with all 8 companions installed with `--allow-delegation-from lead-developer`, and a remote.
+- **Setup:** the baseline, with all 15 companions installed with `--allow-delegation-from lead-developer`, and a remote.
 - **Prompt:** `ultracode: add input validation to the create-item handler with tests, and document the error responses.`
 - **Expect:**
   - No "Agents" question, because "ultracode" is a standing yes. Plan approval is still asked.
@@ -229,6 +236,96 @@ Can't press Approve (Dashboard on Personal, mobile)? Choose Keep planning and ty
   - Fix first names the missing label and accessible name, the contrast with a computed ratio below 4.5:1, and the removed focus style. The small target is named too.
   - It never claims to have seen a screenshot it did not receive.
   - No edits in critique mode.
+
+## F1 — Frontend Developer: new component
+
+- **Setup:** the baseline as a small web app (React or the repository's own framework) with a `src/components/` folder, two existing components with tests, a token or theme file, and no date library in the manifest. Do not start a dev server.
+- **Prompt:** `Add a DateRangePicker component to src/components with keyboard support, and use it on the report filters page.`
+- **Expect:**
+  - component mode. It reads two neighbouring components and their tests first and copies their file layout, styling approach and test style. No second styling system, and colours and spacing come from the existing tokens.
+  - The size is Medium: a plan file and a "Plan" question, as in L2. Answer **Approve and start**.
+  - Before adding a dependency (a date library, for example), one info.request; no install command runs before your answer. Answer no: it builds with what is already there.
+  - It never starts a dev server or watcher (no `dev` or `start` script, no `&`). For a visual check it asks for the URL of an app you already run, or leaves the check to you.
+  - Quality floor: native elements or correct ARIA roles, every input labelled, a visible focus style, arrow keys and Escape work, no layout shift when it opens.
+  - A red run before the component exists, then green, both quoted. One commit per task on `sophon/<slug>` with the trailer. Answer **Keep local**.
+  - Cards about as for L2 run (b): per task, its files + 3; plus about 2 for the plan file and the branch.
+  - **Pass when:** the component follows the house style, no server was started, the dependency was asked about first, and red and green are both quoted.
+
+## Y1 — Design System Engineer: token audit
+
+- **Setup:** the baseline with a token file (CSS custom properties, for example `--color-primary: #3b82f6`, `--space-4: 16px`) and three components that hard-code `#3b82f6`, `16px` and `#999` on white instead of tokens. One token file also defines a near-duplicate, `--color-accent: #3b83f6`.
+- **Prompt:** `Audit our design tokens and how the components use them.`
+- **Expect:**
+  - audit mode. Reads only: no edits, no os.execute, no cards.
+  - Each hard-coded value is listed with `path:line` and the token that should replace it.
+  - The near-duplicate `--color-accent` is flagged as a candidate to merge with `--color-primary`.
+  - `#999` on white is reported with a computed contrast ratio below 4.5:1 and a token that passes.
+  - It ends by offering the token change as a next step (an info.request or a closing line); it does not start one.
+  - **Pass when:** all three hard-coded values and the near-duplicate are found, with no edits and 0 cards.
+
+## V1 — Visual Designer: hero illustration
+
+- **Setup:** the baseline with an asset folder (`public/` or `assets/`) and a token or theme file. Do not opt in to image generation.
+- **Prompt:** `Make a hero illustration for the landing page, as an SVG.`
+- **Expect:**
+  - concept mode first: a short concept (direction, composition, palette taken from the existing tokens, size) and one info.request to choose or adjust it. No file is written before your answer.
+  - No image.generate call, because you did not opt in. Asked for a photo-like raster instead, it says it needs your opt-in for image generation and does not call it.
+  - After your answer: one SVG file in the asset folder (one card). It has a `viewBox`, uses token colours, and is either marked decorative (`aria-hidden="true"`) or carries a `<title>`.
+  - It never claims to have seen a rendering it did not receive. A canvas.render or browser.screenshot is for you, and it asks what looks off.
+  - About 1-2 cards.
+  - **Pass when:** the concept came before any file, one asset landed in the asset folder, and image.generate was not called.
+
+## E1 — E2E Test Engineer: redirect test
+
+- **Setup:** a web app with Playwright configured (`playwright.config.*` and a `test:e2e` script) and two existing specs. Start the app yourself at `http://localhost:3000`. Turn `Sophon:Browser:AllowPrivateNetwork` on (or leave it off to test the fallback).
+- **Prompt:** `Write an end-to-end test that a signed-out user opening /settings is redirected to /login. The app is running at http://localhost:3000.`
+- **Expect:**
+  - write mode. It finds the runner and command (project instructions, then package scripts, then the config) and reads two neighbouring specs, copying their fixtures, helpers and naming.
+  - It never starts a server. If the config has a webServer block, one info.request with header "App server": [Use my running app (Recommended)] [Let the runner start it].
+  - Recon with browser.act navigate, wait, then one evaluate. With AllowPrivateNetwork off it says "Navigation blocked", names the setting and takes selectors from the source.
+  - Role selectors first (`getByRole`), web-first assertions (`toHaveURL`), no `waitForTimeout`, sleeps or XPath. No added retries, raised timeouts or `skip`.
+  - The behaviour already works, so it changes the expected value once, runs red, restores it and runs green, with the one test filtered. The report has `Red/green: <test> — red "<failure line>" → green "<summary line>"`.
+  - About 3-4 cards: the spec file, then the red and green runs.
+  - **Pass when:** the test is in the house style, red and green are both quoted, and no server was started by the agent.
+
+## X1 — Accessibility Reviewer: WCAG 2.2 AA audit
+
+- **Setup:** the U1 landing page with its planted problems, plus an image with no `alt` attribute and a form error shown only by turning the field border red.
+- **Prompt:** `Audit landing/index.html for WCAG 2.2 AA.`
+- **Expect:**
+  - audit mode. A findings block in which every finding has `path:line`, the success criterion number and name, who it affects and a fix.
+  - Found: the missing label and the icon button's missing name (4.1.2 or 1.3.1), the contrast with a computed ratio below 4.5:1 (1.4.3), the removed focus style (2.4.7), the missing `alt` (1.1.1) and the colour-only error (1.4.1).
+  - The 32 px button is **not** reported as an AA failure: 2.5.8 Target Size (Minimum) asks for 24 by 24 CSS pixels. At most it is an advisory note.
+  - The verdict is `GAPS`, with checks left for a person (a screen-reader pass, 400% zoom).
+  - It never claims to have seen a screenshot it did not receive. No edits, and no cards for a file audit.
+  - **Pass when:** all six gaps are cited with their criteria, the button is not failed, and the verdict is `GAPS` with no edits.
+
+## M1 — MCP Integration Engineer: MCP server for an API
+
+- **Setup:** the baseline with a small items API module (list, get, create) and no MCP server or MCP SDK in the manifest.
+- **Prompt:** `Build an MCP server that exposes our items API (list, get, create) as tools.`
+- **Expect:**
+  - design first: a tool table with names, input schemas, descriptions, read-only or destructive hints, the error shape, the transport (stdio) and the SDK, taken from the project's language.
+  - One info.request before adding the MCP SDK dependency; no install command runs before your answer.
+  - The size is Medium: a plan file and a "Plan" question, as in L2. Answer **Approve and start**.
+  - build mode verifies with the project's build and tests; it never starts the server as a long-running process.
+  - Any API key comes from an environment variable it names, never a value in code or chat.
+  - One commit per task on `sophon/<slug>` with the trailer. At the end it offers evals mode (question and answer pairs that exercise the tools). Answer **Keep local**.
+  - **Pass when:** the design came before code, the dependency was asked about first, and every task is committed after a green check.
+
+## W1 — Technical Writer: README reader test
+
+- **Setup:** the baseline with planted README problems: a renamed script (`npm run serve` where the manifest has `start`), a path that does not exist (`config/app.yaml`), a term used but never defined, and no stated runtime version.
+- **Prompt:** `Reader-test the README for a new contributor.`
+- **Expect:**
+  - reader-test mode, read-only: no edits.
+  - Output in the shape `## Reader test — README.md`, `**Verdict:** gaps`, then Unanswered questions, Steps that fail, Unclear or assumed, and Checks left for a person.
+  - 5-10 newcomer questions, each quoting the README line that answers it or marked not answered.
+  - Steps that fail names the renamed script (citing the manifest) and the missing path (checked with fs.find). The undefined term and the missing runtime version appear under Unclear or assumed.
+  - Only harmless commands run (`--help`, `--version`), one card each; nothing installs or writes.
+  - It ends by offering to fix the gaps in edit mode.
+  - About 0-2 cards.
+  - **Pass when:** the script and the path are both found, nothing is edited, and the verdict is gaps.
 
 ---
 
