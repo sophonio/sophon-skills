@@ -11,7 +11,8 @@
       B  composer                build/Compose-AgentSouls.ps1 -Check in a child pwsh (SOULs, and the READMEs of a
                                  family with a readmes/ folder)
       C  tool-name lint          SOUL.md, TOOLS.md, README.md, manifest displayName/description/whenToUse
-      D  preflight               the same texts through the scanner replay; every fragment <= 4,096 B and
+      D  preflight               the same texts through the scanner replay; every fragment <= 4,096 B (or its
+                                 FragmentCaps limit; BUDGET-FRAGMENT) and
                                  starts with its only "## " heading
       E  budgets                 SOUL <= SoulCap, TOOLS.md <= 2,048 B, README <= ReadmeCaps (default 12 KiB,
                                  lead 24 KiB); BUDGET-HEADROOM (a warning under 8% free; under 5% free an error
@@ -21,6 +22,7 @@
                                  build/agent-src/catalog/soul-baseline.psd1
       F  manifest                the family contract (keys, lengths, marker, subAgents, requires) and
                                  MAN-SKILL-VERSION (every SkillPolicy skill exists at its MinVersion or later)
+                                 and prints each whenToUse length against the 950-character limit
       G  TOOLS.md                strict grammar, runtime-parser agreement, pin rules
       H  attribution             exact trailer and footer bytes; present in every agent that includes a
                                  fragment using {{= CommitTrailer}} or {{= PrFooter}}, absent otherwise
@@ -522,11 +524,24 @@ foreach ($id in $selected) {
 }
 
 $fragmentDir = Join-Path $RepoRoot $familyContext['FragmentsRelDir']
+# FragmentCaps (optional family key): a lower limit per fragment id; the shape is checked with the family data.
+$fragmentCaps = Get-AgentField $fam 'FragmentCaps'
 if (Test-Path -LiteralPath $fragmentDir -PathType Container) {
-    foreach ($fragment in @(Get-ChildItem -LiteralPath $fragmentDir -File -Filter '*.md' | Sort-Object Name)) {
+    $fragmentFiles = @(Get-ChildItem -LiteralPath $fragmentDir -File -Filter '*.md' | Sort-Object Name)
+    if ($fragmentCaps -is [hashtable]) {
+        foreach ($capId in @($fragmentCaps.Keys | Sort-Object)) {
+            if (@($fragmentFiles | Where-Object { [string]::Equals($_.BaseName, [string]$capId, $ord) }).Count -eq 0) {
+                Add-SourceError 'BUDGET-FRAGMENT' $familyRel (Get-AgentFamilyLine -RepoRoot $RepoRoot -Key 'FragmentCaps') "FragmentCaps names '$capId', which is not a fragment in $($familyContext['FragmentsRelDir'])"
+            }
+        }
+    }
+    foreach ($fragment in $fragmentFiles) {
         $fragRel = Get-RelPath $fragment.FullName
-        if ($fragment.Length -gt 4096) {
-            Add-SourceError 'BUDGET-FRAGMENT' $fragRel 0 "$($fragment.Length) bytes; a fragment is at most 4,096"
+        $fragCap = 4096
+        if ($fragmentCaps -is [hashtable] -and $fragmentCaps[$fragment.BaseName] -is [int]) { $fragCap = [int]$fragmentCaps[$fragment.BaseName] }
+        if ($fragment.Length -gt $fragCap) {
+            $why = if ($fragCap -lt 4096) { "its FragmentCaps limit is $($fragCap.ToString('N0', [Globalization.CultureInfo]::InvariantCulture))" } else { 'a fragment is at most 4,096' }
+            Add-SourceError 'BUDGET-FRAGMENT' $fragRel 0 "$($fragment.Length) bytes; $why"
         }
         # Family contract: a fragment starts with exactly one "## <Heading>" line and holds no other heading
         # outside code fences, so each fragment is one section of the composed SOUL.
@@ -635,6 +650,13 @@ foreach ($id in $selected) {
     $tools = if ($toolsParsed.ContainsKey($id)) { $toolsParsed[$id] } else { $null }
     Add-Issues (Test-AgentManifest -Manifest $m.Parsed -Raw $m.Raw -Id $id -Family $fam -ToolsMd $tools -Path "agents/$id/manifest.json" -Catalog $catalog)
 }
+# The whenToUse lengths against the MAN-AGENT limit of 950 characters, so the room is visible.
+$whenLengths = @(foreach ($id in $selected) {
+        if (-not $manifests.ContainsKey($id)) { continue }
+        $when = Get-AgentField (Get-AgentField $manifests[$id].Parsed 'agent') 'whenToUse'
+        if ($when -is [string]) { '{0} {1}' -f $id, $when.Length }
+    })
+if ($whenLengths.Count -gt 0) { Write-Host "  whenToUse characters (at most 950): $($whenLengths -join ', ')" }
 
 # MAN-SKILL-VERSION: every SkillPolicy skill is in skills/ at its MinVersion or later.
 foreach ($skill in $skillPolicy.Skills) {

@@ -35,6 +35,8 @@
       Method                   the registry of tested rules: @{ Controller = @{ Fragments; Terms; Allow };
                                Worker = @{ Fragments; Exempt }; Rules = @(@{ Id; Fragment | Agent; Anchor }) }
                                (METHOD-CONTROLLER, METHOD-EXCUSES; Test-AgentMethod)
+      FragmentCaps             @{ '<NN-id>' = <bytes> }: a lower size limit for that fragment than the 4,096 B
+                               every fragment has (BUDGET-FRAGMENT); a key must name an existing fragment
 
     Optional agent keys (beside the required Id, DisplayName, SoulCap, Writer, SubAgents, Effort, Fragments, Credits):
       License, Category, RequiredTags   per-agent overrides of the family values
@@ -932,6 +934,20 @@ function Test-AgentFamilyOptionalKeys {
         }
         if (-not $good) {
             $errors.Add((New-AgentComposeError $p (& $at 'ReadmeCaps') 'ReadmeCaps must be @{ Lead = <bytes>; Other = <bytes> } with sizes 1..65536'))
+        }
+    }
+    if ($Family.ContainsKey('FragmentCaps')) {
+        $fragmentCaps = $Family['FragmentCaps']
+        if ($fragmentCaps -isnot [hashtable]) {
+            $errors.Add((New-AgentComposeError $p (& $at 'FragmentCaps') "FragmentCaps must be @{ '<NN-id>' = <bytes> } with sizes 1..4096"))
+        }
+        else {
+            foreach ($key in @($fragmentCaps.Keys | Sort-Object)) {
+                $value = $fragmentCaps[$key]
+                if (-not $script:FragmentIdRegex.IsMatch([string]$key) -or $value -isnot [int] -or $value -le 0 -or $value -gt 4096) {
+                    $errors.Add((New-AgentComposeError $p (& $at 'FragmentCaps') "FragmentCaps '$key' = '$value': the key is a fragment id (NN-id) and the value 1..4096 bytes"))
+                }
+            }
         }
     }
     if ($Family.ContainsKey('SkillPolicy')) {

@@ -477,6 +477,18 @@ try {
         $strict = Invoke-Native $pwsh ($reviewerArgs + '-Release')
         $null = Test-Check 'E' ($daily.Code -eq 0 -and $strict.Code -ne 0 -and $strict.Text.Contains("agent 'code-reviewer' has no RoleCap", $ord) -and
             -not $strict.Text.Contains("agent 'developer' has no RoleCap", $ord)) "a RoleCap within its limit passes; under -Release an agent without one fails once the family sets any (exit $($daily.Code), $($strict.Code))"
+        # FragmentCaps: a lower limit for one fragment (04-scope is 674 B), a key without a fragment, a bad value.
+        if (-not $budgetText.Contains("  Agents = @(`n")) { throw 'the family copy has no Agents line' }
+        $capArgs = @('-NoProfile', '-NonInteractive', '-File', (Join-Path $budgetCase 'build/Test-AgentSources.ps1'), '-RepoRoot', $budgetCase, '-Family', 'development', '-Agents', 'developer')
+        $capRuns = @(foreach ($caps in "@{ '04-scope' = 100 }", "@{ '04-scope' = 700 }", "@{ '99-nothing' = 450 }", "@{ '04-scope' = 5000 }") {
+                Write-Utf8 $budgetFamily ($budgetText.Replace("  Agents = @(`n", "  FragmentCaps = $caps`n  Agents = @(`n"))
+                Invoke-Native $pwsh $capArgs
+            })
+        Write-Utf8 $budgetFamily $budgetText
+        $null = Test-Check 'D' ($capRuns[0].Code -ne 0 -and $capRuns[0].Text.Contains('ERROR BUDGET-FRAGMENT build/agent-src/fragments/soul/04-scope.md:0:', $ord) -and $capRuns[0].Text.Contains('its FragmentCaps limit is 100', $ord) -and
+            $capRuns[1].Code -eq 0 -and
+            $capRuns[2].Code -ne 0 -and $capRuns[2].Text.Contains("FragmentCaps names '99-nothing', which is not a fragment", $ord) -and
+            $capRuns[3].Code -ne 0 -and $capRuns[3].Text.Contains("FragmentCaps '04-scope' = '5000'", $ord)) "FragmentCaps lowers one fragment's limit (BUDGET-FRAGMENT), and a key without a fragment or a value over 4,096 fails (exit $(@($capRuns | ForEach-Object { $_.Code }) -join ', '))"
     } catch {
         Add-Fail 'E' "the budget cases failed to run: $($_.Exception.Message) (line $($_.InvocationInfo.ScriptLineNumber))"
     }
