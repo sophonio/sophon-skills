@@ -27,6 +27,26 @@
   Category = 'development'
   RequiredTag = 'development'
   Lead = 'lead-developer'
+  # The README roster table, in table order (Artifact Creator is not in it). DOC-COUNT derives the table and companion
+  # counts from it.
+  RosterOrder = @(
+    'lead-developer',
+    'developer',
+    'researcher',
+    'software-architect',
+    'code-reviewer',
+    'qa-engineer',
+    'debugger',
+    'security-reviewer',
+    'ui-ux-designer',
+    'frontend-developer',
+    'design-system-engineer',
+    'visual-designer',
+    'e2e-test-engineer',
+    'accessibility-reviewer',
+    'mcp-integration-engineer',
+    'technical-writer'
+  )
   CreditsSentence = 'Workflow patterns adapted, not copied, from obra/superpowers (MIT, © 2025 Jesse Vincent) and Anthropic''s Claude Code plugins (feature-dev, pr-review-toolkit, code-review, security-review, frontend-design; Apache-2.0).'
   ReadmeCaps = @{ Lead = 24576; Other = 12288 }
   Values = @{

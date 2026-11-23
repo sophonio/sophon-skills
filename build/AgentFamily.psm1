@@ -27,6 +27,8 @@
       AllowRestrictedMentions  restricted tool names that may be named un-negated (never pinned)
                                A SkillPolicy skill may also name Fragment = '<NN-id>', its reference fragment: the
                                only source whose lines may name that skill's tools (METHOD-REFERENCE)
+      RosterOrder              the agent ids of the README roster table, in table order (DOC-COUNT derives the
+                               table and companion counts from it)
       Method                   the registry of tested rules: @{ Controller = @{ Fragments; Terms; Allow };
                                Worker = @{ Fragments; Exempt }; Rules = @(@{ Id; Fragment | Agent; Anchor }) }
                                (METHOD-CONTROLLER, METHOD-EXCUSES; Test-AgentMethod)
@@ -956,6 +958,24 @@ function Test-AgentFamilyOptionalKeys {
         foreach ($tool in @(Get-AgentItems $Family['AllowRestrictedMentions'])) {
             if ($tool -isnot [string] -or -not $script:ToolNameRegex.IsMatch($tool)) {
                 $errors.Add((New-AgentComposeError $p (& $at 'AllowRestrictedMentions') "AllowRestrictedMentions entry '$tool' is not a tool name"))
+            }
+        }
+    }
+    if ($Family.ContainsKey('RosterOrder')) {
+        $order = $Family['RosterOrder']
+        $roster = [string[]]@(foreach ($agent in @(Get-AgentItems $Family['Agents'])) { Get-AgentIdOf $agent })
+        if ($order -isnot [array] -or $order.Count -eq 0) {
+            $errors.Add((New-AgentComposeError $p (& $at 'RosterOrder') 'RosterOrder must list the roster-table agent ids in table order'))
+        }
+        else {
+            $seenOrder = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+            foreach ($id in $order) {
+                if ($id -isnot [string] -or -not (Test-AgentInList $roster $id)) {
+                    $errors.Add((New-AgentComposeError $p (& $at 'RosterOrder') "RosterOrder entry '$id' is not in the roster"))
+                }
+                elseif (-not $seenOrder.Add($id)) {
+                    $errors.Add((New-AgentComposeError $p (& $at 'RosterOrder') "RosterOrder lists $id twice"))
+                }
             }
         }
     }
@@ -2030,6 +2050,122 @@ function Invoke-AgentMethodFixtures {
 }
 
 # ---------------------------------------------------------------------------------------------
+# Document counts (DOC-COUNT)
+# ---------------------------------------------------------------------------------------------
+
+$script:DocCountNumberWords = $null
+
+function Get-AgentNumberWords {
+    # Number words 10..99 ("ten" ... "ninety-nine") mapped to their values.
+    if ($null -ne $script:DocCountNumberWords) { return $script:DocCountNumberWords }
+    $map = [System.Collections.Generic.Dictionary[string, int]]::new([StringComparer]::OrdinalIgnoreCase)
+    $units = @('', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine')
+    $teens = @('ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen')
+    for ($i = 0; $i -lt 10; $i++) { $map[$teens[$i]] = 10 + $i }
+    $tens = @('twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety')
+    for ($i = 0; $i -lt $tens.Count; $i++) {
+        $map[$tens[$i]] = 20 + 10 * $i
+        for ($u = 1; $u -lt 10; $u++) { $map["$($tens[$i])-$($units[$u])"] = 20 + 10 * $i + $u }
+    }
+    $script:DocCountNumberWords = $map
+    $map
+}
+
+function Test-AgentDocCounts {
+    <#
+    .SYNOPSIS
+        DOC-COUNT: roster counts stated in the documents of build/agent-src/catalog/doc-counts.psd1.
+    .DESCRIPTION
+        Union is the Get-AgentRosterUnion result. The accepted values are derived from it (all packages, each
+        family's roster, and for a family with RosterOrder its table length and the lead's companions, the table
+        without the lead) plus the data file's Allow values. Returns @{ Values; Findings; Errors; Documents }:
+        Values maps each accepted number to why; Findings and Errors are error objects (Path; Line; Message).
+    #>
+    [CmdletBinding()]
+    [OutputType([hashtable])]
+    param(
+        [Parameter(Mandatory)][string]$RepoRoot,
+        [Parameter(Mandatory)][hashtable]$Union
+    )
+    $root = Resolve-AgentFullPath -Path $RepoRoot
+    $rel = 'build/agent-src/catalog/doc-counts.psd1'
+    $full = Join-AgentRepoPath $root $rel
+    $values = [System.Collections.Generic.SortedDictionary[int, string]]::new()
+    $findings = [System.Collections.Generic.List[object]]::new()
+    $errors = [System.Collections.Generic.List[object]]::new()
+    $documents = [System.Collections.Generic.List[string]]::new()
+    $addValue = { param([int]$Value, [string]$Why) if (-not $values.ContainsKey($Value)) { $values[$Value] = $Why } }
+    & $addValue @($Union['Ids']).Count 'all packages'
+    foreach ($family in @($Union['Families'])) {
+        & $addValue @($family['Roster']).Count "the $($family['Id']) roster"
+        $data = $family['Data']
+        $order = @(if ($data -is [hashtable] -and $data['RosterOrder'] -is [array]) { $data['RosterOrder'] })
+        if ($order.Count -gt 0) {
+            & $addValue $order.Count "the $($family['Id']) roster table (RosterOrder)"
+            if ($data['Lead'] -is [string] -and (Test-AgentInList ([string[]]$order) $data['Lead'])) { & $addValue ($order.Count - 1) "the companions of $($data['Lead'])" }
+        }
+    }
+    if (-not [System.IO.File]::Exists($full)) { return @{ Values = $values; Findings = @(); Errors = @(); Documents = @() } }
+    $data = $null
+    try { $data = Import-AgentDataFile -FullPath $full -RelativePath $rel }
+    catch {
+        $errors.Add((New-AgentComposeError $rel 1 "cannot load: $(($_.Exception.Message -replace '\s+', ' ').Trim())"))
+        return @{ Values = $values; Findings = @(); Errors = $errors.ToArray(); Documents = @() }
+    }
+    foreach ($allow in @(Get-AgentItems $data['Allow'])) {
+        if ($allow -isnot [hashtable] -or $allow['Value'] -isnot [int] -or $allow['Why'] -isnot [string] -or [string]::IsNullOrWhiteSpace($allow['Why'])) {
+            $errors.Add((New-AgentComposeError $rel 1 'each Allow entry is @{ Value = <number>; Why = <reason> }'))
+            continue
+        }
+        & $addValue $allow['Value'] "allowed: $($allow['Why'])"
+    }
+    $history = [string[]]@(foreach ($entry in @(Get-AgentItems $data['History'])) {
+            $phrase = if ($entry -is [hashtable]) { $entry['Phrase'] } else { $entry }
+            if ($phrase -isnot [string] -or $phrase.Length -eq 0) { $errors.Add((New-AgentComposeError $rel 1 'each History entry is an exact phrase (or @{ Phrase; Why })')); continue }
+            $phrase
+        })
+    foreach ($pattern in @(Get-AgentItems $data['Documents'])) {
+        if ($pattern -isnot [string] -or $pattern.Length -eq 0) { continue }
+        if ($pattern.Contains('*')) {
+            $dir = if ($pattern.Contains('/')) { $pattern.Substring(0, $pattern.LastIndexOf('/')) } else { '.' }
+            $leaf = $pattern.Substring($pattern.LastIndexOf('/') + 1)
+            $dirFull = Join-AgentRepoPath $root $dir
+            if (-not [System.IO.Directory]::Exists($dirFull)) { continue }
+            $names = [string[]]@([System.IO.Directory]::GetFiles($dirFull, $leaf) | ForEach-Object { [System.IO.Path]::GetFileName($_) })
+            [Array]::Sort($names, [StringComparer]::Ordinal)
+            foreach ($name in $names) { $documents.Add("$dir/$name") }
+        }
+        elseif ([System.IO.File]::Exists((Join-AgentRepoPath $root $pattern))) { $documents.Add($pattern) }
+    }
+    $words = Get-AgentNumberWords
+    $wordAlternation = (@($words.Keys) | Sort-Object { $_.Length } -Descending) -join '|'
+    $regex = [regex]::new("(?<![\w.-])(?<num>\d{2,}|$wordAlternation)(?:\s+(?:development-family|development|agent|Marketplace|Sophon|``?\.sophon-agent``?)){0,2}\s+(?:agents|packages|companions)\b", 'IgnoreCase, CultureInvariant')
+    $accepted = @($values.Keys) -join ', '
+    foreach ($document in $documents) {
+        $lines = [System.IO.File]::ReadAllLines((Join-AgentRepoPath $root $document))
+        for ($i = 0; $i -lt $lines.Length; $i++) {
+            foreach ($match in $regex.Matches($lines[$i])) {
+                $token = $match.Groups['num'].Value
+                $value = 0
+                if (-not [int]::TryParse($token, [ref]$value)) { $value = $words[$token] }
+                if ($value -lt 10 -or $values.ContainsKey($value)) { continue }
+                $inHistory = $false
+                foreach ($phrase in $history) {
+                    $at = $lines[$i].IndexOf($phrase, [StringComparison]::Ordinal)
+                    while ($at -ge 0) {
+                        if ($match.Index -ge $at -and $match.Index + $match.Length -le $at + $phrase.Length) { $inHistory = $true }
+                        $at = $lines[$i].IndexOf($phrase, $at + 1, [StringComparison]::Ordinal)
+                    }
+                }
+                if ($inHistory) { continue }
+                $findings.Add((New-AgentComposeError $document ($i + 1) "'$($match.Value)' states $value, which is not a roster count ($accepted); update it, or list the phrase under History in $rel"))
+            }
+        }
+    }
+    @{ Values = $values; Findings = $findings.ToArray(); Errors = $errors.ToArray(); Documents = $documents.ToArray() }
+}
+
+# ---------------------------------------------------------------------------------------------
 # Output helpers
 # ---------------------------------------------------------------------------------------------
 
@@ -2280,6 +2416,7 @@ Export-ModuleMember -Function @(
     'Get-AgentMethodSpans'
     'Test-AgentMethod'
     'Invoke-AgentMethodFixtures'
+    'Test-AgentDocCounts'
     'Compare-AgentSoulText'
     'Write-AgentSoulFile'
     'Get-AgentSoulBudget'

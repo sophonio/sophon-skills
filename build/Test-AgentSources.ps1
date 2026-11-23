@@ -28,6 +28,12 @@
                                  Method), METHOD-REFERENCE (a SkillPolicy skill with a Fragment); findings at the
                                  source line, once (Test-AgentMethod in build/AgentFamily.psm1)
 
+    The repository pass (no -Family, no -Agents) also runs
+      N  documents               DOC-COUNT: a number of 10 or more before "agents", "packages" or "companions" in
+                                 the documents of build/agent-src/catalog/doc-counts.psd1 must be a roster count
+                                 (all packages, a family roster, a RosterOrder table, the lead's companions) or an
+                                 allowed value; a warning, an error with -Release
+
     Families come from build/agent-src/families.psd1. Without -Family this script checks that the agents/
     folders equal the union of every family roster (an id belongs to one family), then runs itself once per
     family (-Family <id>) and fails when any family fails. Without a registry it checks the single family in
@@ -45,7 +51,8 @@
     Check one family (a registry Id). The agents/-equals-union check runs only without -Family.
 .PARAMETER Release
     The release switch (alias -StrictHeadroom): the release-gated findings become errors. Today these are
-    BUDGET-HEADROOM under 5% free and BUDGET-ROLE for an agent without a RoleCap in a family that sets them.
+    BUDGET-HEADROOM under 5% free, BUDGET-ROLE for an agent without a RoleCap in a family that sets them, and
+    DOC-COUNT.
     Build-AgentPackages.ps1 -Release passes it through.
 .EXAMPLE
     pwsh -NoProfile -File build/Test-AgentSources.ps1
@@ -176,6 +183,17 @@ if (-not $Family -and -not $registry['Legacy']) {
         }
     }
 
+    # N. DOC-COUNT: counts in prose must equal a roster count (one value spans both families, so this runs here).
+    # A warning until the release switch makes it an error.
+    if ($requested.Count -eq 0) {
+        Enter-Section 'N' 'Documents'
+        $docCounts = Test-AgentDocCounts -RepoRoot $RepoRoot -Union $union
+        foreach ($e in @($docCounts['Errors'])) { Add-SourceError 'DOC-COUNT' $e['Path'] $e['Line'] $e['Message'] }
+        foreach ($f in @($docCounts['Findings'])) { Add-SourceFinding 'DOC-COUNT' $f['Path'] $f['Line'] $f['Message'] }
+        $accepted = @($docCounts['Values'].Keys) -join ', '
+        Write-Host "  $(@($docCounts['Documents']).Count) document(s) checked; accepted counts: $accepted"
+    }
+
     $pwsh = [Environment]::ProcessPath
     if (-not $pwsh -or [IO.Path]::GetFileNameWithoutExtension($pwsh) -ne 'pwsh') { $pwsh = 'pwsh' }
     $results = [System.Collections.Generic.List[object]]::new()
@@ -213,7 +231,7 @@ if (-not $Family -and -not $registry['Legacy']) {
 
     Write-Host ''
     Write-Host '== Summary'
-    Write-Host ('  roster union  {0} error(s), {1} warning(s)' -f $script:Errors.Count, $script:Warnings.Count)
+    Write-Host ('  repository (roster union, documents)  {0} error(s), {1} warning(s)' -f $script:Errors.Count, $script:Warnings.Count)
     foreach ($result in $results) {
         Write-Host ('  family {0}  {1}, {2} warning(s)' -f $result.Id, $(if ($result.Code -eq 0) { 'OK' } else { "FAILED (exit $($result.Code))" }), $result.Warnings)
     }

@@ -32,13 +32,15 @@
            family still failing LINT-SKILL and MAN-REQUIRES as before. Needs no Sophon CLI.
       M    the Method registry: tests/agents/fixtures/method/cases.psd1 (Invoke-AgentMethodFixtures) for METHOD-CONTROLLER,
            METHOD-EXCUSES and METHOD-REFERENCE, then a temporary copy whose development family gains a Method key.
+      N    documents: DOC-COUNT from the repository pass of Test-AgentSources, plus a temporary copy with planted counts:
+           number words and digits, qualifiers, a History phrase, and -Release turning the warning into an error.
 
     -SourceOnly skips J and K (no Sophon CLI needed). Prints PASS, FAIL or SKIP per section and exits 1 on any
     failure. Temporary folders live under the system temp folder and are removed at the end.
 .PARAMETER RepoRoot
     Repository root. Defaults to two folders above this script.
 .PARAMETER SourceOnly
-    Run sections A-I, L and M only.
+    Run sections A-I, L, M and N only.
 .EXAMPLE
     pwsh -NoProfile -File tests/agents/Test-AgentPackages.ps1
 .EXAMPLE
@@ -74,6 +76,7 @@ $sectionTitles = [ordered]@{
     K = 'Reproducible build'
     L = 'Families'
     M = 'Method registry'
+    N = 'Documents'
 }
 $items = @{}
 $skipped = @{}
@@ -213,9 +216,9 @@ try {
         $current = $null
         $captured = @{}
         $errorCounts = @{}
-        foreach ($key in 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'M') { $captured[$key] = [System.Collections.Generic.List[string]]::new(); $errorCounts[$key] = 0 }
+        foreach ($key in 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'M', 'N') { $captured[$key] = [System.Collections.Generic.List[string]]::new(); $errorCounts[$key] = 0 }
         foreach ($line in $run.Lines) {
-            $heading = [regex]::Match($line, '^== ([A-IM])\. ')
+            $heading = [regex]::Match($line, '^== ([A-IMN])\. ')
             if ($heading.Success) { $current = $heading.Groups[1].Value; continue }
             if ($line -clike '== Summary*') { $current = $null; continue }
             if ($null -eq $current -or -not $line.Trim()) { continue }
@@ -729,6 +732,38 @@ try {
         Add-Fail 'M' "the method cases failed to run: $($_.Exception.Message) (line $($_.InvocationInfo.ScriptLineNumber))"
     }
 
+    # ---- N: document counts -------------------------------------------------------------------------------
+    Write-Host 'Running the document count cases ...'
+    try {
+        $docCase = Join-Path $tempRoot 'case-doc-count'
+        New-RepoCopy $docCase
+        $docsDir = Join-Path $docCase 'docs'
+        New-Item -ItemType Directory -Path $docsDir -Force | Out-Null
+        $docUnion = Get-AgentRosterUnion -RepoRoot $docCase
+        $allCount = @($docUnion['Ids']).Count
+        $planted = @(
+            "The family ships $allCount agent packages, and Sixteen development agents sit in the table.",
+            'Lead Developer has fifteen companions and runs at most 10 agents in 5 calls.',
+            'Install all twenty-one development agents first.',
+            'There are 99 Sophon agents in the store.',
+            'In 2.0.0 the family had nine agents and 12 packages.',
+            'Old text: thirteen agents shipped in the first release.'
+        ) -join "`n"
+        Write-Utf8 (Join-Path $docsDir 'AGENTS.md') ($planted + "`n")
+        $countsFile = Join-Path $docCase 'build/agent-src/catalog/doc-counts.psd1'
+        $countsText = [IO.File]::ReadAllText($countsFile)
+        Write-Utf8 $countsFile ($countsText.Replace('History = @()', "History = @(@{ Phrase = 'thirteen agents shipped in the first release'; Why = 'fixture: a historical count' })"))
+        $docRun = Test-AgentDocCounts -RepoRoot $docCase -Union $docUnion
+        $flagged = @($docRun['Findings'] | ForEach-Object { "$($_['Line'])" }) -join ','
+        $null = Test-Check 'N' ([string]::Equals($flagged, '3,4,5', $ord)) "DOC-COUNT flags 'twenty-one development agents', '99 Sophon agents' and '12 packages' only; derived counts, allowed caps, numbers under 10 and a History phrase pass (flagged lines: $flagged)"
+        $docArgs = @('-NoProfile', '-NonInteractive', '-File', (Join-Path $docCase 'build/Test-AgentSources.ps1'), '-RepoRoot', $docCase)
+        $docStrict = Invoke-Native $pwsh ($docArgs + '-Release')
+        $null = Test-Check 'N' ($docStrict.Code -ne 0 -and $docStrict.Text.Contains('ERROR DOC-COUNT docs/AGENTS.md:3:', $ord) -and -not $docStrict.Text.Contains('DOC-COUNT docs/AGENTS.md:1:', $ord)) "under -Release a stale count fails DOC-COUNT at its line (exit $($docStrict.Code))"
+        $docDaily = Invoke-Native $pwsh $docArgs
+        $null = Test-Check 'N' ($docDaily.Code -eq 0 -and $docDaily.Text.Contains('WARN DOC-COUNT docs/AGENTS.md:3:', $ord)) "without -Release the same count is a warning and the run passes (exit $($docDaily.Code))"
+    } catch {
+        Add-Fail 'N' "the document count cases failed to run: $($_.Exception.Message) (line $($_.InvocationInfo.ScriptLineNumber))"
+    }
     if ($SourceOnly) {
         $skipped['J'] = $true
         $skipped['K'] = $true
@@ -976,5 +1011,5 @@ if ($failedSections.Count -gt 0) {
     Write-Host "Test-AgentPackages: FAIL ($($failedSections -join ', '))" -ForegroundColor Red
     exit 1
 }
-Write-Host "Test-AgentPackages: PASS ($(if ($SourceOnly) { 'A-I, L and M; J and K skipped' } else { 'A-M' }))" -ForegroundColor Green
+Write-Host "Test-AgentPackages: PASS ($(if ($SourceOnly) { 'A-I, L, M and N; J and K skipped' } else { 'A-N' }))" -ForegroundColor Green
 exit 0
