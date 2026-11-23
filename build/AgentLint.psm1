@@ -407,6 +407,14 @@ function Get-AgentSkillPolicy {
     }
 }
 
+function Get-AgentNegationRegex {
+    <#
+    .SYNOPSIS
+        The tool lint's negation words (no, not, never, cannot, instead of, there is no and their contractions) as
+        one case-insensitive regex. METHOD-CONTROLLER (build/AgentFamily.psm1) uses the same list.
+    #>
+    return $script:NegationRx
+}
 function Get-AgentAllowedSkillTools {
     <#
     .SYNOPSIS
@@ -1613,7 +1621,7 @@ function Invoke-AgentLintFixtures {
 Export-ModuleMember -Function @(
     'Get-AgentCatalog', 'Get-ScanRules', 'Get-AgentToolClass', 'Invoke-ToolNameLint', 'Invoke-AgentPreflight',
     'Read-ToolsMd', 'Invoke-AgentToolPinsParse', 'Test-ToolsMdPins', 'Get-ToolsMdPinUnion', 'Test-AgentManifest',
-    'Get-AgentSkillPolicy', 'Get-AgentAllowedSkillTools',
+    'Get-AgentSkillPolicy', 'Get-AgentAllowedSkillTools', 'Get-AgentNegationRegex',
     'Test-SensitiveKeyName', 'Get-AgentField', 'Get-AgentLintTestFamily', 'Expand-AgentFixtureText',
     'Invoke-AgentLintFixtures'
 )

@@ -24,6 +24,9 @@
       H  attribution             exact trailer and footer bytes; present in every agent that includes a
                                  fragment using {{= CommitTrailer}} or {{= PrFooter}}, absent otherwise
       I  credits                 family Credits strings and the family CreditsSentence in each README
+      M  method registry         only when its data exists: METHOD-CONTROLLER and METHOD-EXCUSES (the family key
+                                 Method), METHOD-REFERENCE (a SkillPolicy skill with a Fragment); findings at the
+                                 source line, once (Test-AgentMethod in build/AgentFamily.psm1)
 
     Families come from build/agent-src/families.psd1. Without -Family this script checks that the agents/
     folders equal the union of every family roster (an id belongs to one family), then runs itself once per
@@ -766,6 +769,37 @@ foreach ($id in $selected) {
             if ($licenseAt -lt 0) { Add-SourceError 'CREDITS-SENTENCE' $rel (Get-LineAt $readme $sentenceAt) "the credits sentence must be followed by '$licenseSentence'" }
         }
     }
+}
+
+# =============================================================================================================
+Enter-Section 'M' 'Method registry'
+# =============================================================================================================
+
+# Each check runs only when its data exists: the family key Method (METHOD-CONTROLLER, METHOD-EXCUSES) and a
+# SkillPolicy skill that names its reference Fragment (METHOD-REFERENCE).
+$methodData = Get-AgentField $fam 'Method'
+$referenceSkills = @(@(Get-AgentField (Get-AgentField $fam 'SkillPolicy') 'Skills' @()) | Where-Object { $null -ne (Get-AgentField $_ 'Fragment') })
+if ($null -eq $methodData -and $referenceSkills.Count -eq 0) {
+    Write-Host '  skipped: the family has no Method key and no SkillPolicy reference fragment'
+} else {
+    $sourceLines = @{}
+    foreach ($dir in @($familyContext['SoulsRelDir'], $familyContext['FragmentsRelDir'])) {
+        $full = Join-Path $RepoRoot $dir
+        if (-not (Test-Path -LiteralPath $full -PathType Container)) { continue }
+        foreach ($file in @(Get-ChildItem -LiteralPath $full -File -Filter '*.md' | Sort-Object Name)) {
+            $rel = "$dir/$($file.Name)"
+            $sourceLines[$rel] = @((Read-AgentSourceFile -RepoRoot $RepoRoot -RelativePath $rel)['Lines'])
+        }
+    }
+    $skillTools = @{}
+    foreach ($pair in $catalog.SkillToolOwner.GetEnumerator()) {
+        if (-not $skillTools.ContainsKey($pair.Value)) { $skillTools[$pair.Value] = [System.Collections.Generic.List[string]]::new() }
+        $skillTools[$pair.Value].Add($pair.Key)
+    }
+    $methodResults = @(foreach ($id in $selected) { if ($composedById.ContainsKey($id)) { $composedById[$id] } })
+    $methodIssues = @(Test-AgentMethod -Family $fam -Results $methodResults -SourceLines $sourceLines -Negation (Get-AgentNegationRegex) -SkillTools $skillTools -FullRoster ($requested.Count -eq 0) -RepoRoot $RepoRoot)
+    foreach ($issue in $methodIssues) { Add-SourceError $issue['Rule'] $issue['Path'] $issue['Line'] $issue['Message'] }
+    Write-Host "  $(@(Get-AgentField $methodData 'Rules' @()).Count) registered rule(s), $($referenceSkills.Count) reference fragment(s), $($methodIssues.Count) finding(s)"
 }
 
 # =============================================================================================================

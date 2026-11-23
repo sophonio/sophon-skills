@@ -313,15 +313,16 @@ build/licenses/Apache-2.0.txt the LICENSE the Apache-2.0 agents ship
 build/AgentFamily.psm1        registry, roster and composer
 build/AgentLint.psm1          tool-name lint, scanner preflight, TOOLS.md parser, manifest checks
 build/Compose-AgentSouls.ps1  [-RepoRoot] [-Agents] [-Check] [-OutDir] [-Explain] [-Family]
-build/Test-AgentSources.ps1   sections A-I per family, no Sophon CLI needed (CI runs it) [-Agents] [-Family]
-build/Build-AgentPackages.ps1 [-RepoRoot] [-OutputDir] [-Agents] [-ValidateOnly] [-Family]
-tests/agents/                 Test-AgentPackages.ps1 (A-L), fixtures/, evals/
+build/Test-AgentSources.ps1   sections A-I and M per family, no Sophon CLI needed (CI runs it) [-Agents] [-Family] [-Release]
+build/Build-AgentPackages.ps1 [-RepoRoot] [-OutputDir] [-Agents] [-ValidateOnly] [-Family] [-Release]
+tests/agents/                 Test-AgentPackages.ps1 (A-M), fixtures/, evals/
 ```
 
 **Budgets** (`Test-AgentSources.ps1` section E fails over any of them and prints a headroom table):
 - Composed SOUL, `SoulCap` in `family.psd1` (the 3.0 tiers, option A of the design's byte ledger): lead-developer 62,464 B; ui-ux-designer, frontend-developer, design-system-engineer and visual-designer 51,200 B; developer, debugger, qa-engineer, e2e-test-engineer, mcp-integration-engineer and technical-writer 44,032 B; software-architect, code-reviewer, security-reviewer and accessibility-reviewer 28,672 B; researcher and artifact-creator 22,528 B. Caps are data: raising one changes the family file and its header comment, never code.
 - Headroom: under 8% of the cap free prints `WARN BUDGET-HEADROOM`; under 5% free is an error only with `-Release` (alias `-StrictHeadroom`, on `Test-AgentSources.ps1` and `Build-AgentPackages.ps1`). Warnings never change the exit code. An optional per-agent `RoleCap` caps the role text (the template without include and comment lines; `BUDGET-ROLE`). The table also shows the change against `build/agent-src/catalog/soul-baseline.psd1` (the 2.1.0 sizes).
 - Each fragment at most 4,096 B, each TOOLS.md at most 2,048 B, each README at most 12 KiB (the lead's 24 KiB).
+- **Method registry** (section M of `Test-AgentSources.ps1`, each check only when its data exists): the optional family key `Method` lists the tested rules (a whole fragment, or a block from an `Anchor` line to the end of its `| Excuse | Reality |` table) and the controller/worker split. `METHOD-CONTROLLER` keeps controller fragments and terms out of agents that do not delegate and requires the worker fragments; `METHOD-EXCUSES` requires exactly one canonical excuse table (3-6 rows) per rule and none outside a rule; `METHOD-REFERENCE` keeps a skill's tools inside the reference fragment its `SkillPolicy` entry names. The development family does not set `Method` yet; the fixtures are `tests/agents/fixtures/method/cases.psd1`.
 - Every child pays for its whole SOUL, uncached: keep role text terse and cut before you raise a cap again.
 
 **Verification sequence** (from the repository root; needs PowerShell 7 and Sophon CLI 2.2.x):
@@ -335,7 +336,7 @@ pwsh -NoProfile -File build/Test-AgentSources.ps1                 # lint, prefli
 pwsh -NoProfile -File build/Build-AgentPackages.ps1 -ValidateOnly # sophon dev validate: 0 errors, 0 warnings
 pwsh -NoProfile -File build/Build-AgentPackages.ps1               # 18 x <id>-<version>.sophon-agent + SHA256SUMS
 Get-Content dist/agents/SHA256SUMS
-pwsh -NoProfile -File tests/agents/Test-AgentPackages.ps1         # sections A-L
+pwsh -NoProfile -File tests/agents/Test-AgentPackages.ps1         # sections A-M
 pwsh -File build/Build-MarketplacePackages.ps1 -ValidateOnly      # skills unaffected
 git status --porcelain                                            # only intended sources + generated SOULs
 ```
@@ -343,7 +344,7 @@ git status --porcelain                                            # only intende
 - **The builder** checks the folders against the roster, the CLI version, the composer (`-Check`; drift fails with "SOUL drift — run the composer"), `Test-AgentSources.ps1` and `sophon dev validate --json` per agent. Any CLI error **or warning** fails the build. It then writes `dist/agents/<id>-<version>.sophon-agent` and `dist/agents/SHA256SUMS`.
   - It removes stale packages: all of them on a full build, only the selected ids' on a subset build, which prints "SHA256SUMS covers only: …".
   - A failed build leaves no SHA256SUMS. It never installs or publishes.
-- **The tests.** `tests/agents/Test-AgentPackages.ps1 -SourceOnly` runs sections A-I and L without the CLI. See [`tests/README.md`](../tests/README.md).
+- **The tests.** `tests/agents/Test-AgentPackages.ps1 -SourceOnly` runs sections A-I, L and M without the CLI. See [`tests/README.md`](../tests/README.md).
 - **Package shape** (made by `sophon dev build`): a zip with `manifest.json` first, then the other files in ordinal order, at the root, each entry stamped 1980-01-01 00:00:00. Repeat builds are byte-identical.
 
 **Versioning.**

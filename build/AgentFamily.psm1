@@ -25,6 +25,11 @@
                                tools required beyond the TOOLS.md pins; tools of these skills may be named
                                and pinned
       AllowRestrictedMentions  restricted tool names that may be named un-negated (never pinned)
+                               A SkillPolicy skill may also name Fragment = '<NN-id>', its reference fragment: the
+                               only source whose lines may name that skill's tools (METHOD-REFERENCE)
+      Method                   the registry of tested rules: @{ Controller = @{ Fragments; Terms; Allow };
+                               Worker = @{ Fragments; Exempt }; Rules = @(@{ Id; Fragment | Agent; Anchor }) }
+                               (METHOD-CONTROLLER, METHOD-EXCUSES; Test-AgentMethod)
 
     Optional agent keys (beside the required Id, DisplayName, SoulCap, Writer, SubAgents, Effort, Fragments, Credits):
       License, Category, RequiredTags   per-agent overrides of the family values
@@ -898,10 +903,13 @@ function Test-AgentFamilyOptionalKeys {
             foreach ($skill in $skills) {
                 $name = if ($skill -is [hashtable]) { $skill['Name'] } else { $null }
                 $skillKeys = if ($skill -is [hashtable]) { [string[]]@($skill.Keys) } else { [string[]]@() }
-                $extraKeys = @($skillKeys | Where-Object { -not (Test-AgentInList @('Name', 'MinVersion') $_) })
+                $extraKeys = @($skillKeys | Where-Object { -not (Test-AgentInList @('Name', 'MinVersion', 'Fragment') $_) })
                 if ($skill -isnot [hashtable] -or $name -isnot [string] -or -not $script:SkillNameRegex.IsMatch($name) -or $extraKeys.Count -gt 0) {
-                    $errors.Add((New-AgentComposeError $p $line "SkillPolicy.Skills entry '$name' must be @{ Name = '<skill>'; MinVersion = 'x.y.z' } with a name matching ^[a-z0-9][a-z0-9-]{1,63}$"))
+                    $errors.Add((New-AgentComposeError $p $line "SkillPolicy.Skills entry '$name' must be @{ Name = '<skill>'; MinVersion = 'x.y.z'; Fragment = '<NN-id>' } (MinVersion and Fragment optional) with a name matching ^[a-z0-9][a-z0-9-]{1,63}$"))
                     continue
+                }
+                if ($skill.ContainsKey('Fragment') -and ($skill['Fragment'] -isnot [string] -or -not $script:FragmentIdRegex.IsMatch($skill['Fragment']))) {
+                    $errors.Add((New-AgentComposeError $p $line "SkillPolicy.Skills '$name': Fragment '$($skill['Fragment'])' must be a fragment id (NN-name)"))
                 }
                 if (-not $seenSkills.Add($name)) {
                     $errors.Add((New-AgentComposeError $p $line "SkillPolicy.Skills lists $name twice"))
@@ -928,7 +936,87 @@ function Test-AgentFamilyOptionalKeys {
             }
         }
     }
+    if ($Family.ContainsKey('Method')) {
+        foreach ($message in @(Get-AgentMethodShapeErrors -Method $Family['Method'] -Family $Family)) {
+            $errors.Add((New-AgentComposeError $p (& $at 'Method') $message))
+        }
+    }
     $errors.ToArray()
+}
+
+function Get-AgentMethodShapeErrors {
+    # Shape of the optional Method key (the registry of tested rules). Emits one message per problem.
+    param($Method, [hashtable]$Family)
+    if ($Method -isnot [hashtable]) { 'Method must be @{ Controller = @{...}; Worker = @{...}; Rules = @(...) }'; return }
+    $roster = [string[]]@(foreach ($agent in @(Get-AgentItems $Family['Agents'])) { Get-AgentIdOf $agent })
+    $isFragmentList = {
+        param($value)
+        foreach ($item in @(Get-AgentItems $value)) {
+            if ($item -isnot [string] -or -not $script:FragmentIdRegex.IsMatch($item)) { return $false }
+        }
+        $true
+    }
+    foreach ($key in [string[]]@($Method.Keys)) {
+        if (-not (Test-AgentInList @('Controller', 'Worker', 'Rules') $key)) { "Method has unknown key $key (keys: Controller, Worker, Rules)" }
+    }
+    $controller = $Method['Controller']
+    $terms = [string[]]@()
+    if ($null -ne $controller) {
+        if ($controller -isnot [hashtable]) { 'Method.Controller must be @{ Fragments; Terms; Allow }' }
+        else {
+            foreach ($key in [string[]]@($controller.Keys)) {
+                if (-not (Test-AgentInList @('Fragments', 'Terms', 'Allow') $key)) { "Method.Controller has unknown key $key (keys: Fragments, Terms, Allow)" }
+            }
+            if (-not (& $isFragmentList $controller['Fragments'])) { 'Method.Controller.Fragments must list fragment ids (NN-name)' }
+            $terms = [string[]]@(foreach ($term in @(Get-AgentItems $controller['Terms'])) {
+                    if ($term -isnot [string] -or $term.Length -eq 0) { continue }
+                    $term
+                })
+            foreach ($term in @(Get-AgentItems $controller['Terms'])) {
+                if ($term -isnot [string] -or $term.Length -eq 0) { "Method.Controller.Terms entry '$term' must be a non-empty regex string"; continue }
+                try { [void][regex]::new($term) } catch { "Method.Controller.Terms entry '$term' is not a valid regex" }
+            }
+            foreach ($allow in @(Get-AgentItems $controller['Allow'])) {
+                if ($allow -isnot [hashtable]) { 'Method.Controller.Allow entries must be @{ Agent or Fragment; Term; Why }'; continue }
+                $who = @(@('Agent', 'Fragment') | Where-Object { $allow.ContainsKey($_) })
+                $extra = @([string[]]@($allow.Keys) | Where-Object { -not (Test-AgentInList @('Agent', 'Fragment', 'Term', 'Why') $_) })
+                if ($who.Count -ne 1 -or $extra.Count -gt 0) { 'Method.Controller.Allow entries name exactly one of Agent or Fragment, plus Term and Why'; continue }
+                if (-not (Test-AgentInList $terms $allow['Term'])) { "Method.Controller.Allow term '$($allow['Term'])' is not one of Controller.Terms" }
+                if ($allow['Why'] -isnot [string] -or [string]::IsNullOrWhiteSpace($allow['Why'])) { "Method.Controller.Allow entry for '$($allow['Term'])' needs a Why" }
+                if ($who[0] -eq 'Agent' -and -not (Test-AgentInList $roster $allow['Agent'])) { "Method.Controller.Allow agent '$($allow['Agent'])' is not in the roster" }
+                if ($who[0] -eq 'Fragment' -and ($allow['Fragment'] -isnot [string] -or -not $script:FragmentIdRegex.IsMatch($allow['Fragment']))) { "Method.Controller.Allow fragment '$($allow['Fragment'])' is not a fragment id" }
+            }
+        }
+    }
+    $worker = $Method['Worker']
+    if ($null -ne $worker) {
+        if ($worker -isnot [hashtable]) { 'Method.Worker must be @{ Fragments; Exempt }' }
+        else {
+            foreach ($key in [string[]]@($worker.Keys)) {
+                if (-not (Test-AgentInList @('Fragments', 'Exempt') $key)) { "Method.Worker has unknown key $key (keys: Fragments, Exempt)" }
+            }
+            if (-not (& $isFragmentList $worker['Fragments'])) { 'Method.Worker.Fragments must list fragment ids (NN-name)' }
+            foreach ($id in @(Get-AgentItems $worker['Exempt'])) {
+                if (-not (Test-AgentInList $roster $id)) { "Method.Worker.Exempt agent '$id' is not in the roster" }
+            }
+        }
+    }
+    $seen = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+    foreach ($rule in @(Get-AgentItems $Method['Rules'])) {
+        if ($rule -isnot [hashtable]) { 'Method.Rules entries must be @{ Id; Fragment or Agent; Anchor }'; continue }
+        $id = $rule['Id']
+        if ($id -isnot [string] -or $id -cnotmatch '^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$') { "Method.Rules Id '$id' must be kebab-case and start with a letter (a fragment id starts with two digits)"; continue }
+        if (-not $seen.Add($id)) { "Method.Rules lists $id twice" }
+        $extra = @([string[]]@($rule.Keys) | Where-Object { -not (Test-AgentInList @('Id', 'Fragment', 'Agent', 'Anchor') $_) })
+        if ($extra.Count -gt 0) { "Method.Rules '$id' has unknown key $($extra -join ', ') (keys: Id, Fragment, Agent, Anchor)" }
+        $hasFragment = $rule.ContainsKey('Fragment')
+        $hasAgent = $rule.ContainsKey('Agent')
+        if ($hasFragment -eq $hasAgent) { "Method.Rules '$id' names exactly one of Fragment or Agent"; continue }
+        if ($hasFragment -and ($rule['Fragment'] -isnot [string] -or -not $script:FragmentIdRegex.IsMatch($rule['Fragment']))) { "Method.Rules '$id': Fragment '$($rule['Fragment'])' is not a fragment id" }
+        if ($hasAgent -and $rule['Agent'] -isnot [string]) { "Method.Rules '$id': Agent must be an agent id" }
+        if ($hasAgent -and -not $rule.ContainsKey('Anchor')) { "Method.Rules '$id': a rule in role text needs an Anchor (the first line of its block)" }
+        if ($rule.ContainsKey('Anchor') -and ($rule['Anchor'] -isnot [string] -or [string]::IsNullOrWhiteSpace($rule['Anchor']))) { "Method.Rules '$id': Anchor must be a whole source line" }
+    }
 }
 
 # ---------------------------------------------------------------------------------------------
@@ -1406,6 +1494,411 @@ function Invoke-AgentFamilyCompose {
 }
 
 # ---------------------------------------------------------------------------------------------
+# Method registry (the optional family key Method; docs/plans/2026-11-23-agents-v3-design.md,
+# "The Method registry")
+# ---------------------------------------------------------------------------------------------
+
+$script:ExcuseHeader = '| Excuse | Reality |'
+$script:ExcuseRule = '|---|---|'
+$script:ReferenceFallback = 'If the tool is missing or refused, work from what you carry.'
+
+function Get-AgentMethodRuleSource {
+    # The repo-relative source file of a rule: its fragment, or the agent's template.
+    param([hashtable]$Rule, [string]$SoulsDir, [string]$FragmentsDir)
+    if ($Rule.ContainsKey('Fragment')) { return "$FragmentsDir/$($Rule['Fragment']).md" }
+    "$SoulsDir/$($Rule['Agent']).md"
+}
+
+function Get-AgentMethodSpans {
+    <#
+    .SYNOPSIS
+        Locates every Method rule in its source. Emits @{ Rule; Path; Whole; Start; End; Errors } per rule.
+    .DESCRIPTION
+        SourceLines maps a repo-relative source path to its content lines (@{ Text; Line }, as Read-AgentSourceFile
+        returns them). A whole-fragment rule (Fragment, no Anchor) spans its fragment file. A block rule (Anchor
+        with Fragment or Agent) starts at the one line equal to Anchor and ends with the last row of the first
+        excuse table at or after it. Start and End are 1-based source line numbers (0 when the span is not
+        found); Errors holds error objects (METHOD-EXCUSES).
+    #>
+    [CmdletBinding()]
+    param(
+        [AllowNull()]$Method,
+        [Parameter(Mandatory)][hashtable]$SourceLines,
+        [string]$SoulsDir = $script:SoulsRelDir,
+        [string]$FragmentsDir = $script:FragmentsRelDir
+    )
+    if ($Method -isnot [hashtable]) { return }
+    foreach ($rule in @(Get-AgentItems $Method['Rules'])) {
+        if ($rule -isnot [hashtable] -or $rule['Id'] -isnot [string]) { continue }
+        $path = Get-AgentMethodRuleSource -Rule $rule -SoulsDir $SoulsDir -FragmentsDir $FragmentsDir
+        $errors = [System.Collections.Generic.List[object]]::new()
+        $span = @{ Rule = [string]$rule['Id']; Path = $path; Whole = $false; Start = 0; End = 0; Errors = $errors }
+        if (-not $SourceLines.ContainsKey($path)) {
+            $errors.Add((New-AgentComposeError $path 0 "rule '$($rule['Id'])': source $path not found"))
+            $span; continue
+        }
+        $lines = @($SourceLines[$path])
+        if ($lines.Count -eq 0) { $span; continue }
+        if (-not $rule.ContainsKey('Anchor')) {
+            $span['Whole'] = $true
+            $span['Start'] = [int]$lines[0]['Line']
+            $span['End'] = [int]$lines[$lines.Count - 1]['Line']
+            $span; continue
+        }
+        $anchor = [string]$rule['Anchor']
+        $hits = @(for ($i = 0; $i -lt $lines.Count; $i++) { if (Test-AgentSame $lines[$i]['Text'] $anchor) { $i } })
+        if ($hits.Count -ne 1) {
+            $where = if ($hits.Count -eq 0) { 'matches no line' } else { "matches $($hits.Count) lines ($(@($hits | ForEach-Object { $lines[$_]['Line'] }) -join ', '))" }
+            $errors.Add((New-AgentComposeError $path $(if ($hits.Count -gt 0) { [int]$lines[$hits[0]]['Line'] } else { 0 }) "rule '$($rule['Id'])': Anchor '$anchor' $where; it must match exactly one line"))
+            $span; continue
+        }
+        $header = -1
+        for ($i = $hits[0]; $i -lt $lines.Count; $i++) {
+            if (Test-AgentSame $lines[$i]['Text'] $script:ExcuseHeader) { $header = $i; break }
+        }
+        if ($header -lt 0) {
+            $errors.Add((New-AgentComposeError $path ([int]$lines[$hits[0]]['Line']) "rule '$($rule['Id'])': no excuse table ($($script:ExcuseHeader)) after its Anchor; a block ends with the last row of its table"))
+            $span; continue
+        }
+        $end = $header
+        while ($end + 1 -lt $lines.Count -and $lines[$end + 1]['Text'].StartsWith('|', [StringComparison]::Ordinal)) { $end++ }
+        $span['Start'] = [int]$lines[$hits[0]]['Line']
+        $span['End'] = [int]$lines[$end]['Line']
+        $span
+    }
+}
+
+function Test-AgentExcuseTables {
+    # The table rule for one span: exactly one canonical excuse table, 3 to 6 rows, quoted excuse, full stop,
+    # at most 200 B a row. Emits error objects.
+    param([string]$RuleId, [string]$Path, [object[]]$Lines)
+    $headers = @(for ($i = 0; $i -lt $Lines.Count; $i++) { if (Test-AgentSame $Lines[$i]['Text'] $script:ExcuseHeader) { $i } })
+    $first = if ($Lines.Count -gt 0) { [int]$Lines[0]['Line'] } else { 0 }
+    if ($headers.Count -ne 1) {
+        New-AgentComposeError $Path $(if ($headers.Count -gt 1) { [int]$Lines[$headers[1]]['Line'] } else { $first }) "rule '$RuleId' holds $($headers.Count) excuse tables; a registered rule holds exactly one"
+        return
+    }
+    $h = $headers[0]
+    if ($h + 1 -ge $Lines.Count -or -not (Test-AgentSame $Lines[$h + 1]['Text'] $script:ExcuseRule)) {
+        New-AgentComposeError $Path ([int]$Lines[$h]['Line']) "rule '$RuleId': the excuse table header must be followed by '$($script:ExcuseRule)'"
+        return
+    }
+    $rows = [System.Collections.Generic.List[object]]::new()
+    for ($i = $h + 2; $i -lt $Lines.Count -and $Lines[$i]['Text'].StartsWith('|', [StringComparison]::Ordinal); $i++) { $rows.Add($Lines[$i]) }
+    if ($rows.Count -lt 3 -or $rows.Count -gt 6) {
+        New-AgentComposeError $Path ([int]$Lines[$h]['Line']) "rule '$RuleId': the excuse table has $($rows.Count) rows; it needs 3 to 6"
+    }
+    foreach ($row in $rows) {
+        $text = [string]$row['Text']
+        $line = [int]$row['Line']
+        $size = $script:LenientUtf8.GetByteCount($text)
+        if ($size -gt 200) { New-AgentComposeError $Path $line "rule '$RuleId': excuse row is $size bytes; at most 200" }
+        $cells = [regex]::Match($text, '^\|(?<a>[^|]*)\|(?<b>[^|]*)\|$')
+        if (-not $cells.Success) { New-AgentComposeError $Path $line "rule '$RuleId': an excuse row has exactly two cells"; continue }
+        $excuse = $cells.Groups['a'].Value.Trim()
+        $reality = $cells.Groups['b'].Value.Trim()
+        if ($excuse.Length -lt 2 -or -not $excuse.StartsWith('"', [StringComparison]::Ordinal) -or -not $excuse.EndsWith('"', [StringComparison]::Ordinal)) {
+            New-AgentComposeError $Path $line "rule '$RuleId': the excuse cell must be in double quotes"
+        }
+        if (-not $reality.EndsWith('.', [StringComparison]::Ordinal)) {
+            New-AgentComposeError $Path $line "rule '$RuleId': the reality cell must end with a full stop"
+        }
+    }
+}
+
+function Get-AgentComposedLines {
+    # The composed output lines of a compose result (no trailing empty element).
+    param([hashtable]$Result)
+    $text = [string]$Result['Text']
+    if ($text.Length -eq 0) { return , [string[]]@() }
+    , [string[]](Split-AgentTextLines -Text $text)['Lines']
+}
+
+function Test-AgentMethod {
+    <#
+    .SYNOPSIS
+        METHOD-CONTROLLER, METHOD-EXCUSES and METHOD-REFERENCE for one family. Emits @{ Rule; Path; Line; Message }.
+    .DESCRIPTION
+        Family is the family data; Results the compose results of the agents checked (Id, Text, LineMap,
+        Included); SourceLines maps every template and fragment path of the family to its content lines.
+        Negation is the tool lint's negation regex (Get-AgentNegationRegex in build/AgentLint.psm1). SkillTools
+        maps a skill name to its tool names. FullRoster says Results covers the whole roster, which the
+        "no roster agent carries this rule" check needs. Each check runs only when its data exists: the
+        Method key for the first two, a SkillPolicy skill with a Fragment for the third. Findings are
+        reported at the source line through the line map, once per line and rule.
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)][hashtable]$Family,
+        [Parameter(Mandatory)][AllowEmptyCollection()][object[]]$Results,
+        [Parameter(Mandatory)][hashtable]$SourceLines,
+        [Parameter(Mandatory)][regex]$Negation,
+        [hashtable]$SkillTools = @{},
+        [bool]$FullRoster = $true,
+        [string]$SoulsDir = $script:SoulsRelDir,
+        [string]$FragmentsDir = $script:FragmentsRelDir,
+        [string]$FamilyPath = $script:FamilyRelPath,
+        [string]$RepoRoot = ''
+    )
+    # Family-file lines need the repository (the fixtures have no family file: line 0).
+    $lineOf = {
+        param([string]$AgentId, [string]$Text, [string]$Key)
+        if (-not $RepoRoot) { return 0 }
+        $lineArgs = @{ RepoRoot = $RepoRoot }
+        if ($AgentId) { $lineArgs['AgentId'] = $AgentId }
+        if ($Text) { $lineArgs['Text'] = $Text }
+        if ($Key) { $lineArgs['Key'] = $Key }
+        Get-AgentFamilyLine @lineArgs
+    }
+    $found = [System.Collections.Generic.List[object]]::new()
+    $keys = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+    $add = {
+        param([string]$Rule, [string]$Path, [int]$Line, [string]$Message, [string]$Key = '')
+        $k = if ($Key) { "$Rule|$Key" } else { "$Rule|$Path|$Line|$Message" }
+        if ($keys.Add($k)) { $found.Add(@{ Rule = $Rule; Path = $Path; Line = $Line; Message = $Message }) }
+    }
+    $fragmentOf = {
+        param([string]$Source)
+        $prefix = "$FragmentsDir/"
+        if ($Source.StartsWith($prefix, [StringComparison]::Ordinal) -and $Source.EndsWith('.md', [StringComparison]::Ordinal)) {
+            return $Source.Substring($prefix.Length, $Source.Length - $prefix.Length - 3)
+        }
+        ''
+    }
+    $agentsById = @{}
+    foreach ($agent in @(Get-AgentItems $Family['Agents'])) { $id = Get-AgentIdOf $agent; if ($id) { $agentsById[$id] = $agent } }
+    $method = $Family['Method']
+
+    if ($method -is [hashtable]) {
+        # ---- METHOD-CONTROLLER ----
+        $controller = if ($method['Controller'] -is [hashtable]) { $method['Controller'] } else { @{} }
+        $worker = if ($method['Worker'] -is [hashtable]) { $method['Worker'] } else { @{} }
+        $controllerFragments = [string[]]@(Get-AgentItems $controller['Fragments'])
+        $terms = @(foreach ($term in @(Get-AgentItems $controller['Terms'])) {
+                if ($term -is [string] -and $term.Length -gt 0) { @{ Text = $term; Regex = [regex]::new($term, 'IgnoreCase, CultureInvariant') } }
+            })
+        $allow = @(Get-AgentItems $controller['Allow'] | Where-Object { $_ -is [hashtable] })
+        $workerFragments = [string[]]@(Get-AgentItems $worker['Fragments'])
+        $exempt = [string[]]@(Get-AgentItems $worker['Exempt'])
+        foreach ($result in $Results) {
+            $id = [string]$result['Id']
+            $agent = $agentsById[$id]
+            if ($null -eq $agent) { continue }
+            $sub = $agent['SubAgents']
+            $delegates = $sub -is [hashtable] -and $sub['enabled'] -eq $true
+            if ($delegates -or (Test-AgentInList $exempt $id)) { continue }
+            $included = [string[]]@($result['Included'])
+            foreach ($fragmentId in $controllerFragments) {
+                if (Test-AgentInList $included $fragmentId) {
+                    & $add 'METHOD-CONTROLLER' $FamilyPath (& $lineOf -AgentId $id -Text $fragmentId) "worker '$id' includes the controller fragment $fragmentId (only an agent that delegates may include it)"
+                }
+            }
+            foreach ($fragmentId in $workerFragments) {
+                if (-not (Test-AgentInList $included $fragmentId)) {
+                    & $add 'METHOD-CONTROLLER' $FamilyPath (& $lineOf -AgentId $id) "worker '$id' lacks the worker fragment $fragmentId (Method.Worker.Fragments)"
+                }
+            }
+            if ($terms.Count -eq 0) { continue }
+            $lines = Get-AgentComposedLines -Result $result
+            $map = @($result['LineMap'])
+            for ($i = 0; $i -lt $lines.Length -and $i -lt $map.Count; $i++) {
+                $text = $lines[$i]
+                if ($Negation.IsMatch($text)) { continue }
+                $source = [string]$map[$i]['Source']
+                $fromFragment = & $fragmentOf $source
+                foreach ($term in $terms) {
+                    if (-not $term['Regex'].IsMatch($text)) { continue }
+                    $allowed = @($allow | Where-Object {
+                            (Test-AgentSame $_['Term'] $term['Text']) -and
+                            ((Test-AgentSame $_['Agent'] $id) -or ($fromFragment -and (Test-AgentSame $_['Fragment'] $fromFragment)))
+                        }).Count -gt 0
+                    if ($allowed) { continue }
+                    $hit = $term['Regex'].Match($text).Value
+                    & $add 'METHOD-CONTROLLER' $source ([int]$map[$i]['Line']) "controller term '$hit' ($($term['Text'])) in a worker's text without a negation on the line; reword it, negate it, or list it in Method.Controller.Allow" "$source|$($map[$i]['Line'])|$($term['Text'])"
+                }
+            }
+        }
+
+        # ---- METHOD-EXCUSES ----
+        $spans = @(Get-AgentMethodSpans -Method $method -SourceLines $SourceLines -SoulsDir $SoulsDir -FragmentsDir $FragmentsDir)
+        $covered = @{}
+        foreach ($span in $spans) {
+            foreach ($e in @($span['Errors'])) { & $add 'METHOD-EXCUSES' $e['Path'] $e['Line'] $e['Message'] }
+            if ($span['Start'] -le 0) { continue }
+            if (-not $covered.ContainsKey($span['Path'])) { $covered[$span['Path']] = [System.Collections.Generic.List[object]]::new() }
+            $covered[$span['Path']].Add($span)
+            $inSpan = @(@($SourceLines[$span['Path']]) | Where-Object { $_['Line'] -ge $span['Start'] -and $_['Line'] -le $span['End'] })
+            foreach ($e in @(Test-AgentExcuseTables -RuleId $span['Rule'] -Path $span['Path'] -Lines $inSpan)) { & $add 'METHOD-EXCUSES' $e['Path'] $e['Line'] $e['Message'] }
+        }
+        foreach ($rule in @(Get-AgentItems $method['Rules'] | Where-Object { $_ -is [hashtable] })) {
+            if ($rule.ContainsKey('Agent')) {
+                if (-not $agentsById.ContainsKey([string]$rule['Agent'])) {
+                    & $add 'METHOD-EXCUSES' $FamilyPath (& $lineOf -Key 'Method') "rule '$($rule['Id'])' names agent '$($rule['Agent'])', which is not in the roster"
+                }
+            }
+            elseif ($FullRoster) {
+                $carried = @($Results | Where-Object { Test-AgentInList ([string[]]@($_['Included'])) $rule['Fragment'] }).Count -gt 0
+                if (-not $carried) {
+                    & $add 'METHOD-EXCUSES' $FamilyPath (& $lineOf -Key 'Method') "rule '$($rule['Id'])': no roster agent includes $($rule['Fragment'])"
+                }
+            }
+        }
+        $paths = [string[]]@($SourceLines.Keys)
+        [Array]::Sort($paths, [StringComparer]::Ordinal)
+        foreach ($path in $paths) {
+            foreach ($entry in @($SourceLines[$path])) {
+                if (-not (Test-AgentSame $entry['Text'] $script:ExcuseHeader)) { continue }
+                $line = [int]$entry['Line']
+                $inside = $covered.ContainsKey($path) -and @($covered[$path] | Where-Object { $line -ge $_['Start'] -and $line -le $_['End'] }).Count -gt 0
+                if (-not $inside) {
+                    & $add 'METHOD-EXCUSES' $path $line 'an excuse table outside every registered rule (Method.Rules); register the rule or drop the table'
+                }
+            }
+        }
+    }
+
+    # ---- METHOD-REFERENCE ----
+    $policy = $Family['SkillPolicy']
+    $referenceSkills = @(if ($policy -is [hashtable]) { @(Get-AgentItems $policy['Skills']) | Where-Object { $_ -is [hashtable] -and $_['Fragment'] -is [string] } })
+    foreach ($skill in $referenceSkills) {
+        $fragmentId = [string]$skill['Fragment']
+        $fragmentPath = "$FragmentsDir/$fragmentId.md"
+        if (-not $SourceLines.ContainsKey($fragmentPath)) {
+            & $add 'METHOD-REFERENCE' $FamilyPath (& $lineOf -Key 'SkillPolicy') "SkillPolicy skill '$($skill['Name'])' names the fragment $fragmentId, which has no file $fragmentPath"
+        }
+        elseif (@(@($SourceLines[$fragmentPath]) | Where-Object { ([string]$_['Text']).Contains($script:ReferenceFallback) }).Count -eq 0) {
+            & $add 'METHOD-REFERENCE' $fragmentPath 1 "the reference fragment must contain the sentence '$($script:ReferenceFallback)'"
+        }
+        $tools = [string[]]@(if ($SkillTools.ContainsKey([string]$skill['Name'])) { @($SkillTools[[string]$skill['Name']]) })
+        if ($tools.Length -eq 0) { continue }
+        $toolRegex = [regex]::new('(?<![\w./\\@:-])(?:' + (($tools | ForEach-Object { [regex]::Escape($_) }) -join '|') + ')(?![\w/\\(@-]|\.[A-Za-z0-9_])', 'CultureInvariant')
+        foreach ($result in $Results) {
+            $lines = Get-AgentComposedLines -Result $result
+            $map = @($result['LineMap'])
+            for ($i = 0; $i -lt $lines.Length -and $i -lt $map.Count; $i++) {
+                $match = $toolRegex.Match($lines[$i])
+                if (-not $match.Success) { continue }
+                $source = [string]$map[$i]['Source']
+                if (Test-AgentSame $source $fragmentPath) { continue }
+                & $add 'METHOD-REFERENCE' $source ([int]$map[$i]['Line']) "the skill tool $($match.Value) may appear only in its reference fragment $fragmentId; point at a topic by id instead" "$source|$($map[$i]['Line'])|$($match.Value)"
+            }
+        }
+    }
+    $found.ToArray()
+}
+
+function Expand-AgentFixtureSource {
+    # In-memory expansion for the method fixtures: include lines {{> soul/<id>}} are replaced by the fragment's
+    # lines, recursively. Fills Lines, Map and Included of $State.
+    param([hashtable]$State, [string]$Path, [string[]]$Stack = @())
+    foreach ($entry in @($State['Sources'][$Path])) {
+        $include = $script:IncludeRegex.Match([string]$entry['Text'])
+        $ref = if ($include.Success) { $script:FragmentRefRegex.Match($include.Groups['ref'].Value) } else { $null }
+        if ($null -eq $ref -or -not $ref.Success) {
+            $State['Lines'].Add([string]$entry['Text'])
+            $State['Map'].Add(@{ Source = $Path; Line = [int]$entry['Line'] })
+            continue
+        }
+        $fragmentId = $ref.Groups['id'].Value
+        if ((Test-AgentInList $Stack $fragmentId) -or (Test-AgentInList $State['Omit'] $fragmentId)) { continue }
+        $State['Included'].Add($fragmentId)
+        $fragmentPath = "$($State['FragmentsDir'])/$fragmentId.md"
+        if ($State['Sources'].ContainsKey($fragmentPath)) {
+            Expand-AgentFixtureSource -State $State -Path $fragmentPath -Stack ([string[]](@($Stack) + $fragmentId))
+        }
+    }
+}
+
+function ConvertTo-AgentFixtureLines {
+    param($Value)
+    $lineNo = 0
+    , @(foreach ($text in @(Get-AgentItems $Value)) { $lineNo++; @{ Text = [string]$text; Line = $lineNo } })
+}
+
+function Invoke-AgentMethodFixtures {
+    <#
+    .SYNOPSIS
+        Runs tests/agents/fixtures/method/cases.psd1 through Test-AgentMethod and returns every case that did not
+        behave as its Expect says (empty when all pass), plus the case count as @{ Count; Failures }.
+    .DESCRIPTION
+        A case holds Method, SkillPolicy, SkillTools, Agents (each @{ Id; SubAgents; Template = @(lines) }) and
+        Fragments (@{ '<NN-id>' = @(lines) }). The file's Base supplies any of them a case leaves out; a case's
+        Fragments are merged over the Base fragments, and its Templates (@{ '<agent id>' = @(lines) }) replace
+        those agents' templates. Expect 'fail' passes when a finding carries Rule (and, with
+        Line, at that line of Path); 'pass' passes when there is no finding.
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)][string]$RepoRoot,
+        [Parameter(Mandatory)][regex]$Negation
+    )
+    $file = Join-AgentRepoPath (Resolve-AgentFullPath -Path $RepoRoot) 'tests/agents/fixtures/method/cases.psd1'
+    if (-not [System.IO.File]::Exists($file)) {
+        return @{ Count = 0; Failures = @([pscustomobject]@{ Name = '(file)'; Expect = 'present'; Rule = ''; Got = 'missing'; Detail = $file }) }
+    }
+    $data = Import-PowerShellDataFile -LiteralPath $file
+    $base = if ($data['Base'] -is [hashtable]) { $data['Base'] } else { @{} }
+    $failures = [System.Collections.Generic.List[object]]::new()
+    $count = 0
+    foreach ($case in @(Get-AgentItems $data['Cases'])) {
+        $count++
+        $name = [string]$case['Name']
+        try {
+            $pick = { param($key) if ($case.ContainsKey($key)) { $case[$key] } else { $base[$key] } }
+            $family = @{ Agents = @() }
+            foreach ($key in 'Method', 'SkillPolicy') { $value = & $pick $key; if ($null -ne $value) { $family[$key] = $value } }
+            $fragments = @{}
+            foreach ($source in @($base['Fragments'], $case['Fragments'])) {
+                if ($source -is [hashtable]) { foreach ($k in $source.Keys) { $fragments[[string]$k] = $source[$k] } }
+            }
+            $sources = @{}
+            foreach ($k in $fragments.Keys) { $sources["fragments/soul/$k.md"] = ConvertTo-AgentFixtureLines $fragments[$k] }
+            $agents = @(Get-AgentItems (& $pick 'Agents'))
+            $results = [System.Collections.Generic.List[object]]::new()
+            foreach ($agent in $agents) {
+                $id = [string]$agent['Id']
+                $family['Agents'] += , @{ Id = $id; SubAgents = $agent['SubAgents'] }
+                $templatePath = "souls/$id.md"
+                $template = $agent['Template']
+                if ($case['Templates'] -is [hashtable] -and $case['Templates'].ContainsKey($id)) { $template = $case['Templates'][$id] }
+                $sources[$templatePath] = ConvertTo-AgentFixtureLines $template
+                $state = @{
+                    Sources = $sources; FragmentsDir = 'fragments/soul'; Omit = [string[]]@()
+                    Lines = [System.Collections.Generic.List[string]]::new()
+                    Map = [System.Collections.Generic.List[object]]::new()
+                    Included = [System.Collections.Generic.List[string]]::new()
+                }
+                Expand-AgentFixtureSource -State $state -Path $templatePath
+                $text = if ($state['Lines'].Count -gt 0) { ($state['Lines'] -join "`n") + "`n" } else { '' }
+                $results.Add(@{ Id = $id; Text = $text; LineMap = $state['Map'].ToArray(); Included = $state['Included'].ToArray() })
+            }
+            $skillTools = & $pick 'SkillTools'
+            if ($skillTools -isnot [hashtable]) { $skillTools = @{} }
+            $shape = @(if ($family.ContainsKey('Method')) { Get-AgentMethodShapeErrors -Method $family['Method'] -Family $family })
+            $issues = @($shape | ForEach-Object { @{ Rule = 'METHOD-SHAPE'; Path = 'family'; Line = 0; Message = $_ } })
+            $issues += @(Test-AgentMethod -Family $family -Results $results.ToArray() -SourceLines $sources -Negation $Negation -SkillTools $skillTools -SoulsDir 'souls' -FragmentsDir 'fragments/soul' -FamilyPath 'family')
+        }
+        catch {
+            $failures.Add([pscustomobject]@{ Name = $name; Expect = $case['Expect']; Rule = $case['Rule']; Got = 'exception'; Detail = $_.Exception.Message })
+            continue
+        }
+        $rules = @($issues | ForEach-Object { $_['Rule'] } | Select-Object -Unique)
+        $want = [string]$case['Rule']
+        $ok = if ($case['Expect'] -eq 'pass') { $issues.Count -eq 0 }
+        else {
+            $hits = @($issues | Where-Object { Test-AgentSame $_['Rule'] $want })
+            if ($case.ContainsKey('Path')) { $hits = @($hits | Where-Object { (Test-AgentSame $_['Path'] $case['Path']) -and (-not $case.ContainsKey('Line') -or $_['Line'] -eq $case['Line']) }) }
+            $hits.Count -gt 0
+        }
+        if (-not $ok) {
+            $detail = @($issues | Select-Object -First 4 | ForEach-Object { "$($_['Rule']) $($_['Path']):$($_['Line']): $($_['Message'])" }) -join ' | '
+            $failures.Add([pscustomobject]@{ Name = $name; Expect = $case['Expect']; Rule = $want; Got = ($rules -join ','); Detail = $detail })
+        }
+    }
+    @{ Count = $count; Failures = $failures.ToArray() }
+}
+
+# ---------------------------------------------------------------------------------------------
 # Output helpers
 # ---------------------------------------------------------------------------------------------
 
@@ -1653,6 +2146,9 @@ Export-ModuleMember -Function @(
     'Invoke-AgentCompose'
     'Invoke-AgentFamilyCompose'
     'Format-AgentComposeError'
+    'Get-AgentMethodSpans'
+    'Test-AgentMethod'
+    'Invoke-AgentMethodFixtures'
     'Compare-AgentSoulText'
     'Write-AgentSoulFile'
     'Get-AgentSoulBudget'

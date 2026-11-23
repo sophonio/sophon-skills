@@ -27,13 +27,15 @@
            in two families fails, the legacy registry-less fallback, SkillPolicy (skill-tool mentions and pins,
            requires.skills, ExtraRequiredTools, MAN-SKILL-VERSION), AllowRestrictedMentions, and the development
            family still failing LINT-SKILL and MAN-REQUIRES as before. Needs no Sophon CLI.
+      M    the Method registry: tests/agents/fixtures/method/cases.psd1 (Invoke-AgentMethodFixtures) for METHOD-CONTROLLER,
+           METHOD-EXCUSES and METHOD-REFERENCE, then a temporary copy whose development family gains a Method key.
 
     -SourceOnly skips J and K (no Sophon CLI needed). Prints PASS, FAIL or SKIP per section and exits 1 on any
     failure. Temporary folders live under the system temp folder and are removed at the end.
 .PARAMETER RepoRoot
     Repository root. Defaults to two folders above this script.
 .PARAMETER SourceOnly
-    Run sections A-I and L only.
+    Run sections A-I, L and M only.
 .EXAMPLE
     pwsh -NoProfile -File tests/agents/Test-AgentPackages.ps1
 .EXAMPLE
@@ -68,6 +70,7 @@ $sectionTitles = [ordered]@{
     J = 'Sophon CLI validation'
     K = 'Reproducible build'
     L = 'Families'
+    M = 'Method registry'
 }
 $items = @{}
 $skipped = @{}
@@ -207,9 +210,9 @@ try {
         $current = $null
         $captured = @{}
         $errorCounts = @{}
-        foreach ($key in 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I') { $captured[$key] = [System.Collections.Generic.List[string]]::new(); $errorCounts[$key] = 0 }
+        foreach ($key in 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'M') { $captured[$key] = [System.Collections.Generic.List[string]]::new(); $errorCounts[$key] = 0 }
         foreach ($line in $run.Lines) {
-            $heading = [regex]::Match($line, '^== ([A-I])\. ')
+            $heading = [regex]::Match($line, '^== ([A-IM])\. ')
             if ($heading.Success) { $current = $heading.Groups[1].Value; continue }
             if ($line -clike '== Summary*') { $current = $null; continue }
             if ($null -eq $current -or -not $line.Trim()) { continue }
@@ -626,6 +629,53 @@ try {
         Add-Fail 'L' "the family cases failed to run: $($_.Exception.Message) (line $($_.InvocationInfo.ScriptLineNumber))"
     }
 
+    # ---- M: the Method registry --------------------------------------------------------------------------
+    # The fixtures exercise each check in memory; a temporary copy then gives the development family a Method
+    # key (the design's controller terms and worker contract) that the 2.1.0 text must pass, and fail once
+    # artifact-creator, which lacks the worker fragments, is no longer exempt.
+    Write-Host 'Running the method cases ...'
+    try {
+        Import-Module (Join-Path $RepoRoot 'build/AgentLint.psm1') -Force
+        Import-Module (Join-Path $RepoRoot 'build/AgentFamily.psm1') -Force
+        $methodRun = Invoke-AgentMethodFixtures -RepoRoot $RepoRoot -Negation (Get-AgentNegationRegex)
+        foreach ($failure in @($methodRun['Failures'])) {
+            $rule = if ($failure.Rule) { " $($failure.Rule)" } else { '' }
+            Add-Fail 'M' "fixture method/$($failure.Name): expected $($failure.Expect)$rule, got '$($failure.Got)': $($failure.Detail)"
+        }
+        if ($methodRun['Count'] -eq 0) { Add-Fail 'M' 'no cases in tests/agents/fixtures/method/cases.psd1' }
+        elseif (@($methodRun['Failures']).Count -eq 0) { Add-Pass 'M' "$($methodRun['Count']) method fixture case(s) behave as expected" }
+
+        $methodCase = Join-Path $tempRoot 'case-method'
+        New-RepoCopy $methodCase
+        $methodFamily = Join-Path $methodCase 'build/agent-src/family.psd1'
+        $methodText = [IO.File]::ReadAllText($methodFamily)
+        $methodKey = @'
+  Method = @{
+    Controller = @{
+      Fragments = @()
+      Terms = @('\bagent\.delegate\b', '\bwaves?\b', '\bstand-ins?\b', '\bfan(?:s|ned|ning)? out\b', '\btasks\[')
+      Allow = @(
+        @{ Fragment = '03a-care-writer'; Term = '\bagent\.delegate\b'; Why = 'its card list names every gated tool' }
+      )
+    }
+    Worker = @{
+      Fragments = @('01-delegated-mode', '14-no-delegation')
+      Exempt = @('artifact-creator')
+    }
+  }
+'@.Replace("`r", '') + "`n"
+        if (-not $methodText.Contains("  Agents = @(`n")) { throw 'the family copy has no Agents line' }
+        Write-Utf8 $methodFamily ($methodText.Replace("  Agents = @(`n", $methodKey + "  Agents = @(`n"))
+        $methodArgs = @('-NoProfile', '-NonInteractive', '-File', (Join-Path $methodCase 'build/Test-AgentSources.ps1'), '-RepoRoot', $methodCase, '-Family', 'development')
+        $withKey = Invoke-Native $pwsh $methodArgs
+        $null = Test-Check 'M' ($withKey.Code -eq 0 -and $withKey.Text.Contains('0 registered rule(s), 0 reference fragment(s), 0 finding(s)', $ord)) "the 2.1.0 development text passes METHOD-CONTROLLER with the design's terms and worker contract (exit $($withKey.Code): $(Get-Tail @($withKey.Lines | Where-Object { $_ -clike 'ERROR *' }) 3))"
+        Write-Utf8 $methodFamily ($methodText.Replace("  Agents = @(`n", $methodKey.Replace("Exempt = @('artifact-creator')", 'Exempt = @()') + "  Agents = @(`n"))
+        $noExempt = Invoke-Native $pwsh $methodArgs
+        $null = Test-Check 'M' ($noExempt.Code -ne 0 -and $noExempt.Text.Contains("ERROR METHOD-CONTROLLER build/agent-src/family.psd1:", $ord) -and $noExempt.Text.Contains("worker 'artifact-creator' lacks the worker fragment 01-delegated-mode", $ord)) "without the exemption artifact-creator fails METHOD-CONTROLLER for its missing worker fragments (exit $($noExempt.Code))"
+    } catch {
+        Add-Fail 'M' "the method cases failed to run: $($_.Exception.Message) (line $($_.InvocationInfo.ScriptLineNumber))"
+    }
+
     if ($SourceOnly) {
         $skipped['J'] = $true
         $skipped['K'] = $true
@@ -873,5 +923,5 @@ if ($failedSections.Count -gt 0) {
     Write-Host "Test-AgentPackages: FAIL ($($failedSections -join ', '))" -ForegroundColor Red
     exit 1
 }
-Write-Host "Test-AgentPackages: PASS ($(if ($SourceOnly) { 'A-I and L; J and K skipped' } else { 'A-L' }))" -ForegroundColor Green
+Write-Host "Test-AgentPackages: PASS ($(if ($SourceOnly) { 'A-I, L and M; J and K skipped' } else { 'A-M' }))" -ForegroundColor Green
 exit 0
