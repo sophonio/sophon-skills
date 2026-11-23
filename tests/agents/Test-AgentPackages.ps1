@@ -761,6 +761,39 @@ try {
         Add-Fail 'M' "the method cases failed to run: $($_.Exception.Message) (line $($_.InvocationInfo.ScriptLineNumber))"
     }
 
+    # ---- M: anchors ---------------------------------------------------------------------------------------
+    # In memory: a three-agent family (lead and one writer, one reader) against small texts.
+    Write-Host 'Running the anchor cases ...'
+    try {
+        $anchorFamily = @{
+            Lead = 'lead'; FamilyVersion = '2.1.0'
+            Agents = @(@{ Id = 'lead'; Writer = $true }, @{ Id = 'dev'; Writer = $true }, @{ Id = 'reader'; Writer = $false })
+        }
+        $anchorTexts = @{
+            lead   = @{ SOUL = "STATUS: DONE`nExit Code:`n"; README = "Keep local / Discard menu`n" }
+            dev    = @{ SOUL = "STATUS: DONE`n"; README = "Push + open PR`n" }
+            reader = @{ SOUL = "STATUS: DONE`nold words`n"; README = "none`n" }
+        }
+        $runAnchors = { param([hashtable]$Data, [string]$Version = '2.1.0', [string[]]$Selected = @())
+            $f = $anchorFamily.Clone(); $f['FamilyVersion'] = $Version
+            Test-AgentAnchors -Data $Data -DataPath 'anchors.psd1' -Family $f -Texts $anchorTexts -Selected $Selected }
+        $ok = & $runAnchors @{ Anchors = @(@{ Text = 'STATUS: DONE'; In = 'all' }, @{ Text = 'Exit Code:'; In = 'writers'; Except = @('dev') }, @{ Text = 'Push + open PR'; In = @('dev'); File = 'README' }) }
+        $null = Test-Check 'M' (@($ok['Findings']).Count -eq 0 -and @($ok['Errors']).Count -eq 0 -and $ok['Checked'] -eq 5) "anchors carried by their set, an Except and an id list pass ($(@($ok['Findings']).Count) finding(s), $($ok['Checked']) placement(s))"
+        $missing = & $runAnchors @{ Anchors = @(@{ Text = 'Exit Code:'; In = 'writers' }) }
+        $null = Test-Check 'M' (@($missing['Findings']).Count -eq 1 -and $missing['Findings'][0]['Rule'] -ceq 'ANCHOR-MISSING' -and $missing['Findings'][0]['Path'] -ceq 'agents/dev/SOUL.md') 'a writer without a writers anchor fails ANCHOR-MISSING at its SOUL'
+        $subset = & $runAnchors @{ Anchors = @(@{ Text = 'Exit Code:'; In = 'writers' }) } '2.1.0' @('lead')
+        $null = Test-Check 'M' (@($subset['Findings']).Count -eq 0) 'with -Agents, only the selected agents are checked'
+        $gone = @{ Gone = @(@{ Text = 'old words'; File = 'SOUL'; Since = '3.0.0'; Why = 'fixture' }, @{ Text = 'Keep local / Discard menu'; File = 'README'; Why = 'fixture' }) }
+        $before = & $runAnchors $gone '2.1.0'
+        $after = & $runAnchors $gone '3.0.0'
+        $null = Test-Check 'M' (@($before['Findings']).Count -eq 1 -and $before['Pending'] -eq 1 -and $before['Findings'][0]['Path'] -ceq 'agents/lead/README.md' -and
+            @($after['Findings']).Count -eq 2 -and @($after['Findings'] | Where-Object { $_['Rule'] -ceq 'ANCHOR-GONE' -and $_['Path'] -ceq 'agents/reader/SOUL.md' -and $_['Line'] -eq 2 }).Count -eq 1) 'a Gone string fails ANCHOR-GONE at its line, and one with a later Since stays pending'
+        $bad = & $runAnchors @{ Anchors = @(@{ Text = 'x'; In = @('nobody') }, @{ Text = 'y'; In = 'all'; File = 'TOOLS' }, @{ Text = 'z'; In = 'all' }); Removed = @(@{ Text = 'z'; Why = 'fixture' }) }
+        $null = Test-Check 'M' (@($bad['Errors']).Count -eq 3) "an unknown agent id, a bad File and an anchor also under Removed are data errors ($(@($bad['Errors']).Count) error(s))"
+    } catch {
+        Add-Fail 'M' "the anchor cases failed to run: $($_.Exception.Message) (line $($_.InvocationInfo.ScriptLineNumber))"
+    }
+
     # ---- N: document counts -------------------------------------------------------------------------------
     Write-Host 'Running the document count cases ...'
     try {

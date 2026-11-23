@@ -27,7 +27,10 @@
       I  credits                 family Credits strings and the family CreditsSentence in each README
       M  method registry         only when its data exists: METHOD-CONTROLLER and METHOD-EXCUSES (the family key
                                  Method), METHOD-REFERENCE (a SkillPolicy skill with a Fragment); findings at the
-                                 source line, once (Test-AgentMethod in build/AgentFamily.psm1)
+                                 source line, once (Test-AgentMethod in build/AgentFamily.psm1); with
+                                 tests/agents/fixtures/anchors/<family>.psd1, ANCHOR-MISSING (a listed string is
+                                 absent from a composed SOUL or README) and ANCHOR-GONE (a Gone string is still
+                                 present once FamilyVersion reaches its Since) (Test-AgentAnchors)
 
     The repository pass (no -Family, no -Agents) also runs
       N  documents               DOC-COUNT: a number of 10 or more before "agents", "packages" or "companions" in
@@ -821,6 +824,24 @@ if ($null -eq $methodData -and $referenceSkills.Count -eq 0) {
     $methodIssues = @(Test-AgentMethod -Family $fam -Results $methodResults -SourceLines $sourceLines -Negation (Get-AgentNegationRegex) -SkillTools $skillTools -FullRoster ($requested.Count -eq 0) -RepoRoot $RepoRoot)
     foreach ($issue in $methodIssues) { Add-SourceError $issue['Rule'] $issue['Path'] $issue['Line'] $issue['Message'] }
     Write-Host "  $(@(Get-AgentField $methodData 'Rules' @()).Count) registered rule(s), $($referenceSkills.Count) reference fragment(s), $($methodIssues.Count) finding(s)"
+}
+
+# Anchors: only when the family has an anchor file. ANCHOR-MISSING and ANCHOR-GONE (Test-AgentAnchors).
+$anchorRel = "tests/agents/fixtures/anchors/$familyId.psd1"
+$anchorFull = Join-Path $RepoRoot $anchorRel
+if (-not (Test-Path -LiteralPath $anchorFull -PathType Leaf)) {
+    Write-Host "  anchors skipped: no $anchorRel"
+} else {
+    $anchorData = $null
+    try { $anchorData = Import-PowerShellDataFile -LiteralPath $anchorFull } catch { Add-SourceError 'ANCHOR-DATA' $anchorRel 1 "cannot load: $(($_.Exception.Message -replace '\s+', ' ').Trim())" }
+    if ($anchorData -is [hashtable]) {
+        $anchorTexts = @{}
+        foreach ($id in $selected) { $anchorTexts[$id] = @{ SOUL = $texts[$id]['SOUL.md']; README = $texts[$id]['README.md'] } }
+        $anchorRun = Test-AgentAnchors -Data $anchorData -DataLines ([IO.File]::ReadAllLines($anchorFull)) -DataPath $anchorRel -Family $fam -Texts $anchorTexts -Selected ([string[]]$selected)
+        foreach ($e in @($anchorRun['Errors'])) { Add-SourceError 'ANCHOR-DATA' $e['Path'] $e['Line'] $e['Message'] }
+        foreach ($f in @($anchorRun['Findings'])) { Add-SourceError $f['Rule'] $f['Path'] $f['Line'] $f['Message'] }
+        Write-Host "  $($anchorRun['Anchors']) anchor(s), $($anchorRun['Checked']) placement(s) checked, $($anchorRun['Pending']) gone string(s) pending their Since version, $(@($anchorRun['Findings']).Count) finding(s)"
+    }
 }
 
 # =============================================================================================================

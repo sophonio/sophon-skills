@@ -2403,6 +2403,138 @@ function Test-AgentDocCounts {
     @{ Values = $values; Findings = $findings.ToArray(); Errors = $errors.ToArray(); Documents = $documents.ToArray() }
 }
 
+function Get-AgentAnchorDataLine {
+    # The line of the data file that holds Text as a quoted literal; 1 when it cannot be placed.
+    param([string[]]$Lines, [string]$Text)
+    $quoted = "'" + $Text.Replace("'", "''") + "'"
+    for ($i = 0; $i -lt $Lines.Length; $i++) {
+        if ($Lines[$i].Contains($quoted, [StringComparison]::Ordinal)) { return $i + 1 }
+    }
+    1
+}
+
+function Test-AgentAnchors {
+    <#
+    .SYNOPSIS
+        ANCHOR-MISSING and ANCHOR-GONE: exact strings each composed SOUL or README must, or must no longer, carry.
+    .DESCRIPTION
+        Data is the parsed anchor file (tests/agents/fixtures/anchors/<family>.psd1), DataLines its raw lines (to
+        place findings), DataPath its repository path. Texts maps an agent id to @{ SOUL = <text>; README = <text> }.
+        Family is the family data (Agents with Id and Writer, Lead, FamilyVersion). Selected limits the agents
+        checked; an In list may still name any roster agent.
+
+        Anchors: @{ Text; In; File; Except }. In is 'all', 'writers', 'readers', 'lead' or a list of agent ids; File
+        is 'SOUL' (default) or 'README'; Except removes agent ids from a named set.
+        Removed: @{ Text; Why }: an anchor dropped on purpose; listing the same Text under Anchors is an error.
+        Gone: @{ Text; File; Since; Why }: 2.x wording that must be absent from every agent's File once
+        FamilyVersion is at least Since (SemVer core); before that it is counted as pending.
+        Returns @{ Findings; Errors; Anchors; Checked; Pending }.
+    #>
+    [CmdletBinding()]
+    [OutputType([hashtable])]
+    param(
+        [Parameter(Mandatory)][hashtable]$Data,
+        [AllowEmptyCollection()][string[]]$DataLines = @(),
+        [Parameter(Mandatory)][string]$DataPath,
+        [Parameter(Mandatory)][hashtable]$Family,
+        [Parameter(Mandatory)][hashtable]$Texts,
+        [AllowEmptyCollection()][string[]]$Selected = @()
+    )
+    $findings = [System.Collections.Generic.List[object]]::new()
+    $errors = [System.Collections.Generic.List[object]]::new()
+    $ord = [StringComparison]::Ordinal
+    $roster = [string[]]@(foreach ($a in @(Get-AgentItems $Family['Agents'])) { Get-AgentIdOf $a })
+    $sets = @{
+        all     = $roster
+        writers = [string[]]@(foreach ($a in @(Get-AgentItems $Family['Agents'])) { if ($a['Writer'] -eq $true) { Get-AgentIdOf $a } })
+        readers = [string[]]@(foreach ($a in @(Get-AgentItems $Family['Agents'])) { if ($a['Writer'] -ne $true) { Get-AgentIdOf $a } })
+        lead    = [string[]]@(if ($Family['Lead'] -is [string]) { $Family['Lead'] })
+    }
+    $check = if ($Selected.Count -gt 0) { $Selected } else { $roster }
+    $fileOf = {
+        param($Entry, [int]$Line)
+        $file = if ($null -eq $Entry['File']) { 'SOUL' } else { [string]$Entry['File'] }
+        if (-not (Test-AgentInList @('SOUL', 'README') $file)) { $errors.Add((New-AgentComposeError $DataPath $Line "File '$file' is not SOUL or README")); return $null }
+        $file
+    }
+    $removed = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+    foreach ($entry in @(Get-AgentItems $Data['Removed'])) {
+        if ($entry -isnot [hashtable] -or $entry['Text'] -isnot [string] -or $entry['Text'].Length -eq 0 -or $entry['Why'] -isnot [string] -or [string]::IsNullOrWhiteSpace($entry['Why'])) {
+            $errors.Add((New-AgentComposeError $DataPath 1 'each Removed entry is @{ Text = <exact string>; Why = <reason> }'))
+            continue
+        }
+        [void]$removed.Add($entry['Text'])
+    }
+    $anchorCount = 0
+    $checked = 0
+    foreach ($entry in @(Get-AgentItems $Data['Anchors'])) {
+        if ($entry -isnot [hashtable] -or $entry['Text'] -isnot [string] -or $entry['Text'].Length -eq 0) {
+            $errors.Add((New-AgentComposeError $DataPath 1 'each Anchors entry is @{ Text = <exact string>; In = <set or agent ids> }'))
+            continue
+        }
+        $text = [string]$entry['Text']
+        $line = Get-AgentAnchorDataLine -Lines $DataLines -Text $text
+        if ($removed.Contains($text)) { $errors.Add((New-AgentComposeError $DataPath $line "'$text' is listed under both Anchors and Removed")); continue }
+        $file = & $fileOf $entry $line
+        if ($null -eq $file) { continue }
+        $in = $entry['In']
+        $targets = $null
+        if ($in -is [string] -and $sets.ContainsKey($in)) { $targets = $sets[$in] }
+        elseif ($in -is [string] -or $in -is [array]) {
+            $targets = [string[]]@($in)
+            foreach ($id in $targets) {
+                if (-not (Test-AgentInList $roster $id)) { $errors.Add((New-AgentComposeError $DataPath $line "In names '$id', which is neither a set (all, writers, readers, lead) nor a roster agent")) }
+            }
+        }
+        else { $errors.Add((New-AgentComposeError $DataPath $line "'$text' has no In (a set or a list of agent ids)")); continue }
+        $except = [string[]]@(Get-AgentItems $entry['Except'])
+        foreach ($id in $except) {
+            if (-not (Test-AgentInList $targets $id)) { $errors.Add((New-AgentComposeError $DataPath $line "Except names '$id', which In does not include")) }
+        }
+        $anchorCount++
+        foreach ($id in $targets) {
+            if ((Test-AgentInList $except $id) -or -not (Test-AgentInList $check $id) -or -not $Texts.ContainsKey($id)) { continue }
+            $body = $Texts[$id][$file]
+            if ($null -eq $body) { continue }
+            $checked++
+            if ($body.IndexOf($text, $ord) -lt 0) {
+                $findings.Add(@{ Rule = 'ANCHOR-MISSING'; Path = "agents/$id/$file.md"; Line = 0; Message = "lacks the anchor '$text' ($DataPath`:$line); restore it, or move the entry to Removed with a reason" })
+            }
+        }
+    }
+    $pending = 0
+    $versionMatch = [regex]::Match([string]$Family['FamilyVersion'], '^(\d+)\.(\d+)\.(\d+)')
+    $familyVersion = if ($versionMatch.Success) { [version]::new([int]$versionMatch.Groups[1].Value, [int]$versionMatch.Groups[2].Value, [int]$versionMatch.Groups[3].Value) } else { $null }
+    foreach ($entry in @(Get-AgentItems $Data['Gone'])) {
+        if ($entry -isnot [hashtable] -or $entry['Text'] -isnot [string] -or $entry['Text'].Length -eq 0 -or $entry['Why'] -isnot [string] -or [string]::IsNullOrWhiteSpace($entry['Why'])) {
+            $errors.Add((New-AgentComposeError $DataPath 1 'each Gone entry is @{ Text = <exact string>; File = SOUL|README; Since = <x.y.z>; Why = <reason> }'))
+            continue
+        }
+        $text = [string]$entry['Text']
+        $line = Get-AgentAnchorDataLine -Lines $DataLines -Text $text
+        $file = & $fileOf $entry $line
+        if ($null -eq $file) { continue }
+        if ($null -ne $entry['Since']) {
+            $since = [regex]::Match([string]$entry['Since'], '^(\d+)\.(\d+)\.(\d+)$')
+            if (-not $since.Success) { $errors.Add((New-AgentComposeError $DataPath $line "Since '$($entry['Since'])' is not x.y.z")); continue }
+            $sinceVersion = [version]::new([int]$since.Groups[1].Value, [int]$since.Groups[2].Value, [int]$since.Groups[3].Value)
+            if ($null -eq $familyVersion -or $familyVersion -lt $sinceVersion) { $pending++; continue }
+        }
+        foreach ($id in $check) {
+            if (-not $Texts.ContainsKey($id)) { continue }
+            $body = $Texts[$id][$file]
+            if ($null -eq $body) { continue }
+            $at = $body.IndexOf($text, $ord)
+            if ($at -ge 0) {
+                $hitLine = 1
+                for ($k = 0; $k -lt $at; $k++) { if ($body[$k] -eq "`n") { $hitLine++ } }
+                $findings.Add(@{ Rule = 'ANCHOR-GONE'; Path = "agents/$id/$file.md"; Line = $hitLine; Message = "still carries '$text', which $DataPath`:$line lists as gone ($($entry['Why']))" })
+            }
+        }
+    }
+    @{ Findings = $findings.ToArray(); Errors = $errors.ToArray(); Anchors = $anchorCount; Checked = $checked; Pending = $pending }
+}
+
 # ---------------------------------------------------------------------------------------------
 # Output helpers
 # ---------------------------------------------------------------------------------------------
@@ -2656,6 +2788,7 @@ Export-ModuleMember -Function @(
     'Test-AgentMethod'
     'Invoke-AgentMethodFixtures'
     'Test-AgentDocCounts'
+    'Test-AgentAnchors'
     'Compare-AgentSoulText'
     'Write-AgentSoulFile'
     'Get-AgentSoulBudget'
