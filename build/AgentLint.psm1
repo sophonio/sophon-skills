@@ -46,25 +46,6 @@ $script:CallShapeRx = [regex]::new('(?<![\w./\\@:-])([a-z][a-z0-9_]*(?:\.[a-z][a
 $script:StashActionRx = [regex]::new('(?<![\w-])stash_action["'']?\s*:\s*["'']?([A-Za-z][A-Za-z_-]*)', $script:CI)
 $script:GitProseRx = [regex]::new('(?<![\w./\\@:-])code\.git`?\s+["''`]?([a-z][a-z_-]*)', $script:CI)
 
-$script:RoleDisplayNames = @{
-    'lead-developer'     = 'Lead Developer'
-    'developer'          = 'Developer'
-    'researcher'         = 'Researcher'
-    'software-architect' = 'Software Architect'
-    'code-reviewer'      = 'Code Reviewer'
-    'qa-engineer'        = 'QA Engineer'
-    'debugger'           = 'Debugger'
-    'security-reviewer'  = 'Security Reviewer'
-    'ui-ux-designer'     = 'UI/UX Designer'
-    'accessibility-reviewer'   = 'Accessibility Reviewer'
-    'design-system-engineer'   = 'Design System Engineer'
-    'e2e-test-engineer'        = 'E2E Test Engineer'
-    'frontend-developer'       = 'Frontend Developer'
-    'mcp-integration-engineer' = 'MCP Integration Engineer'
-    'technical-writer'         = 'Technical Writer'
-    'visual-designer'          = 'Visual Designer'
-}
-
 $script:ManifestKeyOrder = @(
     'type', 'schemaVersion', 'name', 'displayName', 'version', 'description', 'author', 'license', 'category',
     'tags', 'agent', 'requires', 'defaults', 'sophon'
@@ -1307,7 +1288,8 @@ function Test-AgentManifest {
         The manifest.json text, for format, key order and line numbers.
     .PARAMETER Family
         family.psd1 data (or Get-AgentFamily output): FamilyMajor, MinSophonVersion, Author, License, Category,
-        RequiredTag, Lead, SkillPolicy, Agents[] with Id, SubAgents and optional DisplayName.
+        RequiredTag, Lead, SkillPolicy, Agents[] with Id, DisplayName (MAN-DISPLAY expects it exactly), SubAgents and the
+        optional Skills.
     .PARAMETER ToolsMd
         The Read-ToolsMd result for the same agent; $null when TOOLS.md is missing.
     .PARAMETER Catalog
@@ -1406,7 +1388,8 @@ function Test-AgentManifest {
 
     # displayName.
     $display = & $get $Manifest 'displayName'
-    $expectedDisplay = Get-AgentField $agentEntry 'DisplayName' $script:RoleDisplayNames[$Id]
+    # The roster's DisplayName (a required family key) is the only source of the expected name.
+    $expectedDisplay = Get-AgentField $agentEntry 'DisplayName'
     if ($display -isnot [string] -or $display.Trim().Length -eq 0) { & $add 'MAN-DISPLAY' 'displayName' 'displayName is required' }
     else {
         if ($display.Length -gt 64) { & $add 'MAN-DISPLAY' 'displayName' 'displayName must be at most 64 characters' }
@@ -1544,9 +1527,21 @@ function Get-AgentLintTestFamily {
     .SYNOPSIS
         The family contract as data, for fixtures that must not depend on build/agent-src/family.psd1.
     #>
-    $agents = foreach ($id in @('code-reviewer', 'debugger', 'developer', 'lead-developer', 'qa-engineer', 'researcher', 'security-reviewer', 'software-architect', 'ui-ux-designer')) {
+    # The fixture family carries its own display names, so no name lives in code outside it.
+    $names = [ordered]@{
+        'code-reviewer'      = 'Code Reviewer'
+        'debugger'           = 'Debugger'
+        'developer'          = 'Developer'
+        'lead-developer'     = 'Lead Developer'
+        'qa-engineer'        = 'QA Engineer'
+        'researcher'         = 'Researcher'
+        'security-reviewer'  = 'Security Reviewer'
+        'software-architect' = 'Software Architect'
+        'ui-ux-designer'     = 'UI/UX Designer'
+    }
+    $agents = foreach ($id in $names.Keys) {
         $lead = $id -ceq 'lead-developer'
-        @{ Id = $id; DisplayName = $script:RoleDisplayNames[$id]; SubAgents = @{ enabled = $lead; maxDepth = $(if ($lead) { 1 } else { 0 }) } }
+        @{ Id = $id; DisplayName = $names[$id]; SubAgents = @{ enabled = $lead; maxDepth = $(if ($lead) { 1 } else { 0 }) } }
     }
     # One agent with its own license, for the per-agent License override.
     $agents = @($agents) + @(@{ Id = 'frontend-developer'; DisplayName = 'Frontend Developer'; License = 'Apache-2.0'; SubAgents = @{ enabled = $false; maxDepth = 0 } })
