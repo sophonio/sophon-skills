@@ -421,6 +421,13 @@ family):
 - The tool lint (`LINT-SKILL`) and the pin check (`TOOLS-PIN-UNKNOWN`) are waived only for the
   tools of those skills, read from `skills/<name>/manifest.json`. A restricted pin still fails.
 - MAN-SKILL-VERSION checks that `skills/<name>/manifest.json` exists at `MinVersion` or later.
+- These rules are evaluated per agent. The optional agent key `Skills` lists the policy skills that
+  agent uses: absent means every policy skill (so `video-producer` is unchanged), `@()` means none, and
+  any other name is a schema error. `requires.skills`, `LINT-SKILL` and `TOOLS-PIN-UNKNOWN` follow it;
+  `ExtraRequiredTools` stays family-wide.
+- A policy skill may also name `Fragment = '<NN-id>'`, its reference fragment: `METHOD-REFERENCE`
+  then allows that skill's tools only on lines from that fragment, which must carry the sentence
+  "If the tool is missing or refused, work from what you carry."
 - The development family has no SkillPolicy, so a skill tool name there still fails `LINT-SKILL`.
 
 **Derived rules.** The attribution checks apply only to an agent whose sources use

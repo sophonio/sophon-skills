@@ -25,7 +25,8 @@
       L    families, on a temporary copy holding the development family plus the media fixture family
            (tests/agents/fixtures/families/media): both compose and pass the source checks side by side, an id
            in two families fails, the legacy registry-less fallback, SkillPolicy (skill-tool mentions and pins,
-           requires.skills, ExtraRequiredTools, MAN-SKILL-VERSION), AllowRestrictedMentions, and the development
+           requires.skills, ExtraRequiredTools, MAN-SKILL-VERSION), the per-agent Skills key (absent, all, none, schema),
+           AllowRestrictedMentions, and the development
            family still failing LINT-SKILL and MAN-REQUIRES as before. Needs no Sophon CLI.
       M    the Method registry: tests/agents/fixtures/method/cases.psd1 (Invoke-AgentMethodFixtures) for METHOD-CONTROLLER,
            METHOD-EXCUSES and METHOD-REFERENCE, then a temporary copy whose development family gains a Method key.
@@ -604,6 +605,46 @@ try {
             $parsedCore = $coreRaw | ConvertFrom-Json
             $coreIssues = @(Test-AgentManifest -Manifest $parsedCore -Raw $coreRaw -Id 'media-maker' -Family $coreFamily -ToolsMd $toolsParsed -Path 'L/manifest.json' -Catalog $catalogL)
             $null = Test-Check 'L' (@($coreIssues | Where-Object { $_.Rule -ceq 'MAN-REQUIRES' -and $_.Message.Contains('fs.read is a core tool', $ord) }).Count -eq 1) 'an ExtraRequiredTools entry that is a core tool fails MAN-REQUIRES'
+
+            # Per-agent skills: the agent key Skills narrows the SkillPolicy (absent = all, @() = none) for
+            # MAN-REQUIRES, LINT-SKILL and TOOLS-PIN-UNKNOWN; listing every policy skill equals leaving it out.
+            $withSkills = {
+                param($Skills)
+                $copy = @{}
+                foreach ($key in $mediaFamily.Keys) { $copy[$key] = $mediaFamily[$key] }
+                $agentCopy = @{}
+                foreach ($key in $mediaFamily['Agents'][0].Keys) { $agentCopy[$key] = $mediaFamily['Agents'][0][$key] }
+                $agentCopy['Skills'] = $Skills
+                $copy['Agents'] = @($agentCopy)
+                return $copy
+            }
+            $noneFamily = & $withSkills @()
+            $allFamily = & $withSkills @('media-kit')
+            $noneTools = Get-AgentAllowedSkillTools -Family $noneFamily -Catalog $catalogL -AgentId 'media-maker'
+            $allTools = Get-AgentAllowedSkillTools -Family $allFamily -Catalog $catalogL -AgentId 'media-maker'
+            $noneSkill = & $rulesOf (Invoke-ToolNameLint -Text $skillLine -Path 'L' -Kind 'soul' -Catalog $catalogL -AllowedSkillTools $noneTools)
+            $nonePins = & $rulesOf (Test-ToolsMdPins -ToolsMd $toolsParsed -Path 'L/TOOLS.md' -Catalog $catalogL -AllowedSkillTools $noneTools)
+            $noneManifest = & $manifestRules $mediaRaw $noneFamily
+            $allManifest = & $manifestRules $mediaRaw $allFamily
+            $null = Test-Check 'L' ($noneTools.Length -eq 0 -and ($noneSkill -join ',') -ceq 'LINT-SKILL' -and ($nonePins -join ',') -ceq 'TOOLS-PIN-UNKNOWN' -and ($noneManifest -join ',') -ceq 'MAN-REQUIRES') "Skills = @() removes the policy skill from that agent: LINT-SKILL, TOOLS-PIN-UNKNOWN and MAN-REQUIRES on the media agent (got '$($noneSkill -join ',')', '$($nonePins -join ',')', '$($noneManifest -join ',')')"
+            $null = Test-Check 'L' ([string]::Equals(($allTools -join ','), ($mediaTools -join ','), $ord) -and $allManifest.Length -eq 0) "Skills listing every policy skill equals leaving the key out (got '$($allTools -join ',')', manifest '$($allManifest -join ',')')"
+            $schemaCases = @(
+                @{ Name = 'an unknown skill name'; Family = (& $withSkills @('not-a-skill')); Want = 'is not a SkillPolicy skill' }
+                @{ Name = 'a skill listed twice'; Family = (& $withSkills @('media-kit', 'media-kit')); Want = 'lists media-kit twice' }
+                @{ Name = 'a string instead of a list'; Family = (& $withSkills 'media-kit'); Want = 'Skills must be an array' }
+            )
+            $saved = Get-AgentFamilyContext
+            Set-AgentFamilyContext -RepoRoot $famCase -Family 'media' | Out-Null
+            try {
+                $okSchema = @(Test-AgentFamilyData -RepoRoot $famCase -Family $noneFamily)
+                $null = Test-Check 'L' ($okSchema.Count -eq 0) "Skills = @() passes the family schema (got $(@($okSchema | ForEach-Object { $_['Message'] }) -join '; '))"
+                foreach ($schemaCase in $schemaCases) {
+                    $schemaErrors = @(Test-AgentFamilyData -RepoRoot $famCase -Family $schemaCase.Family | Where-Object { $_['Message'].Contains($schemaCase.Want, $ord) })
+                    $null = Test-Check 'L' ($schemaErrors.Count -gt 0) "the family schema rejects Skills with $($schemaCase.Name)"
+                }
+            } finally {
+                Set-AgentFamilyContext -Entry @{ Id = $saved['Id']; Path = $saved['FamilyRelPath'] } | Out-Null
+            }
 
             # The development family keeps the single-family rule: requires holds tools only.
             $devId = $devRoster[0]

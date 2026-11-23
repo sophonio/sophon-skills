@@ -429,9 +429,10 @@ $catalog = Get-AgentCatalog -RepoRoot $RepoRoot
 foreach ($warning in $catalog.Warnings) { Write-Host "note: $warning" }
 $rules = Get-ScanRules -RepoRoot $RepoRoot
 $allowedHosts = [string[]]@(Get-AgentField $fam 'AllowedHosts' @())
-# Skill tools are named and pinned only by a family whose SkillPolicy lists their skill; restricted names in
-# AllowRestrictedMentions may be named un-negated (never pinned).
-$allowedSkillTools = Get-AgentAllowedSkillTools -Family $fam -Catalog $catalog
+# Skill tools are named and pinned only by an agent whose family SkillPolicy lists their skill and whose own Skills key (absent =
+# every policy skill, @() = none) keeps it; restricted names in AllowRestrictedMentions may be named un-negated (never pinned).
+$allowedSkillToolsById = @{}
+foreach ($id in $selected) { $allowedSkillToolsById[$id] = [string[]](Get-AgentAllowedSkillTools -Family $fam -Catalog $catalog -AgentId $id) }
 $allowRestricted = [string[]]@(@(Get-AgentField $fam 'AllowRestrictedMentions' @()) | Where-Object { $_ -is [string] })
 $skillPolicy = Get-AgentSkillPolicy $fam
 
@@ -465,6 +466,7 @@ Enter-Section 'C' 'Tool-name lint'
 # =============================================================================================================
 
 foreach ($id in $selected) {
+    $allowedSkillTools = $allowedSkillToolsById[$id]
     foreach ($pair in @(@('SOUL.md', 'soul'), @('TOOLS.md', 'tools'), @('README.md', 'readme'))) {
         $text = $texts[$id][$pair[0]]
         if ($null -eq $text) { continue }
@@ -645,7 +647,7 @@ foreach ($id in $selected) {
     if (-not $toolsParsed.ContainsKey($id)) { continue }
     $parsed = $toolsParsed[$id]
     Add-Issues $parsed.Issues
-    Add-Issues (Test-ToolsMdPins -ToolsMd $parsed -Path "agents/$id/TOOLS.md" -Catalog $catalog -AllowedSkillTools $allowedSkillTools)
+    Add-Issues (Test-ToolsMdPins -ToolsMd $parsed -Path "agents/$id/TOOLS.md" -Catalog $catalog -AllowedSkillTools $allowedSkillToolsById[$id])
 }
 
 # =============================================================================================================

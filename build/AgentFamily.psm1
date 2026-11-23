@@ -33,6 +33,8 @@
 
     Optional agent keys (beside the required Id, DisplayName, SoulCap, Writer, SubAgents, Effort, Fragments, Credits):
       License, Category, RequiredTags   per-agent overrides of the family values
+      Skills                   the SkillPolicy skills this agent uses (absent = all, @() = none); MAN-REQUIRES,
+                               LINT-SKILL and TOOLS-PIN-UNKNOWN are evaluated per agent
       RoleCap                  the most bytes the role text may take (souls/<id>.md without include and comment
                                lines, values substituted); Test-AgentSources.ps1 BUDGET-ROLE
 
@@ -74,7 +76,7 @@ $script:ValueRegex = [regex]::new('\{\{= (?<key>[A-Za-z][A-Za-z0-9]*)\}\}')
 $script:ValueKeyRegex = [regex]::new('^[A-Za-z][A-Za-z0-9]*$')
 $script:AgentIdRegex = [regex]::new('^[a-z0-9][a-z0-9-]{1,63}$')
 $script:AgentKeys = @('Id', 'DisplayName', 'SoulCap', 'Writer', 'SubAgents', 'Effort', 'Fragments', 'Credits')
-$script:OptionalAgentKeys = @('License', 'Category', 'RequiredTags', 'RoleCap')
+$script:OptionalAgentKeys = @('License', 'Category', 'RequiredTags', 'RoleCap', 'Skills')
 $script:LicenseValues = @('MIT', 'Apache-2.0')
 $script:CategoryValues = @('utility', 'productivity', 'communication', 'data', 'development', 'integration', 'ai', 'automation', 'other')
 $script:EffortValues = @('high', 'default')
@@ -793,6 +795,27 @@ function Test-AgentFamilyData {
         }
         if ($agent.ContainsKey('RoleCap') -and ($agent['RoleCap'] -isnot [int] -or $agent['RoleCap'] -le 0)) {
             $errors.Add((New-AgentComposeError $p $line "agent '$id': RoleCap must be a positive integer"))
+        }
+        if ($agent.ContainsKey('Skills')) {
+            # A subset of SkillPolicy.Skills: absent means every policy skill, @() means none.
+            $policySkills = [string[]]@(if ($Family['SkillPolicy'] -is [hashtable]) {
+                    foreach ($skill in @(Get-AgentItems $Family['SkillPolicy']['Skills'])) { if ($skill -is [hashtable] -and $skill['Name'] -is [string]) { $skill['Name'] } }
+                })
+            $skillList = $agent['Skills']
+            if ($null -ne $skillList -and $skillList -isnot [array]) {
+                $errors.Add((New-AgentComposeError $p $line "agent '$id': Skills must be an array of SkillPolicy skill names (@() for none)"))
+            }
+            else {
+                $seenSkills = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+                foreach ($skillName in @(Get-AgentItems $skillList)) {
+                    if ($skillName -isnot [string] -or -not (Test-AgentInList $policySkills $skillName)) {
+                        $errors.Add((New-AgentComposeError $p $line "agent '$id': Skills entry '$skillName' is not a SkillPolicy skill ($(if ($policySkills.Length) { $policySkills -join ', ' } else { 'the family has no SkillPolicy' }))"))
+                    }
+                    elseif (-not $seenSkills.Add($skillName)) {
+                        $errors.Add((New-AgentComposeError $p $line "agent '$id': Skills lists $skillName twice"))
+                    }
+                }
+            }
         }
         if ($agent.ContainsKey('Writer') -and $agent['Writer'] -isnot [bool]) {
             $errors.Add((New-AgentComposeError $p $line "agent '$id': Writer must be `$true or `$false"))

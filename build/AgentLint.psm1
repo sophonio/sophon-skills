@@ -15,8 +15,10 @@
       MAN-JSON MAN-FORMAT MAN-KEYS MAN-ORDER MAN-TYPE MAN-NAME MAN-DISPLAY MAN-VERSION MAN-DESC MAN-META
       MAN-TAGS MAN-AGENT MAN-REQUIRES MAN-DEFAULTS MAN-SOPHON
 
-    Family keys read here (build/AgentFamily.psm1 documents them): Category, RequiredTag, Lead, SkillPolicy and,
-    through the callers, AllowRestrictedMentions. A family with a SkillPolicy may name and pin the tools of its
+    Family keys read here (build/AgentFamily.psm1 documents them): Category, RequiredTag, Lead, SkillPolicy, the agent
+    key Skills and, through the callers, AllowRestrictedMentions. Skill rules are evaluated per agent: an agent's
+    Skills list (absent = every SkillPolicy skill, @() = none) decides which skill tools it may name and pin and what
+    requires.skills holds. A family with a SkillPolicy may name and pin the tools of its
     skills (LINT-SKILL and TOOLS-PIN-UNKNOWN are waived for those tools only) and lists the skills in
     requires.skills; every other family keeps the single-family rules.
 
@@ -379,19 +381,49 @@ function Get-AgentToolClass {
     return 'unknown'
 }
 
+function Get-AgentSkillRoster {
+    <#
+    .SYNOPSIS
+        An agent's optional Skills key: @{ Has; Names }. Has is $false when the agent entry has no Skills key
+        (the agent uses every SkillPolicy skill); Names is the listed skill names (empty for Skills = @()).
+    #>
+    param($Family, [string]$AgentId)
+    $entry = $null
+    foreach ($agent in @(Get-AgentField $Family 'Agents' @())) {
+        if ([string](Get-AgentField $agent 'Id') -ceq $AgentId) { $entry = $agent; break }
+    }
+    # Read the key without the pipeline: an empty array returned through a function becomes $null.
+    $has = $false
+    $value = $null
+    if ($entry -is [System.Collections.IDictionary]) {
+        if ($entry.Contains('Skills')) { $has = $true; $value = $entry['Skills'] }
+    } elseif ($null -ne $entry -and $null -ne $entry.PSObject.Properties['Skills']) {
+        $has = $true
+        $value = $entry.PSObject.Properties['Skills'].Value
+    }
+    $names = [string[]]@(foreach ($item in @($value)) { if ($item -is [string]) { $item } })
+    [pscustomobject]@{ Has = $has; Names = $names }
+}
+
 function Get-AgentSkillPolicy {
     <#
     .SYNOPSIS
         A family's SkillPolicy, normalised: @{ Skills (ordinal by Name, each @{ Name; MinVersion }); Names;
         ExtraRequiredTools; Any }. Empty lists when the family has no SkillPolicy.
+    .PARAMETER AgentId
+        Evaluate the policy for one agent: when its entry has a Skills key, only those skills count (Skills = @()
+        means none). Without the key, or without AgentId, every SkillPolicy skill counts. ExtraRequiredTools stay
+        family-wide.
     #>
-    param($Family)
+    param($Family, [string]$AgentId = '')
     $policy = Get-AgentField $Family 'SkillPolicy'
+    $roster = if ($AgentId) { Get-AgentSkillRoster $Family $AgentId } else { [pscustomobject]@{ Has = $false; Names = [string[]]@() } }
     $skills = [System.Collections.Generic.List[object]]::new()
     foreach ($skill in @(Get-AgentField $policy 'Skills' @())) {
         if ($null -eq $skill) { continue }
         $name = Get-AgentField $skill 'Name'
         if ($name -isnot [string]) { continue }
+        if ($roster.Has -and $name -cnotin $roster.Names) { continue }
         $min = Get-AgentField $skill 'MinVersion'
         $skills.Add([pscustomobject]@{ Name = $name; MinVersion = $(if ($min -is [string]) { $min } else { $null }) })
     }
@@ -419,10 +451,11 @@ function Get-AgentAllowedSkillTools {
     <#
     .SYNOPSIS
         The skill tools a family may name and pin: every tool (Catalog.SkillToolOwner) of a SkillPolicy skill,
-        in ordinal order. Empty for a family without a SkillPolicy.
+        in ordinal order. Empty for a family without a SkillPolicy. With AgentId, only the skills that agent
+        uses (its Skills key; absent means all).
     #>
-    param([Parameter(Mandatory)]$Family, [Parameter(Mandatory)]$Catalog)
-    $names = New-StringSet (Get-AgentSkillPolicy $Family).Names
+    param([Parameter(Mandatory)]$Family, [Parameter(Mandatory)]$Catalog, [string]$AgentId = '')
+    $names = New-StringSet (Get-AgentSkillPolicy $Family $AgentId).Names
     $list = [System.Collections.Generic.List[string]]::new()
     foreach ($pair in $Catalog.SkillToolOwner.GetEnumerator()) {
         if ($names.Contains($pair.Value)) { $list.Add($pair.Key) }
@@ -1332,9 +1365,10 @@ function Test-AgentManifest {
     if ($null -ne $ToolsMd) { $pins = Get-ToolsMdPinUnion $ToolsMd }
 
     # What requires must hold: the built-in pins plus the family SkillPolicy (skill-tool pins never count).
-    $policy = Get-AgentSkillPolicy $Family
+    # Per agent: an agent's Skills key narrows the policy skills (absent = all, @() = none).
+    $policy = Get-AgentSkillPolicy $Family $Id
     $policyTools = New-StringSet
-    if ($null -ne $Catalog -and $policy.Any) { $policyTools = New-StringSet (Get-AgentAllowedSkillTools $Family $Catalog) }
+    if ($null -ne $Catalog -and $policy.Any) { $policyTools = New-StringSet (Get-AgentAllowedSkillTools $Family $Catalog $Id) }
     $requiredSet = New-StringSet (@($pins | Where-Object { -not $policyTools.Contains($_) }) + @($policy.ExtraRequiredTools))
     $requiredList = [System.Collections.Generic.List[string]]::new($requiredSet)
     $requiredList.Sort([System.StringComparer]::Ordinal)
@@ -1621,7 +1655,7 @@ function Invoke-AgentLintFixtures {
 Export-ModuleMember -Function @(
     'Get-AgentCatalog', 'Get-ScanRules', 'Get-AgentToolClass', 'Invoke-ToolNameLint', 'Invoke-AgentPreflight',
     'Read-ToolsMd', 'Invoke-AgentToolPinsParse', 'Test-ToolsMdPins', 'Get-ToolsMdPinUnion', 'Test-AgentManifest',
-    'Get-AgentSkillPolicy', 'Get-AgentAllowedSkillTools', 'Get-AgentNegationRegex',
+    'Get-AgentSkillPolicy', 'Get-AgentSkillRoster', 'Get-AgentAllowedSkillTools', 'Get-AgentNegationRegex',
     'Test-SensitiveKeyName', 'Get-AgentField', 'Get-AgentLintTestFamily', 'Expand-AgentFixtureText',
     'Invoke-AgentLintFixtures'
 )
