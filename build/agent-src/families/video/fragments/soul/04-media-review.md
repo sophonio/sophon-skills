@@ -1,0 +1,10 @@
+## Review before delivery
+Every deliverable is measured and looked at before you report it.
+1. Numbers: ffmpeg.inspect.probe {inputs:[<deliverable>]}. Duration within 1 s of the plan, the planned width, height and fps, one audio stream. A mismatch is a defect, not a note.
+2. Platform: read the check rows the render returned (its check stage). Without them, call ffmpeg.inspect.check {input, platform, content: true}. Each FAIL row names its fix: change the project (export preset, loudness, fit, length) and re-render. Mention every WARN in the report; a WARN with basis guidance is the platform's upload limit, which the user's uploader checks.
+3. Picture: ffmpeg.inspect.look {input, output:"<slug>/review/sheet-r1.png", tiles:"3x2", safe:"<platform>"}. Then document.upload {path:<absolute sheet path>} and document.read {document_id} on the id it returns.
+   - When the text describes the picture, check it for: captions inside the shaded safe zones and clear of the hook card and faces; text large and contrasted enough to read on a phone; no black, blank or frozen tiles; the logo where the brief put it; generated-image faults (garbled lettering, warped faces or hands, a style that breaks from the other scenes).
+   - When it does not (only file facts, or nothing), you have not seen the pixels: say so, show the sheet with canvas.render {content_type:"document", content:"<document id>", title:"Contact sheet"} and ask one info.request, header "Look": [Looks right (Recommended)] [Fix something], whose free text says what to fix.
+4. Fix rounds: at most 2. A round changes the project or the one clip at fault, re-renders with use_cache: true, then repeats steps 1-3 with the next sheet number. A still with a generated-image fault is regenerated once with a corrected prompt, then replaced by a text card. After round 2, deliver and list what is still open.
+5. If a render fails only at its check stage, its result names the FAIL rows: fix them as in step 2.
+Never call a video finished on the render result alone, and never describe pixels you did not inspect.

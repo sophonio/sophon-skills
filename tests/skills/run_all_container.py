@@ -2,10 +2,14 @@
 
 Replicates the Sophon runtime's exec-with-params-global model for every skill listed below:
 unknown-tool and missing-credentials paths must emit clean JSON errors on Python 3.13/alpine.
+ffmpeg-video runs only on the process backend: from the Docker backend's /workspace cwd it must
+refuse with BACKEND_UNSUPPORTED, and its entrypoint must give Sophon nothing to pip-install.
 """
 import contextlib
 import io
 import json
+import os
+import re
 import sys
 
 REPO = "/repo"
@@ -34,12 +38,33 @@ PAIRS = [
 ]
 
 
-def run(skill, params):
+def run(skill, params, cwd=None):
     src = open(f"{REPO}/skills/{skill}/main.py", encoding="utf-8").read()
     buf = io.StringIO()
-    with contextlib.redirect_stdout(buf):
-        exec(compile(src, "main.py", "exec"), {"params": params})
+    old = os.getcwd()
+    if cwd:
+        os.makedirs(cwd, exist_ok=True)
+        os.chdir(cwd)
+    try:
+        with contextlib.redirect_stdout(buf):
+            exec(compile(src, "main.py", "exec"), {"params": params})
+    finally:
+        os.chdir(old)
     return buf.getvalue().strip()
+
+
+# PythonImportResolver (src/Sophon.Sandbox): every line matching this is pip-installed unless stdlib
+IMPORT_RE = re.compile(r"^(?:import|from)\s+(\w+)")
+
+
+def pip_names(skill):
+    src = open(f"{REPO}/skills/{skill}/main.py", encoding="utf-8").read()
+    names = set()
+    for line in src.splitlines():
+        match = IMPORT_RE.match(line.lstrip())
+        if match and not line.lstrip().startswith("#"):
+            names.add(match.group(1))
+    return sorted(n for n in names if n not in sys.stdlib_module_names)
 
 
 fails = 0
@@ -54,5 +79,18 @@ for skill, tool in PAIRS:
     print(f"{'ok  ' if ok else 'FAIL'} {skill}: {unknown.get('error', '')[:70]}")
     if not ok:
         fails += 1
-print(f"python {sys.version.split()[0]} — {len(PAIRS) - fails}/{len(PAIRS)} passed")
+# ffmpeg-video: the Docker backend runs the script in /workspace, which has no FFmpeg
+try:
+    unknown = json.loads(run("ffmpeg-video", {"tool": "nope.nope"}, cwd="/workspace"))
+    refused = json.loads(run("ffmpeg-video", {"tool": "ffmpeg.setup.doctor"}, cwd="/workspace"))
+    ok = ("unknown tool" in unknown.get("error", "").lower()
+          and refused.get("code") == "BACKEND_UNSUPPORTED" and refused.get("backend") == "docker"
+          and not pip_names("ffmpeg-video"))
+except Exception as e:  # noqa: BLE001
+    ok, refused = False, {"error": f"{type(e).__name__}: {e}"}
+print(f"{'ok  ' if ok else 'FAIL'} ffmpeg-video: {refused.get('code') or refused.get('error', '')[:70]}")
+if not ok:
+    fails += 1
+total = len(PAIRS) + 1
+print(f"python {sys.version.split()[0]} — {total - fails}/{total} passed")
 sys.exit(1 if fails else 0)

@@ -9,11 +9,20 @@ Sixteen Sophon Marketplace agents that work on a code repository the way Claude 
 
 Only Lead Developer starts sub-agents, and only with your consent.
 
+The seventeenth package, Artifact Creator, is a standalone productivity agent for grounded documents,
+diagrams and presentations across subjects. It does not need a repository, delegate or build
+interactive applications; its creation tools and permissions depend on the session.
+
+This repository also holds a second, separate family: **video**, with one agent, Video Producer
+(`agents/video-producer`), which drives the `ffmpeg-video` skill. Sections 1-12 are about the
+development family; section 14 covers families, the video family and how the tooling keeps them
+apart.
+
 ## 1. What these are
 
 - **Sophon agent packages**, format v1 (`.sophon-agent`), not skills, plugins or Claude Code agents. Each package holds one persona and no executable code: `manifest.json`, `SOUL.md`, `TOOLS.md`, `README.md` and `LICENSE`.
-- **Family 2.x.** Release **2.1.0**. The nine original agents, rewritten from scratch in 2.0.0 to replace the six 1.0.0 personas, are now at **2.1.0**. The seven agents added in 2.1 (frontend-developer, design-system-engineer, visual-designer, e2e-test-engineer, accessibility-reviewer, mcp-integration-engineer, technical-writer) start at **2.0.0**.
-- **License:** © 2026 Buildersoft LLC. The nine original agents are MIT. The seven added in 2.1 are Apache-2.0, because they adapt Apache-2.0 text from Anthropic's anthropics/skills (section 14). Each package's `LICENSE` says which. **Requires** Sophon 2.2.0 or later.
+- **Family 2.x.** Release **2.1.0**. The nine original agents, rewritten from scratch in 2.0.0 to replace the six 1.0.0 personas, are now at **2.1.0**. The seven agents added in 2.1 (frontend-developer, design-system-engineer, visual-designer, e2e-test-engineer, accessibility-reviewer, mcp-integration-engineer, technical-writer) start at **2.0.0**, and so does Artifact Creator.
+- **License:** © 2026 Buildersoft LLC. The nine original agents are MIT. The seven added in 2.1 are Apache-2.0, because they adapt Apache-2.0 text from Anthropic's anthropics/skills; Artifact Creator is Apache-2.0 too. Each package's `LICENSE` says which. **Requires** Sophon 2.2.0 or later.
 - **Built on Sophon's own tools**, not on this repository's integration skills: fs.read, fs.write, code.git, os.execute, plan.propose, todo.write, info.request, agent.delegate and the rest of the coding tools.
 - **Claude Code analogues:**
 
@@ -45,6 +54,7 @@ Only Lead Developer starts sub-agents, and only with your consent.
 | [accessibility-reviewer](../agents/accessibility-reviewer) | WCAG 2.2 AA: audit / review, findings block, VERDICT `CONFORMS` or `GAPS` | no | yes | high | 1 for the working tree (the diff); browser checks one each |
 | [mcp-integration-engineer](../agents/mcp-integration-engineer) | MCP servers: design / build / evals | no | no | default | files edited + 1-2 runs; plans as for the lead |
 | [technical-writer](../agents/technical-writer) | documentation: draft / edit / reader-test | no | no (documentation files) | default | draft: the skeleton + one per section; edit: one per file; reader-test one per harmless command |
+| [artifact-creator](../agents/artifact-creator) | grounded reports, explainers, guides, diagrams and presentations | no | no (artifact files) | default | depends on the available creation tools |
 
 The five read-only roles (researcher, software-architect, code-reviewer, security-reviewer, accessibility-reviewer) never commit. Software Architect saves only a plan or ADR file, and only after you approve it. The writers (developer, qa-engineer, debugger, ui-ux-designer, frontend-developer, design-system-engineer, visual-designer, e2e-test-engineer, mcp-integration-engineer, technical-writer) use the same sizing, plan and git rules as the lead when you talk to them directly.
 
@@ -83,6 +93,8 @@ sophon agents install technical-writer --allow-delegation-from lead-developer
 
 4. Confirm that **Effective targets** lists every companion you installed.
 5. Keep each agent id equal to its package name. The lead finds companions through the `Family role: <id>.` line in each one's when-to-use text, then by id, then by display name. A `-2` suffix still matches, but avoid it.
+
+Install Artifact Creator separately when needed: `sophon agents install artifact-creator`. It is a standalone productivity agent, not a required lead companion.
 
 A missing companion is not fatal. The lead runs a stand-in (its own rules plus a pasted role checklist), at most 2 per wave, labels the result lower confidence and tells you once which agent to install.
 
@@ -171,7 +183,7 @@ The lead scans your own messages, newest first; the first match wins.
 - The keyword decides consent only. Size still decides the phases: a trivial change stays inline even with ultracode on, and a standing yes still needs plan approval.
 - Without a standing answer, the lead asks once per task (header "Agents") and only when delegation clearly helps. The recommended option comes first, Solo is always offered, and each option states agents, waves, cards and "≈N× Solo tokens".
 - No answer, or a skipped question, means Solo. The answer is written on the plan's `Consent:` line.
-- The other fifteen agents cannot start sub-agents. Asked for "ultracode", they say that Lead Developer runs multi-agent work, then do the task themselves.
+- The other fifteen development agents cannot start sub-agents. Asked for "ultracode", they say that Lead Developer runs multi-agent work, then do the task themselves. Artifact Creator also cannot delegate.
 
 **Ultracode-lite phases** (lead, with consent): Understand (2-5 researchers), Design (2-3 architects judged on a written 14-point rubric), Implement (one developer per task, or up to 3 in parallel on disjoint files), Review (3-5 lenses over one diff file), Refute (3 votes per finding; 2 of 3 must confirm), Fix, Re-review until dry (at most 3 rounds) and a Completeness critic.
 
@@ -280,26 +292,34 @@ The agents read the project instructions as trusted conventions, and they sugges
 
 **Sources.** `agents/<id>/` holds only the 5 package files. Each `SOUL.md` is generated: never edit it by hand.
 
+Each agent's `LICENSE` must be byte-identical to its canonical source: the root `LICENSE` for MIT,
+and `build/licenses/Apache-2.0.txt` for Apache-2.0. The roster can override the family license,
+category and required tags per agent; the source checker resolves the canonical license from the
+declared license rather than accepting arbitrary paths. Empty credits require a license sentence;
+nonempty credits retain the canonical attribution and license ordering checks.
+
 ```
 build/agent-src/
-  family.psd1                 roster, fragment order, SoulCap, SubAgents, Effort, License and
-                              LicenseFile, Credits, Values (commit trailer, PR footer, plan
-                              folder), AllowedHosts
+  families.psd1               the family registry (section 14)
+  family.psd1                 development roster, fragment order, SoulCap, SubAgents, Effort, License,
+                              Category, RequiredTags, Credits, Values (commit trailer, PR footer,
+                              plan folder), AllowedHosts
   souls/<id>.md               role text + include lines ({{> soul/<NN-id>}})
   fragments/soul/<NN-id>.md   21 shared fragments, at most 4,096 bytes each
+  families/video/             the video family: family.psd1, souls/, fragments/soul/
   catalog/sophon-tools.psd1   real Sophon tool names (pinned to sophon a431e1a64, v2.2.2)
   catalog/scan-rules.psd1     the marketplace and runtime scanner rules the preflight replays
-  licenses/Apache-2.0.txt     the LICENSE the Apache-2.0 agents ship
-build/AgentFamily.psm1        roster and composer
+build/licenses/Apache-2.0.txt the LICENSE the Apache-2.0 agents ship
+build/AgentFamily.psm1        registry, roster and composer
 build/AgentLint.psm1          tool-name lint, scanner preflight, TOOLS.md parser, manifest checks
-build/Compose-AgentSouls.ps1  [-RepoRoot] [-Agents] [-Check] [-OutDir] [-Explain]
-build/Test-AgentSources.ps1   sections A-I, no Sophon CLI needed (CI runs it)
-build/Build-AgentPackages.ps1 [-RepoRoot] [-OutputDir] [-Agents] [-ValidateOnly]
-tests/agents/                 Test-AgentPackages.ps1 (A-K), fixtures/, evals/
+build/Compose-AgentSouls.ps1  [-RepoRoot] [-Agents] [-Check] [-OutDir] [-Explain] [-Family]
+build/Test-AgentSources.ps1   sections A-I per family, no Sophon CLI needed (CI runs it) [-Agents] [-Family]
+build/Build-AgentPackages.ps1 [-RepoRoot] [-OutputDir] [-Agents] [-ValidateOnly] [-Family]
+tests/agents/                 Test-AgentPackages.ps1 (A-L), fixtures/, evals/
 ```
 
 **Budgets** (`Test-AgentSources.ps1` section E fails over any of them and prints a headroom table):
-- Composed SOUL, `SoulCap` in `family.psd1`: lead-developer 43,008 B; developer, qa-engineer, debugger, ui-ux-designer, frontend-developer, design-system-engineer, visual-designer, e2e-test-engineer, mcp-integration-engineer and technical-writer 32,768 B; software-architect, code-reviewer, security-reviewer and accessibility-reviewer 22,528 B; researcher 18,432 B.
+- Composed SOUL, `SoulCap` in `family.psd1`: lead-developer 43,008 B; developer, qa-engineer, debugger, ui-ux-designer, frontend-developer, design-system-engineer, visual-designer, e2e-test-engineer, mcp-integration-engineer and technical-writer 32,768 B; software-architect, code-reviewer, security-reviewer and accessibility-reviewer 22,528 B; researcher and artifact-creator 18,432 B.
 - Each fragment at most 4,096 B, each TOOLS.md at most 2,048 B, each README at most 12 KiB (the lead's 24 KiB).
 - The design planned 36,864 B and 28,672 B for the lead and the writers on an estimate of about 17.5 KB of shared writer text. The fragments it mandates measure about 25 KB, so those two caps were raised rather than cutting runtime workarounds. Every child pays for its whole SOUL, uncached: keep role text terse and cut before you raise a cap again.
 
@@ -312,9 +332,9 @@ pwsh -NoProfile -File build/Compose-AgentSouls.ps1                # regenerate a
 pwsh -NoProfile -File build/Compose-AgentSouls.ps1 -Check         # exit 0, no drift
 pwsh -NoProfile -File build/Test-AgentSources.ps1                 # lint, preflight, budgets, manifests, TOOLS.md
 pwsh -NoProfile -File build/Build-AgentPackages.ps1 -ValidateOnly # sophon dev validate: 0 errors, 0 warnings
-pwsh -NoProfile -File build/Build-AgentPackages.ps1               # 16 x <id>-<version>.sophon-agent + SHA256SUMS
+pwsh -NoProfile -File build/Build-AgentPackages.ps1               # 18 x <id>-<version>.sophon-agent + SHA256SUMS
 Get-Content dist/agents/SHA256SUMS
-pwsh -NoProfile -File tests/agents/Test-AgentPackages.ps1         # sections A-K
+pwsh -NoProfile -File tests/agents/Test-AgentPackages.ps1         # sections A-L
 pwsh -File build/Build-MarketplacePackages.ps1 -ValidateOnly      # skills unaffected
 git status --porcelain                                            # only intended sources + generated SOULs
 ```
@@ -322,7 +342,7 @@ git status --porcelain                                            # only intende
 - **The builder** checks the folders against the roster, the CLI version, the composer (`-Check`; drift fails with "SOUL drift — run the composer"), `Test-AgentSources.ps1` and `sophon dev validate --json` per agent. Any CLI error **or warning** fails the build. It then writes `dist/agents/<id>-<version>.sophon-agent` and `dist/agents/SHA256SUMS`.
   - It removes stale packages: all of them on a full build, only the selected ids' on a subset build, which prints "SHA256SUMS covers only: …".
   - A failed build leaves no SHA256SUMS. It never installs or publishes.
-- **The tests.** `tests/agents/Test-AgentPackages.ps1 -SourceOnly` runs sections A-I without the CLI. See [`tests/README.md`](../tests/README.md).
+- **The tests.** `tests/agents/Test-AgentPackages.ps1 -SourceOnly` runs sections A-I and L without the CLI. See [`tests/README.md`](../tests/README.md).
 - **Package shape** (made by `sophon dev build`): a zip with `manifest.json` first, then the other files in ordinal order, at the root, each entry stamped 1980-01-01 00:00:00. Repeat builds are byte-identical.
 
 **Versioning.**
@@ -330,12 +350,12 @@ git status --porcelain                                            # only intende
 - A shared-fragment change bumps every agent that includes it (`Compose-AgentSouls.ps1 -Explain` lists them).
 - The marketplace refuses a version that is not greater than every version ever uploaded, rejected ones included.
 - code-reviewer, debugger and security-reviewer started at 2.0.0 too, so the family has one generation number.
-- In 2.1.0 the nine original agents move to 2.1.0, and the seven new ones start at 2.0.0.
+- In 2.1.0 the nine original agents move to 2.1.0, and the seven new ones and Artifact Creator start at 2.0.0.
 
 **Licenses.**
-- An agent entry in `family.psd1` may set `License` and `LicenseFile` together, for example `License = 'Apache-2.0'` and `LicenseFile = 'build/agent-src/licenses/Apache-2.0.txt'`. Without them the agent takes the family default: MIT and the root `LICENSE`.
+- An agent entry in `family.psd1` may set `License = 'Apache-2.0'`. Without it the agent takes the family default: MIT and the root `LICENSE`.
 - AgentLint checks that the manifest `license` equals the agent's License.
-- `Test-AgentSources.ps1` requires `agents/<id>/LICENSE` to be byte-identical to the agent's LicenseFile (else the root `LICENSE`), and the README's license sentence to match: "Licensed under the MIT License; see LICENSE." or "Licensed under the Apache License, Version 2.0; see LICENSE."
+- `Test-AgentSources.ps1` requires `agents/<id>/LICENSE` to be byte-identical to the license's canonical text (`build/licenses/Apache-2.0.txt` for Apache-2.0, else the root `LICENSE`), and the README's license sentence to match: "Licensed under the MIT License; see LICENSE." or "Licensed under the Apache-2.0 License; see LICENSE."
 - Agents that adapt anthropics/skills text list the `anthropicSkills` key in their `Credits`.
 
 **Publishing (manual, owner only).**
@@ -343,17 +363,87 @@ git status --porcelain                                            # only intende
 2. Run a clean build and the full test suite above.
 3. Preview each install on a throwaway Gateway or `SOPHON_DATA_DIR`, with the injection-scan mode not off: `sophon agents install --file dist/agents/<id>-<version>.sophon-agent --show-files`, check the verdict and that no `expects tool:` line appears, then answer `n`.
 4. Run the smoke scenarios in [`tests/agents/evals/`](../tests/agents/evals/README.md), including the card-count check.
-5. In the Marketplace wizard, upload each of the 16 `.sophon-agent` files from `dist/agents/` one at a time: the nine original agents at 2.1.0 and the seven new ones at 2.0.0. Never upload a zip of all of them, and never use `Publish-MarketplacePackages.ps1`, which stays skills-only. The preview must show no possible-secret finding to acknowledge and a clean moderator flag list.
-6. Every version starts `pendingReview`. Announce only after all 16 are approved. Optionally tag `agents-v2.1.0`.
+5. In the Marketplace wizard, upload each of the 17 development-family `.sophon-agent` files from `dist/agents/` one at a time: the nine original agents at 2.1.0, and the seven new ones and Artifact Creator at 2.0.0 (Video Producer follows section 14). Never upload a zip of all of them, and never use `Publish-MarketplacePackages.ps1`, which stays skills-only. The preview must show no possible-secret finding to acknowledge and a clean moderator flag list.
+6. Every version starts `pendingReview`. Announce only after all 17 are approved. Optionally tag `agents-v2.1.0`.
 7. Withdraw or reject developer's pending 1.0.0 in My packages, so the old persona is never approved.
 
 Prerequisite outside the repo: the `noreply@buildersoft.io` mailbox for the commit trailer.
 
 **Deferred to a later release** (not in 2.1.0): a catalogue drift checker, a full port of the runtime's argument-redaction rules (the CLI covers them now), release reproducibility against published hashes, a headless eval runner, the local-install export script, and README composition.
 
-## 14. Credits
+## 14. Families
 
-Workflow patterns adapted, not copied, from obra/superpowers (MIT, © 2025 Jesse Vincent) and Anthropic's Claude Code plugins (feature-dev, pr-review-toolkit, code-review, security-review, frontend-design; Apache-2.0). Every package README carries this line and its license note.
+The repository holds two agent families. A family is one family file: its roster, versions,
+values, hosts and credits. Its `souls/` and `fragments/soul/` folders sit beside the family file,
+so families never share templates or fragments.
+
+| Family | Family file | Agents | Major | Tag, category |
+|---|---|---|---|---|
+| development | `build/agent-src/family.psd1` | the seventeen in section 2 | 2 | `development`, `development` (Artifact Creator: `productivity`, `productivity`) |
+| video | `build/agent-src/families/video/family.psd1` | `video-producer` | 1 | `video`, `ai` |
+
+**The registry.** `build/agent-src/families.psd1` lists every family as `@{ Id; Path }`. All
+agents still live in `agents/<id>/`; an id belongs to exactly one family, and `agents/` must hold
+exactly the union of the rosters. Without a registry (the composer fixtures, for example) the
+tooling falls back to the single family in `build/agent-src/family.psd1`.
+
+**Running one family.** Every tool loops over the registry by default. `-Family <id>` limits it:
+
+```powershell
+pwsh -NoProfile -File build/Compose-AgentSouls.ps1 -Family video -Check
+pwsh -NoProfile -File build/Test-AgentSources.ps1 -Family development
+pwsh -NoProfile -File build/Build-AgentPackages.ps1 -Family development -OutputDir <folder>
+```
+
+Without `-Family`, `Test-AgentSources.ps1` first checks `agents/` against the roster union, then
+re-runs itself once per family; the composer writes nothing unless every family composes cleanly.
+A build of fewer families than the registry lists is a subset build.
+
+**Family keys beyond the development set** (all optional; the defaults reproduce the development
+family):
+
+| Key | Meaning | video |
+|---|---|---|
+| `Id` | must equal the registry id | `video` |
+| `RequiredTag`, `Category` | MAN-TAGS and MAN-META check them in every manifest | `video`, `ai` |
+| `CreditsSentence` | the sentence every README of an agent with Credits must carry, followed by its license sentence; absent means no check (an agent without Credits needs only its license sentence) | none |
+| `ReadmeCaps` | `@{Lead; Other}` README byte caps | 12,288 and 12,288 |
+| `SkillPolicy` | `Skills` (name and `MinVersion`) and `ExtraRequiredTools` | `ffmpeg-video` 1.0.0; document.upload, media.image, media.video, music.generate, video.generate |
+| `AllowRestrictedMentions` | restricted tools the text may name (never pin) | `message.send` |
+
+**SkillPolicy** is the only way an agent uses a skill's tools:
+- `requires.skills` must equal `SkillPolicy.Skills` exactly, sorted by name, and comes first in
+  `requires`. `requires.tools` is the sorted union of the built-in pins and `ExtraRequiredTools`
+  and never holds a skill tool (the installer would report it missing until the skill is
+  installed). Each extra must be an allowed tool, not core and not restricted.
+- The tool lint (`LINT-SKILL`) and the pin check (`TOOLS-PIN-UNKNOWN`) are waived only for the
+  tools of those skills, read from `skills/<name>/manifest.json`. A restricted pin still fails.
+- MAN-SKILL-VERSION checks that `skills/<name>/manifest.json` exists at `MinVersion` or later.
+- The development family has no SkillPolicy, so a skill tool name there still fails `LINT-SKILL`.
+
+**Derived rules.** The attribution checks apply only to an agent whose sources use
+`{{= CommitTrailer}}` or `{{= PrFooter}}`, and the `whenToUse` sibling rule only when the roster
+has more than one agent. Video Producer commits nothing and has no sibling, so neither applies.
+
+**The video family.** One agent, Video Producer 1.0.0. It plans and produces short videos with
+Sophon's media tools and renders them locally with the `ffmpeg-video` skill. Its SOUL is composed
+from `families/video/souls/video-producer.md` and six fragments (`01-media-ground-rules` to
+`06-media-failures`); its TOOLS.md pins six `ffmpeg.*` tools plus image.generate and tts.file.
+Install order, requirements and limits are in [its README](../agents/video-producer/README.md);
+the manual evals are in [`tests/agents/evals/video-producer.md`](../tests/agents/evals/video-producer.md);
+the design is [`docs/plans/2026-11-15-ffmpeg-video-design.md`](plans/2026-11-15-ffmpeg-video-design.md).
+
+**Publishing order.** The marketplace refuses an agent whose required skill is not approved, so
+publish `ffmpeg-video` and get it approved before uploading `video-producer` (see
+[PUBLISHING.md](PUBLISHING.md#7-skills-that-agents-require)).
+
+**Regression gate.** A change to the multi-family tooling must leave the seventeen development-family
+packages byte-identical: compare `dist/agents/SHA256SUMS` before and after, and
+`Compose-AgentSouls.ps1 -Check` must show no drift.
+
+## 15. Credits
+
+Workflow patterns adapted, not copied, from obra/superpowers (MIT, © 2025 Jesse Vincent) and Anthropic's Claude Code plugins (feature-dev, pr-review-toolkit, code-review, security-review, frontend-design; Apache-2.0). The development package READMEs carry this line and their license note; Artifact Creator has no upstream workflow credits and carries its own license note.
 
 - The software-architect README also credits backend-design and system-design-skills (both MIT, third party), and the debugger README credits backend-design.
 - The security-reviewer exclusion list follows ideas from anthropics/claude-code-security-review in original wording. Its README will credit that project once its license is confirmed, which is an owner item before publishing.
@@ -363,4 +453,4 @@ Portions of the agents added in 2.1 are adapted from Anthropic's agent skills, a
 - **Modification notice:** Buildersoft LLC changed that text, rewriting it for Sophon tools and removing its scripts and branding. The README of every agent that uses it carries this notice.
 - Technical Writer was written independently. It is inspired by doc-coauthoring, which has no license, and copies none of its text.
 
-The nine original packages are licensed under the MIT License; see [`LICENSE`](../LICENSE). The seven added in 2.1 are licensed under the Apache License, Version 2.0; see [`build/agent-src/licenses/Apache-2.0.txt`](../build/agent-src/licenses/Apache-2.0.txt). Every package carries its own `LICENSE`.
+The nine original packages are licensed under the MIT License; see [`LICENSE`](../LICENSE). The seven added in 2.1 and Artifact Creator are licensed under the Apache License, Version 2.0; see [`build/licenses/Apache-2.0.txt`](../build/licenses/Apache-2.0.txt). Every package carries its own `LICENSE`.

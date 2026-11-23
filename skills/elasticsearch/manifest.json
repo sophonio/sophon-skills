@@ -1,6 +1,6 @@
 {
   "name": "elasticsearch",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Elasticsearch integration — search with the Query DSL, run ES|QL queries, count and fetch documents, list indices, inspect mappings and cluster health, and index documents over the REST API. Authenticates with an API key (Authorization: ApiKey) or HTTP basic auth (username + password), and supports custom CA certificates for self-signed TLS. Works with Elastic Cloud, Elastic serverless, self-managed Elasticsearch 8/9, and OpenSearch (basic auth). AWS OpenSearch domains in IAM/SigV4-only mode are not supported.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -74,7 +74,7 @@
           "index": { "type": "string", "description": "Index name, alias, comma-separated list, or wildcard pattern (e.g. logs-*)" },
           "query": { "type": "object", "description": "Query DSL query object (e.g. {\"match\": {\"message\": \"error\"}}). Omit to match all documents." },
           "size": { "type": "integer", "description": "Max hits to return (default 10, max 100)" },
-          "sort": { "type": "array", "items": {}, "description": "Query DSL sort clause passed through as-is (e.g. [{\"@timestamp\": \"desc\"}])" },
+          "sort": { "type": "array", "items": { "type": "object" }, "description": "Query DSL sort clauses passed through as-is, one object per clause (e.g. [{\"@timestamp\": \"desc\"}, {\"_score\": \"desc\"}])" },
           "aggs": { "type": "object", "description": "Query DSL aggregations object passed through as-is" }
         },
         "required": ["index"]

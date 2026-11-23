@@ -1,0 +1,387 @@
+{
+  "schemaVersion": 1,
+  "upstream": {
+    "repo": "https://github.com/kajisho5/ffmpeg-skill",
+    "tag": "v3.9.2",
+    "commit": "3f8ba63cc8eb991c1730d57b0215e6127765399a",
+    "version": "3.9.2"
+  },
+  "files": [
+    {
+      "path": "vendor/ffmpeg-skill/LICENSE",
+      "sha256": "7522b29e4d6e90f2a8fab15f07d224b1064c70692a872be9996ac1a88cf474e9",
+      "bytes": 1065
+    },
+    {
+      "path": "vendor/ffmpeg-skill/SKILL.md",
+      "sha256": "1c52cd5990f15af681dd86cebaec3c77dbf965e613be2d5bc98054c6ef56ccfc",
+      "bytes": 17295
+    },
+    {
+      "path": "vendor/ffmpeg-skill/mcp/server.py",
+      "sha256": "afeb8340514de74feba013c8ef49e796fad291dc80dab167881a49ee2efc52a6",
+      "bytes": 19376
+    },
+    {
+      "path": "vendor/ffmpeg-skill/package.json",
+      "sha256": "f4dd3a166df80d1bbc09b54a772f7144d10f6c723bd977f4cd9b554d5fd8e17e",
+      "bytes": 2225
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/_ass_overlay.py",
+      "sha256": "bfc24e5a35ceb04e86d904fa502f080900b30be18b08cdc6f840978559ed6ede",
+      "bytes": 18940
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/_common/__init__.py",
+      "sha256": "145065308f992cc6c7b3df16a4820f492c3cd9d1c487f0c581977f94f13ac817",
+      "bytes": 17949
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/_common/alpha.py",
+      "sha256": "3ca23b3d1b7390d0efe84b8dbb107fb64b174f83f4da149427391a4390c3ef3b",
+      "bytes": 31175
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/_common/asr.py",
+      "sha256": "2e14d7413cada339fb3f2c1c022947af15bf8cb3de5dd38510f195ce860ca688",
+      "bytes": 68643
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/_common/color.py",
+      "sha256": "bb37d1bcb498f6b1347943662c3da8b52fbedcba005f5d7b3086b594d6e6c6e2",
+      "bytes": 28112
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/_common/decision.py",
+      "sha256": "8c083da592813c46ee312ba09b7f8fe25ffef7e1f8c0dfd0310bc5bd53ee4e24",
+      "bytes": 130008
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/_common/drawtext.py",
+      "sha256": "4e050fcfc4b3397511c351eb487a6677d648b4e430a461421212f1780dd3bc57",
+      "bytes": 15332
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/_common/emit.py",
+      "sha256": "9d1d992e30afa5c69e9bff23a54455348e7d3c0658e11a5e21b84f5ab35ee8ba",
+      "bytes": 67464
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/_common/emoji.py",
+      "sha256": "a86334fb570c86be1ed856c37bf7d2c002da5a613243cd680ac7c5226e7e7464",
+      "bytes": 25528
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/_common/fonts.py",
+      "sha256": "f0fd2306a574f004d59e1b7411c269c406a95285d91b0f7d2ae9e462c8861856",
+      "bytes": 44101
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/_common/probe.py",
+      "sha256": "539265fc6a2c69309fec796b10a509a3fb1bbe5b8104d08081e8a2195f0c78f5",
+      "bytes": 85920
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/_common/runner.py",
+      "sha256": "5ec5dce9f514023ccee5a35568dbcfbd2fa9b702db5f65d2c088969aa405b018",
+      "bytes": 183251
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/_common/text.py",
+      "sha256": "fd9779828c42166e0dd51e55623f2a73e8146e8e51d41ce18ce9e6ee07006566",
+      "bytes": 3990
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/_common/timeline.py",
+      "sha256": "b5426313ae7fb132af9a1f18531972a49b75d11c299565f8ec338758d599043f",
+      "bytes": 41637
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/_common/wrap.py",
+      "sha256": "1d0d42533117689be6e68149570bfbb9eba94aea114f8dc157859802407cdf1d",
+      "bytes": 48177
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/_contract.py",
+      "sha256": "d0a654cb308b0e2ca46f0b689b8e1b46414fd2371124e851985ff2b1425f0179",
+      "bytes": 234689
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/_platforms.py",
+      "sha256": "d0ef81396f0801d9dd051bda7b998b5d52df5a1447f2130cd860d93c5285d105",
+      "bytes": 13565
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/_smartcut.py",
+      "sha256": "77d0ba3e238f4afd5f3495758307fd420c9fc4f2a4d77e2cb9f3dee2f7c64e0a",
+      "bytes": 25577
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/audio.py",
+      "sha256": "1f0eeda102a3372e3da419160c0793e3927a15842f31e727d2aa5550cc0be9d7",
+      "bytes": 47430
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/background.py",
+      "sha256": "2da12632b285b30009e392e40b6e2c455cfbebe783b32c40513191eff565ee17",
+      "bytes": 7821
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/batch.py",
+      "sha256": "33201933dd8753e7950b8a8be1714342a8ab09d12514488bc2ae15ca4dcc20e5",
+      "bytes": 83170
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/broll.py",
+      "sha256": "dd0a745fa5087e89cb1ad2005564c100d05700388a5ad5dcb9ff0da26ec00ba5",
+      "bytes": 18858
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/caption.py",
+      "sha256": "fc817c14333a34955f5caddd7809b24e2f7497686a63b5f99207ee7d7c70b679",
+      "bytes": 134648
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/check.py",
+      "sha256": "26c46562ea65b0714202c4128035bf08d85e288e12522a16eb700df252c6e792",
+      "bytes": 56539
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/color.py",
+      "sha256": "7670ad3a5803509a665929b1d0ea3098c4f4c04a649fc56cb0304c531121ed85",
+      "bytes": 46889
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/crop.py",
+      "sha256": "880e82a059b64a65362f9f8234152c5685cf8d5920fc67707fbbbfe88a1c69f8",
+      "bytes": 4863
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/cropdetect.py",
+      "sha256": "8f977ab975c97c320de9d13d83efd4c6af185742db8b6b3846244c56d704a523",
+      "bytes": 12566
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/cut.py",
+      "sha256": "afc09eae8c88d87a580245596c563cee484b64386bb9a3f40059576276868aa2",
+      "bytes": 125274
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/deinterlace.py",
+      "sha256": "2228d108ef707456bf6dbd8b9b595bc002a9b2c36a69ac4b14251e784e5a0724",
+      "bytes": 4367
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/denoise.py",
+      "sha256": "4366a5681dff9d847fdd15a70ea40a36823a896777f9d5f95cf1f2c6452c0dd8",
+      "bytes": 4907
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/export.py",
+      "sha256": "38aca4bc4064d1f702adb42c207ec9cb7ef08fb0b7ebf8b14d6981352a501f20",
+      "bytes": 65454
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/fit.py",
+      "sha256": "5babd4379a5d63b23a71a18456c4d187bb5e415015a7ac024306379430a3f39d",
+      "bytes": 30394
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/freeze.py",
+      "sha256": "2b374ecd2cdc743dc2d59ef8d18a5c427fa0e8928d549ad1edfbc063e4f6d32a",
+      "bytes": 12738
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/graphics.py",
+      "sha256": "ee5cda1075b73ba5457a7fd5315f0ae4bb5be027e19961d1afb1dcef24c79d76",
+      "bytes": 58966
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/grid.py",
+      "sha256": "e674782cd0b70571b84bf3b78fe63af0f81c7b7085cefdf88e6bd4049ecca30f",
+      "bytes": 15977
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/insert.py",
+      "sha256": "59050cad3cb11699deffe983c222a1d1b75695021707346e370cfb387c737c0b",
+      "bytes": 6656
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/join.py",
+      "sha256": "99adc6c8adc53b9d0b9223193a7a9a553bbed22e5b0e4a45b496a1e909705f9a",
+      "bytes": 61613
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/look.py",
+      "sha256": "834a6694184eebdfae47c7588764e63081ba1f28cd0d8009e182c69c4865e26d",
+      "bytes": 26290
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/loop.py",
+      "sha256": "05d102b1a2b5c6717b0196a588d35d387e089a98824b13ac268d64e7cb6db9c3",
+      "bytes": 22750
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/loudness.py",
+      "sha256": "4a887a06c55bcd1c457849b93094352ad4224aca5f2c57147bb046b87582f9b6",
+      "bytes": 23893
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/metadata.py",
+      "sha256": "ecfd65ad09a5c99b44eb1da1b5b5d436344157a0f614d0c0e7e2d267efe5eee7",
+      "bytes": 18191
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/multicam.py",
+      "sha256": "f0e5eea0c207acb95ea3cc38e377a25b5da1713a53829a9e5386de0bf46aa071",
+      "bytes": 23587
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/overlay.py",
+      "sha256": "f946498509799b052cd2db5cf544058bd37e3a21f1b962f5608c7fa5e5ea09bb",
+      "bytes": 50604
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/pad.py",
+      "sha256": "b5b71acd231ee1d00399ea3e01b54f57bdb81967977471c6cd78fbd89c9548da",
+      "bytes": 6723
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/probe.py",
+      "sha256": "a6413ff5ce01262e4c95903372a87e479c073e1bd3f095e4e266d86bf126fb1a",
+      "bytes": 7608
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/proxy.py",
+      "sha256": "a97cd6b6fb298d6a8d041b7b749c05b2a9daf41a95b0cf467dbdaf005552906b",
+      "bytes": 4696
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/redact.py",
+      "sha256": "319d2731bc459371e7ee6b90e8976a955c5d87412eb7e2d32608d12dd1d2a5c8",
+      "bytes": 9658
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/render.py",
+      "sha256": "c7d25d0376c9d16aaccd4f690a3db212b05313ee6983f384ef7dad28be670daf",
+      "bytes": 139358
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/report.py",
+      "sha256": "fcc9e35a4a2293eef49f298b97f0d18d924243758d995628811089b16921b445",
+      "bytes": 19825
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/reverse.py",
+      "sha256": "d34f4c257225e0afe3f36b1d376743468de62fff848f8238b9860b4b5defbc83",
+      "bytes": 6671
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/scenes.py",
+      "sha256": "cae35c7590a406eef0866fdc8855684b313b30aab24114f70f192c82f4e6a031",
+      "bytes": 26438
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/sequence.py",
+      "sha256": "1d941d938eb4962cc7d86051746b44b6712f45dda8b8158c6d69b01c6a25235c",
+      "bytes": 11611
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/silence.py",
+      "sha256": "bc0a58a4e99c4353678c08802d36b33949104c404eec33274c5daa4c417b6641",
+      "bytes": 59644
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/speedramp.py",
+      "sha256": "845a6eacfee006353ab17d1283e3e7e8a5754643de481fb20f6bcc883828f1dc",
+      "bytes": 10522
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/sphere.py",
+      "sha256": "197c3b1a07db20fb324f7b438aecbb5aa434bbe0d00d667ff28e1aa2cca06d48",
+      "bytes": 8817
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/stabilize.py",
+      "sha256": "afb0988374491b7b97401be7a3011913b16b4f25a4ede49704a6e3e2358002ff",
+      "bytes": 8830
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/straighten.py",
+      "sha256": "ff235417156cb38e4373cc8cedbebc2db4f4bc70bd2475ca021a3064ddfa05a1",
+      "bytes": 6903
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/sync.py",
+      "sha256": "6d4d7ff62b4eee0bfe08fed888edece77d15e8793d7d03b323a4cd882daf1398",
+      "bytes": 29168
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/verify.py",
+      "sha256": "88a6ae8e28460fa9b43849975a350498f30fd2398ee95f7c2ab746549a19da26",
+      "bytes": 21958
+    },
+    {
+      "path": "vendor/ffmpeg-skill/scripts/waveform.py",
+      "sha256": "faa941fc55ef18fda09bf72cbd84a627a709d41c6e1af25a400b43d386a0aa31",
+      "bytes": 26758
+    },
+    {
+      "path": "vendor/ffmpeg-skill/templates/audiogram.json",
+      "sha256": "540672f3020d1da669818c63798bf6143decb9dde7c2d63182341803450879d5",
+      "bytes": 605
+    },
+    {
+      "path": "vendor/ffmpeg-skill/templates/facebook.json",
+      "sha256": "19b6f7d63a101773905db4a2eae89cfc4e08e6473513ef8600fbdbf61c3ee73e",
+      "bytes": 702
+    },
+    {
+      "path": "vendor/ffmpeg-skill/templates/linkedin.json",
+      "sha256": "e743f911b9a81d6dbd67e04755307d6ee0f0526e9962521fd0b250875a1a114e",
+      "bytes": 702
+    },
+    {
+      "path": "vendor/ffmpeg-skill/templates/podcast.json",
+      "sha256": "52ac44d93104e3403248f4855279e23857b9810e50e857d5b9ac1a80b125b4c1",
+      "bytes": 310
+    },
+    {
+      "path": "vendor/ffmpeg-skill/templates/reels.json",
+      "sha256": "4babffa264c53f637a10c844713d88db09941663baa72de2a2b61a925a73137c",
+      "bytes": 686
+    },
+    {
+      "path": "vendor/ffmpeg-skill/templates/shorts.json",
+      "sha256": "00e25cac9bb574ac74089c985f3c2ed34db09963add32d308bbdc21b3f60f312",
+      "bytes": 689
+    },
+    {
+      "path": "vendor/ffmpeg-skill/templates/tiktok.json",
+      "sha256": "c346c9e4c6f82c4b40b009ceb3e4ddb0df21ef5083ab6d301dc22906c8170e12",
+      "bytes": 689
+    },
+    {
+      "path": "vendor/ffmpeg-skill/templates/x.json",
+      "sha256": "f8d7936f365aea4a9a63e4b0ad419b1effc4836b47b0d491a82e436fac4379a9",
+      "bytes": 681
+    },
+    {
+      "path": "vendor/ffmpeg-skill/templates/youtube-shorts.json",
+      "sha256": "abf2c39ce09f5fc100730351b0340498e07f6e21c9d1bf7e3283c07f86b64951",
+      "bytes": 697
+    },
+    {
+      "path": "vendor/ffmpeg-skill/templates/youtube.json",
+      "sha256": "0221caab867bb9a0b28766af35cb9c9761e3d1dd7d0c080a105ae167daf5506a",
+      "bytes": 699
+    }
+  ],
+  "generated": [
+    {
+      "path": "lib/tool-map.json",
+      "sha256": "33ed4aa3ffee27497319a9ef2add7a98ad50863066e540a4032a1ca0158331a1"
+    }
+  ]
+}

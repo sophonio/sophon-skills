@@ -209,7 +209,10 @@
         'mod', 'sum', 'rs', 'java', 'kt', 'kts', 'gradle', 'rb', 'php', 'swift', 'c', 'h', 'cpp', 'hpp', 'cc',
         'lua', 'pl', 'dart', 'scala', 'ex', 'exs', 'erl', 'hs', 'elm', 'proto', 'graphql', 'gql', 'tf', 'hcl',
         'gitignore', 'gitattributes', 'editorconfig', 'npmrc', 'nvmrc', 'map', 'min', 'bak', 'tmp', 'out',
-        'pem', 'crt', 'cer', 'pub', 'bin', 'obj', 'dat', 'cache', 'tex'
+        'pem', 'crt', 'cer', 'pub', 'bin', 'obj', 'dat', 'cache', 'tex',
+        # Media (video, audio, subtitles, LUTs, fonts): file names such as clip.mp4 or cues.srt are not tools.
+        'mp4', 'mov', 'mkv', 'webm', 'm4v', 'avi', 'mp3', 'wav', 'm4a', 'aac', 'flac', 'ogg', 'opus', 'srt', 'vtt',
+        'ass', 'cube', 'ttf', 'otf'
     )
 
     # code.git (sophon/src/Sophon.Skills/Tools/CodeGitTool.cs:25-26, :53-55): the operation enum and the

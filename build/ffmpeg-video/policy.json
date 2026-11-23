@@ -1,0 +1,505 @@
+{
+  "schemaVersion": 1,
+  "upstreamExpect": {
+    "contractMajor": 2,
+    "removed": [
+      "--crf as an alias of --quality on every re-encoding tool that takes --quality (export.py keeps --crf: its preset chooses the encoder)",
+      "json and progress in the MCP inputSchema (they are CLI transport flags, not tool arguments)",
+      "probe's hdr meaning BT.2020 primaries or a PQ/HLG transfer",
+      "overwriting an existing output without --overwrite (1.x warned)",
+      "the result_v2 preview key and FFMPEG_SKILL_RESULT_V2 (the v1 top-level keys it was to replace were un-deprecated: they are the 2.0 shape)",
+      "running on Python 3.9 (the requirements.python floor)",
+      "running on FFmpeg 5.x (the requirements.ffmpeg floor)"
+    ],
+    "deprecated": []
+  },
+  "optionalImports": ["faster_whisper"],
+  "groupOrder": ["inspect", "make", "edit", "adjust", "layer", "mix", "deliver", "project", "setup"],
+  "toolMapLegend": {
+    "json": "flag: the tool takes --json and build_argv appends it; add: the tool takes --json but build_argv does not append it (MCP_JSON_EXEMPT), so the bridge passes json=True itself (look; also the doctor and contract handlers); native: the tool prints JSON without the flag (probe); none: no JSON output",
+    "brief": "the tool supports --json-brief; detail=brief (defaultDetail) maps to json_brief=True",
+    "paths": "param -> path role, see pathRoles; params not listed are not paths",
+    "required": "always required (also in the manifest schema)",
+    "conditionalRequired": "param is required when every rule holds: at least one of whenAny is truthy (when given) and none of whenNone is truthy (when given); enforced by the bridge only",
+    "choices": "accepted values per param, numeric ones included (the manifest keeps only string enums)",
+    "mutuallyExclusive": "at most one param of each group may be truthy",
+    "oneOfRequired": "at least one param of each group must be truthy",
+    "constraints": "relative_name: a file name or glob with no folder part and no '..'; lang_suffix: the value may end in :LANG (a language tag) after the path, so check the path part; jobs_cap: an integer string or 'auto', lowered to max",
+    "writesBesideInput": "when param is truthy the tool writes next to the named input param, so that input's folder must be inside a write root",
+    "nested": "the file holds more paths the bridge must check, relative to that file's own folder: brand_json (vendored _common.decision.BRAND_FILE_KEYS: logo, font_file; read), render_project (_common.decision.PROJECT_PATH_KEYS: output is written, the rest are read; plan documents refused), batch_recipe (output_dir is written; project is read; steps name upstream scripts with {in}/{out}), report_pack (the deliverables the pack table names; read)",
+    "removed": "params refused by name with the reason given",
+    "deadline": "per-tool wrapper deadline in seconds (null = the call deadline D)",
+    "read_only": "_contract.mcp_read_only(spec): run with FFMPEG_SKILL_READ_ONLY=1",
+    "handler": "special handling in lib/bridge.py (render, batch, verify, doctor, contract); null = plain build_argv + run_tool"
+  },
+  "pathRoles": {
+    "in_file": {
+      "meaning": "one existing file the tool reads",
+      "hint": "Existing input file (absolute, or relative to the output root)."
+    },
+    "in_files": {
+      "meaning": "a list of existing files the tool reads",
+      "hint": "Existing input files (absolute, or relative to the output root)."
+    },
+    "in_dir": {
+      "meaning": "an existing folder the tool reads",
+      "hint": "Existing input folder (absolute, or relative to the output root)."
+    },
+    "in_paths": {
+      "meaning": "a list of existing files and/or folders the tool reads",
+      "hint": "Existing input files or folders (absolute, or relative to the output root)."
+    },
+    "out_file": {
+      "meaning": "the main file the tool writes; needs an extension; confined to the write roots",
+      "hint": "Output file with an extension; a relative path lands in the output root."
+    },
+    "out_side_file": {
+      "meaning": "an extra file the tool writes when named; confined to the write roots",
+      "hint": "Extra file to write; a relative path lands in the output root."
+    },
+    "out_dir": {
+      "meaning": "a folder the tool writes into; confined to the write roots",
+      "hint": "Output folder; a relative path lands in the output root."
+    }
+  },
+  "dropEverywhere": {
+    "argv": "raw CLI arguments are not accepted; use the named parameters",
+    "json": "set by the wrapper; use detail instead",
+    "json_brief": "set by the wrapper; use detail instead",
+    "progress": "progress events are not supported by Sophon skills",
+    "plan": "plan files are not supported; use dry_run to see the commands",
+    "hw": "GPU (Apple VideoToolbox) switching is not exposed; encodes run on the CPU",
+    "no_hw": "GPU (Apple VideoToolbox) switching is not exposed; encodes run on the CPU"
+  },
+  "readOnlyDrop": {
+    "overwrite": "this read-only tool writes no file"
+  },
+  "commonDescriptions": {
+    "dry_run": "Plan only: return the ffmpeg commands that would run and write nothing (tools that measure still read the input).",
+    "timeout": "Seconds one ffmpeg run may take (default 1800); the wrapper lowers it to fit the call's own deadline.",
+    "overwrite": "Replace an existing output. Honoured only when every output is inside the output root; anywhere else the call is refused.",
+    "fast": "Preview quality (x264 veryfast) for quick iterations; leave it off for the final file."
+  },
+  "wrapperParamsEverywhere": ["detail"],
+  "wrapperParams": {
+    "detail": {
+      "type": "string",
+      "enum": ["brief", "full"],
+      "description": "brief (default): a compact result. full: the whole upstream JSON document; a very large one is saved to a report file and its path returned."
+    },
+    "project_json": {
+      "type": "string",
+      "description": "The project as inline JSON text (at most 64 KB) instead of a project file; it is saved under the output root's projects/ folder and rendered from there, so use absolute paths inside it."
+    },
+    "use_cache": {
+      "type": "boolean",
+      "description": "Reuse stages that did not change since an earlier render of the same project (cache kept in the output root). Turn it on for re-renders after small fixes."
+    },
+    "recipe_json": {
+      "type": "string",
+      "description": "The batch recipe as inline JSON text (at most 64 KB) instead of a recipe file; use absolute paths inside it."
+    },
+    "tool_name": {
+      "type": "string",
+      "description": "The tool to describe: a full name such as ffmpeg.edit.cut, or the upstream script name such as cut. Omit it for a one-line summary of every tool."
+    }
+  },
+  "globalLiterals": [
+    "album", "allow_silent", "artist", "aspect", "at", "background", "beat_range", "border_color",
+    "bottom", "box_color", "chromakey", "color", "comment", "crossfade", "date", "default_track", "duration",
+    "end", "expect_changed", "field", "fill_color", "filler_extra", "filler_keep", "font", "font_color",
+    "from_", "genre", "gradient", "guides", "highlight_color", "jobs", "keyframes_near", "lang", "language",
+    "name", "offset", "outline_color", "pad_color", "place", "platform", "position", "primary", "remove",
+    "segments", "start", "subtitle", "switch", "template", "text_color", "tiles", "title", "top",
+    "track_title", "upcoming_color"
+  ],
+  "tools": {
+    "probe": {
+      "group": "inspect",
+      "risk": "none",
+      "jsonMode": "native",
+      "deadline": 120,
+      "useWhen": "Use first on every input you plan from, and to confirm a written file: duration, size, fps, codecs, audio streams, HDR.",
+      "paths": {"inputs": "in_files"},
+      "literals": ["field"]
+    },
+    "cropdetect": {
+      "group": "inspect",
+      "risk": "none",
+      "deadline": 300,
+      "useWhen": "Use before ffmpeg.adjust.crop when a source shows black bars.",
+      "paths": {"input": "in_file"}
+    },
+    "check": {
+      "group": "inspect",
+      "risk": "none",
+      "deadline": 900,
+      "useWhen": "Use as the last step before delivery: PASS/WARN/FAIL rows against a platform (reels, shorts, tiktok, youtube ...), each naming its fix.",
+      "paths": {"input": "in_file", "compare": "in_file"},
+      "literals": ["expect_identity", "expect_changed"]
+    },
+    "scenes": {
+      "group": "inspect",
+      "risk": "low",
+      "useWhen": "Use to plan cuts in long footage; it can also measure a beat grid (beats), shot types (shots) and write a contact sheet (sheet).",
+      "paths": {"input": "in_file", "edl": "out_side_file", "sheet": "out_side_file"}
+    },
+    "look": {
+      "group": "inspect",
+      "risk": "low",
+      "jsonMode": "add",
+      "deadline": 300,
+      "useWhen": "Use after any picture change to see the result: a PNG contact sheet, frames at given times or a side-by-side; then inspect the PNG.",
+      "paths": {"input": "in_file", "output": "out_file", "compare": "in_file"},
+      "required": ["output"],
+      "descriptions": {
+        "output": "Output PNG with an extension (the sheet or compare image, or the base name for at frames); a relative path lands in the output root."
+      }
+    },
+    "report": {
+      "group": "inspect",
+      "risk": "low",
+      "useWhen": "Use to hand a finished video to someone who wants one file to review.",
+      "paths": {"after": "in_file", "pack": "in_file", "before": "in_file", "output": "out_file", "commands": "in_file", "notes": "in_file"},
+      "required": ["output"],
+      "nested": {"pack": "report_pack"}
+    },
+    "insert": {
+      "group": "make",
+      "risk": "low",
+      "useWhen": "Use to bring a still image (generated or supplied) into a timeline as a clip of exact length, with optional Ken Burns zoom and pan.",
+      "paths": {"input": "in_file", "output": "out_file"},
+      "required": ["output"]
+    },
+    "background": {
+      "group": "make",
+      "risk": "low",
+      "useWhen": "Use for title-card, spacer or end-card backgrounds of a given size and length.",
+      "paths": {"output": "out_file"}
+    },
+    "sequence": {
+      "group": "make",
+      "risk": "low",
+      "useWhen": "Use when the frames already exist as numbered or globbed images in one folder.",
+      "paths": {"dir": "in_dir", "output": "out_file"},
+      "literals": ["pattern"],
+      "required": ["output"],
+      "constraints": {"pattern": {"kind": "relative_name", "text": "A file name pattern inside dir; no folder part."}}
+    },
+    "waveform": {
+      "group": "make",
+      "risk": "low",
+      "useWhen": "Use to turn a voice-over, podcast or music track into a video: a waveform or spectrum over a colour or still image, optionally captioned.",
+      "paths": {"input": "in_file", "output": "out_file", "image": "in_file", "srt": "in_file", "text": "in_file", "brand": "in_file"},
+      "required": ["output"],
+      "nested": {"brand": "brand_json"}
+    },
+    "cut": {
+      "group": "edit",
+      "risk": "low",
+      "useWhen": "Use to trim a clip (start, end or duration) or to keep or drop several ranges (segments, remove); lossless when keyframes allow.",
+      "paths": {"input": "in_file", "output": "out_file", "snap_source": "in_file"},
+      "required": ["output"]
+    },
+    "join": {
+      "group": "edit",
+      "risk": "low",
+      "useWhen": "Use to put two or more clips in order with fade, dissolve, wipe or slide transitions.",
+      "paths": {"inputs": "in_files", "output": "out_file"},
+      "removed": {"list": "pass the clips in inputs; a clip-list file would name paths the wrapper cannot check"},
+      "required": ["inputs", "output"]
+    },
+    "silence": {
+      "group": "edit",
+      "risk": "low",
+      "useWhen": "Use to tighten talking-head or podcast footage by removing pauses (and filler words with a transcript), or only to list them.",
+      "paths": {"input": "in_file", "output": "out_file", "edl": "out_side_file", "timemap": "out_side_file", "filler_words": "in_file", "words": "in_file"},
+      "literals": ["model"],
+      "conditionalRequired": [{"param": "output", "whenNone": ["list", "filler_list"]}]
+    },
+    "broll": {
+      "group": "edit",
+      "risk": "low",
+      "useWhen": "Use to show other footage over a main clip for a while (cutaways) without changing the main clip's timing or sound.",
+      "paths": {"input": "in_file", "output": "out_file", "insert": "in_files"},
+      "required": ["output"]
+    },
+    "multicam": {
+      "group": "edit",
+      "risk": "low",
+      "useWhen": "Use for two or more cameras of the same take: aligns them by sound, then cuts between them by a switch list or by loudness.",
+      "paths": {"inputs": "in_files", "output": "out_file", "edl": "out_side_file", "write_project": "out_side_file"},
+      "conditionalRequired": [{"param": "output", "whenNone": ["offsets_only"]}]
+    },
+    "sync": {
+      "group": "edit",
+      "risk": "low",
+      "useWhen": "Use to find the offset between a camera and an external recorder, and optionally write the synced file.",
+      "paths": {"reference": "in_file", "second": "in_file", "more_sources": "in_files", "output": "out_file"},
+      "conditionalRequired": [{"param": "output", "whenAny": ["replace_audio", "trim_second"]}]
+    },
+    "grid": {
+      "group": "edit",
+      "risk": "low",
+      "useWhen": "Use for split screens and video walls: several clips or stills side by side in a columns x rows grid.",
+      "paths": {"inputs": "in_files", "output": "out_file"},
+      "required": ["output"]
+    },
+    "pad": {
+      "group": "edit",
+      "risk": "low",
+      "useWhen": "Use to add black, silent time before or after a clip.",
+      "paths": {"input": "in_file", "output": "out_file"},
+      "required": ["output"]
+    },
+    "freeze": {
+      "group": "edit",
+      "risk": "low",
+      "useWhen": "Use for an end-card hold or a pause on one frame.",
+      "paths": {"input": "in_file", "output": "out_file"},
+      "required": ["output"]
+    },
+    "loop": {
+      "group": "edit",
+      "risk": "low",
+      "useWhen": "Use to repeat a short clip a number of times or up to a length, with a crossfade or boomerang at the seams.",
+      "paths": {"input": "in_file", "output": "out_file"},
+      "required": ["output"]
+    },
+    "metadata": {
+      "group": "edit",
+      "risk": "low",
+      "useWhen": "Use to add chapters (from a file, or proposed from pauses and scene changes) and title or artist tags without re-encoding.",
+      "paths": {"input": "in_file", "output": "out_file", "chapters": "in_file", "chapters_out": "out_side_file", "description_out": "out_side_file"},
+      "required": ["output"]
+    },
+    "fit": {
+      "group": "adjust",
+      "risk": "low",
+      "useWhen": "Use to reach a platform aspect (9:16, 1:1, 16:9) by pad, crop or blurred fill, to change length by speed or trim, or to resize, rotate or flip.",
+      "paths": {"input": "in_file", "output": "out_file"},
+      "required": ["output"]
+    },
+    "crop": {
+      "group": "adjust",
+      "risk": "low",
+      "useWhen": "Use when you know the exact rectangle to keep, for example from ffmpeg.inspect.cropdetect.",
+      "paths": {"input": "in_file", "output": "out_file"},
+      "required": ["output"]
+    },
+    "color": {
+      "group": "adjust",
+      "risk": "low",
+      "summary": "Colour management: HDR (PQ, HLG) to SDR BT.709 with real tone mapping, a .cube LUT, colour-tag fixes without re-encoding, or typed primary correction (exposure, contrast, saturation, gamma, white balance, lift/gain, levels, curves).",
+      "useWhen": "Use for HDR phone footage going to SDR platforms, Log footage, a .cube look, or exposure and white-balance fixes.",
+      "paths": {"input": "in_file", "output": "out_file", "lut": "in_file"},
+      "required": ["output"]
+    },
+    "speedramp": {
+      "group": "adjust",
+      "risk": "low",
+      "useWhen": "Use for speed-ramp effects: different constant speeds over consecutive ranges that cover the whole clip.",
+      "paths": {"input": "in_file", "output": "out_file"},
+      "required": ["output"]
+    },
+    "reverse": {
+      "group": "adjust",
+      "risk": "low",
+      "useWhen": "Use for a rewind effect; the whole clip is held in memory, so keep it short.",
+      "paths": {"input": "in_file", "output": "out_file"},
+      "required": ["output"]
+    },
+    "straighten": {
+      "group": "adjust",
+      "risk": "low",
+      "useWhen": "Use to level a tilted horizon by a small angle (-45 to 45 degrees).",
+      "paths": {"input": "in_file", "output": "out_file"},
+      "required": ["output"]
+    },
+    "sphere": {
+      "group": "adjust",
+      "risk": "low",
+      "useWhen": "Use to get a normal flat shot out of 360-degree footage, choosing the direction and field of view.",
+      "paths": {"input": "in_file", "output": "out_file"},
+      "required": ["output"]
+    },
+    "stabilize": {
+      "group": "adjust",
+      "risk": "low",
+      "useWhen": "Use for shaky handheld footage; needs an FFmpeg build with libvidstab and is slow.",
+      "paths": {"input": "in_file", "output": "out_file"},
+      "required": ["output"]
+    },
+    "deinterlace": {
+      "group": "adjust",
+      "risk": "low",
+      "useWhen": "Use when moving edges show comb lines.",
+      "paths": {"input": "in_file", "output": "out_file"},
+      "required": ["output"]
+    },
+    "denoise": {
+      "group": "adjust",
+      "risk": "low",
+      "useWhen": "Use for grainy low-light footage.",
+      "paths": {"input": "in_file", "output": "out_file"},
+      "required": ["output"]
+    },
+    "redact": {
+      "group": "adjust",
+      "risk": "low",
+      "useWhen": "Use to hide a face, number plate or logo that stays in one fixed rectangle for the whole clip.",
+      "paths": {"input": "in_file", "output": "out_file"},
+      "required": ["output"]
+    },
+    "caption": {
+      "group": "layer",
+      "risk": "low",
+      "useWhen": "Use to burn in or attach subtitles from an SRT/ASS file or a plain cue file (one 'start-end text' line per cue), with animation, karaoke and platform safe zones.",
+      "paths": {"input": "in_file", "output": "out_file", "srt": "in_file", "ass": "in_file", "text": "in_file", "write_srt": "out_side_file", "brand": "in_file", "fonts_dir": "in_dir", "emoji_assets": "in_dir", "write_ass": "out_side_file"},
+      "literals": ["model"],
+      "constraints": {"srt": {"kind": "lang_suffix", "text": "A trailing :LANG (subs.srt:en) tags the track."}},
+      "nested": {"brand": "brand_json"},
+      "conditionalRequired": [
+        {"param": "output", "whenAny": ["input"]},
+        {"param": "write_srt", "whenNone": ["input"]}
+      ]
+    },
+    "graphics": {
+      "group": "layer",
+      "risk": "low",
+      "useWhen": "Use for designed text on video: hook cards, titles, lower thirds, chapter cards, progress bars, countdowns, stickers, memes.",
+      "paths": {"input": "in_file", "output": "out_file", "brand": "in_file", "font_file": "in_file", "write_ass": "out_side_file", "emoji_assets": "in_dir"},
+      "literals": ["text", "text_color"],
+      "required": ["output"],
+      "nested": {"brand": "brand_json"}
+    },
+    "overlay": {
+      "group": "layer",
+      "risk": "low",
+      "useWhen": "Use to place a logo, an image, a text line or a second video (picture-in-picture, green screen) on a clip, with timing, fade and opacity.",
+      "paths": {"input": "in_file", "output": "out_file", "image": "in_file", "video": "in_file", "brand": "in_file", "font_file": "in_file", "emoji_assets": "in_dir"},
+      "literals": ["text"],
+      "required": ["output"],
+      "nested": {"brand": "brand_json"}
+    },
+    "audio": {
+      "group": "mix",
+      "risk": "low",
+      "useWhen": "Use to clean a voice, add a music bed that ducks under speech, add effects, replace or extract the sound, or change channels or sample rate.",
+      "paths": {"input": "in_file", "output": "out_file", "music": "in_file", "effects": "in_file", "replace": "in_file"},
+      "literals": ["bitrate"],
+      "required": ["output"]
+    },
+    "loudness": {
+      "group": "mix",
+      "risk": "low",
+      "useWhen": "Use to hit a platform loudness target (-14 LUFS for streaming by default) before export, or only to measure it.",
+      "paths": {"input": "in_file", "output": "out_file"},
+      "literals": ["audio_bitrate", "versions"],
+      "conditionalRequired": [{"param": "output", "whenNone": ["measure_only", "versions"]}],
+      "writesBesideInput": {"versions": "input"},
+      "descriptions": {
+        "versions": "Write one normalised file per target (comma list: streaming, ebu-r128, broadcast-jp or LUFS/TP pairs such as -16/-1.5). The files are written next to the input, so the input must be inside the output root."
+      }
+    },
+    "export": {
+      "group": "deliver",
+      "risk": "low",
+      "useWhen": "Use as the final encode for a platform or a master (youtube, reels, tiktok, shorts, prores, dnxhr, gif ...); can also aim at a file size.",
+      "paths": {"input": "in_file", "output": "out_file"},
+      "conditionalRequired": [
+        {"param": "input", "whenNone": ["list"]},
+        {"param": "output", "whenNone": ["list"]}
+      ]
+    },
+    "proxy": {
+      "group": "deliver",
+      "risk": "low",
+      "useWhen": "Use to make a light copy of heavy footage (4K, HEVC, ProRes) for quick looks and tests.",
+      "paths": {"input": "in_file", "output": "out_file"},
+      "required": ["output"]
+    },
+    "render": {
+      "group": "project",
+      "risk": "medium",
+      "handler": "render",
+      "useWhen": "Use for any edit of three or more steps: one project (clips, transitions, captions, graphics, overlays, music, loudness, export, check) in one call, or a platform template on one video.",
+      "writes": "Writes: the project's output, or output in template mode; work files stay in the call's temp folder. Relative output paths land in the output root.",
+      "paths": {"project": "in_file", "init": "out_side_file", "export_timeline": "out_side_file", "cues": "in_file", "srt": "in_file", "logo": "in_file", "brand": "in_file", "chapters": "in_file", "image": "in_file", "output": "out_file", "write_project": "out_side_file"},
+      "removed": {
+        "work": "the wrapper keeps intermediates in the call's own temp folder",
+        "keep": "intermediates are always removed after the call",
+        "audit_log": "audit logs are not written by the wrapper",
+        "cache": "use use_cache; the cache folder lives in the output root"
+      },
+      "extraParams": ["project_json", "use_cache"],
+      "mutuallyExclusive": [["project", "project_json"]],
+      "oneOfRequired": [["project", "project_json", "init", "list_templates"]],
+      "conditionalRequired": [{"param": "output", "whenAny": ["template"]}],
+      "nested": {"project": "render_project", "brand": "brand_json"},
+      "descriptions": {
+        "project": "Existing input file (absolute, or relative to the output root): a project.json to render, or with template the video to deliver.",
+        "output": "Output file with an extension; a relative path lands in the output root. Template mode only (a project names its own output); for a template list or all, its folder receives the pack."
+      }
+    },
+    "batch": {
+      "group": "project",
+      "risk": "medium",
+      "handler": "batch",
+      "useWhen": "Use to apply the same steps or project to every file in a folder; a content-hash cache skips files that were already done.",
+      "writes": "Writes: into the recipe's output_dir, which must be inside the write roots (relative = under the output root).",
+      "paths": {"folder": "in_dir", "recipe": "in_file"},
+      "literals": ["jobs"],
+      "optional": ["recipe"],
+      "removed": {
+        "watch": "watching a folder would block the call; run batch again instead",
+        "work": "the wrapper keeps intermediates in the call's own temp folder"
+      },
+      "extraParams": ["recipe_json"],
+      "mutuallyExclusive": [["recipe", "recipe_json"]],
+      "oneOfRequired": [["recipe", "recipe_json"]],
+      "constraints": {"jobs": {"kind": "jobs_cap", "max": 2, "text": "Capped at 2 by the wrapper."}},
+      "nested": {"recipe": "batch_recipe"}
+    },
+    "verify": {
+      "group": "setup",
+      "risk": "low",
+      "handler": "verify",
+      "useWhen": "Use once on a new machine or with unusual footage to prove every step works on it; its outputs go to a fresh folder in the output root.",
+      "writes": "Writes: test outputs into a fresh folder in the output root; the report file when named.",
+      "paths": {"paths": "in_paths", "report": "out_side_file"},
+      "removed": {
+        "out": "the wrapper picks a fresh folder in the output root",
+        "keep": "the wrapper keeps the outputs in the output root",
+        "dry_run": "verify always runs real encodes; it has no dry run"
+      },
+      "descriptions": {
+        "timeout": "Seconds each verification step may take (default 600); the wrapper lowers it to fit the call's own deadline."
+      }
+    }
+  },
+  "wrapperTools": {
+    "doctor": {
+      "group": "setup",
+      "risk": "none",
+      "script": "scripts/_contract.py",
+      "handler": "doctor",
+      "deadline": 120,
+      "summary": "Check this computer: Python, FFmpeg and ffprobe versions, the filters, encoders, fonts and speech engines each tool needs, and where the skill writes (outputRoot).",
+      "useWhen": "Use once per session before the first edit, and after a dependency error; relay each problem's fix to the user.",
+      "writes": "Writes: nothing.",
+      "params": ["detail"]
+    },
+    "contract": {
+      "group": "setup",
+      "risk": "none",
+      "script": "scripts/_contract.py",
+      "handler": "contract",
+      "deadline": 60,
+      "summary": "Describe the tools: every parameter of one tool with its flags, defaults and accepted values, or a one-line summary of all of them.",
+      "useWhen": "Use when a parameter's meaning or accepted values are unclear.",
+      "writes": "Writes: nothing.",
+      "params": ["tool_name", "detail"]
+    }
+  }
+}

@@ -95,4 +95,4 @@ The section-by-section drafting method is inspired by Anthropic's doc-coauthorin
 
 Workflow patterns adapted, not copied, from obra/superpowers (MIT, © 2025 Jesse Vincent) and Anthropic's Claude Code plugins (feature-dev, pr-review-toolkit, code-review, security-review, frontend-design; Apache-2.0).
 
-Licensed under the Apache License, Version 2.0; see LICENSE.
+Licensed under the Apache-2.0 License; see LICENSE.

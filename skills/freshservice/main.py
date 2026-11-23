@@ -5,8 +5,8 @@ dependencies. `params` is injected as a global by the Sophon runtime and carries
 the tool arguments, and the connection-card fields (baseUrl, apiKey).
 
 Auth is HTTP Basic with the agent's API key as the username and the literal "X" as the password
-(same mechanism as Freshdesk): "Authorization: Basic base64(apiKey + ':X')". The key is self-serve
-from Profile Settings, provided an admin has enabled API access for the agent. All calls hit
+(same mechanism as Freshdesk): "Authorization: Basic base64(apiKey + ':X')". Agents get the key
+themselves under Profile Settings, provided an admin has enabled API access for them. All calls hit
 {baseUrl}/api/v2 on the customer's {sub}.freshservice.com domain.
 """
 

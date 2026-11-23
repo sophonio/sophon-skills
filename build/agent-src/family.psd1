@@ -7,9 +7,13 @@
 # SoulCap: lead 43008, writers 32768, ARC/CR/SEC 22528, RES 18432. The design set 36864/28672 for the lead and writers on an
 # estimate of 17.5 KB of shared writer text; the mandated fragments measure about 25 KB, so those two caps were raised to fit
 # them with about 1 KiB of headroom instead of cutting the runtime workarounds (design section 11, ruling on issue 3/37/64).
-# License: the family default (MIT, the root LICENSE). An agent may set License + LicenseFile together to ship another
-# license; the frontend and design agents added in 2.1 are Apache-2.0 because they adapt Apache-2.0 upstream text.
+# License: the family default (MIT, the root LICENSE). An agent may set License = 'Apache-2.0' (LICENSE copies
+# build/licenses/Apache-2.0.txt); the frontend and design agents added in 2.1 are Apache-2.0 because they adapt
+# Apache-2.0 upstream text.
+# Id, RequiredTag, Category, CreditsSentence and ReadmeCaps are the family keys build/Test-AgentSources.ps1 reads
+# (build/agent-src/families.psd1 lists every family; build/AgentFamily.psm1 documents the optional keys).
 @{
+  Id = 'development'
   FamilyMajor = 2
   FamilyVersion = '2.1.0'
   SophonCli = '^2\.2\.\d+'
@@ -17,7 +21,10 @@
   Author = 'Buildersoft LLC'
   License = 'MIT'
   Category = 'development'
+  RequiredTag = 'development'
   Lead = 'lead-developer'
+  CreditsSentence = 'Workflow patterns adapted, not copied, from obra/superpowers (MIT, © 2025 Jesse Vincent) and Anthropic''s Claude Code plugins (feature-dev, pr-review-toolkit, code-review, security-review, frontend-design; Apache-2.0).'
+  ReadmeCaps = @{ Lead = 24576; Other = 12288 }
   Values = @{
     CommitTrailer = 'Co-Authored-By: Sophon <noreply@buildersoft.io>'
     PrFooter = '🤖 Generated with [Sophon](https://sophon.buildersoft.io)'
@@ -42,7 +49,6 @@
       SubAgents = @{ enabled = $false; maxDepth = 0 }
       Effort = 'high'
       License = 'Apache-2.0'
-      LicenseFile = 'build/agent-src/licenses/Apache-2.0.txt'
       Fragments = @(
         '01-delegated-mode',
         '02-tools-workspace',
@@ -60,6 +66,19 @@
         '16-reporting'
       )
       Credits = @('superpowers', 'anthropic')
+    }
+    @{
+      Id = 'artifact-creator'
+      DisplayName = 'Artifact Creator'
+      SoulCap = 18432
+      Writer = $false
+      License = 'Apache-2.0'
+      Category = 'productivity'
+      RequiredTags = @('productivity')
+      SubAgents = @{ enabled = $false; maxDepth = 0 }
+      Effort = 'default'
+      Fragments = @('13-data-hygiene')
+      Credits = @()
     }
     @{
       Id = 'code-reviewer'
@@ -122,7 +141,6 @@
       SubAgents = @{ enabled = $false; maxDepth = 0 }
       Effort = 'default'
       License = 'Apache-2.0'
-      LicenseFile = 'build/agent-src/licenses/Apache-2.0.txt'
       Fragments = @(
         '01-delegated-mode',
         '02-tools-workspace',
@@ -180,7 +198,6 @@
       SubAgents = @{ enabled = $false; maxDepth = 0 }
       Effort = 'default'
       License = 'Apache-2.0'
-      LicenseFile = 'build/agent-src/licenses/Apache-2.0.txt'
       Fragments = @(
         '01-delegated-mode',
         '02-tools-workspace',
@@ -210,7 +227,6 @@
       SubAgents = @{ enabled = $false; maxDepth = 0 }
       Effort = 'default'
       License = 'Apache-2.0'
-      LicenseFile = 'build/agent-src/licenses/Apache-2.0.txt'
       Fragments = @(
         '01-delegated-mode',
         '02-tools-workspace',
@@ -269,7 +285,6 @@
       SubAgents = @{ enabled = $false; maxDepth = 0 }
       Effort = 'default'
       License = 'Apache-2.0'
-      LicenseFile = 'build/agent-src/licenses/Apache-2.0.txt'
       Fragments = @(
         '01-delegated-mode',
         '02-tools-workspace',
@@ -400,7 +415,6 @@
       SubAgents = @{ enabled = $false; maxDepth = 0 }
       Effort = 'default'
       License = 'Apache-2.0'
-      LicenseFile = 'build/agent-src/licenses/Apache-2.0.txt'
       Fragments = @(
         '01-delegated-mode',
         '02-tools-workspace',
@@ -458,7 +472,6 @@
       SubAgents = @{ enabled = $false; maxDepth = 0 }
       Effort = 'default'
       License = 'Apache-2.0'
-      LicenseFile = 'build/agent-src/licenses/Apache-2.0.txt'
       Fragments = @(
         '01-delegated-mode',
         '02-tools-workspace',

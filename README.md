@@ -11,15 +11,20 @@ into `.sophon-skill` artifacts, and the docs for publishing them.
 > These are **Sophon** skills (`manifest.json` format), not Claude Code / Anthropic `SKILL.md`
 > plugins — a different ecosystem with a different manifest.
 
-## Development agents
+## Agents
 
 The **Buildersoft development family 2.1.0**: sixteen `.sophon-agent` packages that work on a
 repository the way Claude Code does. They plan in a markdown file you approve, execute it task by
 task with a live todo list, verify with real commands, commit each verified task on a feature
-branch and offer a pull request. All are authored by **Buildersoft LLC** and require **Sophon
-2.2.0+**. The nine original agents are licensed **MIT**; the seven frontend, design, testing, MCP
-and docs agents added in 2.1 are licensed **Apache-2.0**. Only Lead Developer starts sub-agents,
-and only with your consent.
+branch and offer a pull request. The nine original agents are licensed **MIT**; the seven
+frontend, design, testing, MCP and docs agents added in 2.1 are licensed **Apache-2.0**. Only Lead
+Developer starts sub-agents, and only with your consent.
+
+The seventeenth package, [Artifact Creator](agents/artifact-creator), is a standalone **Apache-2.0**
+productivity agent for grounded reports, explainers, guides, diagrams and presentations across
+subjects. It does not delegate or build interactive applications. File creation depends on the
+available tools and permissions; live creation has not been verified for this package.
+All seventeen are authored by **Buildersoft LLC** and require **Sophon 2.2.0+**.
 
 | Agent | Role | Delegates | Read-only |
 |-------|------|-----------|-----------|
@@ -43,12 +48,15 @@ and only with your consent.
 Each `agents/<id>/SOUL.md` is generated from `build/agent-src/`; never edit it by hand. Compose,
 check and build with Sophon CLI 2.2.x on PATH:
 
+Each package's `LICENSE` matches its canonical source byte for byte: the root `LICENSE` for MIT,
+or `build/licenses/Apache-2.0.txt` for Apache-2.0.
+
 ```powershell
 pwsh -NoProfile -File build/Compose-AgentSouls.ps1                # regenerate agents/*/SOUL.md
 pwsh -NoProfile -File build/Test-AgentSources.ps1                 # lint, preflight, budgets, manifests (no CLI)
 pwsh -NoProfile -File build/Build-AgentPackages.ps1 -ValidateOnly # adds sophon dev validate: 0 errors, 0 warnings
 pwsh -NoProfile -File build/Build-AgentPackages.ps1               # dist/agents/<id>-<version>.sophon-agent + SHA256SUMS
-pwsh -NoProfile -File tests/agents/Test-AgentPackages.ps1         # sections A-K
+pwsh -NoProfile -File tests/agents/Test-AgentPackages.ps1         # sections A-L
 ```
 
 Upload artifacts are in **`dist/agents/`**, with a `SHA256SUMS` index. Nothing is uploaded by
@@ -56,6 +64,19 @@ these commands: agents are published manually, one file at a time, in the Market
 [docs/AGENTS.md](docs/AGENTS.md) for install order, the settings a package cannot carry, the
 approval cards to expect and the maintainer runbook. The skill build/publish scripts remain
 skill-only.
+
+## Video agent
+
+**[Video Producer](agents/video-producer)** 1.0.0, the only agent of the separate **video**
+family. It turns a brief, a script or your own footage into a finished short video: script and
+storyboard for your approval, voice-over, images, clips and music from Sophon's media tools, then
+a local edit, captions, mix, platform checks and render with the
+[`ffmpeg-video`](skills/ffmpeg-video) skill. It needs FFmpeg 6.1+ and Python 3.10+ on the computer
+that runs Sophon, and Sophon's process sandbox (the Docker sandbox has no FFmpeg). Install the
+skill first; the agent's README covers requirements, the isolation trade-off and limits.
+
+Both families are built by the same commands above; `-Family <id>` limits a command to one of
+them. See [docs/AGENTS.md](docs/AGENTS.md) section 14.
 
 ## Skills in this repo
 
@@ -122,6 +143,7 @@ skill-only.
 | [`image-processing`](skills/image-processing) | utility | Resize, convert, crop, compress, and watermark images |
 | [`json-yaml-tools`](skills/json-yaml-tools) | data | Convert, query (JMESPath), validate, and merge JSON/YAML/TOML |
 | [`youtube-watcher`](skills/youtube-watcher) | data | Fetch YouTube transcripts to summarize or answer questions about a video |
+| [`ffmpeg-video`](skills/ffmpeg-video) | utility | Edit, caption, mix, check and render video locally with FFmpeg (44 tools; process sandbox only) |
 
 **Enterprise systems**
 
@@ -185,22 +207,32 @@ skill-only.
 | [`units-convert`](skills/units-convert) | utility | Offline unit conversion across length, mass, temperature, and more |
 | [`crypto-utils`](skills/crypto-utils) | utility | Offline hashing, HMAC, JWT decode/verify, token & password generation |
 
-All skills are pure-Python and run in the sandbox with no system binaries — most use only the
-standard library (`urllib`, `hashlib`); a few pin small, pure-Python or musllinux-wheel dependencies.
+All skills but one are pure-Python and run in the sandbox with no system binaries — most use only
+the standard library (`urllib`, `hashlib`); a few pin small, pure-Python or musllinux-wheel
+dependencies. The exception is `ffmpeg-video`: it drives the FFmpeg installed on the host, so it
+runs only on Sophon's process sandbox backend, and it ships the MIT-licensed
+[ffmpeg-skill](https://github.com/kajisho5/ffmpeg-skill) unchanged under `vendor/` (see
+[docs/VENDORING.md](docs/VENDORING.md)).
 
 ## Repository layout
 
 ```
-skills/<name>/        A skill: manifest.json + entrypoint + README.md + LICENSE
+skills/<name>/        A skill: manifest.json + entrypoint + README.md + LICENSE (+ optional lib/, locked vendor/)
 agents/<id>/          An agent: manifest.json + SOUL.md (generated) + TOOLS.md + README.md + LICENSE
 plugins/              Sophon plugins (.sophon-plugin, .NET gRPC) — scaffolded, none yet
 templates/            Contributor scaffolds (skill-python, skill-csharp, plugin-*)
-build/                Build-MarketplacePackages.ps1, Publish-MarketplacePackages.ps1 (skills);
+build/                Build-MarketplacePackages.ps1, Publish-MarketplacePackages.ps1, SkillLint.psm1 (skills);
                       Compose-AgentSouls.ps1, Test-AgentSources.ps1, Build-AgentPackages.ps1 (agents)
-build/agent-src/      Agent sources: family.psd1, souls/<id>.md, shared fragments, tool catalogue
+build/catalog/        Data for the skill checks: sandbox stdlib list, marketplace rules
+build/ffmpeg-video/   Vendoring and generation for ffmpeg-video: Sync-FfmpegSkill.ps1, generate.py, policy.json
+build/agent-src/      Agent sources: families.psd1 (registry), family.psd1 (development), souls/, fragments/,
+                      families/video/, tool catalogue
+tests/skills/         Offline skill tests (run_all.py), the Sophon sandbox simulator, ffmpeg-video tests
+tests/build/          Skill build-check tests (Test-SkillLint.ps1) and fixture skills
 tests/agents/         Agent package tests (Test-AgentPackages.ps1), fixtures, manual eval scenarios
 docs/PUBLISHING.md    How to build, validate, and publish to the Marketplace
-docs/AGENTS.md        The development agents: install, settings, cards, maintainer runbook
+docs/AGENTS.md        The agents: install, settings, cards, families, maintainer runbook
+docs/VENDORING.md     Policy for third-party code vendored into a skill
 dist/                 Built .sophon-skill artifacts; dist/agents/ holds .sophon-agent (git-ignored)
 ```
 
@@ -226,7 +258,8 @@ pwsh -File build/Publish-MarketplacePackages.ps1
    rename the `.template` files.
 2. Fill in `manifest.json` — see the field contract in [`CONTRIBUTING.md`](CONTRIBUTING.md). The
    folder name **must** equal the manifest `name`.
-3. `pwsh -File build/Build-MarketplacePackages.ps1 -ValidateOnly` until it passes.
+3. `pwsh -File build/Build-MarketplacePackages.ps1 -ValidateOnly` until it passes, and add a
+   `tests/skills/test_<your-skill>.py` that `python tests/skills/run_all.py` runs.
 4. Open a PR. CI runs the same validation.
 
 See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the full contract and PR checklist, and
@@ -237,9 +270,13 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the full contract and PR checklist,
 Licensed under the MIT License. © 2026 Buildersoft LLC. Each skill also carries its own LICENSE.
 
 The development agents each carry their own LICENSE too: the nine original agents are MIT, and the
-seven added in 2.1 are licensed under the Apache License, Version 2.0.
+seven added in 2.1 and Artifact Creator are licensed under the Apache License, Version 2.0.
 
 The development agents' workflow patterns are adapted, not copied, from obra/superpowers (MIT,
 © 2025 Jesse Vincent) and Anthropic's Claude Code plugins (Apache-2.0). Portions of the agents
 added in 2.1 are adapted from Anthropic's agent skills, anthropics/skills (Apache-2.0, © 2026
 Anthropic, PBC), and changed by Buildersoft LLC.
+
+`skills/ffmpeg-video/vendor/ffmpeg-skill/` is ffmpeg-skill by kajisho5 (MIT, © 2026 kajisho5),
+shipped unchanged; see `skills/ffmpeg-video/THIRD_PARTY_NOTICES.md`. FFmpeg is a trademark of
+Fabrice Bellard; this project is not affiliated with or endorsed by the FFmpeg project.

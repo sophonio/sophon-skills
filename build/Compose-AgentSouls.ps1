@@ -4,10 +4,12 @@
 .SYNOPSIS
     Composes agents/<id>/SOUL.md from build/agent-src/ (agent templates plus shared fragments).
 .DESCRIPTION
-    Each SOUL.md is generated from build/agent-src/souls/<id>.md, with every include line
-    ({{> soul/<NN-id>}}) replaced by build/agent-src/fragments/soul/<NN-id>.md and every
-    {{= Key}} replaced by the family Values in build/agent-src/family.psd1. Lines starting
-    with "%% " are template comments and are dropped. Never hand-edit a SOUL.md.
+    Families are listed in build/agent-src/families.psd1 (without it: the single family in
+    build/agent-src/family.psd1). For each family, with <dir> the folder of its family file, each
+    SOUL.md is generated from <dir>/souls/<id>.md, with every include line ({{> soul/<NN-id>}})
+    replaced by <dir>/fragments/soul/<NN-id>.md and every {{= Key}} replaced by that family's
+    Values. Lines starting with "%% " are template comments and are dropped. Never hand-edit a
+    SOUL.md. Families never share templates or fragments; an agent id belongs to one family.
 
     Output is UTF-8 without BOM, LF line endings, exactly one trailing newline, no banner.
     A SOUL.md is written only when its bytes change; no other file is touched. When any error
@@ -17,9 +19,12 @@
     exits 0 (or 1 under -Check when a SOUL.md drifted).
 .PARAMETER RepoRoot
     Repository root holding build/agent-src/ and agents/. Defaults to the parent of this script.
+.PARAMETER Family
+    Compose only these families (registry Ids; comma-separated values are accepted). Default: every
+    registered family. Unknown names are errors.
 .PARAMETER Agents
     Compose only these agent ids (comma-separated values are accepted). Unknown ids are errors.
-    The unused-fragment check runs only when the whole roster is composed.
+    The unused-fragment check runs per family, only when that family's whole roster is composed.
 .PARAMETER Check
     Write nothing. Compare each composed SOUL with the committed file and report every drift
     (a missing file is drift too), then exit 1 if any drifted.
@@ -33,6 +38,8 @@
 .EXAMPLE
     pwsh -NoProfile -File build/Compose-AgentSouls.ps1 -Check
 .EXAMPLE
+    pwsh -NoProfile -File build/Compose-AgentSouls.ps1 -Family development -Check
+.EXAMPLE
     pwsh -NoProfile -File build/Compose-AgentSouls.ps1 -Agents developer -OutDir $env:TEMP/souls -Explain
 #>
 [CmdletBinding()]
@@ -41,7 +48,8 @@ param(
     [string[]]$Agents = @(),
     [switch]$Check,
     [string]$OutDir = '',
-    [switch]$Explain
+    [switch]$Explain,
+    [string[]]$Family = @()
 )
 
 Set-StrictMode -Version Latest
@@ -57,26 +65,94 @@ try {
     }
     $root = Resolve-AgentFullPath -Path $RepoRoot
 
-    $family = $null
-    try {
-        $family = Get-AgentFamily -RepoRoot $root
+    # Families: every registered family, or the -Family selection (the legacy single family without a registry).
+    $registry = Get-AgentFamilyRegistry -RepoRoot $root
+    $registryErrors = @($registry['Errors'])
+    foreach ($item in $registryErrors) { Format-AgentComposeError -Item $item }
+    if ($registryErrors.Count -gt 0) { exit 1 }
+    $knownFamilies = [string[]]@(foreach ($f in @($registry['Families'])) { [string]$f['Id'] })
+    $wantedFamilies = [System.Collections.Generic.List[string]]::new()
+    foreach ($entry in $Family) {
+        foreach ($part in ([string]$entry).Split(',')) {
+            $name = $part.Trim()
+            if (-not $name -or $wantedFamilies.Contains($name)) { continue }
+            if ([Array]::IndexOf($knownFamilies, $name) -lt 0) {
+                Write-Output "ERROR $($registry['Path']):1: unknown family '$name' (families: $($knownFamilies -join ', '))"
+                exit 1
+            }
+            $wantedFamilies.Add($name)
+        }
     }
-    catch {
-        $message = ($_.Exception.Message -replace '\s+', ' ').Trim()
-        $line = 1
-        if ($_.Exception.Data.Contains('Line')) { $line = $_.Exception.Data['Line'] }
-        Write-Output "ERROR build/agent-src/family.psd1:${line}: cannot load family data: $message"
-        exit 1
+    $entries = @(@($registry['Families']) | Where-Object { $wantedFamilies.Count -eq 0 -or $wantedFamilies.Contains([string]$_['Id']) })
+    $multi = $entries.Count -gt 1
+
+    # Several families: ids are unique across them, and each -Agents id goes to the family that owns it.
+    $agentsByFamily = @{}
+    if ($multi) {
+        $union = Get-AgentRosterUnion -RepoRoot $root -Family ([string[]]@($entries | ForEach-Object { $_['Id'] }))
+        $unionErrors = @($union['Errors'])
+        foreach ($item in $unionErrors) { Format-AgentComposeError -Item $item }
+        if ($unionErrors.Count -gt 0) { exit 1 }
+        $requested = [System.Collections.Generic.List[string]]::new()
+        foreach ($entry in $Agents) {
+            foreach ($part in ([string]$entry).Split(',')) {
+                $name = $part.Trim()
+                if ($name -and -not $requested.Contains($name)) { $requested.Add($name) }
+            }
+        }
+        $unknownAgents = 0
+        foreach ($name in $requested) {
+            $owner = $null
+            if (-not $union['Owner'].TryGetValue($name, [ref]$owner)) {
+                Write-Output "ERROR $($registry['Path']):1: unknown agent '$name' (not in any family roster)"
+                $unknownAgents++
+                continue
+            }
+            if (-not $agentsByFamily.ContainsKey($owner)) { $agentsByFamily[$owner] = [System.Collections.Generic.List[string]]::new() }
+            $agentsByFamily[$owner].Add($name)
+        }
+        if ($unknownAgents -gt 0) { exit 1 }
+        if ($requested.Count -gt 0) {
+            $entries = @($entries | Where-Object { $agentsByFamily.ContainsKey([string]$_['Id']) })
+        }
     }
 
-    $run = Invoke-AgentFamilyCompose -RepoRoot $root -Agents $Agents -Family $family
-    $allErrors = @($run['AllErrors'])
-    foreach ($item in $allErrors) { Format-AgentComposeError -Item $item }
+    # Phase 1: compose every selected family. Nothing is written unless every family composed cleanly.
+    $runs = [System.Collections.Generic.List[object]]::new()
+    $allErrors = [System.Collections.Generic.List[object]]::new()
+    foreach ($entry in $entries) {
+        $null = Set-AgentFamilyContext -Entry $entry
+        $familyRel = [string](Get-AgentFamilyContext)['FamilyRelPath']
+        if ($multi) { Write-Output "family $($entry['Id']) ($familyRel)" }
+        $familyData = $null
+        try {
+            $familyData = Get-AgentFamily -RepoRoot $root
+        }
+        catch {
+            $message = ($_.Exception.Message -replace '\s+', ' ').Trim()
+            $line = 1
+            if ($_.Exception.Data.Contains('Line')) { $line = $_.Exception.Data['Line'] }
+            Write-Output "ERROR ${familyRel}:${line}: cannot load family data: $message"
+            exit 1
+        }
+        $familyAgents = $Agents
+        if ($multi) {
+            $familyAgents = if ($agentsByFamily.ContainsKey([string]$entry['Id'])) { [string[]]$agentsByFamily[[string]$entry['Id']].ToArray() } else { [string[]]@() }
+        }
+        $run = Invoke-AgentFamilyCompose -RepoRoot $root -Agents $familyAgents -Family $familyData
+        foreach ($item in @($run['AllErrors'])) {
+            Format-AgentComposeError -Item $item
+            $allErrors.Add($item)
+        }
+        $runs.Add(@{ Id = [string]$entry['Id']; Run = $run; FragmentIds = [string[]]@(Get-AgentFragmentIds -RepoRoot $root) })
+    }
 
     $outRoot = ''
     if ($OutDir) { $outRoot = Resolve-AgentFullPath -Path $OutDir }
-    $clean = @($run['Results'] | Where-Object { @($_['Errors']).Count -eq 0 })
+    $results = @(foreach ($r in $runs) { @($r['Run']['Results']) })
+    $clean = @($results | Where-Object { @($_['Errors']).Count -eq 0 })
 
+    # Phase 2: compare or write.
     $drift = 0
     if ($Check) {
         foreach ($result in $clean) {
@@ -113,7 +189,7 @@ try {
     }
 
     if ($Explain) {
-        foreach ($result in @($run['Results'])) {
+        foreach ($result in $results) {
             $map = @($result['LineMap'])
             $top = @($result['Fragments'])
             $nested = @(@($result['Included']) | Where-Object { [Array]::IndexOf([string[]]$top, [string]$_) -lt 0 })
@@ -124,11 +200,12 @@ try {
                 Write-Output ("{0}`t{1}:{2}" -f ($i + 1), $map[$i]['Source'], $map[$i]['Line'])
             }
         }
-        Write-Output 'FRAGMENT USAGE'
-        $fragmentIds = [string[]]@(Get-AgentFragmentIds -RepoRoot $root)
-        foreach ($usage in @(Get-AgentFragmentUsage -Results @($run['Results']) -FragmentIds $fragmentIds)) {
-            $users = @($usage['Agents'])
-            Write-Output ('  {0}: {1}' -f $usage['Id'], $(if ($users.Count) { $users -join ', ' } else { '(none)' }))
+        foreach ($r in $runs) {
+            Write-Output $(if ($multi) { "FRAGMENT USAGE ($($r['Id']))" } else { 'FRAGMENT USAGE' })
+            foreach ($usage in @(Get-AgentFragmentUsage -Results @($r['Run']['Results']) -FragmentIds $r['FragmentIds'])) {
+                $users = @($usage['Agents'])
+                Write-Output ('  {0}: {1}' -f $usage['Id'], $(if ($users.Count) { $users -join ', ' } else { '(none)' }))
+            }
         }
     }
 

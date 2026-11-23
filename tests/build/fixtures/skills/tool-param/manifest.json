@@ -1,0 +1,40 @@
+{
+  "name": "tool-param",
+  "version": "1.0.0",
+  "description": "Fixture skill tool-param for tests/build/Test-SkillLint.ps1.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "development",
+  "tags": [
+    "fixture"
+  ],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "requirements": [],
+  "sandbox": {
+    "network": false,
+    "timeoutSeconds": 30
+  },
+  "platforms": [],
+  "tools": [
+    {
+      "name": "fixture.toolparam.ping",
+      "description": "Fixture tool fixture.toolparam.ping.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "tool": {
+            "type": "string",
+            "description": "Overwritten."
+          }
+        },
+        "required": [
+          "tool",
+          "missing"
+        ]
+      }
+    }
+  ]
+}
