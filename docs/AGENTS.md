@@ -320,6 +320,7 @@ tests/agents/                 Test-AgentPackages.ps1 (A-L), fixtures/, evals/
 
 **Budgets** (`Test-AgentSources.ps1` section E fails over any of them and prints a headroom table):
 - Composed SOUL, `SoulCap` in `family.psd1` (the 3.0 tiers, option A of the design's byte ledger): lead-developer 62,464 B; ui-ux-designer, frontend-developer, design-system-engineer and visual-designer 51,200 B; developer, debugger, qa-engineer, e2e-test-engineer, mcp-integration-engineer and technical-writer 44,032 B; software-architect, code-reviewer, security-reviewer and accessibility-reviewer 28,672 B; researcher and artifact-creator 22,528 B. Caps are data: raising one changes the family file and its header comment, never code.
+- Headroom: under 8% of the cap free prints `WARN BUDGET-HEADROOM`; under 5% free is an error only with `-Release` (alias `-StrictHeadroom`, on `Test-AgentSources.ps1` and `Build-AgentPackages.ps1`). Warnings never change the exit code. An optional per-agent `RoleCap` caps the role text (the template without include and comment lines; `BUDGET-ROLE`). The table also shows the change against `build/agent-src/catalog/soul-baseline.psd1` (the 2.1.0 sizes).
 - Each fragment at most 4,096 B, each TOOLS.md at most 2,048 B, each README at most 12 KiB (the lead's 24 KiB).
 - Every child pays for its whole SOUL, uncached: keep role text terse and cut before you raise a cap again.
 

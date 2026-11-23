@@ -26,6 +26,11 @@
                                and pinned
       AllowRestrictedMentions  restricted tool names that may be named un-negated (never pinned)
 
+    Optional agent keys (beside the required Id, DisplayName, SoulCap, Writer, SubAgents, Effort, Fragments, Credits):
+      License, Category, RequiredTags   per-agent overrides of the family values
+      RoleCap                  the most bytes the role text may take (souls/<id>.md without include and comment
+                               lines, values substituted); Test-AgentSources.ps1 BUDGET-ROLE
+
     Template grammar:
       A line that is exactly {{> soul/<NN-id>}} is replaced by that fragment's lines.
       Fragments may include other fragments the same way.
@@ -64,7 +69,7 @@ $script:ValueRegex = [regex]::new('\{\{= (?<key>[A-Za-z][A-Za-z0-9]*)\}\}')
 $script:ValueKeyRegex = [regex]::new('^[A-Za-z][A-Za-z0-9]*$')
 $script:AgentIdRegex = [regex]::new('^[a-z0-9][a-z0-9-]{1,63}$')
 $script:AgentKeys = @('Id', 'DisplayName', 'SoulCap', 'Writer', 'SubAgents', 'Effort', 'Fragments', 'Credits')
-$script:OptionalAgentKeys = @('License', 'Category', 'RequiredTags')
+$script:OptionalAgentKeys = @('License', 'Category', 'RequiredTags', 'RoleCap')
 $script:LicenseValues = @('MIT', 'Apache-2.0')
 $script:CategoryValues = @('utility', 'productivity', 'communication', 'data', 'development', 'integration', 'ai', 'automation', 'other')
 $script:EffortValues = @('high', 'default')
@@ -781,6 +786,9 @@ function Test-AgentFamilyData {
         if ($agent.ContainsKey('SoulCap') -and ($agent['SoulCap'] -isnot [int] -or $agent['SoulCap'] -le 0)) {
             $errors.Add((New-AgentComposeError $p $line "agent '$id': SoulCap must be a positive integer"))
         }
+        if ($agent.ContainsKey('RoleCap') -and ($agent['RoleCap'] -isnot [int] -or $agent['RoleCap'] -le 0)) {
+            $errors.Add((New-AgentComposeError $p $line "agent '$id': RoleCap must be a positive integer"))
+        }
         if ($agent.ContainsKey('Writer') -and $agent['Writer'] -isnot [bool]) {
             $errors.Add((New-AgentComposeError $p $line "agent '$id': Writer must be `$true or `$false"))
         }
@@ -1207,7 +1215,9 @@ function Invoke-AgentCompose {
     .SYNOPSIS
         Composes one agent's SOUL text from its template and the shared fragments.
     .DESCRIPTION
-        Returns @{ Id; DisplayName; SoulCap; Template; Text; Bytes; LineMap; Errors; Fragments; Included }.
+        Returns @{ Id; DisplayName; SoulCap; RoleBytes; RoleCap; Template; Text; Bytes; LineMap; Errors; Fragments;
+        Included }. RoleBytes is the role text: the bytes of the template's own output lines (include and comment
+        lines excluded, values substituted, one LF each); RoleCap is the agent's optional RoleCap (0 when absent).
         Text is LF-only with exactly one trailing newline ('' when nothing composed).
         LineMap has one @{ Source; Line } per output line (Source is repo-relative).
         Fragments is the template's top-level include order; Included is every fragment
@@ -1272,10 +1282,19 @@ function Invoke-AgentCompose {
     $text = ''
     if ($state['Lines'].Count -gt 0) { $text = ($state['Lines'] -join "`n") + "`n" }
     $topIds = [string[]]@(foreach ($t in $state['TopLevel']) { [string]$t['Id'] })
+    # Role text: the template's own output lines (no include lines, no %% comments), values substituted.
+    $roleBytes = 0
+    for ($i = 0; $i -lt $state['Lines'].Count; $i++) {
+        if (Test-AgentSame $state['Map'][$i]['Source'] $templateRel) { $roleBytes += $script:LenientUtf8.GetByteCount($state['Lines'][$i]) + 1 }
+    }
+    $roleCap = 0
+    if ($null -ne $agent -and $agent['RoleCap'] -is [int]) { $roleCap = [int]$agent['RoleCap'] }
     @{
         Id = $Id
         DisplayName = $displayName
         SoulCap = $soulCap
+        RoleBytes = $roleBytes
+        RoleCap = $roleCap
         Template = $templateRel
         Text = $text
         Bytes = $script:LenientUtf8.GetByteCount($text)
@@ -1488,7 +1507,12 @@ function Write-AgentSoulFile {
 function Get-AgentSoulBudget {
     <#
     .SYNOPSIS
-        Byte budget figures: @{ Bytes; Cap; Percent; Tokens } where Tokens = round(bytes / 3.8), an estimate.
+        Byte budget figures: @{ Bytes; Cap; Percent; Free; FreePercent; Headroom; Tokens }.
+    .DESCRIPTION
+        Percent is the share of the cap used and FreePercent the share left (both rounded to 0.01), with
+        Free = Cap - Bytes. Tokens = round(bytes / 3.8), an estimate. Headroom is 'over' (over the cap),
+        'fail' (less than 5% free: Free * 100 < Cap * 5), 'warn' (less than 8% free) or 'ok'; exactly 5% free
+        is not 'fail'. A cap of 0 gives 'ok' and zero percentages (no cap to measure against).
     #>
     [CmdletBinding()]
     [OutputType([hashtable])]
@@ -1497,30 +1521,85 @@ function Get-AgentSoulBudget {
         [Parameter(Mandatory)][int]$Cap
     )
     $percent = if ($Cap -gt 0) { [Math]::Round(100.0 * $Bytes / $Cap, 1) } else { 0.0 }
+    $free = $Cap - $Bytes
+    $freePercent = if ($Cap -gt 0) { [Math]::Round(100.0 * $free / $Cap, 2) } else { 0.0 }
+    $headroom = 'ok'
+    if ($Cap -gt 0) {
+        if ($Bytes -gt $Cap) { $headroom = 'over' }
+        elseif ([long]$free * 100 -lt [long]$Cap * 5) { $headroom = 'fail' }
+        elseif ([long]$free * 100 -lt [long]$Cap * 8) { $headroom = 'warn' }
+    }
     @{
         Bytes = $Bytes
         Cap = $Cap
         Percent = $percent
+        Free = $free
+        FreePercent = $freePercent
+        Headroom = $headroom
         Tokens = [int][Math]::Round($Bytes / $script:BytesPerToken)
     }
+}
+
+function Get-AgentSoulBaseline {
+    <#
+    .SYNOPSIS
+        Reads build/agent-src/catalog/soul-baseline.psd1: @{ Tag; Souls; Errors }.
+    .DESCRIPTION
+        Souls maps an agent id to its composed SOUL bytes at the baseline release. A missing file gives an
+        empty map and no error; a file that does not load, or a value that is not a positive integer, is an error.
+    #>
+    [CmdletBinding()]
+    [OutputType([hashtable])]
+    param([Parameter(Mandatory)][string]$RepoRoot)
+    $rel = 'build/agent-src/catalog/soul-baseline.psd1'
+    $full = Join-AgentRepoPath (Resolve-AgentFullPath -Path $RepoRoot) $rel
+    $souls = [System.Collections.Generic.Dictionary[string, int]]::new([StringComparer]::Ordinal)
+    $errors = [System.Collections.Generic.List[object]]::new()
+    if (-not [System.IO.File]::Exists($full)) { return @{ Tag = ''; Souls = $souls; Errors = @() } }
+    $data = $null
+    try { $data = Import-AgentDataFile -FullPath $full -RelativePath $rel }
+    catch {
+        $errors.Add((New-AgentComposeError $rel 1 "cannot load the SOUL baseline: $(($_.Exception.Message -replace '\s+', ' ').Trim())"))
+        return @{ Tag = ''; Souls = $souls; Errors = $errors.ToArray() }
+    }
+    $tag = if ($data['Tag'] -is [string]) { [string]$data['Tag'] } else { '' }
+    $map = $data['Souls']
+    if ($map -isnot [hashtable]) {
+        $errors.Add((New-AgentComposeError $rel 1 'Souls must be a hashtable of agent id = bytes'))
+    }
+    else {
+        foreach ($key in @($map.Keys)) {
+            if ($map[$key] -isnot [int] -or $map[$key] -le 0) {
+                $errors.Add((New-AgentComposeError $rel 1 "Souls '$key' must be a positive integer"))
+                continue
+            }
+            $souls[[string]$key] = [int]$map[$key]
+        }
+    }
+    @{ Tag = $tag; Souls = $souls; Errors = $errors.ToArray() }
 }
 
 function Format-AgentBudgetTable {
     <#
     .SYNOPSIS
-        Formats compose results as the headroom table: agent, bytes, cap, % used, ~tokens.
+        Formats compose results as the headroom table: agent, bytes, cap, % used, % free, ~tokens.
     #>
     [CmdletBinding()]
     [OutputType([string])]
     param([Parameter(Mandatory)][AllowEmptyCollection()][object[]]$Results)
     $inv = [System.Globalization.CultureInfo]::InvariantCulture
-    $format = '{0,-20} {1,7} {2,7} {3,7} {4,8}'
-    $format -f 'agent', 'bytes', 'cap', '% used', "`u{2248}tokens"
+    $format = '{0,-24} {1,7} {2,7} {3,7} {4,7} {5,8}'
+    $format -f 'agent', 'bytes', 'cap', '% used', '% free', "`u{2248}tokens"
     foreach ($result in $Results) {
         $budget = Get-AgentSoulBudget -Bytes $result['Bytes'] -Cap $result['SoulCap']
         $percent = $budget['Percent'].ToString('0.0', $inv) + '%'
-        $row = $format -f $result['Id'], $budget['Bytes'], $budget['Cap'], $percent, $budget['Tokens']
-        if ($budget['Bytes'] -gt $budget['Cap']) { $row += '  OVER CAP' }
+        $freePercent = $budget['FreePercent'].ToString('0.0', $inv) + '%'
+        $row = $format -f $result['Id'], $budget['Bytes'], $budget['Cap'], $percent, $freePercent, $budget['Tokens']
+        switch ($budget['Headroom']) {
+            'over' { $row += '  OVER CAP' }
+            'fail' { $row += '  under 5% free' }
+            'warn' { $row += '  under 8% free' }
+        }
         $row
     }
     "`u{2248}tokens = bytes/3.8 (estimate)"
@@ -1577,6 +1656,7 @@ Export-ModuleMember -Function @(
     'Compare-AgentSoulText'
     'Write-AgentSoulFile'
     'Get-AgentSoulBudget'
+    'Get-AgentSoulBaseline'
     'Format-AgentBudgetTable'
     'Get-AgentFragmentUsage'
 )

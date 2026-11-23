@@ -13,7 +13,11 @@
       D  preflight               the same texts through the scanner replay; every fragment <= 4,096 B and
                                  starts with its only "## " heading
       E  budgets                 SOUL <= SoulCap, TOOLS.md <= 2,048 B, README <= ReadmeCaps (default 12 KiB,
-                                 lead 24 KiB); prints the headroom table
+                                 lead 24 KiB); BUDGET-HEADROOM (a warning under 8% free; under 5% free an error
+                                 with -Release, else a warning); BUDGET-ROLE (role text <= the optional RoleCap;
+                                 with -Release, every agent needs one once the family sets any); prints the
+                                 headroom table with free bytes and percent, role bytes and the change against
+                                 build/agent-src/catalog/soul-baseline.psd1
       F  manifest                the family contract (keys, lengths, marker, subAgents, requires) and
                                  MAN-SKILL-VERSION (every SkillPolicy skill exists at its MinVersion or later)
       G  TOOLS.md                strict grammar, runtime-parser agreement, pin rules
@@ -26,8 +30,9 @@
     family (-Family <id>) and fails when any family fails. Without a registry it checks the single family in
     build/agent-src/family.psd1, folders == roster included.
 
-    Every issue prints as "ERROR <rule> <path>:<line>: <message>". Exit code 1 on any error, else 0.
-    Pure cross-platform PowerShell 7; runs on Linux CI.
+    Every issue prints as "ERROR <rule> <path>:<line>: <message>". A warning prints as
+    "WARN <rule> <path>:<line>: <message>", is counted in the summary and never changes the exit code.
+    Exit code 1 on any error, else 0. Pure cross-platform PowerShell 7; runs on Linux CI.
 .PARAMETER RepoRoot
     Repository root. Defaults to the parent of this script.
 .PARAMETER Agents
@@ -35,6 +40,10 @@
     without -Agents.
 .PARAMETER Family
     Check one family (a registry Id). The agents/-equals-union check runs only without -Family.
+.PARAMETER Release
+    The release switch (alias -StrictHeadroom): the release-gated findings become errors. Today these are
+    BUDGET-HEADROOM under 5% free and BUDGET-ROLE for an agent without a RoleCap in a family that sets them.
+    Build-AgentPackages.ps1 -Release passes it through.
 .EXAMPLE
     pwsh -NoProfile -File build/Test-AgentSources.ps1
 .EXAMPLE
@@ -46,7 +55,8 @@
 param(
     [string]$RepoRoot = (Join-Path $PSScriptRoot '..'),
     [string[]]$Agents = @(),
-    [string]$Family = ''
+    [string]$Family = '',
+    [Alias('StrictHeadroom')][switch]$Release
 )
 
 Set-StrictMode -Version Latest
@@ -57,13 +67,16 @@ Import-Module (Join-Path $PSScriptRoot 'AgentLint.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'AgentFamily.psm1') -Force
 
 $script:Errors = [System.Collections.Generic.List[object]]::new()
+$script:Warnings = [System.Collections.Generic.List[object]]::new()
 $script:SectionCounts = [ordered]@{}
+$script:SectionWarnings = @{}
 $script:Section = ''
 
 function Enter-Section {
     param([string]$Id, [string]$Title)
     $script:Section = $Id
     $script:SectionCounts[$Id] = 0
+    $script:SectionWarnings[$Id] = 0
     Write-Host ''
     Write-Host "== $Id. $Title"
 }
@@ -73,6 +86,20 @@ function Add-SourceError {
     $script:Errors.Add([pscustomobject]@{ Section = $script:Section; Rule = $Rule; Path = $Path; Line = $Line; Message = $Message })
     $script:SectionCounts[$script:Section]++
     Write-Host "ERROR $Rule ${Path}:${Line}: $Message"
+}
+
+function Add-SourceWarning {
+    # A warning is counted in the summary and never changes the exit code.
+    param([string]$Rule, [string]$Path, [int]$Line, [string]$Message)
+    $script:Warnings.Add([pscustomobject]@{ Section = $script:Section; Rule = $Rule; Path = $Path; Line = $Line; Message = $Message })
+    $script:SectionWarnings[$script:Section]++
+    Write-Host "WARN $Rule ${Path}:${Line}: $Message"
+}
+
+function Add-SourceFinding {
+    # An error under -Release, a warning otherwise (the release-gated checks, such as BUDGET-HEADROOM below 5%).
+    param([string]$Rule, [string]$Path, [int]$Line, [string]$Message)
+    if ($Release) { Add-SourceError $Rule $Path $Line $Message } else { Add-SourceWarning $Rule $Path $Line $Message }
 }
 
 function Add-Issues {
@@ -154,6 +181,7 @@ if (-not $Family -and -not $registry['Legacy']) {
     foreach ($loaded in @($union['Families'])) {
         $id = [string]$loaded['Id']
         $childArgs = @('-NoProfile', '-NonInteractive', '-File', $PSCommandPath, '-RepoRoot', $RepoRoot, '-Family', $id)
+        if ($Release) { $childArgs += '-Release' }
         if ($requested.Count -gt 0) {
             if (-not $byFamily.ContainsKey($id)) { continue }
             $childArgs += @('-Agents', ($byFamily[$id] -join ','))
@@ -176,14 +204,15 @@ if (-not $Family -and -not $registry['Legacy']) {
         }
         foreach ($line in $output) { Write-Host $line }
         $childErrors += @($output | Where-Object { $_ -clike 'ERROR *' }).Count
-        $results.Add([pscustomobject]@{ Id = $id; Code = $code })
+        $childWarnings = @($output | Where-Object { $_ -clike 'WARN *' }).Count
+        $results.Add([pscustomobject]@{ Id = $id; Code = $code; Warnings = $childWarnings })
     }
 
     Write-Host ''
     Write-Host '== Summary'
-    Write-Host ('  roster union  {0} error(s)' -f $script:Errors.Count)
+    Write-Host ('  roster union  {0} error(s), {1} warning(s)' -f $script:Errors.Count, $script:Warnings.Count)
     foreach ($result in $results) {
-        Write-Host ('  family {0}  {1}' -f $result.Id, $(if ($result.Code -eq 0) { 'OK' } else { "FAILED (exit $($result.Code))" }))
+        Write-Host ('  family {0}  {1}, {2} warning(s)' -f $result.Id, $(if ($result.Code -eq 0) { 'OK' } else { "FAILED (exit $($result.Code))" }), $result.Warnings)
     }
     $failed = @($results | Where-Object { $_.Code -ne 0 } | ForEach-Object { $_.Id })
     if ($script:Errors.Count -gt 0 -or $failed.Count -gt 0) {
@@ -382,6 +411,16 @@ if ($requested.Count -gt 0 -and $selected.Count -eq 0) {
     }
 }
 
+# The composed sources, once (E reads the role bytes, H the include lists, M the line maps). Composer errors
+# are section B's; here a failed compose only leaves an agent out of those checks.
+$composedById = @{}
+try {
+    $familyCompose = Invoke-AgentFamilyCompose -RepoRoot $RepoRoot -Agents ([string[]]$selected.ToArray()) -Family $fam
+    foreach ($result in @($familyCompose['Results'])) { $composedById[[string]$result['Id']] = $result }
+} catch {
+    Write-Host "note: composing the family in-process failed ($($_.Exception.Message)); E, H and M use what they can"
+}
+
 # Shared inputs for C-G.
 $catalog = Get-AgentCatalog -RepoRoot $RepoRoot
 foreach ($warning in $catalog.Warnings) { Write-Host "note: $warning" }
@@ -489,14 +528,35 @@ $readmeCaps = Get-AgentField $fam 'ReadmeCaps'
 $readmeCapLead = [int](Get-AgentField $readmeCaps 'Lead' 24576)
 $readmeCapOther = [int](Get-AgentField $readmeCaps 'Other' 12288)
 $budgetRows = [System.Collections.Generic.List[object]]::new()
+# RoleCap: optional per agent. Once any agent of the family sets one, -Release requires it of every agent.
+$roleCapsSet = @($familyAgents | Where-Object { $null -ne (Get-AgentField $_ 'RoleCap') }).Count -gt 0
+$baseline = Get-AgentSoulBaseline -RepoRoot $RepoRoot
+foreach ($e in @($baseline['Errors'])) { Add-SourceError 'BUDGET-BASELINE' $e['Path'] $e['Line'] $e['Message'] }
 foreach ($id in $selected) {
     $entry = $agentById[$id]
     $cap = [int](Get-AgentField $entry 'SoulCap' 0)
+    $composedEntry = if ($composedById.ContainsKey($id)) { $composedById[$id] } else { $null }
+    $roleBytes = if ($null -ne $composedEntry) { [int]$composedEntry['RoleBytes'] } else { -1 }
+    $roleCap = [int](Get-AgentField $entry 'RoleCap' 0)
+    $templateRel = Get-AgentTemplatePath -RepoRoot $RepoRoot -Id $id
+    if ($roleCap -gt 0 -and $roleBytes -gt $roleCap) {
+        Add-SourceError 'BUDGET-ROLE' $templateRel 0 "role text is $roleBytes bytes (template without include and comment lines); RoleCap $roleCap (over by $($roleBytes - $roleCap))"
+    } elseif ($roleCap -le 0 -and $roleCapsSet -and $Release) {
+        Add-SourceError 'BUDGET-ROLE' $familyRel (Get-AgentFamilyLine -RepoRoot $RepoRoot -AgentId $id) "agent '$id' has no RoleCap, and the family sets role caps (required under -Release)"
+    }
     if ($bytes[$id].ContainsKey('SOUL.md')) {
         $size = $bytes[$id]['SOUL.md'].Length
+        $budget = Get-AgentSoulBudget -Bytes $size -Cap $cap
         if ($cap -le 0) { Add-SourceError 'BUDGET-SOUL' $familyRel 1 "agent '$id' has no SoulCap" }
         elseif ($size -gt $cap) { Add-SourceError 'BUDGET-SOUL' "agents/$id/SOUL.md" 0 "$size bytes; cap $cap (over by $($size - $cap))" }
-        $budgetRows.Add([pscustomobject]@{ Id = $id; Bytes = $size; Cap = $cap })
+        elseif ($budget['Headroom'] -eq 'fail') {
+            Add-SourceFinding 'BUDGET-HEADROOM' "agents/$id/SOUL.md" 0 ("$size bytes; cap $cap leaves $($budget['Free']) bytes free ({0:0.00}%), under the 5% floor" -f $budget['FreePercent'])
+        } elseif ($budget['Headroom'] -eq 'warn') {
+            Add-SourceWarning 'BUDGET-HEADROOM' "agents/$id/SOUL.md" 0 ("$size bytes; cap $cap leaves $($budget['Free']) bytes free ({0:0.00}%), under 8%" -f $budget['FreePercent'])
+        }
+        $base = 0
+        $hasBase = $baseline['Souls'].TryGetValue($id, [ref]$base)
+        $budgetRows.Add([pscustomobject]@{ Id = $id; Bytes = $size; Cap = $cap; Free = $budget['Free']; FreePercent = $budget['FreePercent']; Role = $roleBytes; RoleCap = $roleCap; Base = $(if ($hasBase) { $base } else { $null }) })
     }
     if ($bytes[$id].ContainsKey('TOOLS.md') -and $bytes[$id]['TOOLS.md'].Length -gt 2048) {
         Add-SourceError 'BUDGET-TOOLS' "agents/$id/TOOLS.md" 0 "$($bytes[$id]['TOOLS.md'].Length) bytes; at most 2,048"
@@ -507,12 +567,30 @@ foreach ($id in $selected) {
     }
 }
 if ($budgetRows.Count -gt 0) {
-    Write-Host ('  {0,-20} {1,8} {2,8} {3,7} {4,10}' -f 'agent', 'bytes', 'cap', 'used', '~tokens')
+    $inv = [Globalization.CultureInfo]::InvariantCulture
+    $tableFormat = '  {0,-24} {1,8} {2,8} {3,8} {4,7} {5,7} {6,7} {7,9} {8,8}'
+    Write-Host ($tableFormat -f 'agent', 'bytes', 'cap', 'free', 'free%', 'role', 'rolecap', "vs $(if ($baseline['Tag']) { 'base' } else { 'n/a' })", '~tokens')
+    $sumBytes = 0
+    $sumGrowth = 0
+    $withBase = 0
     foreach ($row in $budgetRows) {
-        $pct = if ($row.Cap -gt 0) { '{0:0.0}%' -f (100.0 * $row.Bytes / $row.Cap) } else { 'n/a' }
-        Write-Host ('  {0,-20} {1,8:N0} {2,8:N0} {3,7} {4,10:N0}' -f $row.Id, $row.Bytes, $row.Cap, $pct, [Math]::Round($row.Bytes / 3.8))
+        $freePct = if ($row.Cap -gt 0) { $row.FreePercent.ToString('0.00', $inv) + '%' } else { 'n/a' }
+        $role = if ($row.Role -ge 0) { $row.Role.ToString('N0', $inv) } else { '?' }
+        $roleCapText = if ($row.RoleCap -gt 0) { $row.RoleCap.ToString('N0', $inv) } else { '-' }
+        $delta = '-'
+        if ($null -ne $row.Base) {
+            $growth = $row.Bytes - $row.Base
+            $delta = $(if ($growth -ge 0) { '+' } else { '' }) + $growth.ToString('N0', $inv)
+            $sumGrowth += $growth
+            $withBase++
+        }
+        $sumBytes += $row.Bytes
+        Write-Host ($tableFormat -f $row.Id, $row.Bytes.ToString('N0', $inv), $row.Cap.ToString('N0', $inv), $row.Free.ToString('N0', $inv), $freePct, $role, $roleCapText, $delta, ([Math]::Round($row.Bytes / 3.8)).ToString('N0', $inv))
     }
-    Write-Host '  ~tokens = bytes/3.8, an estimate. Body of TOOLS.md (at most 5 lines) is checked in G.'
+    $growthText = if ($withBase -gt 0) { "$(if ($sumGrowth -ge 0) { '+' } else { '' })$($sumGrowth.ToString('N0', $inv)) bytes against $($baseline['Tag']) over $withBase agent(s)" } else { 'no baseline' }
+    Write-Host ("  family total: {0} bytes in {1} SOUL(s), {2}" -f $sumBytes.ToString('N0', $inv), $budgetRows.Count, $growthText)
+    Write-Host '  role = template bytes without include and comment lines; ~tokens = bytes/3.8, an estimate.'
+    Write-Host '  BUDGET-HEADROOM warns under 8% free and, under -Release, fails under 5%. Body of TOOLS.md (at most 5 lines) is checked in G.'
 }
 
 # =============================================================================================================
@@ -581,8 +659,7 @@ $attributionUsers = @{}
 $sourceTexts = @{}
 foreach ($id in $selected) {
     $users = [System.Collections.Generic.List[string]]::new()
-    $composed = $null
-    try { $composed = Invoke-AgentCompose -RepoRoot $RepoRoot -Id $id -Family $fam } catch { $composed = $null }
+    $composed = if ($composedById.ContainsKey($id)) { $composedById[$id] } else { $null }
     if ($null -ne $composed) {
         $sources = @([pscustomobject]@{ Name = $id; Rel = [string]$composed['Template'] }) +
             @(@($composed['Included']) | ForEach-Object { [pscustomobject]@{ Name = [string]$_; Rel = (Get-AgentFragmentPath -RepoRoot $RepoRoot -FragmentId ([string]$_)) } })
@@ -698,8 +775,10 @@ foreach ($id in $selected) {
 Write-Host ''
 Write-Host '== Summary'
 foreach ($key in $script:SectionCounts.Keys) {
-    Write-Host ('  {0}  {1} error(s)' -f $key, $script:SectionCounts[$key])
+    $warned = if ($script:SectionWarnings[$key] -gt 0) { ", $($script:SectionWarnings[$key]) warning(s)" } else { '' }
+    Write-Host ('  {0}  {1} error(s){2}' -f $key, $script:SectionCounts[$key], $warned)
 }
+Write-Host ('  warnings: {0}{1}' -f $script:Warnings.Count, $(if ($Release) { ' (-Release: release-gated findings are errors)' } else { '' }))
 if ($script:Errors.Count -gt 0) {
     Write-Host "Test-AgentSources: $($script:Errors.Count) error(s) across $($selected.Count) agent(s)."
     exit 1

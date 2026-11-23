@@ -13,6 +13,8 @@
       C D F G plus the lint, scan, manifest and toolsmd fixture suites (Invoke-AgentLintFixtures in AgentLint.psm1).
       D    plus a temporary copy with one fragment given a second heading and one stripped of its heading,
            which Test-AgentSources must fail with FRAGMENT-HEADING.
+      E    plus the headroom boundaries (Get-AgentSoulBudget) and a temporary copy with a lowered developer cap and
+           RoleCap: under 5% free warns daily and fails with -Release, 5-8% free only warns, BUDGET-ROLE.
       J    'sophon --version' matches every family's SophonCli; 'sophon dev validate --json' per agent gives ok,
            projectType agent, no errors and no warnings.
       K    build/Build-AgentPackages.ps1 into a temporary folder: a decoy package is removed, one package per
@@ -386,6 +388,50 @@ try {
     } catch {
         Add-Fail 'I' "credits regression cases failed to run: $($_.Exception.Message)"
     }
+    # ---- E: headroom and role caps ---------------------------------------------------------------------------
+    # The boundaries in-process (cap 40,960: a warning above 37,683 B, a release failure above 38,912 B), then a
+    # temporary copy whose developer cap and RoleCap are lowered, checked with and without -Release.
+    Write-Host 'Running the budget cases ...'
+    try {
+        $states = @(37683, 37684, 38912, 38913, 40960, 40961 | ForEach-Object { (Get-AgentSoulBudget -Bytes $_ -Cap 40960)['Headroom'] }) -join ','
+        $null = Test-Check 'E' ([string]::Equals($states, 'ok,warn,warn,fail,fail,over', $ord)) "headroom at cap 40,960 for 37,683 / 37,684 / 38,912 / 38,913 / 40,960 / 40,961 B is ok,warn,warn,fail,fail,over (got $states)"
+        $budgetCase = Join-Path $tempRoot 'case-budget'
+        New-RepoCopy $budgetCase
+        $budgetFamily = Join-Path $budgetCase 'build/agent-src/family.psd1'
+        $budgetText = [IO.File]::ReadAllText($budgetFamily)
+        $devSize = [IO.File]::ReadAllBytes((Join-Path $budgetCase 'agents/developer/SOUL.md')).Length
+        $devEntry = [regex]::Match($budgetText, "(Id = 'developer'\n      DisplayName = 'Developer'\n      SoulCap = )\d+")
+        if (-not $devEntry.Success) { throw "no developer SoulCap line in the family copy" }
+        $budgetArgs = @('-NoProfile', '-NonInteractive', '-File', (Join-Path $budgetCase 'build/Test-AgentSources.ps1'), '-RepoRoot', $budgetCase, '-Family', 'development', '-Agents', 'developer')
+        # 3% free: a warning daily, an error with -Release (and with its alias -StrictHeadroom).
+        $tightCap = [int][Math]::Ceiling($devSize / 0.97)
+        Write-Utf8 $budgetFamily ($budgetText.Remove($devEntry.Index, $devEntry.Length).Insert($devEntry.Index, $devEntry.Groups[1].Value + $tightCap))
+        $daily = Invoke-Native $pwsh $budgetArgs
+        $strict = Invoke-Native $pwsh ($budgetArgs + '-Release')
+        $alias = Invoke-Native $pwsh ($budgetArgs + '-StrictHeadroom')
+        $null = Test-Check 'E' ($daily.Code -eq 0 -and $daily.Text.Contains('WARN BUDGET-HEADROOM agents/developer/SOUL.md:0:', $ord) -and
+            $strict.Code -ne 0 -and $strict.Text.Contains('ERROR BUDGET-HEADROOM agents/developer/SOUL.md:0:', $ord) -and
+            $alias.Code -ne 0 -and $alias.Text.Contains('ERROR BUDGET-HEADROOM', $ord)) "under 5% free warns daily and fails under -Release / -StrictHeadroom (exit $($daily.Code), $($strict.Code), $($alias.Code))"
+        # 6% free: a warning both ways, never an error.
+        $warnCap = [int][Math]::Ceiling($devSize / 0.94)
+        Write-Utf8 $budgetFamily ($budgetText.Remove($devEntry.Index, $devEntry.Length).Insert($devEntry.Index, $devEntry.Groups[1].Value + $warnCap))
+        $strict = Invoke-Native $pwsh ($budgetArgs + '-Release')
+        $null = Test-Check 'E' ($strict.Code -eq 0 -and $strict.Text.Contains('WARN BUDGET-HEADROOM agents/developer/SOUL.md:0:', $ord)) "between 5% and 8% free warns, also under -Release (exit $($strict.Code))"
+        # RoleCap below the measured role text fails; a RoleCap on one agent makes -Release require it of all.
+        $roleText = $budgetText.Replace("Id = 'developer'`n      DisplayName = 'Developer'", "Id = 'developer'`n      DisplayName = 'Developer'`n      RoleCap = 100")
+        Write-Utf8 $budgetFamily $roleText
+        $roleRun = Invoke-Native $pwsh $budgetArgs
+        $null = Test-Check 'E' ($roleRun.Code -ne 0 -and $roleRun.Text.Contains('ERROR BUDGET-ROLE build/agent-src/souls/developer.md:0:', $ord)) "role text over its RoleCap fails BUDGET-ROLE (exit $($roleRun.Code))"
+        Write-Utf8 $budgetFamily ($budgetText.Replace("Id = 'developer'`n      DisplayName = 'Developer'", "Id = 'developer'`n      DisplayName = 'Developer'`n      RoleCap = 9000"))
+        $reviewerArgs = @('-NoProfile', '-NonInteractive', '-File', (Join-Path $budgetCase 'build/Test-AgentSources.ps1'), '-RepoRoot', $budgetCase, '-Family', 'development', '-Agents', 'developer,code-reviewer')
+        $daily = Invoke-Native $pwsh $reviewerArgs
+        $strict = Invoke-Native $pwsh ($reviewerArgs + '-Release')
+        $null = Test-Check 'E' ($daily.Code -eq 0 -and $strict.Code -ne 0 -and $strict.Text.Contains("agent 'code-reviewer' has no RoleCap", $ord) -and
+            -not $strict.Text.Contains("agent 'developer' has no RoleCap", $ord)) "a RoleCap within its limit passes; under -Release an agent without one fails once the family sets any (exit $($daily.Code), $($strict.Code))"
+    } catch {
+        Add-Fail 'E' "the budget cases failed to run: $($_.Exception.Message) (line $($_.InvocationInfo.ScriptLineNumber))"
+    }
+
     # ---- C D F G: lint, scan, manifest and TOOLS.md fixture suites ------------------------------------------
     Write-Host 'Running the lint, scan, manifest and toolsmd fixture suites ...'
     $suiteSection = @{ lint = 'C'; scan = 'D'; manifest = 'F'; toolsmd = 'G' }

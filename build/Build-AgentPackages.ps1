@@ -32,6 +32,9 @@
 .PARAMETER Family
     Build only this family (a registry Id). Its agents must have folders; folders of other families are
     checked by a build without -Family. A build of fewer families than the registry lists is a subset build.
+.PARAMETER Release
+    Release build (alias -StrictHeadroom): passes -Release to Test-AgentSources.ps1, so its release-gated findings
+    (BUDGET-HEADROOM under 5% free, a missing RoleCap) fail the build instead of warning.
 .EXAMPLE
     pwsh -NoProfile -File build/Build-AgentPackages.ps1 -ValidateOnly
 .EXAMPLE
@@ -47,7 +50,8 @@ param(
     [string]$OutputDir = '',
     [string[]]$Agents = @(),
     [switch]$ValidateOnly,
-    [string]$Family = ''
+    [string]$Family = '',
+    [Alias('StrictHeadroom')][switch]$Release
 )
 
 Set-StrictMode -Version Latest
@@ -239,6 +243,7 @@ try {
     $sourceArgs = @('-NoProfile', '-NonInteractive', '-File', $sources, '-RepoRoot', $RepoRoot)
     if ($Family) { $sourceArgs += @('-Family', $Family) }
     if ($selectionSubset) { $sourceArgs += @('-Agents', ($selected -join ',')) }
+    if ($Release) { $sourceArgs += '-Release' }
     $sourceRun = Invoke-Native $pwsh $sourceArgs
     if ($sourceRun.Code -ne 0) {
         foreach ($line in $sourceRun.Lines) { Write-Host "  | $line" }
