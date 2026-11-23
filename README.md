@@ -11,13 +11,19 @@ into `.sophon-skill` artifacts, and the docs for publishing them.
 > These are **Sophon** skills (`manifest.json` format), not Claude Code / Anthropic `SKILL.md`
 > plugins — a different ecosystem with a different manifest.
 
-## Development agents
+## Agents
 
 The **Buildersoft development family 2.0.0**: nine `.sophon-agent` packages that work on a
 repository the way Claude Code does. They plan in a markdown file you approve, execute it task by
 task with a live todo list, verify with real commands, commit each verified task on a feature
-branch and offer a pull request. All are authored by **Buildersoft LLC**, licensed **MIT** and
-require **Sophon 2.2.0+**. Only Lead Developer starts sub-agents, and only with your consent.
+branch and offer a pull request. These nine are licensed **MIT**. Only Lead Developer starts
+sub-agents, and only with your consent.
+
+The tenth package, [Artifact Creator](agents/artifact-creator), is a standalone **Apache-2.0**
+productivity agent for grounded reports, explainers, guides, diagrams and presentations across
+subjects. It does not delegate or build interactive applications. File creation depends on the
+available tools and permissions; live creation has not been verified for this package.
+All ten are authored by **Buildersoft LLC** and require **Sophon 2.2.0+**.
 
 | Agent | Role | Delegates | Read-only |
 |-------|------|-----------|-----------|
@@ -33,6 +39,9 @@ require **Sophon 2.2.0+**. Only Lead Developer starts sub-agents, and only with 
 
 Each `agents/<id>/SOUL.md` is generated from `build/agent-src/`; never edit it by hand. Compose,
 check and build with Sophon CLI 2.2.x on PATH:
+
+Each package's `LICENSE` matches its canonical source byte for byte: the root `LICENSE` for MIT,
+or `build/licenses/Apache-2.0.txt` for Apache-2.0.
 
 ```powershell
 pwsh -NoProfile -File build/Compose-AgentSouls.ps1                # regenerate agents/*/SOUL.md

@@ -83,8 +83,9 @@ otherwise.
 
 ## Agent package tests (`tests/agents/`)
 
-`Test-AgentPackages.ps1` checks the ten agent packages in `agents/` (the development family's nine
-and the video family's `video-producer`) end to end. It needs PowerShell 7; sections J and K also
+`Test-AgentPackages.ps1` checks the eleven agent packages in `agents/` end to end: the development
+family's nine MIT development agents and the Apache-2.0 productivity agent `artifact-creator`, and
+the video family's `video-producer`. It needs PowerShell 7; sections J and K also
 need Sophon CLI 2.2.x on PATH.
 
 ```powershell
@@ -100,7 +101,7 @@ pwsh -NoProfile -File build/Test-AgentSources.ps1
 
 | Section | What it checks |
 |---|---|
-| A | roster and layout: `agents/` folders equal the roster union of all families, 5 files each, strict UTF-8, LF, size limits, LICENSE equals the root LICENSE |
+| A | roster and layout: `agents/` folders equal the roster union of all families, 5 files each, strict UTF-8, LF, size limits, LICENSE equals the agent's canonical license (root `LICENSE` for MIT, `build/licenses/Apache-2.0.txt` for Apache-2.0); per-agent License/Category/RequiredTags schema cases |
 | B | composer: `-Check` on the real tree, every composer fixture against its EXPECT, two byte-identical `-OutDir` composes |
 | C | tool-name lint on the packages, plus the lint fixtures |
 | D | scanner preflight (P1-P6) on the packages, plus the scan fixtures; fragment rules (at most 4,096 B, one `## ` heading on line 1), plus a planted-heading case |

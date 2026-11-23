@@ -71,10 +71,11 @@ wrapping folder); excludes `__pycache__/`, `dist/`, `.DS_Store`, `Thumbs.db`, `*
 
 ## Agent packages (`agents/`)
 
-Ten `.sophon-agent` packages in two families, listed in the registry
-`build/agent-src/families.psd1`: **development** (nine agents, `build/agent-src/family.psd1`,
-souls and fragments beside it) and **video** (`video-producer`,
-`build/agent-src/families/video/family.psd1`, its own `souls/` and `fragments/soul/`). Families
+Eleven `.sophon-agent` packages in two families, listed in the registry
+`build/agent-src/families.psd1`: **development** (nine development agents plus the Artifact
+Creator productivity agent, `build/agent-src/family.psd1`, souls and fragments beside it) and
+**video** (`video-producer`, `build/agent-src/families/video/family.psd1`, its own `souls/` and
+`fragments/soul/`). Families
 share no templates or fragments; an id belongs to one family; `agents/` holds exactly the union of
 the rosters. The tools take `-Family <id>` to work on one family (default: all). Full guide:
 [`docs/AGENTS.md`](docs/AGENTS.md); designs: `docs/plans/2026-11-15-agents-v2-design.md`,
@@ -87,8 +88,10 @@ the rosters. The tools take `-Family <id>` to work on one family (default: all).
   restricted tool (video: `message.send`), never pin it.
 - **Files.** Only the 7 package files may live in `agents/<id>/` (`manifest.json`, `SOUL.md`,
   `VOICE.md`, `HEARTBEAT.md`, `TOOLS.md`, `README.md`, `LICENSE`); anything else is `not_packaged`
-  and fails the build. Both families use exactly 5 (no VOICE, no HEARTBEAT), and `LICENSE` is a
-  byte-identical copy of the root `LICENSE`. UTF-8 without BOM, LF, no tabs, no trailing whitespace,
+  and fails the build. Both families use exactly 5 (no VOICE, no HEARTBEAT). Each `LICENSE` is
+  byte-identical to its canonical source: root `LICENSE` for MIT, `build/licenses/Apache-2.0.txt` for
+  Apache-2.0. The roster may override the family license, category and required tags per agent.
+  UTF-8 without BOM, LF, no tabs, no trailing whitespace,
   one final newline.
 - **Never hand-edit `agents/*/SOUL.md`.** It is generated: edit the family's sources beside its
   family file (`souls/<id>.md` for role text, `fragments/soul/<NN-id>.md` for shared protocol) and run

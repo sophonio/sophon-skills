@@ -64,6 +64,9 @@ $script:ValueRegex = [regex]::new('\{\{= (?<key>[A-Za-z][A-Za-z0-9]*)\}\}')
 $script:ValueKeyRegex = [regex]::new('^[A-Za-z][A-Za-z0-9]*$')
 $script:AgentIdRegex = [regex]::new('^[a-z0-9][a-z0-9-]{1,63}$')
 $script:AgentKeys = @('Id', 'DisplayName', 'SoulCap', 'Writer', 'SubAgents', 'Effort', 'Fragments', 'Credits')
+$script:OptionalAgentKeys = @('License', 'Category', 'RequiredTags')
+$script:LicenseValues = @('MIT', 'Apache-2.0')
+$script:CategoryValues = @('utility', 'productivity', 'communication', 'data', 'development', 'integration', 'ai', 'automation', 'other')
 $script:EffortValues = @('high', 'default')
 $script:BytesPerToken = 3.8
 
@@ -620,6 +623,15 @@ function Get-AgentFamilyAgent {
     $null
 }
 
+function Resolve-AgentLicenseSource {
+    [CmdletBinding()]
+    [OutputType([string])]
+    param([Parameter(Mandatory)][string]$License)
+    if (Test-AgentSame $License 'MIT') { return 'LICENSE' }
+    if (Test-AgentSame $License 'Apache-2.0') { return 'build/licenses/Apache-2.0.txt' }
+    throw "unsupported agent license '$License'"
+}
+
 function Get-AgentFamilyLine {
     <#
     .SYNOPSIS
@@ -735,8 +747,31 @@ function Test-AgentFamilyData {
         $agentKeys = [string[]]@($agent.Keys)
         [Array]::Sort($agentKeys, [StringComparer]::Ordinal)
         foreach ($key in $agentKeys) {
-            if (-not (Test-AgentInList $script:AgentKeys $key)) {
+            if (-not (Test-AgentInList $script:AgentKeys $key) -and -not (Test-AgentInList $script:OptionalAgentKeys $key)) {
                 $errors.Add((New-AgentComposeError $p $line "agent '$id' has unknown key $key"))
+            }
+        }
+        if ($agent.ContainsKey('License') -and ($agent['License'] -isnot [string] -or -not (Test-AgentInList $script:LicenseValues $agent['License']))) {
+            $errors.Add((New-AgentComposeError $p $line "agent '$id': License must be 'MIT' or 'Apache-2.0'"))
+        }
+        if ($agent.ContainsKey('Category') -and ($agent['Category'] -isnot [string] -or -not (Test-AgentInList $script:CategoryValues $agent['Category']))) {
+            $errors.Add((New-AgentComposeError $p $line "agent '$id': Category must be a supported category"))
+        }
+        if ($agent.ContainsKey('RequiredTags')) {
+            $tags = $agent['RequiredTags']
+            if ($tags -isnot [array] -or $tags.Count -eq 0 -or $tags.Count -gt 10) {
+                $errors.Add((New-AgentComposeError $p $line "agent '$id': RequiredTags must be an array of 1-10 tags"))
+            }
+            else {
+                $seenTags = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+                foreach ($tag in $tags) {
+                    if ($tag -isnot [string] -or $tag.Length -gt 32 -or $tag -cnotmatch '^[a-z0-9]+(?:-[a-z0-9]+)*\z') {
+                        $errors.Add((New-AgentComposeError $p $line "agent '$id': RequiredTags entries must be kebab-case, at most 32 characters"))
+                    }
+                    elseif (-not $seenTags.Add($tag)) {
+                        $errors.Add((New-AgentComposeError $p $line "agent '$id': duplicate required tag '$tag'"))
+                    }
+                }
             }
         }
         if ($agent.ContainsKey('DisplayName') -and
@@ -1532,6 +1567,7 @@ Export-ModuleMember -Function @(
     'Get-AgentRosterUnion'
     'Get-AgentFamily'
     'Get-AgentFamilyAgent'
+    'Resolve-AgentLicenseSource'
     'Get-AgentFamilyLine'
     'Test-AgentFamilyData'
     'Read-AgentSourceFile'

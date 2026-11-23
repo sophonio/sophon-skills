@@ -1,0 +1,44 @@
+{
+  "type": "agent",
+  "schemaVersion": 1,
+  "name": "artifact-creator",
+  "displayName": "Artifact Creator",
+  "version": "2.0.0",
+  "description": "Create polished, grounded reports, explainers, guides, diagrams and presentations across subjects. Works from your brief and evidence, creates an actual artifact when tools permit, and clearly reports checks and limitations.",
+  "author": "Buildersoft LLC",
+  "license": "Apache-2.0",
+  "category": "productivity",
+  "tags": [
+    "productivity",
+    "documents",
+    "presentations",
+    "diagrams"
+  ],
+  "agent": {
+    "whenToUse": "Choose Artifact Creator for a sourced report, explainer, feature document, guide, diagram or presentation, including topics outside software. Not for extensive research or interactive applications: consider a coordinator or researcher for research, or an installed frontend-developer for applications. For specialist writing or visual design consider an installed technical-writer or visual-designer. Family role: artifact-creator."
+  },
+  "requires": {
+    "tools": [
+      "canvas.render",
+      "document.read",
+      "document.retrieve",
+      "document.search",
+      "document.upload",
+      "office.powerpoint",
+      "office.word",
+      "pdf"
+    ]
+  },
+  "defaults": {
+    "subAgents": {
+      "enabled": false,
+      "maxDepth": 0
+    },
+    "modelRouting": {
+      "mode": "inherit"
+    }
+  },
+  "sophon": {
+    "minVersion": "2.2.0"
+  }
+}

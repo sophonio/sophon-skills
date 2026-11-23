@@ -1382,6 +1382,7 @@ function Test-AgentManifest {
     # author, license, category.
     foreach ($pair in @(@('author', 'Author', 'Buildersoft LLC'), @('license', 'License', 'MIT'), @('category', 'Category', 'development'))) {
         $want = [string](Get-AgentField $Family $pair[1] $pair[2])
+        if ($pair[0] -cne 'author') { $want = [string](Get-AgentField $agentEntry $pair[1] $want) }
         if (-not (Test-OrdinalEqual (& $get $Manifest $pair[0]) $want)) { & $add 'MAN-META' $pair[0] "$($pair[0]) must be '$want'" }
     }
 
@@ -1392,11 +1393,14 @@ function Test-AgentManifest {
         if ($tags.Length -eq 0 -or $tags.Length -gt 10) { & $add 'MAN-TAGS' 'tags' "tags must hold 1-10 items (has $($tags.Length))" }
         $tagSet = New-StringSet
         foreach ($tag in $tags) {
-            if ($tag -isnot [string] -or $tag.Length -gt 32 -or $tag -cnotmatch '^[a-z0-9]+(?:-[a-z0-9]+)*$') { & $add 'MAN-TAGS' 'tags' "tag '$tag' must be kebab-case, at most 32 characters" }
+            if ($tag -isnot [string] -or $tag.Length -gt 32 -or $tag -cnotmatch '^[a-z0-9]+(?:-[a-z0-9]+)*\z') { & $add 'MAN-TAGS' 'tags' "tag '$tag' must be kebab-case, at most 32 characters" }
             elseif (-not $tagSet.Add($tag)) { & $add 'MAN-TAGS' 'tags' "duplicate tag '$tag'" }
         }
-        $requiredTag = [string](Get-AgentField $Family 'RequiredTag' 'development')
-        if ($requiredTag -cnotin @($tags)) { & $add 'MAN-TAGS' 'tags' ('tags must include "{0}"' -f $requiredTag) }
+        # The agent's RequiredTags override the family RequiredTag.
+        $familyTag = [string](Get-AgentField $Family 'RequiredTag' 'development')
+        foreach ($required in @(Get-AgentField $agentEntry 'RequiredTags' @($familyTag))) {
+            if (-not $tagSet.Contains([string]$required)) { & $add 'MAN-TAGS' 'tags' ('tags must include "{0}"' -f $required) }
+        }
     }
 
     # agent.whenToUse.
