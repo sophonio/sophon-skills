@@ -10,7 +10,8 @@
          The agents/ folders must equal the roster ids exactly, and every -Agents entry must be a roster id.
       2. 'sophon' must be on PATH and 'sophon --version' must match the SophonCli pattern of every family
          being built. The CLI version and 'git rev-parse --short HEAD' are printed.
-      3. build/Compose-AgentSouls.ps1 -Check (every SOUL.md must equal its composed text).
+      3. build/Compose-AgentSouls.ps1 -Check (every SOUL.md, and every generated README.md, must equal its composed
+         text).
       4. build/Test-AgentSources.ps1 (-Agents <selection> on a subset build).
       5. 'sophon dev validate <dir> --json' per selected agent. Any error and ANY warning fails the build.
       6. -ValidateOnly stops here.
@@ -234,9 +235,9 @@ try {
     $compose = Invoke-Native $pwsh $composeArgs
     if ($compose.Code -ne 0) {
         foreach ($line in $compose.Lines) { Write-Host "  | $line" }
-        throw "SOUL drift — run the composer (pwsh -File build/Compose-AgentSouls.ps1); Compose-AgentSouls.ps1 -Check exited $($compose.Code)."
+        throw "SOUL or README drift — run the composer (pwsh -File build/Compose-AgentSouls.ps1); Compose-AgentSouls.ps1 -Check exited $($compose.Code)."
     }
-    Write-Host "Compose-AgentSouls -Check: ok ($(@($compose.Lines | Where-Object { $_ -clike 'ok *' }).Count) SOUL file(s) match)"
+    Write-Host "Compose-AgentSouls -Check: ok ($(@($compose.Lines | Where-Object { $_ -clike 'ok *' }).Count) SOUL and README file(s) match)"
 
     # 4. Source checks. ------------------------------------------------------------------------------------
     $sources = Get-RepoScript 'Test-AgentSources.ps1'

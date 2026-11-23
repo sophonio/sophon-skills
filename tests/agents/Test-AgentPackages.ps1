@@ -179,6 +179,17 @@ function Write-Utf8([string]$Path, [string]$Text) {
     [IO.File]::WriteAllText($Path, $Text, [Text.UTF8Encoding]::new($false))
 }
 
+function Edit-AgentReadme([string]$Root, [string]$Id, [string]$Old, [string]$New) {
+    # A development README is generated: change agents/<id>/README.md and its source the same way, so a case fails
+    # on the rule it plants and not on README drift.
+    foreach ($path in @((Join-Path $Root "agents/$Id/README.md"), (Join-Path $Root "build/agent-src/readmes/$Id.md"))) {
+        if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { continue }
+        $text = [IO.File]::ReadAllText($path)
+        if (-not $text.Contains($Old)) { throw "Edit-AgentReadme: '$Old' not found in $path" }
+        Write-Utf8 $path ($text.Replace($Old, $New))
+    }
+}
+
 $tempRoot = Join-Path ([IO.Path]::GetTempPath()) ('sophon-agent-tests-' + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $tempRoot -Force | Out-Null
 $unexpected = $null
@@ -308,6 +319,19 @@ try {
                 } else { $same++ }
             }
             if ($roster.Count -gt 0 -and $same -eq $roster.Count) { Add-Pass 'B' "two -OutDir composes are byte-identical ($same SOUL files)" }
+            # Generated READMEs: a family with a readmes/ folder gets one per agent, equal to the committed file.
+            $readmeSame = 0
+            $readmeOut = @($roster | Where-Object { Test-Path -LiteralPath (Join-Path $outA "$_/README.md") -PathType Leaf })
+            foreach ($id in $readmeOut) {
+                $bytesA = [IO.File]::ReadAllBytes((Join-Path $outA "$id/README.md"))
+                $fileB = Join-Path $outB "$id/README.md"
+                $committedReadme = Join-Path $RepoRoot "agents/$id/README.md"
+                if (-not (Test-Path -LiteralPath $fileB -PathType Leaf) -or -not (Test-BytesEqual $bytesA ([IO.File]::ReadAllBytes($fileB)))) { Add-Fail 'B' "two -OutDir composes of $id/README.md differ" }
+                elseif (-not (Test-BytesEqual $bytesA ([IO.File]::ReadAllBytes($committedReadme)))) { Add-Fail 'B' "the composed $id/README.md differs from agents/$id/README.md" }
+                else { $readmeSame++ }
+            }
+            $wantReadmes = @($families | Where-Object { Test-Path -LiteralPath (Join-Path $RepoRoot "$($_['Dir'])/readmes") -PathType Container } | ForEach-Object { @($_['Roster']) }).Count
+            $null = Test-Check 'B' ($readmeOut.Count -eq $wantReadmes -and $readmeSame -eq $wantReadmes) "the -OutDir compose writes one README per agent of a family with a readmes/ folder ($readmeSame of $wantReadmes), each equal to agents/<id>/README.md; other families keep a hand-written README"
         }
     }
 
@@ -350,6 +374,9 @@ try {
         $readmePath = Join-Path $licenseCase 'agents/code-reviewer/README.md'
         $readmeText = [IO.File]::ReadAllText($readmePath).Replace('Licensed under the MIT License; see LICENSE.', 'Licensed under the Apache-2.0 License; see LICENSE.')
         Write-Utf8 $readmePath $readmeText
+        # The README is generated from its source, so the source takes the same edit.
+        $readmeSource = Join-Path $licenseCase 'build/agent-src/readmes/code-reviewer.md'
+        if (Test-Path -LiteralPath $readmeSource -PathType Leaf) { Write-Utf8 $readmeSource ([IO.File]::ReadAllText($readmeSource).Replace('Licensed under the MIT License; see LICENSE.', 'Licensed under the Apache-2.0 License; see LICENSE.')) }
         $canonicalPath = Join-Path $licenseCase 'build/licenses/Apache-2.0.txt'
         New-Item -ItemType Directory -Path (Split-Path $canonicalPath) -Force | Out-Null
         Write-Utf8 $canonicalPath "synthetic canonical bytes`n"
@@ -362,7 +389,7 @@ try {
         $result = Invoke-Native $pwsh $sourceArgs
         $null = Test-Check 'A' ($result.Code -ne 0 -and $result.Text.Contains('ERROR LAYOUT-LICENSE agents/code-reviewer/LICENSE:', $ord)) 'incorrect Apache package license bytes fail'
         Write-Utf8 $packageLicense "synthetic canonical bytes`n"
-        Write-Utf8 $readmePath ($readmeText.Replace('Licensed under the Apache-2.0 License; see LICENSE.', 'Licensed under the MIT License; see LICENSE.'))
+        Edit-AgentReadme $licenseCase 'code-reviewer' 'Licensed under the Apache-2.0 License; see LICENSE.' 'Licensed under the MIT License; see LICENSE.'
         $result = Invoke-Native $pwsh $sourceArgs
         $null = Test-Check 'I' ($result.Code -ne 0 -and $result.Text.Contains('ERROR CREDITS-SENTENCE agents/code-reviewer/README.md:', $ord)) 'incorrect Apache README license sentence fails'
     } catch {
@@ -385,22 +412,24 @@ try {
         $acText = [IO.File]::ReadAllText($acReadme)
         $null = Test-Check 'I' ($acText.Contains($apacheSentence, $ord) -and -not $acText.Contains($upstreamSentence, $ord)) 'artifact-creator README has the Apache sentence and no upstream credit sentence'
 
-        Write-Utf8 $acReadme ($acText.Replace($apacheSentence, 'Licensed under the MIT License; see LICENSE.'))
+        Edit-AgentReadme $creditsCase 'artifact-creator' $apacheSentence 'Licensed under the MIT License; see LICENSE.'
         $result = Invoke-Native $pwsh $creditArgs
         $null = Test-Check 'I' ($result.Code -ne 0 -and $result.Text.Contains('ERROR CREDITS-SENTENCE agents/artifact-creator/README.md:', $ord) -and -not $result.Text.Contains('verbatim credits sentence', $ord)) 'empty Credits with a wrong license sentence fails on the license sentence only'
 
-        Write-Utf8 $acReadme ($acText.Replace($apacheSentence, ''))
+        Edit-AgentReadme $creditsCase 'artifact-creator' 'Licensed under the MIT License; see LICENSE.' ''
         $result = Invoke-Native $pwsh $creditArgs
         $null = Test-Check 'I' ($result.Code -ne 0 -and $result.Text.Contains('ERROR CREDITS-SENTENCE agents/artifact-creator/README.md:', $ord)) 'empty Credits with no license sentence fails'
 
         Write-Utf8 $acReadme $acText
+        $acSource = Join-Path $creditsCase 'build/agent-src/readmes/artifact-creator.md'
+        if (Test-Path -LiteralPath $acSource -PathType Leaf) { Write-Utf8 $acSource $acText }
         $crReadme = Join-Path $creditsCase 'agents/code-reviewer/README.md'
         $crText = [IO.File]::ReadAllText($crReadme)
         $crStart = $crText.IndexOf($upstreamSentence, $ord)
         $null = Test-Check 'I' ($crStart -ge 0) 'code-reviewer README carries the upstream credit sentence before the strictness probe'
         if ($crStart -ge 0) {
             $crEnd = $crText.IndexOf("`n", $crStart, $ord)
-            Write-Utf8 $crReadme ($crText.Remove($crStart, $crEnd - $crStart))
+            Edit-AgentReadme $creditsCase 'code-reviewer' $crText.Substring($crStart, $crEnd - $crStart) ''
             $result = Invoke-Native $pwsh @('-NoProfile', '-NonInteractive', '-File', $creditsSourceScript, '-RepoRoot', $creditsCase, '-Agents', 'code-reviewer')
             $null = Test-Check 'I' ($result.Code -ne 0 -and $result.Text.Contains('ERROR CREDITS-SENTENCE agents/code-reviewer/README.md:', $ord)) 'non-empty Credits still require the upstream credit sentence'
         }
@@ -419,7 +448,7 @@ try {
         $budgetFamily = Join-Path $budgetCase 'build/agent-src/family.psd1'
         $budgetText = [IO.File]::ReadAllText($budgetFamily)
         $devSize = [IO.File]::ReadAllBytes((Join-Path $budgetCase 'agents/developer/SOUL.md')).Length
-        $devEntry = [regex]::Match($budgetText, "(Id = 'developer'\n      DisplayName = 'Developer'\n      SoulCap = )\d+")
+        $devEntry = [regex]::Match($budgetText, "(Id = 'developer'\n(?:      [A-Za-z]+ = [^\n]*\n)*?      SoulCap = )\d+")
         if (-not $devEntry.Success) { throw "no developer SoulCap line in the family copy" }
         $budgetArgs = @('-NoProfile', '-NonInteractive', '-File', (Join-Path $budgetCase 'build/Test-AgentSources.ps1'), '-RepoRoot', $budgetCase, '-Family', 'development', '-Agents', 'developer')
         # 3% free: a warning daily, an error with -Release (and with its alias -StrictHeadroom).
@@ -959,7 +988,7 @@ try {
         if (Test-Path -LiteralPath $soulPath -PathType Leaf) {
             Write-Utf8 $soulPath ([IO.File]::ReadAllText($soulPath) + "A line the composer never wrote.`n")
             $result = Invoke-Builder $caseRoot @('-ValidateOnly', '-OutputDir', $failOut)
-            $null = Test-Check 'K' ($result.Code -ne 0 -and $result.Text.Contains('DRIFT', $ord) -and $result.Text.Contains('SOUL drift', $ord) -and
+            $null = Test-Check 'K' ($result.Code -ne 0 -and $result.Text.Contains('DRIFT', $ord) -and $result.Text.Contains('SOUL or README drift', $ord) -and
                 -not $result.Text.Contains('sophon dev validate', $ord)) 'a hand-edited SOUL.md fails with DRIFT before sophon dev validate runs'
         } else {
             Add-Fail 'K' "drift case: agents/$leadId/SOUL.md does not exist"
@@ -969,6 +998,9 @@ try {
         Copy-Item -LiteralPath $base -Destination $caseRoot -Recurse
         $readmePath = Join-Path $caseRoot "agents/$sampleId/README.md"
         Write-Utf8 $readmePath ([IO.File]::ReadAllText($readmePath) + "`nRead the page with web.fetch.`n")
+        # A generated README takes the same line in its source, so the case fails on the lint and not on drift.
+        $readmeSource = Join-Path $caseRoot "build/agent-src/readmes/$sampleId.md"
+        if (Test-Path -LiteralPath $readmeSource -PathType Leaf) { Write-Utf8 $readmeSource ([IO.File]::ReadAllText($readmeSource) + "`nRead the page with web.fetch.`n") }
         $result = Invoke-Builder $caseRoot @('-ValidateOnly', '-OutputDir', $failOut)
         $null = Test-Check 'K' ($result.Code -ne 0 -and $result.Text.Contains('LINT-DENIED', $ord) -and -not $result.Text.Contains('sophon dev validate', $ord)) 'a denied tool name in a README fails with LINT-DENIED before sophon dev validate runs'
         $null = Test-Check 'K' (-not (Test-Path -LiteralPath $failOut)) 'failed -ValidateOnly runs write nothing'

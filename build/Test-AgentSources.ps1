@@ -8,7 +8,8 @@
     Sections (docs/plans/2026-11-15-agents-v2-design.md section 7.5), run per agent family:
       A  roster and layout       roster agents have folders; exactly 5 files each; strict UTF-8, no BOM, CR,
                                  NUL, tabs or hidden characters; one trailing LF; size limits; LICENSE copy
-      B  composer                build/Compose-AgentSouls.ps1 -Check in a child pwsh
+      B  composer                build/Compose-AgentSouls.ps1 -Check in a child pwsh (SOULs, and the READMEs of a
+                                 family with a readmes/ folder)
       C  tool-name lint          SOUL.md, TOOLS.md, README.md, manifest displayName/description/whenToUse
       D  preflight               the same texts through the scanner replay; every fragment <= 4,096 B and
                                  starts with its only "## " heading
@@ -428,7 +429,7 @@ if ($requested.Count -gt 0 -and $selected.Count -eq 0) {
     }
     foreach ($line in @($output)) { Write-Host "  | $line" }
     if ($code -ne 0) {
-        Add-SourceError 'COMPOSE-CHECK' 'build/Compose-AgentSouls.ps1' 0 "-Check exited $code (SOUL drift or a source error; run pwsh -File build/Compose-AgentSouls.ps1)"
+        Add-SourceError 'COMPOSE-CHECK' 'build/Compose-AgentSouls.ps1' 0 "-Check exited $code (SOUL or README drift, or a source error; run pwsh -File build/Compose-AgentSouls.ps1)"
     }
 }
 
