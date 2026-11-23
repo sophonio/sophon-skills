@@ -2,29 +2,36 @@
 
 <#
 .SYNOPSIS
-    End-to-end tests for the Buildersoft development family packages in agents/ (sections A-K).
+    End-to-end tests for the Buildersoft agent family packages in agents/ (sections A-L).
 .DESCRIPTION
+    The roster is the union of every family in build/agent-src/families.psd1 (an id belongs to one family).
     Sections (docs/plans/2026-11-15-agents-v2-design.md section 7.5):
-      A-I  build/Test-AgentSources.ps1 on the real tree: layout, composer -Check, tool-name lint, preflight,
-           budgets (with the headroom table), manifests, TOOLS.md, attribution, credits.
+      A-I  build/Test-AgentSources.ps1 on the real tree (every family): layout, composer -Check, tool-name lint,
+           preflight, budgets (with the headroom table), manifests, TOOLS.md, attribution, credits.
       B    plus every tests/agents/fixtures/compose/<case> through Compose-AgentSouls.ps1 -RepoRoot <case> -Check,
            compared with its EXPECT file, and two -OutDir builds of the real tree that must be byte-identical.
       C D F G plus the lint, scan, manifest and toolsmd fixture suites (Invoke-AgentLintFixtures in AgentLint.psm1).
       D    plus a temporary copy with one fragment given a second heading and one stripped of its heading,
            which Test-AgentSources must fail with FRAGMENT-HEADING.
-      J    'sophon --version' matches the family SophonCli; 'sophon dev validate --json' per agent gives ok,
+      J    'sophon --version' matches every family's SophonCli; 'sophon dev validate --json' per agent gives ok,
            projectType agent, no errors and no warnings.
-      K    build/Build-AgentPackages.ps1 into a temporary folder: a decoy package is removed, 9 packages, a
+      K    build/Build-AgentPackages.ps1 into a temporary folder: a decoy package is removed, one package per
+           roster agent, a
            well-formed SHA256SUMS with recomputed hashes, zip entries equal to the sources, a byte-identical
            repeat build, a subset build, and failure cases (unknown agent, roster mismatch, name mismatch,
            SOUL drift, a lint error).
+      L    families, on a temporary copy holding the development family plus the media fixture family
+           (tests/agents/fixtures/families/media): both compose and pass the source checks side by side, an id
+           in two families fails, the legacy registry-less fallback, SkillPolicy (skill-tool mentions and pins,
+           requires.skills, ExtraRequiredTools, MAN-SKILL-VERSION), AllowRestrictedMentions, and the development
+           family still failing LINT-SKILL and MAN-REQUIRES as before. Needs no Sophon CLI.
 
     -SourceOnly skips J and K (no Sophon CLI needed). Prints PASS, FAIL or SKIP per section and exits 1 on any
     failure. Temporary folders live under the system temp folder and are removed at the end.
 .PARAMETER RepoRoot
     Repository root. Defaults to two folders above this script.
 .PARAMETER SourceOnly
-    Run sections A-I only.
+    Run sections A-I and L only.
 .EXAMPLE
     pwsh -NoProfile -File tests/agents/Test-AgentPackages.ps1
 .EXAMPLE
@@ -58,6 +65,7 @@ $sectionTitles = [ordered]@{
     I = 'Credits'
     J = 'Sophon CLI validation'
     K = 'Reproducible build'
+    L = 'Families'
 }
 $items = @{}
 $skipped = @{}
@@ -165,21 +173,25 @@ New-Item -ItemType Directory -Path $tempRoot -Force | Out-Null
 $unexpected = $null
 
 try {
-    # ---- Family --------------------------------------------------------------------------------------------
+    # ---- Families ------------------------------------------------------------------------------------------
+    # The roster is the union of the family rosters; $family is the first family (development), whose lead
+    # the K drift case edits.
     $family = $null
+    $families = @()
     $roster = [string[]]@()
     try {
-        $family = Import-PowerShellDataFile -LiteralPath (Join-Path $RepoRoot 'build/agent-src/family.psd1')
-        $list = [System.Collections.Generic.List[string]]::new()
-        foreach ($entry in @($family['Agents'])) { $list.Add([string]$entry['Id']) }
-        $list.Sort($ordinal)
-        $roster = $list.ToArray()
+        Import-Module (Join-Path $RepoRoot 'build/AgentFamily.psm1') -Force
+        $union = Get-AgentRosterUnion -RepoRoot $RepoRoot
+        foreach ($e in @($union['Errors'])) { Add-Fail 'A' "agent families: $(Format-AgentComposeError -Item $e)" }
+        $families = @($union['Families'])
+        $roster = [string[]]@($union['Ids'])
+        if ($families.Count -gt 0) { $family = $families[0]['Data'] }
     } catch {
-        Add-Fail 'A' "build/agent-src/family.psd1 does not load with Import-PowerShellDataFile: $($_.Exception.Message)"
+        Add-Fail 'A' "the agent families do not load: $($_.Exception.Message)"
     }
     $familyVersion = if ($null -ne $family -and $family.Contains('FamilyVersion')) { [string]$family['FamilyVersion'] } else { '2.0.0' }
-    $sophonPattern = if ($null -ne $family -and $family.Contains('SophonCli')) { [string]$family['SophonCli'] } else { '^2\.2\.\d+' }
     Write-Host "Repo: $RepoRoot"
+    Write-Host "Families: $(@($families | ForEach-Object { "$($_['Id']) ($(@($_['Roster']).Count))" }) -join ', ')"
     Write-Host "Roster ($($roster.Count)): $($roster -join ', ')"
     if ($SourceOnly) { Write-Host 'CLI CHECKS NOT RUN (-SourceOnly)' -ForegroundColor Red }
 
@@ -430,6 +442,144 @@ try {
         Add-Fail 'D' "the fragment heading case failed to run: $($_.Exception.Message)"
     }
 
+    # ---- L: families ----------------------------------------------------------------------------------------
+    # A temporary copy holds the development family as it is in the tree plus the media fixture family
+    # (tests/agents/fixtures/families/media), so the multi-family rules run without depending on other families.
+    Write-Host 'Running the family cases ...'
+    try {
+        $dev = @($families | Where-Object { [string]::Equals([string]$_['Id'], 'development', $ord) }) | Select-Object -First 1
+        $mediaSource = Join-Path $RepoRoot 'tests/agents/fixtures/families/media'
+        if ($null -eq $dev) {
+            Add-Fail 'L' 'the registry has no development family'
+        } elseif (-not (Test-Path -LiteralPath (Join-Path $mediaSource 'family.psd1') -PathType Leaf)) {
+            Add-Fail 'L' 'tests/agents/fixtures/families/media/family.psd1 is missing'
+        } else {
+            $devRoster = [string[]]@($dev['Roster'])
+            $famCase = Join-Path $tempRoot 'case-families'
+            New-RepoCopy $famCase
+            foreach ($dir in @(Get-ChildItem -LiteralPath (Join-Path $famCase 'agents') -Directory)) {
+                if ([Array]::IndexOf($devRoster, $dir.Name) -lt 0) { Remove-Item -LiteralPath $dir.FullName -Recurse -Force }
+            }
+            $mediaDir = Join-Path $famCase 'build/agent-src/families/media'
+            if (Test-Path -LiteralPath $mediaDir) { Remove-Item -LiteralPath $mediaDir -Recurse -Force }
+            New-Item -ItemType Directory -Path $mediaDir -Force | Out-Null
+            foreach ($part in 'family.psd1', 'souls', 'fragments') { Copy-Item -LiteralPath (Join-Path $mediaSource $part) -Destination $mediaDir -Recurse }
+            Write-Utf8 (Join-Path $famCase 'build/agent-src/families.psd1') ("@{`n  Families = @(`n    @{ Id = 'development'; Path = 'build/agent-src/family.psd1' }`n" +
+                "    @{ Id = 'media'; Path = 'build/agent-src/families/media/family.psd1' }`n  )`n}`n")
+            $mediaAgent = Join-Path $famCase 'agents/media-maker'
+            New-Item -ItemType Directory -Path $mediaAgent -Force | Out-Null
+            foreach ($file in @(Get-ChildItem -LiteralPath (Join-Path $mediaSource 'agent') -File)) { Copy-Item -LiteralPath $file.FullName -Destination $mediaAgent }
+            Copy-Item -LiteralPath (Join-Path $RepoRoot 'LICENSE') -Destination $mediaAgent
+            $skillDir = Join-Path $famCase 'skills/media-kit'
+            New-Item -ItemType Directory -Path $skillDir -Force | Out-Null
+            $skillManifest = Join-Path $skillDir 'manifest.json'
+            Copy-Item -LiteralPath (Join-Path $mediaSource 'skill/manifest.json') -Destination $skillManifest
+
+            # Isolation: both families compose and pass every source check; the media agent has no sibling, no
+            # attribution values, a skill-tool pin, requires.skills and an allowed message.send mention.
+            $famComposer = Join-Path $famCase 'build/Compose-AgentSouls.ps1'
+            $famSources = Join-Path $famCase 'build/Test-AgentSources.ps1'
+            $composeRun = Invoke-Native $pwsh @('-NoProfile', '-NonInteractive', '-File', $famComposer, '-RepoRoot', $famCase)
+            $null = Test-Check 'L' ($composeRun.Code -eq 0 -and $composeRun.Text.Contains('wrote agents/media-maker/SOUL.md', $ord) -and
+                $composeRun.Text.Contains('family media (build/agent-src/families/media/family.psd1)', $ord)) "two families compose side by side (got exit $($composeRun.Code): $(Get-Tail $composeRun.Lines 2))"
+            $mediaOnly = Invoke-Native $pwsh @('-NoProfile', '-NonInteractive', '-File', $famComposer, '-RepoRoot', $famCase, '-Family', 'media', '-Check')
+            $null = Test-Check 'L' ($mediaOnly.Code -eq 0 -and @($mediaOnly.Lines | Where-Object { $_ -clike 'ok *' }).Count -eq 1 -and
+                $mediaOnly.Text.Contains('ok agents/media-maker/SOUL.md', $ord)) 'Compose-AgentSouls -Family media -Check composes only the media family'
+            $wantCount = $devRoster.Length + 1
+            $sourcesRun = Invoke-Native $pwsh @('-NoProfile', '-NonInteractive', '-File', $famSources, '-RepoRoot', $famCase)
+            $null = Test-Check 'L' ($sourcesRun.Code -eq 0 -and $sourcesRun.Text.Contains('-- family media (build/agent-src/families/media/family.psd1)', $ord) -and
+                $sourcesRun.Text.Contains("Test-AgentSources: OK ($wantCount agent(s) in 2 families: development, media).", $ord)) "Test-AgentSources passes the development and media families ($wantCount agents; got exit $($sourcesRun.Code): $(Get-Tail @($sourcesRun.Lines | Where-Object { $_ -clike 'ERROR *' -or $_ -clike 'Test-AgentSources:*' }) 4))"
+
+            $famUnion = Get-AgentRosterUnion -RepoRoot $famCase
+            $null = Test-Check 'L' (@($famUnion['Errors']).Count -eq 0 -and $famUnion['Ids'].Length -eq $wantCount -and
+                [string]::Equals($famUnion['Owner']['media-maker'], 'media', $ord) -and [string]::Equals($famUnion['Owner'][$devRoster[0]], 'development', $ord)) 'Get-AgentRosterUnion maps each id to its one family'
+            $dupUnion = Get-AgentRosterUnion -RepoRoot (Join-Path $RepoRoot 'tests/agents/fixtures/compose/families-dup-id')
+            $null = Test-Check 'L' (@($dupUnion['Errors'] | Where-Object { $_['Message'].Contains("agent 'alpha' is in two families (one and two)", $ord) }).Count -eq 1) 'an id listed by two families is an error'
+            $legacy = Get-AgentFamilyRegistry -RepoRoot (Join-Path $RepoRoot 'tests/agents/fixtures/compose/ok')
+            $null = Test-Check 'L' ($legacy['Legacy'] -and @($legacy['Families']).Count -eq 1 -and [string]::Equals([string]$legacy['Families'][0]['Path'], 'build/agent-src/family.psd1', $ord)) 'without a registry the legacy single family applies'
+
+            # Skill policy and restricted mentions, in-process on the copy's catalogue.
+            $catalogL = Get-AgentCatalog -RepoRoot $famCase
+            $mediaFamily = Import-PowerShellDataFile -LiteralPath (Join-Path $mediaDir 'family.psd1')
+            $devFamily = $dev['Data']
+            $mediaTools = Get-AgentAllowedSkillTools -Family $mediaFamily -Catalog $catalogL
+            $devTools = Get-AgentAllowedSkillTools -Family $devFamily -Catalog $catalogL
+            $null = Test-Check 'L' ([string]::Equals(($mediaTools -join ','), 'mediakit.inspect.probe,mediakit.project.render', $ord) -and $devTools.Length -eq 0) "SkillPolicy allows exactly the tools of its skills (SkillToolOwner); the development family allows none (got '$($mediaTools -join ',')' and '$($devTools -join ',')')"
+            # The distinct rule ids of a result, comma-joined ('' for none): a string never unrolls to $null.
+            $rulesOf = { param($issues) [string](@(@($issues | Where-Object { $null -ne $_ }) | ForEach-Object { $_.Rule } | Select-Object -Unique) -join ',') }
+            $skillLine = 'Check the clip with mediakit.inspect.probe first.'
+            $devSkill = & $rulesOf (Invoke-ToolNameLint -Text $skillLine -Path 'L' -Kind 'soul' -Catalog $catalogL -AllowedSkillTools $devTools)
+            $mediaSkill = & $rulesOf (Invoke-ToolNameLint -Text $skillLine -Path 'L' -Kind 'soul' -Catalog $catalogL -AllowedSkillTools $mediaTools)
+            $null = Test-Check 'L' (($devSkill -join ',') -ceq 'LINT-SKILL' -and $mediaSkill.Length -eq 0) "a skill tool name fails LINT-SKILL in the development family and passes only through the SkillPolicy (got '$($devSkill -join ',')' and '$($mediaSkill -join ',')')"
+            $sendLine = 'Send the clip with message.send when the user asks.'
+            $devSend = & $rulesOf (Invoke-ToolNameLint -Text $sendLine -Path 'L' -Kind 'soul' -Catalog $catalogL -AllowRestrictedMentions ([string[]]@(Get-AgentField $devFamily 'AllowRestrictedMentions' @())))
+            $mediaSend = & $rulesOf (Invoke-ToolNameLint -Text $sendLine -Path 'L' -Kind 'soul' -Catalog $catalogL -AllowRestrictedMentions ([string[]]@($mediaFamily['AllowRestrictedMentions'])))
+            $null = Test-Check 'L' (($devSend -join ',') -ceq 'LINT-RESTRICTED' -and $mediaSend.Length -eq 0) "message.send fails LINT-RESTRICTED in the development family and is allowed in the media family (got '$($devSend -join ',')' and '$($mediaSend -join ',')')"
+
+            $toolsText = [IO.File]::ReadAllText((Join-Path $mediaAgent 'TOOLS.md'))
+            $toolsParsed = Read-ToolsMd -Text $toolsText -Path 'L/TOOLS.md'
+            $pinMedia = & $rulesOf (Test-ToolsMdPins -ToolsMd $toolsParsed -Path 'L/TOOLS.md' -Catalog $catalogL -AllowedSkillTools $mediaTools)
+            $pinDev = & $rulesOf (Test-ToolsMdPins -ToolsMd $toolsParsed -Path 'L/TOOLS.md' -Catalog $catalogL -AllowedSkillTools $devTools)
+            $sendPins = Read-ToolsMd -Text $toolsText.Replace('      - tts.file', "      - tts.file`n      - message.send") -Path 'L/TOOLS.md'
+            $pinSend = & $rulesOf (Test-ToolsMdPins -ToolsMd $sendPins -Path 'L/TOOLS.md' -Catalog $catalogL -AllowedSkillTools $mediaTools)
+            $null = Test-Check 'L' ($pinMedia.Length -eq 0 -and ($pinDev -join ',') -ceq 'TOOLS-PIN-UNKNOWN' -and ($pinSend -join ',') -ceq 'TOOLS-PIN-RESTRICTED') "a skill-tool pin passes only through the SkillPolicy, and message.send stays unpinnable (got '$($pinMedia -join ',')', '$($pinDev -join ',')', '$($pinSend -join ',')')"
+
+            $mediaRaw = [IO.File]::ReadAllText((Join-Path $mediaAgent 'manifest.json'))
+            $manifestRules = {
+                param([string]$Raw, $Fam)
+                $parsedRaw = $null
+                try { $parsedRaw = $Raw | ConvertFrom-Json -ErrorAction Stop } catch { $parsedRaw = $null }
+                & $rulesOf (Test-AgentManifest -Manifest $parsedRaw -Raw $Raw -Id 'media-maker' -Family $Fam -ToolsMd $toolsParsed -Path 'L/manifest.json' -Catalog $catalogL)
+            }
+            $variants = @(
+                @{ Name = 'as written'; Raw = $mediaRaw; Want = '' }
+                @{ Name = 'requires.skills minVersion 0.9.0'; Raw = $mediaRaw.Replace('"minVersion": "1.0.0"', '"minVersion": "0.9.0"'); Want = 'MAN-REQUIRES' }
+                @{ Name = 'requires.skills missing'; Raw = $mediaRaw.Replace("    `"skills`": [`n      {`n        `"name`": `"media-kit`",`n        `"minVersion`": `"1.0.0`"`n      }`n    ],`n", ''); Want = 'MAN-REQUIRES' }
+                @{ Name = 'a skill tool in requires.tools'; Raw = $mediaRaw.Replace('"media.video",', "`"media.video`",`n      `"mediakit.inspect.probe`","); Want = 'MAN-REQUIRES' }
+                @{ Name = 'the extra required tool missing'; Raw = $mediaRaw.Replace("      `"media.video`",`n", ''); Want = 'MAN-REQUIRES' }
+                @{ Name = 'tags without the RequiredTag'; Raw = $mediaRaw.Replace('"media",', '"film",'); Want = 'MAN-TAGS' }
+            )
+            foreach ($variant in $variants) {
+                if ($variant.Want -and [string]::Equals($variant.Raw, $mediaRaw, $ord)) { Add-Fail 'L' "manifest variant '$($variant.Name)' did not change the fixture text"; continue }
+                $got = & $manifestRules $variant.Raw $mediaFamily
+                if ($variant.Want) {
+                    $null = Test-Check 'L' (($got -join ',') -ceq $variant.Want) "media manifest, $($variant.Name): fails $($variant.Want) only (got '$($got -join ',')')"
+                } else {
+                    $null = Test-Check 'L' ($got.Length -eq 0) "media manifest, $($variant.Name): passes the skill policy (got '$($got -join ',')')"
+                }
+            }
+            $coreFamily = @{}
+            foreach ($key in $mediaFamily.Keys) { $coreFamily[$key] = $mediaFamily[$key] }
+            $coreFamily['SkillPolicy'] = @{ Skills = $mediaFamily['SkillPolicy']['Skills']; ExtraRequiredTools = @('fs.read', 'media.video') }
+            $coreRaw = $mediaRaw.Replace('"media.video",', "`"fs.read`",`n      `"media.video`",")
+            $parsedCore = $coreRaw | ConvertFrom-Json
+            $coreIssues = @(Test-AgentManifest -Manifest $parsedCore -Raw $coreRaw -Id 'media-maker' -Family $coreFamily -ToolsMd $toolsParsed -Path 'L/manifest.json' -Catalog $catalogL)
+            $null = Test-Check 'L' (@($coreIssues | Where-Object { $_.Rule -ceq 'MAN-REQUIRES' -and $_.Message.Contains('fs.read is a core tool', $ord) }).Count -eq 1) 'an ExtraRequiredTools entry that is a core tool fails MAN-REQUIRES'
+
+            # The development family keeps the single-family rule: requires holds tools only.
+            $devId = $devRoster[0]
+            $devRaw = [IO.File]::ReadAllText((Join-Path $famCase "agents/$devId/manifest.json"))
+            $devToolsMd = Read-ToolsMd -Text ([IO.File]::ReadAllText((Join-Path $famCase "agents/$devId/TOOLS.md"))) -Path 'L/TOOLS.md'
+            $devSkillsRaw = $devRaw.Replace("  `"requires`": {`n", "  `"requires`": {`n    `"skills`": [`n      {`n        `"name`": `"media-kit`"`n      }`n    ],`n")
+            $devIssues = @(Test-AgentManifest -Manifest ($devSkillsRaw | ConvertFrom-Json) -Raw $devSkillsRaw -Id $devId -Family $devFamily -ToolsMd $devToolsMd -Path 'L/manifest.json' -Catalog $catalogL)
+            $devBase = @(Test-AgentManifest -Manifest ($devRaw | ConvertFrom-Json) -Raw $devRaw -Id $devId -Family $devFamily -ToolsMd $devToolsMd -Path 'L/manifest.json' -Catalog $catalogL)
+            $null = Test-Check 'L' ($devBase.Count -eq 0 -and -not [string]::Equals($devSkillsRaw, $devRaw, $ord) -and
+                @($devIssues | Where-Object { $_.Rule -ceq 'MAN-REQUIRES' -and $_.Message -ceq 'requires.skills is not allowed (requires holds tools only)' }).Count -eq 1) "agents/$devId with requires.skills still fails MAN-REQUIRES 'requires.skills is not allowed (requires holds tools only)'"
+
+            # MAN-SKILL-VERSION: the SkillPolicy skill must exist at its MinVersion or later.
+            $skillText = [IO.File]::ReadAllText($skillManifest)
+            Write-Utf8 $skillManifest ($skillText.Replace('"version": "1.2.0"', '"version": "0.9.0"'))
+            $oldSkill = Invoke-Native $pwsh @('-NoProfile', '-NonInteractive', '-File', $famSources, '-RepoRoot', $famCase, '-Family', 'media')
+            Remove-Item -LiteralPath $skillManifest -Force
+            $noSkill = Invoke-Native $pwsh @('-NoProfile', '-NonInteractive', '-File', $famSources, '-RepoRoot', $famCase, '-Family', 'media')
+            Write-Utf8 $skillManifest $skillText
+            $null = Test-Check 'L' ($oldSkill.Code -ne 0 -and $oldSkill.Text.Contains('ERROR MAN-SKILL-VERSION skills/media-kit/manifest.json:1: version 0.9.0 is below the SkillPolicy MinVersion 1.0.0', $ord) -and
+                $noSkill.Code -ne 0 -and $noSkill.Text.Contains('ERROR MAN-SKILL-VERSION skills/media-kit/manifest.json:0:', $ord)) 'a SkillPolicy skill below its MinVersion, or missing, fails MAN-SKILL-VERSION'
+        }
+    } catch {
+        Add-Fail 'L' "the family cases failed to run: $($_.Exception.Message) (line $($_.InvocationInfo.ScriptLineNumber))"
+    }
+
     if ($SourceOnly) {
         $skipped['J'] = $true
         $skipped['K'] = $true
@@ -442,7 +592,11 @@ try {
         } else {
             $version = Invoke-Native $sophon.Source @('--version')
             $versionLine = [string](@($version.Lines | Where-Object { "$_".Trim() }) | Select-Object -First 1)
-            $null = Test-Check 'J' ($version.Code -eq 0 -and $versionLine.Trim() -match $sophonPattern) "sophon --version '$($versionLine.Trim())' matches $sophonPattern"
+            foreach ($f in $families) {
+                $sophonPattern = [string](Get-Field $f['Data'] 'SophonCli')
+                if (-not $sophonPattern) { $sophonPattern = '^2\.2\.\d+' }
+                $null = Test-Check 'J' ($version.Code -eq 0 -and $versionLine.Trim() -match $sophonPattern) "sophon --version '$($versionLine.Trim())' matches $sophonPattern (family $($f['Id']))"
+            }
             foreach ($id in $roster) {
                 $dir = Join-Path $RepoRoot "agents/$id"
                 $result = Invoke-NativeJson $sophon.Source @('dev', 'validate', $dir, '--json')
@@ -673,5 +827,5 @@ if ($failedSections.Count -gt 0) {
     Write-Host "Test-AgentPackages: FAIL ($($failedSections -join ', '))" -ForegroundColor Red
     exit 1
 }
-Write-Host "Test-AgentPackages: PASS ($(if ($SourceOnly) { 'A-I; J and K skipped' } else { 'A-K' }))" -ForegroundColor Green
+Write-Host "Test-AgentPackages: PASS ($(if ($SourceOnly) { 'A-I and L; J and K skipped' } else { 'A-L' }))" -ForegroundColor Green
 exit 0

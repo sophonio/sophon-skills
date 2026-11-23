@@ -1,0 +1,79 @@
+{
+  "name": "good",
+  "version": "1.0.0",
+  "description": "Fixture skill good for tests/build/Test-SkillLint.ps1.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "development",
+  "tags": [
+    "fixture"
+  ],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "requirements": [],
+  "sandbox": {
+    "network": false,
+    "timeoutSeconds": 30
+  },
+  "platforms": [],
+  "tools": [
+    {
+      "name": "fixture.good.ping",
+      "description": "Fixture tool fixture.good.ping.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "Text."
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "fast",
+              "slow"
+            ],
+            "description": "Mode."
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4,
+            "description": "Count."
+          },
+          "paths": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Paths."
+          },
+          "options": {
+            "type": "object",
+            "properties": {
+              "deep": {
+                "type": "boolean"
+              }
+            },
+            "description": "Options."
+          }
+        },
+        "required": [
+          "message"
+        ]
+      }
+    },
+    {
+      "name": "fixture.good.echo",
+      "description": "Fixture tool fixture.good.echo.",
+      "riskLevel": "low",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  ]
+}

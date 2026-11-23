@@ -1,6 +1,6 @@
 {
   "name": "pdf-toolkit",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Local PDF operations — merge, split, rotate, extract text and tables, read metadata, and encrypt or decrypt PDF files. Runs entirely offline with no network access.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -46,7 +46,7 @@
         "properties": {
           "input": { "type": "string", "description": "Path to the source PDF" },
           "output": { "type": "string", "description": "Path to write the rotated PDF" },
-          "degrees": { "type": "integer", "enum": [90, 180, 270], "description": "Clockwise rotation in degrees" },
+          "degrees": { "type": "integer", "description": "Clockwise rotation in degrees: 90, 180 or 270" },
           "pages": { "type": "array", "items": { "type": "integer" }, "description": "1-based page numbers to rotate. Omit to rotate all pages." }
         },
         "required": ["input", "output", "degrees"]

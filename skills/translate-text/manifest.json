@@ -1,6 +1,6 @@
 {
   "name": "translate-text",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Machine translation via the DeepL REST API — translate text into 30+ languages with optional formality control, list supported languages, and check your account usage.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -36,11 +36,9 @@
         "type": "object",
         "properties": {
           "text": {
-            "description": "Text to translate — a single string or an array of strings.",
-            "oneOf": [
-              { "type": "string" },
-              { "type": "array", "items": { "type": "string" } }
-            ]
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Texts to translate, one array element per text (a single text is a one-element array)."
           },
           "targetLang": { "type": "string", "description": "Target language code, e.g. EN, DE, FR, EN-GB, PT-BR" },
           "sourceLang": { "type": "string", "description": "Source language code (optional; auto-detected if omitted), e.g. EN, DE" },

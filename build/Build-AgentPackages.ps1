@@ -2,13 +2,14 @@
 
 <#
 .SYNOPSIS
-    Validates and builds the Buildersoft development family (agents/<id>) with Sophon's agent-package CLI.
+    Validates and builds the Buildersoft agent families (agents/<id>) with Sophon's agent-package CLI.
 .DESCRIPTION
     Order (docs/plans/2026-11-15-agents-v2-design.md section 7.4):
-      1. Load build/agent-src/family.psd1. The agents/ folders must equal the roster ids exactly, and every
-         -Agents entry must be a roster id.
-      2. 'sophon' must be on PATH and 'sophon --version' must match the family's SophonCli pattern. The CLI
-         version and 'git rev-parse --short HEAD' are printed.
+      1. Load every family in build/agent-src/families.psd1 (or the single build/agent-src/family.psd1 when
+         there is no registry). The roster is the union of the family rosters; an id in two families fails.
+         The agents/ folders must equal the roster ids exactly, and every -Agents entry must be a roster id.
+      2. 'sophon' must be on PATH and 'sophon --version' must match the SophonCli pattern of every family
+         being built. The CLI version and 'git rev-parse --short HEAD' are printed.
       3. build/Compose-AgentSouls.ps1 -Check (every SOUL.md must equal its composed text).
       4. build/Test-AgentSources.ps1 (-Agents <selection> on a subset build).
       5. 'sophon dev validate <dir> --json' per selected agent. Any error and ANY warning fails the build.
@@ -28,23 +29,31 @@
     Build only these agent ids (comma-separated values are accepted). Unknown ids fail the build.
 .PARAMETER ValidateOnly
     Run every check, write nothing.
+.PARAMETER Family
+    Build only this family (a registry Id). Its agents must have folders; folders of other families are
+    checked by a build without -Family. A build of fewer families than the registry lists is a subset build.
 .EXAMPLE
     pwsh -NoProfile -File build/Build-AgentPackages.ps1 -ValidateOnly
 .EXAMPLE
     pwsh -NoProfile -File build/Build-AgentPackages.ps1
 .EXAMPLE
     pwsh -NoProfile -File build/Build-AgentPackages.ps1 -Agents lead-developer,code-reviewer
+.EXAMPLE
+    pwsh -NoProfile -File build/Build-AgentPackages.ps1 -Family development
 #>
 [CmdletBinding()]
 param(
     [string]$RepoRoot = (Join-Path $PSScriptRoot '..'),
     [string]$OutputDir = '',
     [string[]]$Agents = @(),
-    [switch]$ValidateOnly
+    [switch]$ValidateOnly,
+    [string]$Family = ''
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+
+Import-Module (Join-Path $PSScriptRoot 'AgentFamily.psm1') -Force
 
 function Resolve-FullPath([string]$Path) {
     return [IO.Path]::GetFullPath($ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Path))
@@ -126,15 +135,21 @@ try {
         Remove-Item -LiteralPath $indexPath -Force
     }
 
-    # 1. Family roster, folders and selection. ------------------------------------------------------------
-    $familyPath = Join-Path $RepoRoot 'build/agent-src/family.psd1'
-    if (-not (Test-Path -LiteralPath $familyPath -PathType Leaf)) { throw "Missing build/agent-src/family.psd1 under '$RepoRoot'." }
-    $family = Import-PowerShellDataFile -LiteralPath $familyPath
-    $rosterList = [System.Collections.Generic.List[string]]::new()
-    foreach ($entry in @($family['Agents'])) { $rosterList.Add([string]$entry['Id']) }
-    $rosterList.Sort($ordinal)
-    $roster = $rosterList.ToArray()
-    if ($roster.Count -eq 0) { throw 'build/agent-src/family.psd1 lists no agents.' }
+    # 1. Family rosters, folders and selection. -----------------------------------------------------------
+    $registry = Get-AgentFamilyRegistry -RepoRoot $RepoRoot
+    $registryErrors = @($registry['Errors'])
+    if ($registryErrors.Count -gt 0) { throw "family registry error: $(Format-AgentComposeError -Item $registryErrors[0])" }
+    $familyFilter = @(if ($Family) { $Family })
+    $union = Get-AgentRosterUnion -RepoRoot $RepoRoot -Family $familyFilter
+    $unionErrors = @($union['Errors'])
+    if ($unionErrors.Count -gt 0) {
+        throw "agent families do not load: $(@($unionErrors | ForEach-Object { Format-AgentComposeError -Item $_ }) -join '; ')"
+    }
+    $families = @($union['Families'])
+    $rosterSource = if ($registry['Legacy']) { 'build/agent-src/family.psd1' } else { $registry['Path'] }
+    $roster = [string[]]@($union['Ids'])
+    if ($roster.Count -eq 0) { throw "$rosterSource lists no agents." }
+    $partialFamilies = -not $registry['Legacy'] -and $families.Count -lt @($registry['Families']).Count
 
     $relativeOut = [IO.Path]::GetRelativePath($agentsDir, $OutputDir)
     if ($relativeOut -eq '.' -or -not ($relativeOut.StartsWith('..') -or [IO.Path]::IsPathRooted($relativeOut))) {
@@ -149,12 +164,13 @@ try {
     $folders.Sort($ordinal)
     $folderSet = [System.Collections.Generic.HashSet[string]]::new([string[]]$folders.ToArray(), $ordinal)
     $missing = @($roster | Where-Object { -not $folderSet.Contains($_) })
-    $extra = @($folders | Where-Object { -not $rosterSet.Contains($_) })
+    # A -Family build sees only its own roster, so other families' folders are not extra.
+    $extra = @(if (-not $partialFamilies) { $folders | Where-Object { -not $rosterSet.Contains($_) } })
     if ($missing.Count -gt 0 -or $extra.Count -gt 0) {
         $parts = @()
         if ($missing.Count -gt 0) { $parts += "roster ids without a folder: $($missing -join ', ')" }
         if ($extra.Count -gt 0) { $parts += "folders not in the roster: $($extra -join ', ')" }
-        throw "agents/ folders must equal the roster in build/agent-src/family.psd1 ($($parts -join '; '))."
+        throw "agents/ folders must equal the roster in $rosterSource ($($parts -join '; '))."
     }
 
     $requested = @($Agents | ForEach-Object { "$_" -split ',' } | ForEach-Object { $_.Trim() } | Where-Object { $_ })
@@ -163,7 +179,10 @@ try {
     }
     $requestedSet = [System.Collections.Generic.HashSet[string]]::new([string[]]$requested, $ordinal)
     $selected = @(if ($requested.Count -eq 0) { $roster } else { $roster | Where-Object { $requestedSet.Contains($_) } })
-    $subset = $selected.Count -lt $roster.Count
+    $selectionSubset = $selected.Count -lt $roster.Count
+    $subset = $selectionSubset -or $partialFamilies
+    $selectedSet = [System.Collections.Generic.HashSet[string]]::new([string[]]$selected, $ordinal)
+    $builtFamilies = @($families | Where-Object { @($_['Roster'] | Where-Object { $selectedSet.Contains($_) }).Count -gt 0 })
 
     $projects = @(foreach ($id in $selected) {
             $dir = Join-Path $agentsDir $id
@@ -183,15 +202,18 @@ try {
     # 2. Sophon CLI and commit. ----------------------------------------------------------------------------
     $sophon = Get-Command 'sophon' -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
     if ($null -eq $sophon) {
-        throw "The Sophon CLI ('sophon') is not on PATH; install Sophon $($family['MinSophonVersion']) or later."
+        throw "The Sophon CLI ('sophon') is not on PATH; install Sophon $($builtFamilies[0]['Data']['MinSophonVersion']) or later."
     }
     $sophonPath = $sophon.Source
     $versionRun = Invoke-Native $sophonPath @('--version')
     $versionLine = [string](@($versionRun.Lines | Where-Object { "$_".Trim() }) | Select-Object -First 1)
     $versionLine = $versionLine.Trim()
     if ($versionRun.Code -ne 0) { throw "'sophon --version' exited $($versionRun.Code): $($versionRun.Lines -join ' ')" }
-    if ($versionLine -notmatch [string]$family['SophonCli']) {
-        throw "Sophon CLI '$versionLine' does not match $($family['SophonCli']) (build/agent-src/family.psd1 SophonCli)."
+    foreach ($built in $builtFamilies) {
+        $pattern = [string]$built['Data']['SophonCli']
+        if ($versionLine -notmatch $pattern) {
+            throw "Sophon CLI '$versionLine' does not match $pattern ($($built['Path']) SophonCli)."
+        }
     }
     Write-Host "Sophon CLI: $versionLine"
     $commit = 'n/a (git not found)'
@@ -203,7 +225,9 @@ try {
 
     # 3. Composer drift check. -----------------------------------------------------------------------------
     $composer = Get-RepoScript 'Compose-AgentSouls.ps1'
-    $compose = Invoke-Native $pwsh @('-NoProfile', '-NonInteractive', '-File', $composer, '-RepoRoot', $RepoRoot, '-Check')
+    $composeArgs = @('-NoProfile', '-NonInteractive', '-File', $composer, '-RepoRoot', $RepoRoot, '-Check')
+    if ($Family) { $composeArgs += @('-Family', $Family) }
+    $compose = Invoke-Native $pwsh $composeArgs
     if ($compose.Code -ne 0) {
         foreach ($line in $compose.Lines) { Write-Host "  | $line" }
         throw "SOUL drift — run the composer (pwsh -File build/Compose-AgentSouls.ps1); Compose-AgentSouls.ps1 -Check exited $($compose.Code)."
@@ -213,7 +237,8 @@ try {
     # 4. Source checks. ------------------------------------------------------------------------------------
     $sources = Get-RepoScript 'Test-AgentSources.ps1'
     $sourceArgs = @('-NoProfile', '-NonInteractive', '-File', $sources, '-RepoRoot', $RepoRoot)
-    if ($subset) { $sourceArgs += @('-Agents', ($selected -join ',')) }
+    if ($Family) { $sourceArgs += @('-Family', $Family) }
+    if ($selectionSubset) { $sourceArgs += @('-Agents', ($selected -join ',')) }
     $sourceRun = Invoke-Native $pwsh $sourceArgs
     if ($sourceRun.Code -ne 0) {
         foreach ($line in $sourceRun.Lines) { Write-Host "  | $line" }

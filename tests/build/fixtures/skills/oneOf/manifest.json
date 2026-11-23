@@ -1,0 +1,78 @@
+{
+  "name": "one-of",
+  "version": "1.0.0",
+  "description": "Fixture skill one-of for tests/build/Test-SkillLint.ps1.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "development",
+  "tags": [
+    "fixture"
+  ],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "requirements": [],
+  "sandbox": {
+    "network": false,
+    "timeoutSeconds": 30
+  },
+  "platforms": [],
+  "tools": [
+    {
+      "name": "fixture.oneof.ping",
+      "description": "Fixture tool fixture.oneof.ping.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "description": "One or many.",
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          },
+          "symbols": {
+            "type": [
+              "string",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "description": "Codes."
+          },
+          "list": {
+            "type": "array",
+            "description": "No items."
+          },
+          "nested": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "description": "Nested."
+          },
+          "ref": {
+            "$ref": "#/definitions/x"
+          }
+        },
+        "required": []
+      }
+    }
+  ]
+}

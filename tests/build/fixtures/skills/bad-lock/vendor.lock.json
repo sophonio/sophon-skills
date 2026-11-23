@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "upstream": {
+    "repo": "https://github.com/example/demo-upstream",
+    "tag": "v1.2.3",
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "version": "1.2.3"
+  },
+  "files": [
+    {
+      "path": "vendor/demo-upstream/scripts/tool.py",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "bytes": 31
+    },
+    {
+      "path": "vendor/demo-upstream/LICENSE",
+      "sha256": "46a45d6ec02c2161363af77b66a9f62bb4054d9e3dd9c9f066bb27f93f092e17",
+      "bytes": 1
+    },
+    {
+      "path": "vendor/demo-upstream/missing.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "vendor/demo-upstream/notes.md",
+      "sha256": "5bd0409927f4ebac789069fc3f6504b08d818c71419ead7e738c80c2c893b4ea",
+      "bytes": 13
+    },
+    {
+      "path": "vendor/demo-upstream/scripts/run.sh",
+      "sha256": "b77d933fde445bf412ac42dd2ad036f6154f99ddebc345b468c86bbe49744fb3",
+      "bytes": 9
+    }
+  ],
+  "generated": [
+    {
+      "path": "lib/tool-map.json",
+      "sha256": "8900c2ee0613e1f39e35e08d73131b77f221d21fb8495688c79e7ee57e407904"
+    }
+  ]
+}

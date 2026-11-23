@@ -6,7 +6,7 @@ the tool arguments, and the connection-card fields (base_url, api_key).
 
 Auth is Sonarr's static per-instance API key sent as the `X-Api-Key` header on every request.
 All endpoints live under {base_url}/api/v3. Sonarr is self-hosted: the server must be reachable
-from Sophon's sandbox (LAN-only or VPN-only instances need a reverse proxy or tunnel).
+by Sophon's sandbox (LAN-only or VPN-only instances need a reverse proxy or tunnel).
 """
 
 import json

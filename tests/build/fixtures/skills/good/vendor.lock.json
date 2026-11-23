@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "upstream": {
+    "repo": "https://github.com/example/demo-upstream",
+    "tag": "v1.2.3",
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "version": "1.2.3"
+  },
+  "files": [
+    {
+      "path": "vendor/demo-upstream/LICENSE",
+      "sha256": "46a45d6ec02c2161363af77b66a9f62bb4054d9e3dd9c9f066bb27f93f092e17",
+      "bytes": 249
+    },
+    {
+      "path": "vendor/demo-upstream/scripts/tool.py",
+      "sha256": "10efa1606835335affa27e225494c4116c3a083bcaee2f18083951fb850c84f6",
+      "bytes": 31
+    },
+    {
+      "path": "vendor/demo-upstream/templates/reels.json",
+      "sha256": "6bab4cd966b1d59bfebd5a1d838e053829a4ef82d57a004a80de25cbc43e5f20",
+      "bytes": 16
+    }
+  ],
+  "generated": [
+    {
+      "path": "lib/tool-map.json",
+      "sha256": "8900c2ee0613e1f39e35e08d73131b77f221d21fb8495688c79e7ee57e407904"
+    }
+  ]
+}

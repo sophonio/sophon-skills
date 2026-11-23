@@ -1,12 +1,30 @@
 #Requires -Version 7.0
 <#
 .SYNOPSIS
-    Roster loading and SOUL composition for the Buildersoft development family (agents/<id>/).
+    Roster loading and SOUL composition for the Buildersoft agent families (agents/<id>/).
 .DESCRIPTION
-    Sources live under build/agent-src/:
-      family.psd1                 roster, per-agent fragment order, caps and Values
-      souls/<id>.md               agent template: role text plus include lines
-      fragments/soul/<NN-id>.md   shared fragments
+    Families are listed in build/agent-src/families.psd1:
+      @{ Families = @( @{ Id = 'development'; Path = 'build/agent-src/family.psd1' }, ... ) }
+    Each family's sources live in the folder of its family file (<dir>):
+      <dir>/family.psd1                 roster, per-agent fragment order, caps and Values
+      <dir>/souls/<id>.md               agent template: role text plus include lines
+      <dir>/fragments/soul/<NN-id>.md   that family's shared fragments
+    Without a registry the single legacy family build/agent-src/family.psd1 applies. Every path
+    function below works on the current family context, which Set-AgentFamilyContext selects;
+    importing the module selects the legacy paths. An agent id may belong to one family only
+    (Get-AgentRosterUnion), and agents/ holds the folders of every family.
+
+    Optional family keys (absent = the development family's behaviour; checked by Test-AgentFamilyData):
+      Id                       equals the registry Id
+      RequiredTag              tag every manifest must carry (default 'development')
+      Category                 manifest category (default 'development')
+      CreditsSentence          verbatim sentence every README must carry (absent or '' = no sentence check)
+      ReadmeCaps               @{ Lead = <bytes>; Other = <bytes> } (default 24576 / 12288)
+      SkillPolicy              @{ Skills = @(@{ Name; MinVersion }); ExtraRequiredTools = @('<tool>') }:
+                               the marketplace skills the agents require (requires.skills) and the built-in
+                               tools required beyond the TOOLS.md pins; tools of these skills may be named
+                               and pinned
+      AllowRestrictedMentions  restricted tool names that may be named un-negated (never pinned)
 
     Template grammar:
       A line that is exactly {{> soul/<NN-id>}} is replaced by that fragment's lines.
@@ -22,10 +40,21 @@
 
 Set-StrictMode -Version Latest
 
+$script:RegistryRelPath = 'build/agent-src/families.psd1'
+$script:LegacyFamilyRelPath = 'build/agent-src/family.psd1'
+$script:LegacyFamilyId = 'default'
+$script:FamilyId = $script:LegacyFamilyId
 $script:FamilyRelPath = 'build/agent-src/family.psd1'
 $script:SoulsRelDir = 'build/agent-src/souls'
 $script:FragmentsRelDir = 'build/agent-src/fragments/soul'
 $script:AgentsRelDir = 'agents'
+$script:FamilyIdRegex = [regex]::new('^[a-z][a-z0-9-]{1,31}$')
+$script:FamilyPathRegex = [regex]::new('^(?:[A-Za-z0-9_.-]+/)*family\.psd1$')
+$script:TagRegex = [regex]::new('^[a-z0-9]+(?:-[a-z0-9]+)*$')
+$script:SkillNameRegex = [regex]::new('^[a-z0-9][a-z0-9-]{1,63}$')
+$script:ToolNameRegex = [regex]::new('^[a-z][a-z0-9_-]*(?:\.[a-z0-9_-]+)*$')
+$script:SemVerCoreRegex = [regex]::new('^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$')
+$script:Categories = @('utility', 'productivity', 'communication', 'data', 'development', 'integration', 'ai', 'automation', 'other')
 $script:StrictUtf8 = [System.Text.UTF8Encoding]::new($false, $true)
 $script:LenientUtf8 = [System.Text.UTF8Encoding]::new($false, $false)
 $script:IncludeRegex = [regex]::new('^\{\{> (?<ref>[^{}\s]+)\}\}$')
@@ -263,13 +292,297 @@ function Get-AgentTemplateIds {
 }
 
 # ---------------------------------------------------------------------------------------------
+# Family registry and context
+# ---------------------------------------------------------------------------------------------
+
+function Import-AgentDataFile {
+    # Loads a .psd1 data file; throws InvalidOperationException with Data['Line'] on a syntax error.
+    param([string]$FullPath, [string]$RelativePath)
+    $tokens = $null
+    $parseErrors = $null
+    [void][System.Management.Automation.Language.Parser]::ParseFile($FullPath, [ref]$tokens, [ref]$parseErrors)
+    if ($null -ne $parseErrors -and $parseErrors.Count -gt 0) {
+        $exception = [System.InvalidOperationException]::new("syntax error: $($parseErrors[0].Message)")
+        $exception.Data['Line'] = $parseErrors[0].Extent.StartLineNumber
+        throw $exception
+    }
+    try {
+        Import-PowerShellDataFile -LiteralPath $FullPath
+    }
+    catch {
+        $exception = [System.InvalidOperationException]::new($_.Exception.Message.Replace($FullPath, $RelativePath))
+        $exception.Data['Line'] = 1
+        throw $exception
+    }
+}
+
+function Get-AgentRegistryLine {
+    # Best-effort line of the registry entry naming Id (1 when not found).
+    param([string]$FullPath, [string]$Id)
+    if (-not [System.IO.File]::Exists($FullPath)) { return 0 }
+    if ($Id) {
+        $idRegex = [regex]::new("\bId\s*=\s*'" + [regex]::Escape($Id) + "'")
+        $lines = [System.IO.File]::ReadAllLines($FullPath)
+        for ($i = 0; $i -lt $lines.Length; $i++) {
+            if ($idRegex.IsMatch($lines[$i])) { return $i + 1 }
+        }
+    }
+    1
+}
+
+function Get-AgentFamilyRegistry {
+    <#
+    .SYNOPSIS
+        Reads build/agent-src/families.psd1. Returns @{ Legacy; Path; Families; Errors }.
+    .DESCRIPTION
+        Families holds @{ Id; Path; Dir } per entry, in registry order (Path is the repo-relative family
+        file, Dir its folder). Without a registry file, Legacy is $true and Families holds the single
+        legacy family (Id 'default', build/agent-src/family.psd1). Errors are error objects; when there
+        are any, Families holds only the entries that passed.
+    #>
+    [CmdletBinding()]
+    [OutputType([hashtable])]
+    param([Parameter(Mandatory)][string]$RepoRoot)
+    $root = Resolve-AgentFullPath -Path $RepoRoot
+    $p = $script:RegistryRelPath
+    $full = Join-AgentRepoPath $root $p
+    $errors = [System.Collections.Generic.List[object]]::new()
+    $families = [System.Collections.Generic.List[hashtable]]::new()
+    if (-not [System.IO.File]::Exists($full)) {
+        $families.Add(@{ Id = $script:LegacyFamilyId; Path = $script:LegacyFamilyRelPath; Dir = 'build/agent-src' })
+        return @{ Legacy = $true; Path = $p; Families = $families.ToArray(); Errors = @() }
+    }
+    $data = $null
+    try {
+        $data = Import-AgentDataFile -FullPath $full -RelativePath $p
+    }
+    catch {
+        $line = 1
+        if ($_.Exception.Data.Contains('Line')) { $line = [int]$_.Exception.Data['Line'] }
+        $message = ($_.Exception.Message -replace '\s+', ' ').Trim()
+        $errors.Add((New-AgentComposeError $p $line "cannot load the family registry: $message"))
+        return @{ Legacy = $false; Path = $p; Families = @(); Errors = $errors.ToArray() }
+    }
+    $topKeys = [string[]]@($data.Keys)
+    [Array]::Sort($topKeys, [StringComparer]::Ordinal)
+    foreach ($key in $topKeys) {
+        if (-not (Test-AgentSame $key 'Families')) {
+            $errors.Add((New-AgentComposeError $p 1 "unknown registry key $key (the registry holds Families only)"))
+        }
+    }
+    $entries = @(Get-AgentItems $data['Families'])
+    if ($entries.Count -eq 0) {
+        $errors.Add((New-AgentComposeError $p 1 'Families must list at least one family'))
+    }
+    $seenIds = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+    $seenDirs = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+    foreach ($entry in $entries) {
+        if ($entry -isnot [hashtable]) {
+            $errors.Add((New-AgentComposeError $p 1 'each Families entry must be a hashtable @{ Id; Path }'))
+            continue
+        }
+        $id = $entry['Id']
+        $line = if ($id -is [string]) { Get-AgentRegistryLine -FullPath $full -Id $id } else { 1 }
+        $good = $true
+        $entryKeys = [string[]]@($entry.Keys)
+        [Array]::Sort($entryKeys, [StringComparer]::Ordinal)
+        foreach ($key in $entryKeys) {
+            if (-not (Test-AgentInList @('Id', 'Path') $key)) {
+                $errors.Add((New-AgentComposeError $p $line "family entry has unknown key $key (keys: Id, Path)"))
+                $good = $false
+            }
+        }
+        if ($id -isnot [string] -or -not $script:FamilyIdRegex.IsMatch($id)) {
+            $errors.Add((New-AgentComposeError $p $line "family Id '$id' must match ^[a-z][a-z0-9-]{1,31}$"))
+            continue
+        }
+        if (-not $seenIds.Add($id)) {
+            $errors.Add((New-AgentComposeError $p $line "duplicate family Id '$id'"))
+            continue
+        }
+        $path = $entry['Path']
+        if ($path -isnot [string] -or -not $script:FamilyPathRegex.IsMatch($path) -or
+            (Test-AgentInList ([string[]]$path.Split('/')) '..') -or (Test-AgentInList ([string[]]$path.Split('/')) '.')) {
+            $errors.Add((New-AgentComposeError $p $line "family '$id': Path '$path' must be a repo-relative forward-slash path to a family.psd1 (no '.' or '..' segments)"))
+            continue
+        }
+        $dir = if ($path.Contains('/')) { $path.Substring(0, $path.LastIndexOf('/')) } else { '.' }
+        if (-not $seenDirs.Add($dir)) {
+            $errors.Add((New-AgentComposeError $p $line "family '$id': another family already uses the folder $dir (souls and fragments would be shared)"))
+            continue
+        }
+        if ($good) { $families.Add(@{ Id = $id; Path = $path; Dir = $dir }) }
+    }
+    @{ Legacy = $false; Path = $p; Families = $families.ToArray(); Errors = $errors.ToArray() }
+}
+
+function Set-AgentFamilyPaths {
+    param([string]$Id, [string]$RelativePath)
+    $dir = if ($RelativePath.Contains('/')) { $RelativePath.Substring(0, $RelativePath.LastIndexOf('/')) } else { '.' }
+    $script:FamilyId = $Id
+    $script:FamilyRelPath = $RelativePath
+    $script:SoulsRelDir = "$dir/souls"
+    $script:FragmentsRelDir = "$dir/fragments/soul"
+}
+
+function Set-AgentFamilyContext {
+    <#
+    .SYNOPSIS
+        Selects the family every path function works on. Returns its registry entry @{ Id; Path; Dir }.
+    .DESCRIPTION
+        -Family names a registry Id. Without -Family the legacy single family is selected when there is
+        no registry, or the only family when the registry lists one; a registry with several families
+        needs -Family. -Entry selects a registry entry directly. Throws on an unknown family or a
+        broken registry.
+    #>
+    [CmdletBinding(DefaultParameterSetName = 'ById')]
+    [OutputType([hashtable])]
+    param(
+        [Parameter(Mandatory, ParameterSetName = 'ById')][string]$RepoRoot,
+        [Parameter(ParameterSetName = 'ById')][string]$Family,
+        [Parameter(Mandatory, ParameterSetName = 'ByEntry')][hashtable]$Entry
+    )
+    if ($PSCmdlet.ParameterSetName -eq 'ByEntry') {
+        Set-AgentFamilyPaths -Id ([string]$Entry['Id']) -RelativePath ([string]$Entry['Path'])
+        return $Entry
+    }
+    $registry = Get-AgentFamilyRegistry -RepoRoot $RepoRoot
+    if (@($registry['Errors']).Count -gt 0) {
+        throw ('family registry error: ' + (Format-AgentComposeError -Item @($registry['Errors'])[0]))
+    }
+    $families = @($registry['Families'])
+    $selected = $null
+    if (-not $Family) {
+        if ($families.Count -ne 1) {
+            throw "the family registry lists $($families.Count) families ($(@($families | ForEach-Object { $_['Id'] }) -join ', ')); name one with -Family"
+        }
+        $selected = $families[0]
+    }
+    else {
+        foreach ($candidate in $families) {
+            if (Test-AgentSame $candidate['Id'] $Family) { $selected = $candidate }
+        }
+        if ($null -eq $selected) {
+            throw "unknown family '$Family' (families: $(@($families | ForEach-Object { $_['Id'] }) -join ', '))"
+        }
+    }
+    Set-AgentFamilyPaths -Id ([string]$selected['Id']) -RelativePath ([string]$selected['Path'])
+    $selected
+}
+
+function Get-AgentFamilyContext {
+    <#
+    .SYNOPSIS
+        The current family context: @{ Id; FamilyRelPath; SoulsRelDir; FragmentsRelDir }.
+    #>
+    [CmdletBinding()]
+    [OutputType([hashtable])]
+    param()
+    @{
+        Id = $script:FamilyId
+        FamilyRelPath = $script:FamilyRelPath
+        SoulsRelDir = $script:SoulsRelDir
+        FragmentsRelDir = $script:FragmentsRelDir
+    }
+}
+
+function Get-AgentRosterUnion {
+    <#
+    .SYNOPSIS
+        Loads every registered family (or the -Family selection) and returns the union of their rosters.
+    .DESCRIPTION
+        Returns @{ Legacy; Families; Ids; Owner; Errors }. Families holds @{ Id; Path; Dir; Data; Roster }
+        per loaded family, in registry order (Data is the Get-AgentFamily result, Roster its ids in
+        ordinal order). Ids is the ordinal-sorted union; Owner maps each id to its family Id. An id in two
+        families, a missing or unloadable family file, a family Id key that differs from the registry,
+        and an unknown -Family name are errors. The family context is restored before returning.
+    #>
+    [CmdletBinding()]
+    [OutputType([hashtable])]
+    param(
+        [Parameter(Mandatory)][string]$RepoRoot,
+        [string[]]$Family = @()
+    )
+    $root = Resolve-AgentFullPath -Path $RepoRoot
+    $saved = Get-AgentFamilyContext
+    $errors = [System.Collections.Generic.List[object]]::new()
+    $loaded = [System.Collections.Generic.List[hashtable]]::new()
+    $owner = [System.Collections.Generic.Dictionary[string, string]]::new([StringComparer]::Ordinal)
+    $registry = Get-AgentFamilyRegistry -RepoRoot $root
+    foreach ($e in @($registry['Errors'])) { $errors.Add($e) }
+
+    $wanted = [System.Collections.Generic.List[string]]::new()
+    foreach ($item in @(Get-AgentItems $Family)) {
+        foreach ($part in ([string]$item).Split(',')) {
+            $name = $part.Trim()
+            if ($name -and -not $wanted.Contains($name)) { $wanted.Add($name) }
+        }
+    }
+    $known = [string[]]@(foreach ($f in @($registry['Families'])) { [string]$f['Id'] })
+    foreach ($name in $wanted) {
+        if (-not (Test-AgentInList $known $name)) {
+            $errors.Add((New-AgentComposeError $script:RegistryRelPath 1 "unknown family '$name' (families: $($known -join ', '))"))
+        }
+    }
+
+    try {
+        foreach ($entry in @($registry['Families'])) {
+            if ($wanted.Count -gt 0 -and -not $wanted.Contains([string]$entry['Id'])) { continue }
+            Set-AgentFamilyPaths -Id ([string]$entry['Id']) -RelativePath ([string]$entry['Path'])
+            $data = $null
+            try {
+                $data = Get-AgentFamily -RepoRoot $root
+            }
+            catch {
+                $line = 0
+                if ($_.Exception.Data.Contains('Line')) { $line = [int]$_.Exception.Data['Line'] }
+                $message = ($_.Exception.Message -replace '\s+', ' ').Trim()
+                $errors.Add((New-AgentComposeError ([string]$entry['Path']) $line "cannot load family '$($entry['Id'])': $message"))
+                continue
+            }
+            if (-not $registry['Legacy'] -and $data.ContainsKey('Id') -and -not (Test-AgentSame $data['Id'] $entry['Id'])) {
+                $errors.Add((New-AgentComposeError ([string]$entry['Path']) (Get-AgentFamilyLine -RepoRoot $root -Key 'Id') "family Id '$($data['Id'])' differs from the registry Id '$($entry['Id'])'"))
+            }
+            $ids = [System.Collections.Generic.List[string]]::new()
+            foreach ($agent in @(Get-AgentItems $data['Agents'])) {
+                $agentId = Get-AgentIdOf $agent
+                if (-not $agentId -or $ids.Contains($agentId)) { continue }
+                $ids.Add($agentId)
+                $previous = $null
+                if ($owner.TryGetValue($agentId, [ref]$previous)) {
+                    $line = Get-AgentFamilyLine -RepoRoot $root -AgentId $agentId
+                    $errors.Add((New-AgentComposeError ([string]$entry['Path']) $line "agent '$agentId' is in two families ($previous and $($entry['Id'])); an id belongs to one family"))
+                }
+                else {
+                    $owner[$agentId] = [string]$entry['Id']
+                }
+            }
+            $ids.Sort([StringComparer]::Ordinal)
+            $loaded.Add(@{ Id = [string]$entry['Id']; Path = [string]$entry['Path']; Dir = [string]$entry['Dir']; Data = $data; Roster = $ids.ToArray() })
+        }
+    }
+    finally {
+        Set-AgentFamilyPaths -Id $saved['Id'] -RelativePath $saved['FamilyRelPath']
+    }
+    $union = [string[]]@($owner.Keys)
+    [Array]::Sort($union, [StringComparer]::Ordinal)
+    @{
+        Legacy = [bool]$registry['Legacy']
+        Families = $loaded.ToArray()
+        Ids = $union
+        Owner = $owner
+        Errors = $errors.ToArray()
+    }
+}
+
+# ---------------------------------------------------------------------------------------------
 # Family data
 # ---------------------------------------------------------------------------------------------
 
 function Get-AgentFamily {
     <#
     .SYNOPSIS
-        Loads build/agent-src/family.psd1 and returns it with Agents sorted ordinal by Id.
+        Loads the current family's family.psd1 and returns it with Agents sorted ordinal by Id.
     .DESCRIPTION
         Throws when the file is missing or cannot be parsed as a data file.
         Use Test-AgentFamilyData for schema errors.
@@ -282,22 +595,7 @@ function Get-AgentFamily {
     if (-not [System.IO.File]::Exists($path)) {
         throw "family data not found: $($script:FamilyRelPath)"
     }
-    $tokens = $null
-    $parseErrors = $null
-    [void][System.Management.Automation.Language.Parser]::ParseFile($path, [ref]$tokens, [ref]$parseErrors)
-    if ($null -ne $parseErrors -and $parseErrors.Count -gt 0) {
-        $exception = [System.InvalidOperationException]::new("syntax error: $($parseErrors[0].Message)")
-        $exception.Data['Line'] = $parseErrors[0].Extent.StartLineNumber
-        throw $exception
-    }
-    try {
-        $data = Import-PowerShellDataFile -LiteralPath $path
-    }
-    catch {
-        $exception = [System.InvalidOperationException]::new($_.Exception.Message.Replace($path, $script:FamilyRelPath))
-        $exception.Data['Line'] = 1
-        throw $exception
-    }
+    $data = Import-AgentDataFile -FullPath $path -RelativePath $script:FamilyRelPath
     $items = [object[]]@(Get-AgentItems $data['Agents'])
     if ($items.Length -gt 1) {
         $keys = [string[]]::new($items.Length)
@@ -522,6 +820,105 @@ function Test-AgentFamilyData {
     }
     if ($Family.ContainsKey('Lead') -and -not $seen.Contains([string]$Family['Lead'])) {
         $errors.Add((New-AgentComposeError $p (Get-AgentFamilyLine -RepoRoot $root -Key 'Lead') "Lead '$($Family['Lead'])' is not in the roster"))
+    }
+    foreach ($e in @(Test-AgentFamilyOptionalKeys -RepoRoot $root -Family $Family)) { $errors.Add($e) }
+    $errors.ToArray()
+}
+
+function Test-AgentFamilyOptionalKeys {
+    # Shape checks for the optional family keys (see the module header).
+    param([string]$RepoRoot, [hashtable]$Family)
+    $p = $script:FamilyRelPath
+    $errors = [System.Collections.Generic.List[object]]::new()
+    $at = { param($key) Get-AgentFamilyLine -RepoRoot $RepoRoot -Key $key }
+
+    if ($Family.ContainsKey('Id')) {
+        $id = $Family['Id']
+        if ($id -isnot [string] -or -not $script:FamilyIdRegex.IsMatch($id)) {
+            $errors.Add((New-AgentComposeError $p (& $at 'Id') "Id '$id' must match ^[a-z][a-z0-9-]{1,31}$"))
+        }
+        elseif (-not (Test-AgentSame $script:FamilyId $script:LegacyFamilyId) -and -not (Test-AgentSame $id $script:FamilyId)) {
+            $errors.Add((New-AgentComposeError $p (& $at 'Id') "Id '$id' differs from the registry Id '$($script:FamilyId)'"))
+        }
+    }
+    if ($Family.ContainsKey('RequiredTag')) {
+        $tag = $Family['RequiredTag']
+        if ($tag -isnot [string] -or $tag.Length -gt 32 -or -not $script:TagRegex.IsMatch($tag)) {
+            $errors.Add((New-AgentComposeError $p (& $at 'RequiredTag') "RequiredTag '$tag' must be a kebab-case tag of at most 32 characters"))
+        }
+    }
+    if ($Family.ContainsKey('Category') -and -not (Test-AgentInList $script:Categories $Family['Category'])) {
+        $errors.Add((New-AgentComposeError $p (& $at 'Category') "Category '$($Family['Category'])' must be one of: $($script:Categories -join ', ')"))
+    }
+    if ($Family.ContainsKey('CreditsSentence')) {
+        $sentence = $Family['CreditsSentence']
+        if ($sentence -isnot [string] -or $sentence.Contains("`n") -or $sentence.Contains("`r")) {
+            $errors.Add((New-AgentComposeError $p (& $at 'CreditsSentence') 'CreditsSentence must be a single-line string (empty for no sentence check)'))
+        }
+    }
+    if ($Family.ContainsKey('ReadmeCaps')) {
+        $caps = $Family['ReadmeCaps']
+        $good = $caps -is [hashtable] -and $caps.Count -eq 2
+        if ($good) {
+            foreach ($key in 'Lead', 'Other') {
+                if (-not $caps.ContainsKey($key) -or $caps[$key] -isnot [int] -or $caps[$key] -le 0 -or $caps[$key] -gt 65536) { $good = $false }
+            }
+        }
+        if (-not $good) {
+            $errors.Add((New-AgentComposeError $p (& $at 'ReadmeCaps') 'ReadmeCaps must be @{ Lead = <bytes>; Other = <bytes> } with sizes 1..65536'))
+        }
+    }
+    if ($Family.ContainsKey('SkillPolicy')) {
+        $line = & $at 'SkillPolicy'
+        $policy = $Family['SkillPolicy']
+        if ($policy -isnot [hashtable]) {
+            $errors.Add((New-AgentComposeError $p $line 'SkillPolicy must be @{ Skills = @(@{ Name; MinVersion }); ExtraRequiredTools = @(...) }'))
+        }
+        else {
+            $policyKeys = [string[]]@($policy.Keys)
+            [Array]::Sort($policyKeys, [StringComparer]::Ordinal)
+            foreach ($key in $policyKeys) {
+                if (-not (Test-AgentInList @('Skills', 'ExtraRequiredTools') $key)) {
+                    $errors.Add((New-AgentComposeError $p $line "SkillPolicy has unknown key $key (keys: Skills, ExtraRequiredTools)"))
+                }
+            }
+            $skills = @(Get-AgentItems $policy['Skills'])
+            if ($skills.Count -eq 0 -or $skills.Count -gt 16) {
+                $errors.Add((New-AgentComposeError $p $line 'SkillPolicy.Skills must list 1-16 skills'))
+            }
+            $seenSkills = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+            foreach ($skill in $skills) {
+                $name = if ($skill -is [hashtable]) { $skill['Name'] } else { $null }
+                $skillKeys = if ($skill -is [hashtable]) { [string[]]@($skill.Keys) } else { [string[]]@() }
+                $extraKeys = @($skillKeys | Where-Object { -not (Test-AgentInList @('Name', 'MinVersion') $_) })
+                if ($skill -isnot [hashtable] -or $name -isnot [string] -or -not $script:SkillNameRegex.IsMatch($name) -or $extraKeys.Count -gt 0) {
+                    $errors.Add((New-AgentComposeError $p $line "SkillPolicy.Skills entry '$name' must be @{ Name = '<skill>'; MinVersion = 'x.y.z' } with a name matching ^[a-z0-9][a-z0-9-]{1,63}$"))
+                    continue
+                }
+                if (-not $seenSkills.Add($name)) {
+                    $errors.Add((New-AgentComposeError $p $line "SkillPolicy.Skills lists $name twice"))
+                }
+                if ($skill.ContainsKey('MinVersion') -and ($skill['MinVersion'] -isnot [string] -or -not $script:SemVerCoreRegex.IsMatch($skill['MinVersion']))) {
+                    $errors.Add((New-AgentComposeError $p $line "SkillPolicy.Skills '$name': MinVersion '$($skill['MinVersion'])' must be x.y.z"))
+                }
+            }
+            $seenTools = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+            foreach ($tool in @(Get-AgentItems $policy['ExtraRequiredTools'])) {
+                if ($tool -isnot [string] -or -not $script:ToolNameRegex.IsMatch($tool)) {
+                    $errors.Add((New-AgentComposeError $p $line "SkillPolicy.ExtraRequiredTools entry '$tool' is not a tool name"))
+                }
+                elseif (-not $seenTools.Add($tool)) {
+                    $errors.Add((New-AgentComposeError $p $line "SkillPolicy.ExtraRequiredTools lists $tool twice"))
+                }
+            }
+        }
+    }
+    if ($Family.ContainsKey('AllowRestrictedMentions')) {
+        foreach ($tool in @(Get-AgentItems $Family['AllowRestrictedMentions'])) {
+            if ($tool -isnot [string] -or -not $script:ToolNameRegex.IsMatch($tool)) {
+                $errors.Add((New-AgentComposeError $p (& $at 'AllowRestrictedMentions') "AllowRestrictedMentions entry '$tool' is not a tool name"))
+            }
+        }
     }
     $errors.ToArray()
 }
@@ -1164,6 +1561,10 @@ Export-ModuleMember -Function @(
     'Get-AgentFragmentPath'
     'Get-AgentFragmentIds'
     'Get-AgentTemplateIds'
+    'Get-AgentFamilyRegistry'
+    'Set-AgentFamilyContext'
+    'Get-AgentFamilyContext'
+    'Get-AgentRosterUnion'
     'Get-AgentFamily'
     'Get-AgentFamilyAgent'
     'Resolve-AgentLicenseSource'

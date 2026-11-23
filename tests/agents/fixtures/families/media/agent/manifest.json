@@ -1,0 +1,42 @@
+{
+  "type": "agent",
+  "schemaVersion": 1,
+  "name": "media-maker",
+  "displayName": "Media Maker",
+  "version": "1.0.0",
+  "description": "Test fixture: cuts clips the user supplies into short videos with the media-kit skill.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "ai",
+  "tags": [
+    "media",
+    "video"
+  ],
+  "agent": {
+    "whenToUse": "Pick this agent to cut the user's own clips into one short video. Not for: downloading media or publishing it anywhere. Family role: media-maker."
+  },
+  "requires": {
+    "skills": [
+      {
+        "name": "media-kit",
+        "minVersion": "1.0.0"
+      }
+    ],
+    "tools": [
+      "media.video",
+      "tts.file"
+    ]
+  },
+  "defaults": {
+    "subAgents": {
+      "enabled": false,
+      "maxDepth": 0
+    },
+    "modelRouting": {
+      "mode": "inherit"
+    }
+  },
+  "sophon": {
+    "minVersion": "2.2.0"
+  }
+}

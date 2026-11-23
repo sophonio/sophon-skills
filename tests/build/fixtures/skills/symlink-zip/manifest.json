@@ -1,0 +1,32 @@
+{
+  "name": "symlink-zip",
+  "version": "1.0.0",
+  "description": "Fixture skill symlink-zip for tests/build/Test-SkillLint.ps1.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "development",
+  "tags": [
+    "fixture"
+  ],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "requirements": [],
+  "sandbox": {
+    "network": false,
+    "timeoutSeconds": 30
+  },
+  "platforms": [],
+  "tools": [
+    {
+      "name": "fixture.symlinkzip.ping",
+      "description": "Fixture tool fixture.symlinkzip.ping.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  ]
+}

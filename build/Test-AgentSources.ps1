@@ -5,19 +5,26 @@
     Source checks for the agent packages in agents/: layout, SOUL composition, tool-name lint, scanner
     preflight, budgets, manifests, TOOLS.md, attribution and credits. Needs no Sophon CLI.
 .DESCRIPTION
-    Sections (docs/plans/2026-11-15-agents-v2-design.md section 7.5):
-      A  roster and layout       agents/ folders == roster; exactly 5 files each; strict UTF-8, no BOM, CR,
+    Sections (docs/plans/2026-11-15-agents-v2-design.md section 7.5), run per agent family:
+      A  roster and layout       roster agents have folders; exactly 5 files each; strict UTF-8, no BOM, CR,
                                  NUL, tabs or hidden characters; one trailing LF; size limits; LICENSE copy
       B  composer                build/Compose-AgentSouls.ps1 -Check in a child pwsh
       C  tool-name lint          SOUL.md, TOOLS.md, README.md, manifest displayName/description/whenToUse
       D  preflight               the same texts through the scanner replay; every fragment <= 4,096 B and
                                  starts with its only "## " heading
-      E  budgets                 SOUL <= SoulCap, TOOLS.md <= 2,048 B, README <= 12 KiB (lead 24 KiB);
-                                 prints the headroom table
-      F  manifest                the family contract (keys, lengths, marker, subAgents, requires.tools)
+      E  budgets                 SOUL <= SoulCap, TOOLS.md <= 2,048 B, README <= ReadmeCaps (default 12 KiB,
+                                 lead 24 KiB); prints the headroom table
+      F  manifest                the family contract (keys, lengths, marker, subAgents, requires) and
+                                 MAN-SKILL-VERSION (every SkillPolicy skill exists at its MinVersion or later)
       G  TOOLS.md                strict grammar, runtime-parser agreement, pin rules
-      H  attribution             exact trailer and footer bytes; present in every 12a agent, absent otherwise
-      I  credits                 family Credits strings and the canonical credits sentence in each README
+      H  attribution             exact trailer and footer bytes; present in every agent that includes a
+                                 fragment using {{= CommitTrailer}} or {{= PrFooter}}, absent otherwise
+      I  credits                 family Credits strings and the family CreditsSentence in each README
+
+    Families come from build/agent-src/families.psd1. Without -Family this script checks that the agents/
+    folders equal the union of every family roster (an id belongs to one family), then runs itself once per
+    family (-Family <id>) and fails when any family fails. Without a registry it checks the single family in
+    build/agent-src/family.psd1, folders == roster included.
 
     Every issue prints as "ERROR <rule> <path>:<line>: <message>". Exit code 1 on any error, else 0.
     Pure cross-platform PowerShell 7; runs on Linux CI.
@@ -26,15 +33,20 @@
 .PARAMETER Agents
     Check only these agent ids (comma-separated values are accepted). The folders-equal-roster check runs only
     without -Agents.
+.PARAMETER Family
+    Check one family (a registry Id). The agents/-equals-union check runs only without -Family.
 .EXAMPLE
     pwsh -NoProfile -File build/Test-AgentSources.ps1
+.EXAMPLE
+    pwsh -NoProfile -File build/Test-AgentSources.ps1 -Family development
 .EXAMPLE
     pwsh -NoProfile -File build/Test-AgentSources.ps1 -Agents lead-developer
 #>
 [CmdletBinding()]
 param(
     [string]$RepoRoot = (Join-Path $PSScriptRoot '..'),
-    [string[]]$Agents = @()
+    [string[]]$Agents = @(),
+    [string]$Family = ''
 )
 
 Set-StrictMode -Version Latest
@@ -42,6 +54,7 @@ $ErrorActionPreference = 'Stop'
 
 $RepoRoot = [IO.Path]::GetFullPath($RepoRoot)
 Import-Module (Join-Path $PSScriptRoot 'AgentLint.psm1') -Force
+Import-Module (Join-Path $PSScriptRoot 'AgentFamily.psm1') -Force
 
 $script:Errors = [System.Collections.Generic.List[object]]::new()
 $script:SectionCounts = [ordered]@{}
@@ -91,52 +104,157 @@ $ordIgnore = [System.StringComparison]::OrdinalIgnoreCase
 $packageFiles = @('LICENSE', 'README.md', 'SOUL.md', 'TOOLS.md', 'manifest.json')
 
 # =============================================================================================================
-Enter-Section 'A' 'Roster and layout'
+# Families: the registry, and the parent pass that runs one child pass per family
 # =============================================================================================================
 
-$familyPath = Join-Path $RepoRoot 'build/agent-src/family.psd1'
-try {
-    $familyData = Import-PowerShellDataFile -LiteralPath $familyPath
-} catch {
-    Add-SourceError 'FAMILY-LOAD' 'build/agent-src/family.psd1' 1 "does not load with Import-PowerShellDataFile: $($_.Exception.Message)"
+$registry = Get-AgentFamilyRegistry -RepoRoot $RepoRoot
+if (@($registry['Errors']).Count -gt 0) {
+    Enter-Section 'A' 'Roster and layout'
+    foreach ($e in @($registry['Errors'])) { Add-SourceError 'FAMILY-REGISTRY' $e['Path'] $e['Line'] $e['Message'] }
     Write-Host ''
-    Write-Host 'Test-AgentSources: cannot continue without family.psd1.'
+    Write-Host 'Test-AgentSources: cannot continue without a valid family registry.'
     exit 1
 }
 
-# Prefer the composer's loader when it is present (it sorts Agents ordinally); fall back to the data file.
-$family = $familyData
-$familyModule = Join-Path $PSScriptRoot 'AgentFamily.psm1'
-if (Test-Path -LiteralPath $familyModule -PathType Leaf) {
-    try {
-        Import-Module $familyModule -Force
-        $loaded = AgentFamily\Get-AgentFamily -RepoRoot $RepoRoot
-        if ($null -ne (Get-AgentField $loaded 'Agents')) { $family = $loaded }
-    } catch {
-        Write-Host "note: build/AgentFamily.psm1 did not load the family ($($_.Exception.Message)); using family.psd1 directly"
+$requested = @($Agents | ForEach-Object { $_ -split ',' } | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+
+if (-not $Family -and -not $registry['Legacy']) {
+    # Parent pass: agents/ must hold exactly the union of the family rosters; then each family is checked by a
+    # child pass of this script (-Family <id>), and the exit codes are combined.
+    $familyIds = [string[]]@($registry['Families'] | ForEach-Object { [string]$_['Id'] })
+    Enter-Section 'A' "Roster union ($($familyIds -join ', '))"
+    $union = Get-AgentRosterUnion -RepoRoot $RepoRoot
+    foreach ($e in @($union['Errors'])) { Add-SourceError 'FAMILY-LOAD' $e['Path'] $e['Line'] $e['Message'] }
+    $byFamily = @{}
+    if ($requested.Count -eq 0) {
+        $agentsRoot = Join-Path $RepoRoot 'agents'
+        if (Test-Path -LiteralPath $agentsRoot -PathType Container) {
+            foreach ($entry in @(Get-ChildItem -LiteralPath $agentsRoot -Force | Sort-Object Name)) {
+                if (-not $entry.PSIsContainer) { Add-SourceError 'LAYOUT-ROSTER' (Get-RelPath $entry.FullName) 0 'only agent folders may live directly under agents/' }
+                elseif (-not $union['Owner'].ContainsKey($entry.Name)) { Add-SourceError 'LAYOUT-ROSTER' "agents/$($entry.Name)" 0 "folder is not in any family roster ($($registry['Path']))" }
+            }
+        }
+    } else {
+        foreach ($id in $requested) {
+            $owner = $null
+            if ($union['Owner'].TryGetValue($id, [ref]$owner)) {
+                if (-not $byFamily.ContainsKey($owner)) { $byFamily[$owner] = [System.Collections.Generic.List[string]]::new() }
+                if (-not $byFamily[$owner].Contains($id)) { $byFamily[$owner].Add($id) }
+            } else {
+                Add-SourceError 'LAYOUT-AGENT' $registry['Path'] 1 "unknown agent '$id' (roster union: $($union['Ids'] -join ', '))"
+            }
+        }
     }
+
+    $pwsh = [Environment]::ProcessPath
+    if (-not $pwsh -or [IO.Path]::GetFileNameWithoutExtension($pwsh) -ne 'pwsh') { $pwsh = 'pwsh' }
+    $results = [System.Collections.Generic.List[object]]::new()
+    $childErrors = 0
+    $checked = 0
+    foreach ($loaded in @($union['Families'])) {
+        $id = [string]$loaded['Id']
+        $childArgs = @('-NoProfile', '-NonInteractive', '-File', $PSCommandPath, '-RepoRoot', $RepoRoot, '-Family', $id)
+        if ($requested.Count -gt 0) {
+            if (-not $byFamily.ContainsKey($id)) { continue }
+            $childArgs += @('-Agents', ($byFamily[$id] -join ','))
+            $checked += $byFamily[$id].Count
+        } else {
+            $checked += @($loaded['Roster']).Count
+        }
+        Write-Host ''
+        Write-Host "-- family $id ($($loaded['Path']))"
+        $previousPreference = $ErrorActionPreference
+        $ErrorActionPreference = 'Continue'
+        try {
+            $output = @(& $pwsh @childArgs 2>&1 | ForEach-Object { "$_" })
+            $code = $LASTEXITCODE
+        } catch {
+            $output = @("ERROR FAMILY-PASS build/Test-AgentSources.ps1:0: could not start ${pwsh}: $($_.Exception.Message)")
+            $code = -1
+        } finally {
+            $ErrorActionPreference = $previousPreference
+        }
+        foreach ($line in $output) { Write-Host $line }
+        $childErrors += @($output | Where-Object { $_ -clike 'ERROR *' }).Count
+        $results.Add([pscustomobject]@{ Id = $id; Code = $code })
+    }
+
+    Write-Host ''
+    Write-Host '== Summary'
+    Write-Host ('  roster union  {0} error(s)' -f $script:Errors.Count)
+    foreach ($result in $results) {
+        Write-Host ('  family {0}  {1}' -f $result.Id, $(if ($result.Code -eq 0) { 'OK' } else { "FAILED (exit $($result.Code))" }))
+    }
+    $failed = @($results | Where-Object { $_.Code -ne 0 } | ForEach-Object { $_.Id })
+    if ($script:Errors.Count -gt 0 -or $failed.Count -gt 0) {
+        $total = $script:Errors.Count + $childErrors
+        Write-Host "Test-AgentSources: $total error(s) across $($results.Count) family pass(es)$(if ($failed.Count) { " (failed: $($failed -join ', '))" })."
+        exit 1
+    }
+    Write-Host "Test-AgentSources: OK ($checked agent(s) in $($results.Count) famil$(if ($results.Count -eq 1) { 'y' } else { 'ies' }): $(@($results | ForEach-Object { $_.Id }) -join ', '))."
+    exit 0
 }
 
-$familyAgents = @(Get-AgentField $family 'Agents' @())
+# =============================================================================================================
+Enter-Section 'A' 'Roster and layout'
+# =============================================================================================================
+
+try {
+    $familyEntry = Set-AgentFamilyContext -RepoRoot $RepoRoot -Family $Family
+} catch {
+    Add-SourceError 'FAMILY-LOAD' $registry['Path'] 1 $_.Exception.Message
+    Write-Host ''
+    Write-Host 'Test-AgentSources: cannot continue without a family.'
+    exit 1
+}
+$familyId = [string]$familyEntry['Id']
+$familyContext = Get-AgentFamilyContext
+$familyRel = [string]$familyContext['FamilyRelPath']
+if (-not $registry['Legacy']) { Write-Host "  family $familyId ($familyRel)" }
+
+$familyPath = Join-Path $RepoRoot $familyRel
+try {
+    $familyData = Import-PowerShellDataFile -LiteralPath $familyPath
+} catch {
+    Add-SourceError 'FAMILY-LOAD' $familyRel 1 "does not load with Import-PowerShellDataFile: $($_.Exception.Message)"
+    Write-Host ''
+    Write-Host "Test-AgentSources: cannot continue without $familyRel."
+    exit 1
+}
+
+# Prefer the composer's loader (it sorts Agents ordinally); fall back to the data file.
+$fam = $familyData
+try {
+    $loaded = Get-AgentFamily -RepoRoot $RepoRoot
+    if ($null -ne (Get-AgentField $loaded 'Agents')) { $fam = $loaded }
+} catch {
+    Write-Host "note: build/AgentFamily.psm1 did not load the family ($($_.Exception.Message)); using $familyRel directly"
+}
+
+$familyAgents = @(Get-AgentField $fam 'Agents' @())
 $roster = [System.Collections.Generic.List[string]]::new()
 foreach ($agent in $familyAgents) { $roster.Add([string](Get-AgentField $agent 'Id')) }
 $roster.Sort([System.StringComparer]::Ordinal)
 $agentById = @{}
 foreach ($agent in $familyAgents) { $agentById[[string](Get-AgentField $agent 'Id')] = $agent }
 
-$requested = @($Agents | ForEach-Object { $_ -split ',' } | ForEach-Object { $_.Trim() } | Where-Object { $_ })
 $selected = [System.Collections.Generic.List[string]]::new()
 if ($requested.Count -eq 0) {
     foreach ($id in $roster) { $selected.Add($id) }
 } else {
     foreach ($id in $requested) {
         if ($roster.Contains($id)) { if (-not $selected.Contains($id)) { $selected.Add($id) } }
-        else { Add-SourceError 'LAYOUT-AGENT' 'build/agent-src/family.psd1' 1 "unknown agent '$id' (roster: $($roster -join ', '))" }
+        else { Add-SourceError 'LAYOUT-AGENT' $familyRel 1 "unknown agent '$id' (roster: $($roster -join ', '))" }
     }
 }
 
 $agentsDir = Join-Path $RepoRoot 'agents'
-if ($requested.Count -eq 0) {
+if ($requested.Count -eq 0 -and -not $registry['Legacy']) {
+    # One family of several: the parent pass checks agents/ against the union of the rosters.
+    foreach ($id in $roster) {
+        if (-not (Test-Path -LiteralPath (Join-Path $agentsDir $id) -PathType Container)) { Add-SourceError 'LAYOUT-ROSTER' "agents/$id" 0 'roster agent has no folder' }
+    }
+} elseif ($requested.Count -eq 0) {
     $entries = @(if (Test-Path -LiteralPath $agentsDir -PathType Container) { Get-ChildItem -LiteralPath $agentsDir -Force })
     $folders = [System.Collections.Generic.List[string]]::new()
     foreach ($entry in $entries) {
@@ -144,7 +262,7 @@ if ($requested.Count -eq 0) {
         else { Add-SourceError 'LAYOUT-ROSTER' (Get-RelPath $entry.FullName) 0 'only agent folders may live directly under agents/' }
     }
     foreach ($name in $folders) {
-        if (-not $roster.Contains($name)) { Add-SourceError 'LAYOUT-ROSTER' "agents/$name" 0 'folder is not in the family roster (build/agent-src/family.psd1)' }
+        if (-not $roster.Contains($name)) { Add-SourceError 'LAYOUT-ROSTER' "agents/$name" 0 "folder is not in the family roster ($familyRel)" }
     }
     foreach ($id in $roster) {
         if (-not $folders.Contains($id)) { Add-SourceError 'LAYOUT-ROSTER' "agents/$id" 0 'roster agent has no folder' }
@@ -154,10 +272,10 @@ if ($requested.Count -eq 0) {
 $licenseSources = @{}
 $agentLicenseSources = @{}
 foreach ($id in $selected) {
-    $license = [string](Get-AgentField $agentById[$id] 'License' (Get-AgentField $family 'License' 'MIT'))
+    $license = [string](Get-AgentField $agentById[$id] 'License' (Get-AgentField $fam 'License' 'MIT'))
     try { $source = AgentFamily\Resolve-AgentLicenseSource -License $license }
     catch {
-        Add-SourceError 'LAYOUT-LICENSE' 'build/agent-src/family.psd1' 0 "agent '$id' has unsupported license '$license'"
+        Add-SourceError 'LAYOUT-LICENSE' $familyRel 0 "agent '$id' has unsupported license '$license'"
         continue
     }
     $agentLicenseSources[$id] = $source
@@ -245,6 +363,7 @@ if ($requested.Count -gt 0 -and $selected.Count -eq 0) {
     $pwsh = [Environment]::ProcessPath
     if (-not $pwsh -or [IO.Path]::GetFileNameWithoutExtension($pwsh) -ne 'pwsh') { $pwsh = 'pwsh' }
     $composeArgs = @('-NoProfile', '-NonInteractive', '-File', $composer, '-RepoRoot', $RepoRoot, '-Check')
+    if (-not $registry['Legacy']) { $composeArgs += @('-Family', $familyId) }
     if ($requested.Count -gt 0 -and $selected.Count -gt 0) { $composeArgs += @('-Agents', ($selected -join ',')) }
     $previousPreference = $ErrorActionPreference
     $ErrorActionPreference = 'Continue'
@@ -267,7 +386,12 @@ if ($requested.Count -gt 0 -and $selected.Count -eq 0) {
 $catalog = Get-AgentCatalog -RepoRoot $RepoRoot
 foreach ($warning in $catalog.Warnings) { Write-Host "note: $warning" }
 $rules = Get-ScanRules -RepoRoot $RepoRoot
-$allowedHosts = [string[]]@(Get-AgentField $family 'AllowedHosts' @())
+$allowedHosts = [string[]]@(Get-AgentField $fam 'AllowedHosts' @())
+# Skill tools are named and pinned only by a family whose SkillPolicy lists their skill; restricted names in
+# AllowRestrictedMentions may be named un-negated (never pinned).
+$allowedSkillTools = Get-AgentAllowedSkillTools -Family $fam -Catalog $catalog
+$allowRestricted = [string[]]@(@(Get-AgentField $fam 'AllowRestrictedMentions' @()) | Where-Object { $_ -is [string] })
+$skillPolicy = Get-AgentSkillPolicy $fam
 
 # Manifest texts per agent: parsed object, raw text, and the scanned fields with their manifest.json lines.
 $manifests = @{}
@@ -302,11 +426,11 @@ foreach ($id in $selected) {
     foreach ($pair in @(@('SOUL.md', 'soul'), @('TOOLS.md', 'tools'), @('README.md', 'readme'))) {
         $text = $texts[$id][$pair[0]]
         if ($null -eq $text) { continue }
-        Add-Issues (Invoke-ToolNameLint -Text $text -Path "agents/$id/$($pair[0])" -Kind $pair[1] -Catalog $catalog)
+        Add-Issues (Invoke-ToolNameLint -Text $text -Path "agents/$id/$($pair[0])" -Kind $pair[1] -Catalog $catalog -AllowedSkillTools $allowedSkillTools -AllowRestrictedMentions $allowRestricted)
     }
     if ($manifests.ContainsKey($id)) {
         foreach ($field in $manifests[$id].Fields) {
-            Add-Issues (Invoke-ToolNameLint -Text $field.Text -Path "agents/$id/manifest.json" -Kind 'manifest' -Catalog $catalog) @{ 1 = $field.Line }
+            Add-Issues (Invoke-ToolNameLint -Text $field.Text -Path "agents/$id/manifest.json" -Kind 'manifest' -Catalog $catalog -AllowedSkillTools $allowedSkillTools -AllowRestrictedMentions $allowRestricted) @{ 1 = $field.Line }
         }
     }
 }
@@ -331,7 +455,7 @@ foreach ($id in $selected) {
     }
 }
 
-$fragmentDir = Join-Path $RepoRoot 'build/agent-src/fragments/soul'
+$fragmentDir = Join-Path $RepoRoot $familyContext['FragmentsRelDir']
 if (Test-Path -LiteralPath $fragmentDir -PathType Container) {
     foreach ($fragment in @(Get-ChildItem -LiteralPath $fragmentDir -File -Filter '*.md' | Sort-Object Name)) {
         $fragRel = Get-RelPath $fragment.FullName
@@ -353,28 +477,31 @@ if (Test-Path -LiteralPath $fragmentDir -PathType Container) {
         }
     }
 } else {
-    Add-SourceError 'BUDGET-FRAGMENT' 'build/agent-src/fragments/soul' 0 'fragment folder is missing'
+    Add-SourceError 'BUDGET-FRAGMENT' $familyContext['FragmentsRelDir'] 0 'fragment folder is missing'
 }
 
 # =============================================================================================================
 Enter-Section 'E' 'Budgets'
 # =============================================================================================================
 
-$lead = [string](Get-AgentField $family 'Lead' 'lead-developer')
+$lead = [string](Get-AgentField $fam 'Lead' 'lead-developer')
+$readmeCaps = Get-AgentField $fam 'ReadmeCaps'
+$readmeCapLead = [int](Get-AgentField $readmeCaps 'Lead' 24576)
+$readmeCapOther = [int](Get-AgentField $readmeCaps 'Other' 12288)
 $budgetRows = [System.Collections.Generic.List[object]]::new()
 foreach ($id in $selected) {
     $entry = $agentById[$id]
     $cap = [int](Get-AgentField $entry 'SoulCap' 0)
     if ($bytes[$id].ContainsKey('SOUL.md')) {
         $size = $bytes[$id]['SOUL.md'].Length
-        if ($cap -le 0) { Add-SourceError 'BUDGET-SOUL' 'build/agent-src/family.psd1' 1 "agent '$id' has no SoulCap" }
+        if ($cap -le 0) { Add-SourceError 'BUDGET-SOUL' $familyRel 1 "agent '$id' has no SoulCap" }
         elseif ($size -gt $cap) { Add-SourceError 'BUDGET-SOUL' "agents/$id/SOUL.md" 0 "$size bytes; cap $cap (over by $($size - $cap))" }
         $budgetRows.Add([pscustomobject]@{ Id = $id; Bytes = $size; Cap = $cap })
     }
     if ($bytes[$id].ContainsKey('TOOLS.md') -and $bytes[$id]['TOOLS.md'].Length -gt 2048) {
         Add-SourceError 'BUDGET-TOOLS' "agents/$id/TOOLS.md" 0 "$($bytes[$id]['TOOLS.md'].Length) bytes; at most 2,048"
     }
-    $readmeCap = if ($id -ceq $lead) { 24576 } else { 12288 }
+    $readmeCap = if ($id -ceq $lead) { $readmeCapLead } else { $readmeCapOther }
     if ($bytes[$id].ContainsKey('README.md') -and $bytes[$id]['README.md'].Length -gt $readmeCap) {
         Add-SourceError 'BUDGET-README' "agents/$id/README.md" 0 "$($bytes[$id]['README.md'].Length) bytes; at most $readmeCap"
     }
@@ -401,7 +528,32 @@ foreach ($id in $selected) {
     if (-not $manifests.ContainsKey($id)) { continue }
     $m = $manifests[$id]
     $tools = if ($toolsParsed.ContainsKey($id)) { $toolsParsed[$id] } else { $null }
-    Add-Issues (Test-AgentManifest -Manifest $m.Parsed -Raw $m.Raw -Id $id -Family $family -ToolsMd $tools -Path "agents/$id/manifest.json")
+    Add-Issues (Test-AgentManifest -Manifest $m.Parsed -Raw $m.Raw -Id $id -Family $fam -ToolsMd $tools -Path "agents/$id/manifest.json" -Catalog $catalog)
+}
+
+# MAN-SKILL-VERSION: every SkillPolicy skill is in skills/ at its MinVersion or later.
+foreach ($skill in $skillPolicy.Skills) {
+    $skillRel = "skills/$($skill.Name)/manifest.json"
+    $skillPath = Join-Path $RepoRoot $skillRel
+    if (-not (Test-Path -LiteralPath $skillPath -PathType Leaf)) {
+        Add-SourceError 'MAN-SKILL-VERSION' $skillRel 0 "the family SkillPolicy requires skill '$($skill.Name)', which has no manifest in skills/"
+        continue
+    }
+    $skillVersion = $null
+    try { $skillVersion = Get-AgentField (Get-Content -LiteralPath $skillPath -Raw -Encoding utf8 | ConvertFrom-Json -ErrorAction Stop) 'version' } catch { $skillVersion = $null }
+    $have = if ($skillVersion -is [string]) { [regex]::Match($skillVersion, '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?$') } else { $null }
+    if ($null -eq $have -or -not $have.Success) {
+        Add-SourceError 'MAN-SKILL-VERSION' $skillRel 1 "version '$skillVersion' is not SemVer"
+        continue
+    }
+    if ($null -eq $skill.MinVersion) { continue }
+    $need = [regex]::Match($skill.MinVersion, '^(\d+)\.(\d+)\.(\d+)$')
+    $haveCore = [version]::new([int]$have.Groups[1].Value, [int]$have.Groups[2].Value, [int]$have.Groups[3].Value)
+    $needCore = [version]::new([int]$need.Groups[1].Value, [int]$need.Groups[2].Value, [int]$need.Groups[3].Value)
+    $preRelease = $skillVersion.Contains('-')
+    if ($haveCore -lt $needCore -or ($haveCore -eq $needCore -and $preRelease)) {
+        Add-SourceError 'MAN-SKILL-VERSION' $skillRel 1 "version $skillVersion is below the SkillPolicy MinVersion $($skill.MinVersion) ($familyRel)"
+    }
 }
 
 # =============================================================================================================
@@ -412,32 +564,61 @@ foreach ($id in $selected) {
     if (-not $toolsParsed.ContainsKey($id)) { continue }
     $parsed = $toolsParsed[$id]
     Add-Issues $parsed.Issues
-    Add-Issues (Test-ToolsMdPins -ToolsMd $parsed -Path "agents/$id/TOOLS.md" -Catalog $catalog)
+    Add-Issues (Test-ToolsMdPins -ToolsMd $parsed -Path "agents/$id/TOOLS.md" -Catalog $catalog -AllowedSkillTools $allowedSkillTools)
 }
 
 # =============================================================================================================
 Enter-Section 'H' 'Attribution'
 # =============================================================================================================
 
-$values = Get-AgentField $family 'Values' @{}
+$values = Get-AgentField $fam 'Values' @{}
 $trailer = [string](Get-AgentField $values 'CommitTrailer' '')
 $footer = [string](Get-AgentField $values 'PrFooter' '')
-if (-not $trailer -or -not $footer) {
-    Add-SourceError 'ATTR-VALUES' 'build/agent-src/family.psd1' 1 'Values.CommitTrailer and Values.PrFooter are required'
+
+# Which agents carry attribution: those whose template or included fragments use {{= CommitTrailer}} or
+# {{= PrFooter}} (the commit and PR fragments). Derived from the sources, so no fragment name is hardcoded.
+$attributionUsers = @{}
+$sourceTexts = @{}
+foreach ($id in $selected) {
+    $users = [System.Collections.Generic.List[string]]::new()
+    $composed = $null
+    try { $composed = Invoke-AgentCompose -RepoRoot $RepoRoot -Id $id -Family $fam } catch { $composed = $null }
+    if ($null -ne $composed) {
+        $sources = @([pscustomobject]@{ Name = $id; Rel = [string]$composed['Template'] }) +
+            @(@($composed['Included']) | ForEach-Object { [pscustomobject]@{ Name = [string]$_; Rel = (Get-AgentFragmentPath -RepoRoot $RepoRoot -FragmentId ([string]$_)) } })
+        foreach ($source in $sources) {
+            if (-not $sourceTexts.ContainsKey($source.Rel)) {
+                $full = Join-Path $RepoRoot $source.Rel
+                $sourceTexts[$source.Rel] = if (Test-Path -LiteralPath $full -PathType Leaf) { [IO.File]::ReadAllText($full) } else { '' }
+            }
+            $sourceText = $sourceTexts[$source.Rel]
+            if ($sourceText.Contains('{{= CommitTrailer}}', $ord) -or $sourceText.Contains('{{= PrFooter}}', $ord)) { $users.Add($source.Name) }
+        }
+    }
+    $attributionUsers[$id] = $users.ToArray()
+}
+$usesAttribution = @($selected | Where-Object { $attributionUsers[$_].Count -gt 0 }).Count -gt 0
+
+if ($usesAttribution -and (-not $trailer -or -not $footer)) {
+    Add-SourceError 'ATTR-VALUES' $familyRel 1 'Values.CommitTrailer and Values.PrFooter are required (an agent includes a commit or PR fragment)'
 } else {
     $footerAnchor = 'Generated with [Sophon]'
-    $anchorOffset = $footer.IndexOf($footerAnchor, $ord)
-    $scanDirs = if ($requested.Count -eq 0) { @($agentsDir) } else { @($selected | ForEach-Object { Join-Path $agentsDir $_ }) }
+    $anchorOffset = if ($footer) { $footer.IndexOf($footerAnchor, $ord) } else { -1 }
+    # The legacy single family scans every file under agents/; a family of several scans its own folders.
+    $scanDirs = if ($requested.Count -eq 0 -and $registry['Legacy']) { @($agentsDir) } else { @($selected | ForEach-Object { Join-Path $agentsDir $_ }) }
     foreach ($scanDir in $scanDirs) {
         if (-not (Test-Path -LiteralPath $scanDir -PathType Container)) { continue }
         foreach ($file in @(Get-ChildItem -LiteralPath $scanDir -File -Recurse -Force)) {
             $rel = Get-RelPath $file.FullName
+            $isSoul = [string]::Equals($file.Name, 'SOUL.md', $ord)
             $text = $null
             try { $text = $utf8Strict.GetString([IO.File]::ReadAllBytes($file.FullName)) } catch { continue }
 
             $at = $text.IndexOf('Co-Authored-By:', $ordIgnore)
             while ($at -ge 0) {
-                if ($text.Length - $at -lt $trailer.Length -or -not [string]::Equals($text.Substring($at, $trailer.Length), $trailer, $ord)) {
+                if (-not $trailer) {
+                    if (-not $isSoul) { Add-SourceError 'ATTR-UNEXPECTED' $rel (Get-LineAt $text $at) "a commit trailer, but $familyRel defines no Values.CommitTrailer" }
+                } elseif ($text.Length - $at -lt $trailer.Length -or -not [string]::Equals($text.Substring($at, $trailer.Length), $trailer, $ord)) {
                     $found = [regex]::Match($text.Substring($at), '^Co-Authored-By:[^"''`\r\n]*', 'IgnoreCase').Value
                     Add-SourceError 'ATTR-TRAILER' $rel (Get-LineAt $text $at) "commit trailer '$found' differs from the canonical '$trailer'"
                 }
@@ -447,7 +628,9 @@ if (-not $trailer -or -not $footer) {
             $at = $text.IndexOf($footerAnchor, $ordIgnore)
             while ($at -ge 0) {
                 $start = $at - $anchorOffset
-                if ($start -lt 0 -or $text.Length - $start -lt $footer.Length -or -not [string]::Equals($text.Substring($start, $footer.Length), $footer, $ord)) {
+                if (-not $footer) {
+                    if (-not $isSoul) { Add-SourceError 'ATTR-UNEXPECTED' $rel (Get-LineAt $text $at) "a PR footer, but $familyRel defines no Values.PrFooter" }
+                } elseif ($start -lt 0 -or $text.Length - $start -lt $footer.Length -or -not [string]::Equals($text.Substring($start, $footer.Length), $footer, $ord)) {
                     $found = [regex]::Match($text.Substring([Math]::Max(0, $start)), '^.{0,3}Generated with \[Sophon\]\([^)]*\)?', 'IgnoreCase').Value
                     Add-SourceError 'ATTR-FOOTER' $rel (Get-LineAt $text $at) "PR footer '$found' differs from the canonical footer (U+1F916 without U+FE0F, then ' Generated with [Sophon](https://sophon.buildersoft.io)')"
                 }
@@ -464,13 +647,13 @@ if (-not $trailer -or -not $footer) {
     foreach ($id in $selected) {
         $soul = $texts[$id]['SOUL.md']
         if ($null -eq $soul) { continue }
-        $fragments = @(Get-AgentField $agentById[$id] 'Fragments' @())
-        if ($fragments -contains '12a-git-commit') {
-            if (-not $soul.Contains($trailer, $ord)) { Add-SourceError 'ATTR-MISSING' "agents/$id/SOUL.md" 0 "includes 12a-git-commit but does not contain the commit trailer '$trailer'" }
-            if (-not $soul.Contains($footer, $ord)) { Add-SourceError 'ATTR-MISSING' "agents/$id/SOUL.md" 0 'includes 12a-git-commit but does not contain the PR footer' }
+        $users = @($attributionUsers[$id])
+        if ($users.Count -gt 0) {
+            if (-not $soul.Contains($trailer, $ord)) { Add-SourceError 'ATTR-MISSING' "agents/$id/SOUL.md" 0 "includes $($users -join ', ') but does not contain the commit trailer '$trailer'" }
+            if (-not $soul.Contains($footer, $ord)) { Add-SourceError 'ATTR-MISSING' "agents/$id/SOUL.md" 0 "includes $($users -join ', ') but does not contain the PR footer" }
         } else {
-            if ($soul.IndexOf('Co-Authored-By:', $ordIgnore) -ge 0) { Add-SourceError 'ATTR-UNEXPECTED' "agents/$id/SOUL.md" (Get-LineAt $soul $soul.IndexOf('Co-Authored-By:', $ordIgnore)) 'a read-only agent (no 12a-git-commit) must not carry the commit trailer' }
-            if ($soul.IndexOf($footerAnchor, $ordIgnore) -ge 0) { Add-SourceError 'ATTR-UNEXPECTED' "agents/$id/SOUL.md" (Get-LineAt $soul $soul.IndexOf($footerAnchor, $ordIgnore)) 'a read-only agent (no 12a-git-commit) must not carry the PR footer' }
+            if ($soul.IndexOf('Co-Authored-By:', $ordIgnore) -ge 0) { Add-SourceError 'ATTR-UNEXPECTED' "agents/$id/SOUL.md" (Get-LineAt $soul $soul.IndexOf('Co-Authored-By:', $ordIgnore)) 'an agent without a commit or PR fragment must not carry the commit trailer' }
+            if ($soul.IndexOf($footerAnchor, $ordIgnore) -ge 0) { Add-SourceError 'ATTR-UNEXPECTED' "agents/$id/SOUL.md" (Get-LineAt $soul $soul.IndexOf($footerAnchor, $ordIgnore)) 'an agent without a commit or PR fragment must not carry the PR footer' }
         }
     }
 }
@@ -479,11 +662,12 @@ if (-not $trailer -or -not $footer) {
 Enter-Section 'I' 'Credits'
 # =============================================================================================================
 
-$creditSentence = 'Workflow patterns adapted, not copied, from obra/superpowers (MIT, ' + [char]0xA9 + ' 2025 Jesse Vincent) and ' +
-    'Anthropic''s Claude Code plugins (feature-dev, pr-review-toolkit, code-review, security-review, frontend-design; Apache-2.0).'
-$credits = Get-AgentField $family 'Credits' @{}
+# CreditsSentence: the family's verbatim README sentence (absent or empty: no sentence check).
+# An agent with no Credits needs only its license sentence.
+$creditSentence = [string](Get-AgentField $fam 'CreditsSentence' '')
+$credits = Get-AgentField $fam 'Credits' @{}
 foreach ($id in $selected) {
-    $license = [string](Get-AgentField $agentById[$id] 'License' (Get-AgentField $family 'License' 'MIT'))
+    $license = [string](Get-AgentField $agentById[$id] 'License' (Get-AgentField $fam 'License' 'MIT'))
     $licenseSentence = "Licensed under the $license License; see LICENSE."
     $readme = $texts[$id]['README.md']
     if ($null -eq $readme) { continue }
@@ -491,13 +675,13 @@ foreach ($id in $selected) {
     $agentCredits = @(Get-AgentField $agentById[$id] 'Credits' @())
     foreach ($key in $agentCredits) {
         $credit = Get-AgentField $credits ([string]$key)
-        if ($null -eq $credit) { Add-SourceError 'CREDITS-KEY' 'build/agent-src/family.psd1' 1 "agent '$id' lists credit '$key', which Credits does not define"; continue }
+        if ($null -eq $credit) { Add-SourceError 'CREDITS-KEY' $familyRel 1 "agent '$id' lists credit '$key', which Credits does not define"; continue }
         if (-not $readme.Contains([string]$credit, $ord)) { Add-SourceError 'CREDITS-MISSING' $rel 0 "missing the credit '$credit'" }
     }
     if ($agentCredits.Count -eq 0) {
         if ($readme.IndexOf($licenseSentence, $ord) -lt 0) { Add-SourceError 'CREDITS-SENTENCE' $rel 0 "missing the license sentence '$licenseSentence'" }
     }
-    else {
+    elseif ($creditSentence) {
         $sentenceAt = $readme.IndexOf($creditSentence, $ord)
         if ($sentenceAt -lt 0) { Add-SourceError 'CREDITS-SENTENCE' $rel 0 "missing the verbatim credits sentence '$creditSentence'" }
         else {
@@ -520,5 +704,6 @@ if ($script:Errors.Count -gt 0) {
     Write-Host "Test-AgentSources: $($script:Errors.Count) error(s) across $($selected.Count) agent(s)."
     exit 1
 }
-Write-Host "Test-AgentSources: OK ($($selected.Count) agent(s): $($selected -join ', '))."
+$familyNote = if ($registry['Legacy']) { '' } else { " in family $familyId" }
+Write-Host "Test-AgentSources: OK ($($selected.Count) agent(s)$($familyNote): $($selected -join ', '))."
 exit 0

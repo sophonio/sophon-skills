@@ -1,0 +1,51 @@
+{
+  "name": "int-enum",
+  "version": "1.0.0",
+  "description": "Fixture skill int-enum for tests/build/Test-SkillLint.ps1.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "development",
+  "tags": [
+    "fixture"
+  ],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "requirements": [],
+  "sandbox": {
+    "network": false,
+    "timeoutSeconds": 30
+  },
+  "platforms": [],
+  "tools": [
+    {
+      "name": "fixture.intenum.ping",
+      "description": "Fixture tool fixture.intenum.ping.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "priority": {
+            "type": "integer",
+            "enum": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "description": "Priority."
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "a",
+              2
+            ],
+            "description": "Mixed."
+          }
+        },
+        "required": []
+      }
+    }
+  ]
+}

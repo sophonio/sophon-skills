@@ -243,23 +243,48 @@ class SchemaTests(unittest.TestCase):
         props = self.tools['create_note']['parameters']['properties']
         update = self.tools['update_note']['parameters']['properties']
         for note in (props, update):
-            self.assertEqual(note['sources']['type'], ['array', 'null'])
+            self.assertEqual(note['sources']['type'], 'array')
             self.assertEqual(note['sources']['maxItems'], 100)
             item = note['sources']['items']
             self.assertEqual(item['required'], ['n', 'url'])
             self.assertEqual((item['properties']['n']['minimum'], item['properties']['n']['maximum']), (1, 999))
             self.assertEqual(item['properties']['url']['maxLength'], 2048)
-            self.assertEqual(item['properties']['title']['type'], ['string', 'null'])
+            self.assertEqual(item['properties']['title']['type'], 'string')
             self.assertEqual(note['tags']['maxItems'], 50)
-            self.assertEqual(note['properties']['properties']['status']['enum'], ['not_started', 'in_progress', 'waiting', 'done', None])
             self.assertEqual(sorted(note['properties']['properties']), ['due', 'lead', 'status'])
-            self.assertEqual(note['body']['type'], ['string', 'null'])
+            self.assertEqual(note['body']['type'], 'string')
+        self.assertEqual(props['properties']['properties']['status']['enum'], ['not_started', 'in_progress', 'waiting', 'done'])
+        self.assertEqual(update['properties']['properties']['status']['enum'], ['not_started', 'in_progress', 'waiting', 'done', ''])
         share = props['share_with']
         self.assertEqual((share['maxItems'], share['items']['required']), (9, ['email', 'role']))
         self.assertEqual(share['items']['properties']['role']['enum'], ['edit', 'view'])
-        self.assertEqual(update['title']['type'], ['string', 'null'])
-        self.assertEqual(self.tools['create_todo']['parameters']['properties']['priority']['enum'], [1, 2, None])
-        self.assertEqual(self.tools['ask']['parameters']['properties']['discussion_id']['type'], ['string', 'null'])
+        self.assertEqual(update['title']['type'], 'string')
+        priority = self.tools['create_todo']['parameters']['properties']['priority']
+        self.assertEqual((priority['type'], priority['minimum'], priority['maximum']), ('integer', 1, 2))
+        self.assertEqual(self.tools['ask']['parameters']['properties']['discussion_id']['type'], 'string')
+
+    def test_manifest_types_are_single_strings_and_enums_hold_strings(self):
+        # Gemini accepts one type per node, and its cleaner turns enum values into strings.
+        def walk(node, path):
+            if isinstance(node, dict):
+                if 'type' in node:
+                    self.assertIsInstance(node['type'], str, path + '.type')
+                if 'enum' in node:
+                    self.assertEqual(node.get('type'), 'string', path + '.enum')
+                    self.assertTrue(all(isinstance(v, str) for v in node['enum']), path + '.enum')
+                for key, value in node.items():
+                    walk(value, path + '.' + key)
+            elif isinstance(node, list):
+                for i, value in enumerate(node):
+                    walk(value, path + '[' + str(i) + ']')
+        for name, tool in self.tools.items():
+            walk(tool['parameters'], name)
+
+    def test_update_note_empty_property_member_is_sent_as_null(self):
+        _, _, body = sent('update_note', {'id': 'n', 'properties': {'status': '', 'due': '', 'lead': ''}})
+        self.assertEqual(body, {'properties': {'status': None, 'due': None, 'lead': None}})
+        _, _, body = sent('update_note', {'id': 'n', 'properties': {'status': 'done', 'due': ''}})
+        self.assertEqual(body, {'properties': {'status': 'done', 'due': None}})
         self.assertEqual(self.tools['append_note']['parameters']['required'], ['id', 'body'])
         self.assertNotIn('limit', self.tools['list_todos']['parameters']['properties'])
 
@@ -316,7 +341,7 @@ class SchemaTests(unittest.TestCase):
             ('create_note', {'title': 'x', 'properties': {'due': '2026-1-1'}}),
             ('create_note', {'title': 'x', 'properties': {'due': 20260101}}),
             ('create_note', {'title': 'x', 'properties': {'lead': 'person_key'}}),
-            ('update_note', {'id': 'n', 'properties': {'lead': ''}}),
+            ('create_note', {'title': 'x', 'properties': {'lead': ''}}),
             ('update_note', {'id': 'n', 'properties': {'lead': 7}}),
             ('create_note', {'title': 'x', 'sources': 'a'}),
             ('create_note', {'title': 'x', 'sources': [good] * 101}),

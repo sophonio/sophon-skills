@@ -262,6 +262,9 @@ def update_note():
         raise ValueError("provide at least one note field")
     if "title" in body and body["title"] is not None and (not isinstance(body["title"], str) or not body["title"]):
         raise ValueError("title cannot be empty")
+    # The tool schema has no null (Gemini takes one type per node): an empty member clears it.
+    if isinstance(body.get("properties"), dict):
+        body["properties"] = {k: (None if v == "" else v) for k, v in body["properties"].items()}
     check_note_body(body, True)
     check_note_size(body)
     headers = header("If-Match", "if_match")

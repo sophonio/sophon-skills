@@ -1,0 +1,21 @@
+{
+  "name": "media-kit",
+  "version": "1.2.0",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "description": "Test fixture skill for the agent tooling (section L of tests/agents/Test-AgentPackages.ps1).",
+  "runtime": "python",
+  "entrypoint": "main.py",
+  "tools": [
+    {
+      "name": "mediakit.inspect.probe",
+      "description": "Probe a clip.",
+      "riskLevel": "none"
+    },
+    {
+      "name": "mediakit.project.render",
+      "description": "Render a project.",
+      "riskLevel": "medium"
+    }
+  ]
+}

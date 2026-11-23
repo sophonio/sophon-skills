@@ -31,21 +31,21 @@ Paths below are relative to the API base URL. Risk ratings reflect potential eff
 
 Call `inkling.list_notes` with `{"q":"project", "limit":20}`. To continue a page, pass the returned `next_cursor` as `cursor`. Call `inkling.ask` with `{"query":"What are the next steps?"}`, then pass the returned `id` to `inkling.get_answer`, optionally with `wait: 20`. For a body replacement, first read the note and call `inkling.update_note` with its `id`, new `body`, and `if_match` set to the returned `etag`.
 
-To clear a note property, send it as `null`: `{"id":"note_1","properties":{"due":null}}`. Members left out are kept.
+To clear a note property, send it as an empty string: `{"id":"note_1","properties":{"due":""}}`. The skill sends it to the API as `null`. Members left out are kept.
 
 For note creation, append, and todo creation, the optional `idempotency_key` parameter becomes the `Idempotency-Key` header. The key must be 1–255 printable ASCII characters. The server does not compare replayed bodies, so reuse a key only for the same intended operation. The skill returns response JSON, not HTTP response headers.
 
 ## Parameter contracts
 
-The skill checks these rules locally and makes no request when one fails; the error names the field but never echoes your values. The API remains the authority for anything not listed here. Fields marked nullable accept `null`, which is sent to the API unchanged so a field can be cleared or reset; a field left out is not sent.
+The skill checks these rules locally and makes no request when one fails; the error names the field but never echoes your values. The API remains the authority for anything not listed here. Fields marked nullable accept `null`, which is sent to the API unchanged so a field can be cleared or reset; a field left out is not sent. The tool schema gives each parameter one type and no `null` (Gemini accepts a single type), so models normally leave a field out instead of sending `null`.
 
 ### Notes
 
 - `create_note`: `title` is required and nonempty. `body`, `tags`, `properties`, `sources` and `share_with` are optional and nullable. `idempotency_key` is optional.
-- `update_note`: `id` plus at least one of `title`, `body`, `tags`, `properties` and `sources`. `title` is nullable but cannot be an empty string. `body` replaces the whole text and needs `if_match`, even when it is `null`. For `properties`, a member left out is kept and `null` clears it.
+- `update_note`: `id` plus at least one of `title`, `body`, `tags`, `properties` and `sources`. `title` is nullable but cannot be an empty string. `body` replaces the whole text and needs `if_match`, even when it is `null`. For `properties`, a member left out is kept, and an empty string or `null` clears it.
 - `append_note`: `id` and `body` (a string) are required; `sources` is nullable.
 - `tags`: array of at most 50 nonempty strings, each without `#`.
-- `properties`: an object with only `status`, `due` and `lead`, each nullable. `status` is `not_started`, `in_progress`, `waiting` or `done`. `due` is a real calendar date, `YYYY-MM-DD`. `lead` is `me` or `null` on creation; on update it is `me`, the key of a person on the note, or `null`.
+- `properties`: an object with only `status`, `due` and `lead`, each nullable. `status` is `not_started`, `in_progress`, `waiting` or `done`. `due` is a real calendar date, `YYYY-MM-DD`. `lead` is `me` or `null` on creation; on update it is `me`, the key of a person on the note, or `null`. On update, an empty `status`, `due` or `lead` is sent as `null`.
 - `sources`: array of at most 100 objects. `n` is required, an integer from 1 to 999, unique within the request. `url` is required, an `http` or `https` address of at most 2,048 characters. `title`, `snippet` and `published_date` are nullable strings. No other members are accepted.
 - `share_with`: array of at most 9 objects with exactly `email` and `role` (`edit` or `view`). The API additionally requires each person to already be on one of the account's own notes.
 - A create or update request can be at most 8 MiB once serialized as JSON. The developer reference states the limit for the body it takes; the skill applies it to the whole request.
