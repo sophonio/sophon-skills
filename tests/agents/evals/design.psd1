@@ -24,18 +24,15 @@
        Turns = @('Design the settings page. It is for team admins who change board defaults a few times a month; their job is to find one setting and change it fast. We have no design system yet.')
        Uses = @(@{ Text = 'header "Direction"'; Agent = 'ui-ux-designer' })
        Pass = @(@{ Tool = 'canvas.render' }, @{ MaxCalls = @{ Tool = 'canvas.render'; Max = 1 } }, @{ Question = 'Direction' })
-       Read = 'A round of four directions with the same anatomy (the same specimen in each), shown in one canvas.render call, then one question under the header "Direction".'
-       Pending = 'M6' }
+       Read = 'A round of four directions with the same anatomy (the same specimen in each), shown in one canvas.render call, then one question under the header "Direction".' }
 
     @{ Id = 'DSN-02'; Tier = 'design'; Agent = 'ui-ux-designer'; Fixture = 'repo-ui-bare'; SameRunAs = 'DSN-01'
        Pass = @(@{ FirstOption = '^Sophon.*\(Recommended\)$' })
-       Read = 'The first option is the Sophon default and its label ends "(Recommended)"; the others are two alternatives and the plain standard.'
-       Pending = 'M6' }
+       Read = 'The first option is the Sophon default and its label ends "(Recommended)"; the others are two alternatives and the plain standard.' }
 
     @{ Id = 'DSN-03'; Tier = 'design'; Agent = 'ui-ux-designer'; Fixture = 'repo-ui-bare'; SameRunAs = 'DSN-01'
        Pass = @(@{ NoWrite = '**' }, @{ Says = 'nothing (was|is|has been) applied|not applied|applied nothing' })
-       Read = 'With the question unanswered no file is written, and the reply says that nothing was applied.'
-       Pending = 'M6' }
+       Read = 'With the question unanswered no file is written, and the reply says that nothing was applied.' }
 
     @{ Id = 'DSN-04'; Tier = 'design'; Agent = 'ui-ux-designer'; Fixture = 'repo-ui-system'; Setup = @()
        Turns = @('Design the settings page. It is for team admins who change board defaults a few times a month.')
@@ -86,23 +83,20 @@
        Uses = @(@{ Text = '- Design rules: DESIGN.md'; Fragment = '08d-save-document' })
        Pass = @(@{ Tool = 'info.request' })
        Fail = @(@{ FirstWrite = 'DESIGN.md' })
-       Read = 'By hand: after the pick DESIGN.md is written only after the save question, holds the values of direction 2 and nothing the default bans, and the AGENTS.md line "- Design rules: DESIGN.md" is offered.'
-       Pending = 'M6' }
+       Read = 'By hand: after the pick DESIGN.md is written only after the save question, holds the values of direction 2 and nothing the default bans, and the AGENTS.md line "- Design rules: DESIGN.md" is offered.' }
 
     @{ Id = 'DSN-11'; Tier = 'design'; Agent = 'ui-ux-designer'; Fixture = 'repo-ui-bare'; Setup = @(); Mode = 'plan'
        Turns = @('Design the settings page. It is for team admins who change board defaults a few times a month; their job is to find one setting and change it fast. We have no design system yet.')
        Uses = @(@{ Text = 'Plan mode refuses the canvas'; Agent = 'ui-ux-designer' })
        Pass = @(@{ NoTool = 'canvas.render' }, @{ NoWrite = '**' }, @{ Question = 'Direction' })
        Fail = @(@{ Tool = 'canvas.render' }, @{ Tool = 'fs.write' })
-       Read = 'In plan mode the round arrives as text with the question; no canvas call and nothing written.'
-       Pending = 'M6' }
+       Read = 'In plan mode the round arrives as text with the question; no canvas call and nothing written.' }
 
     @{ Id = 'DSN-12'; Tier = 'design'; Agent = 'ui-ux-designer'; Fixture = 'repo-ui-bare'; Setup = @(); Skill = 'installed'
        Turns = @('Design the settings page. It is for team admins who change board defaults a few times a month; their job is to find one setting and change it fast. We have no design system yet.')
        Uses = @(@{ Text = 'If the tool is missing or refused, work from what you carry.'; Fragment = '18-reference-topics' })
        Pass = @(@{ Tool = 'canvas.render' }, @{ Question = 'Direction' })
-       Read = 'DSN-01, DSN-04 and DSN-05 repeated with the reference skill installed: the same gates and the same first moves, and at most one read per topic.'
-       Pending = 'M6' }
+       Read = 'DSN-01, DSN-04 and DSN-05 repeated with the reference skill installed: the same gates and the same first moves, and at most one read per topic.' }
 
     @{ Id = 'DSN-13'; Tier = 'design'; Agent = 'frontend-developer'; Fixture = 'repo-ui-bare'; Setup = @('styled')
        Turns = @('Add a status badge component for boards: active, paused or archived.')

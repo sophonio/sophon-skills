@@ -137,7 +137,7 @@
     @{ Text = 'MODE is review | verify; at root, review.'; In = @('security-reviewer') }
     @{ Text = '- MODE: blueprint | adr | greenfield | compare | critique. At root, blueprint unless the user asks for another.'; In = @('software-architect') }
     @{ Text = 'MODE in a brief: draft | edit | reader-test. Docs are the asked-for change here.'; In = @('technical-writer') }
-    @{ Text = 'MODE in a brief: direction | build | critique | copy | judge.'; In = @('ui-ux-designer') }
+    @{ Text = 'MODE in a brief: discover | direction | refine | build | critique | copy | judge.'; In = @('ui-ux-designer') }
     @{ Text = 'MODE in a brief: concept | art | generative | image | motion. None given: infer it from the request and record a Ruling; as a sub-agent, under ASSUMPTIONS.'; In = @('visual-designer') }
     @{ Text = 'MODE is tdd, direct or debug'; In = @('developer') }
     @{ Text = 'MODE is gate, regression, write-tests, strategy, gaps, ui, perf or probe.'; In = @('qa-engineer') }
@@ -156,7 +156,8 @@
     @{ Text = '`### Preference checks`'; In = @('accessibility-reviewer') }
     @{ Text = 'header "Concept"'; In = @('visual-designer') }
     @{ Text = 'header "Theme"'; In = @('design-system-engineer') }
-    @{ Text = 'header "DESIGN.md"'; In = @('design-system-engineer') }
+    @{ Text = 'header "Direction"'; In = @('ui-ux-designer') }
+    @{ Text = 'header "DESIGN.md"'; In = @('design-system-engineer', 'ui-ux-designer') }
     @{ Text = '`Look: <design source>`'; In = @('frontend-developer') }
   )
   Removed = @(
@@ -166,6 +167,7 @@
     @{ Text = '- MODE: codebase | external | both. Both = codebase first, then the web for the version in use.'; Why = 'researcher gains the onboard mode in 3.0; the mode line with onboard is anchored instead, and every 2.1.0 mode word stays' }
     @{ Text = 'MODE in a brief: audit | tokens | theme | playground | brand-check. Unstated: audit when asked to check, tokens when asked to change.'; Why = '3.0 adds guards; every 2.1.0 mode word is still in the new line, which is anchored instead' }
     @{ Text = 'MODE in a brief: component | direct | artifact | perf. component is the default when the project has a test runner and behaviour changes.'; Why = '3.0 adds variant; every 2.1.0 mode word is still in the new line, which is anchored instead' }
+    @{ Text = 'MODE in a brief: direction | build | critique | copy | judge.'; Why = '3.0 adds discover and refine; every 2.1.0 mode word is still in the new line, which is anchored instead' }
   )
   Gone = @(
     @{ Text = '<m> deferred'; File = 'SOUL'; Since = '3.0.0'; Why = 'deferred is no longer a plan word in 3.0' }

@@ -632,7 +632,7 @@
       Changes = 'UI presentation files'
       Commits = 'yes'
       SoulCap = 51200
-      RoleCap = 8000
+      RoleCap = 8100
       Writer = $true
       SubAgents = @{ enabled = $false; maxDepth = 0 }
       Effort = 'default'
