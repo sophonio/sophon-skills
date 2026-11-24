@@ -3,8 +3,8 @@ name: validate
 # Validates every skill's manifest against the marketplace publishing contract, plus the repo's own
 # build checks (build/SkillLint.psm1: import scan, tool names, schema subset, folder rule, vendor lock,
 # zip mirror). This is validation the skills never had while they lived in the main sophon repo.
-# Also runs the skill lint's own tests, the generated-file check of the vendored ffmpeg-video skill and
-# every offline skill test (tests/skills/run_all.py).
+# Also runs the skill lint's own tests, the generated-file checks of the vendored ffmpeg-video skill and of
+# craft-reference (plus its topic source checks), and every offline skill test (tests/skills/run_all.py).
 # Also checks the agents' sources (agents/, build/agent-src/), every family in
 # build/agent-src/families.psd1: SOUL drift, tool-name lint, scanner preflight, budgets, manifests and
 # TOOLS.md. The Sophon CLI checks (sophon dev validate and the package build) are not run here;
@@ -55,6 +55,13 @@ jobs:
       - name: Check ffmpeg-video generated files (generate.py --check)
         if: ${{ !cancelled() }}
         run: python -B build/ffmpeg-video/generate.py --check
+      - name: Check craft-reference generated files (generate.py --check)
+        if: ${{ !cancelled() }}
+        run: python -B build/craft-reference/generate.py --check
+      - name: Check craft-reference topic sources (Test-CraftSources.ps1)
+        if: ${{ !cancelled() }}
+        shell: pwsh
+        run: pwsh -NoProfile -File build/craft-reference/Test-CraftSources.ps1
       - name: Test the skill build checks (Test-SkillLint.ps1)
         if: ${{ !cancelled() }}
         shell: pwsh

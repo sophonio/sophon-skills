@@ -4,6 +4,7 @@ Replicates the Sophon runtime's exec-with-params-global model for every skill li
 unknown-tool and missing-credentials paths must emit clean JSON errors on Python 3.13/alpine.
 ffmpeg-video runs only on the process backend: from the Docker backend's /workspace cwd it must
 refuse with BACKEND_UNSUPPORTED, and its entrypoint must give Sophon nothing to pip-install.
+craft-reference must answer one read and an unknown tool from /workspace, with nothing to pip-install.
 """
 import contextlib
 import io
@@ -91,6 +92,17 @@ except Exception as e:  # noqa: BLE001
 print(f"{'ok  ' if ok else 'FAIL'} ffmpeg-video: {refused.get('code') or refused.get('error', '')[:70]}")
 if not ok:
     fails += 1
-total = len(PAIRS) + 1
+# craft-reference: topics are embedded in main.py; one read, an unknown tool, nothing to install
+try:
+    unknown = json.loads(run("craft-reference", {"tool": "nope.nope"}, cwd="/workspace"))
+    topic = run("craft-reference", {"tool": "craft.read", "topic": "design-schools", "section": "swiss"}, cwd="/workspace")
+    ok = ("unknown tool" in unknown.get("error", "").lower() and unknown.get("code") == "UNKNOWN_TOOL"
+          and topic.startswith("[craft-reference ") and "## Swiss" in topic and not pip_names("craft-reference"))
+except Exception as e:  # noqa: BLE001
+    ok, topic = False, f"{type(e).__name__}: {e}"
+print(f"{'ok  ' if ok else 'FAIL'} craft-reference: {topic.splitlines()[0][:70] if topic else ''}")
+if not ok:
+    fails += 1
+total = len(PAIRS) + 2
 print(f"python {sys.version.split()[0]} — {total - fails}/{total} passed")
 sys.exit(1 if fails else 0)
