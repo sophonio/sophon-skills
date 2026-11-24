@@ -16,12 +16,14 @@
                    nothing and calls no Gateway.
     -Run           The headless runner. UNVERIFIED: it is written against the stream-json contract of Sophon CLI
                    2.2.2 (src/Sophon.CLI/Headless/StreamJsonSink.cs) and has not run against a Gateway; spike 5
-                   of the design must confirm its five facts first (see README.md). It installs both arms into
-                   the -DataDir Gateway data folder, pipes each turn to 'sophon exec ... --output-format
+                   of the design must confirm its five facts first (see README.md). It installs both arms on
+                   the throwaway Gateway at -GatewayUrl (or SOPHON_GATEWAY_URL), which must have been started
+                   with SOPHON_DATA_DIR set to -DataDir, pipes each turn to 'sophon exec ... --output-format
                    stream-json -', scores the first moves and writes transcripts and a summary to
                    dist/evals/<date>/. Guards: refuses under CI or GITHUB_ACTIONS, requires -DataDir and refuses
-                   the default data folder, one repetition by default, stops before starting when the planned
-                   runs exceed -MaxRuns.
+                   the default data folder, requires the Gateway URL and refuses the gatewayUrl of cli.json and
+                   the ports 8080 and 8470, sets SOPHON_GATEWAY_URL for every child call, one repetition by
+                   default, stops before starting when the planned runs exceed -MaxRuns.
 .PARAMETER Scenario
     Scenario ids to select (wildcards allowed). Default: all, or all of -Tier.
 .EXAMPLE
@@ -41,6 +43,7 @@ param(
     [ValidateSet('acceptance', 'pressure', 'design', 'voice')][string[]]$Tier = @(),
     [Parameter(ParameterSetName = 'Prepare')][Parameter(ParameterSetName = 'Run')][string]$OutDir = '',
     [Parameter(ParameterSetName = 'Run', Mandatory)][string]$DataDir,
+    [Parameter(ParameterSetName = 'Run')][string]$GatewayUrl = '',
     [Parameter(ParameterSetName = 'Run')][ValidateRange(1, 10)][int]$Repeat = 1,
     [Parameter(ParameterSetName = 'Run')][ValidateRange(1, 1000)][int]$MaxRuns = 30,
     [Parameter(ParameterSetName = 'Run')][ValidateRange(30, 1800)][int]$TimeoutSeconds = 300,
@@ -205,6 +208,15 @@ $defaultData = [IO.Path]::GetFullPath((Join-Path ([Environment]::GetFolderPath('
 if ($DataDir.TrimEnd('\', '/') -ieq $defaultData.TrimEnd('\', '/') -or ($env:SOPHON_DATA_DIR -and [IO.Path]::GetFullPath($env:SOPHON_DATA_DIR) -ieq $defaultData)) {
     Write-Host "Invoke-AgentEvals: -DataDir must be a throwaway folder, not $defaultData" -ForegroundColor Red; exit 1
 }
+# SOPHON_DATA_DIR alone does not isolate the run: the CLI reaches the Gateway named by SOPHON_GATEWAY_URL or by
+# cli.json under the user profile, and both install and exec go through it. So the runner needs the URL of a
+# throwaway Gateway started with SOPHON_DATA_DIR set to -DataDir, and passes it to every child call.
+if (-not $GatewayUrl) { $GatewayUrl = [string]$env:SOPHON_GATEWAY_URL }
+$cliJson = Join-Path ([Environment]::GetFolderPath('UserProfile')) '.sophon/config/cli.json'
+$gatewayProblem = Test-AgentEvalGatewayUrl -Url $GatewayUrl -CliConfigPath $cliJson
+if ($gatewayProblem) {
+    Write-Host "Invoke-AgentEvals: -Run needs a throwaway Gateway started with SOPHON_DATA_DIR=$DataDir; $gatewayProblem" -ForegroundColor Red; exit 1
+}
 $sophon = Get-Command 'sophon' -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
 if ($null -eq $sophon) { Write-Host "Invoke-AgentEvals: 'sophon' is not on PATH" -ForegroundColor Red; exit 1 }
 
@@ -215,10 +227,11 @@ foreach ($row in $runnable) {
         for ($r = 1; $r -le $Repeat; $r++) { $plan.Add(@{ Row = $row; Arm = $a; Rep = $r }) }
     }
 }
-Write-Host "Invoke-AgentEvals: $($plan.Count) planned run(s) into $OutDir (data folder $DataDir)"
+Write-Host "Invoke-AgentEvals: $($plan.Count) planned run(s) into $OutDir (Gateway $GatewayUrl, data folder $DataDir)"
 if ($plan.Count -gt $MaxRuns) { Write-Host "Invoke-AgentEvals: $($plan.Count) runs exceed -MaxRuns $MaxRuns; nothing started" -ForegroundColor Red; exit 1 }
 
 $env:SOPHON_DATA_DIR = $DataDir
+$env:SOPHON_GATEWAY_URL = $GatewayUrl
 $cliVersion = (@(& $sophon.Source --version 2>&1) | Select-Object -First 1)
 $installed = @{}
 $rows = [System.Collections.Generic.List[object]]::new()

@@ -796,6 +796,20 @@ try {
         $good = & $scoreOf 'transcript-test-first'
         $bad = & $scoreOf 'transcript-source-first'
         $null = Test-Check 'M' ($null -ne $acc05 -and $good['Passed'] -and -not $bad['Passed'] -and ($bad['Tripped'] -join ',') -ceq 'FirstWrite=reportkit/**') "the scorer passes ACC-05 on a test-first transcript and fails it on a source-first one, ignoring a child's call (tripped: $($bad['Tripped'] -join ','))"
+
+        # The -Run Gateway guard: an explicit throwaway URL, never the cli.json Gateway or a product port.
+        $cliJson = Join-Path $tempRoot 'evals-cli.json'
+        [IO.File]::WriteAllText($cliJson, '{ "gatewayUrl": "http://localhost:9100" }', [Text.UTF8Encoding]::new($false))
+        $gw = [ordered]@{
+            empty = Test-AgentEvalGatewayUrl -Url '' -CliConfigPath $cliJson
+            relative = Test-AgentEvalGatewayUrl -Url 'localhost:9200' -CliConfigPath $cliJson
+            port8080 = Test-AgentEvalGatewayUrl -Url 'http://localhost:8080' -CliConfigPath $cliJson
+            port8470 = Test-AgentEvalGatewayUrl -Url 'http://127.0.0.1:8470/' -CliConfigPath $cliJson
+            configured = Test-AgentEvalGatewayUrl -Url 'http://127.0.0.1:9100/' -CliConfigPath $cliJson
+            throwaway = Test-AgentEvalGatewayUrl -Url 'http://localhost:9200' -CliConfigPath $cliJson
+        }
+        $refused = @($gw.Keys | Where-Object { $_ -ne 'throwaway' -and $gw[$_] })
+        $null = Test-Check 'M' ($refused.Count -eq 5 -and -not $gw['throwaway'] -and $gw['configured'].Contains('gatewayUrl', $ord)) "the -Run Gateway guard refuses no URL, a relative URL, ports 8080 and 8470 and the cli.json Gateway, and accepts another local port (refused: $($refused -join ', '); throwaway: '$($gw['throwaway'])')"
     } catch {
         Add-Fail 'M' "the scenario lint cases failed to run: $($_.Exception.Message) (line $($_.InvocationInfo.ScriptLineNumber))"
     }

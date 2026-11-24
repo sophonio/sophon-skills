@@ -919,9 +919,45 @@ function Get-AgentEvalScore {
     @{ Passed = ($missed.Count -eq 0 -and $tripped.Count -eq 0); Held = $held.ToArray(); Missed = $missed.ToArray(); Tripped = $tripped.ToArray() }
 }
 
+function Test-AgentEvalGatewayUrl {
+    <#
+    .SYNOPSIS
+        Why a Gateway URL is not a throwaway Gateway for -Run, or '' when it may be used.
+    .DESCRIPTION
+        The CLI takes its Gateway from SOPHON_GATEWAY_URL or from cli.json (always under the user profile, whatever
+        SOPHON_DATA_DIR says), and 'sophon agents install' and 'sophon exec' both talk to that Gateway. So the runner
+        needs an explicit URL, and refuses one that is not an absolute http(s) URL, one on the product ports 8080
+        or 8470, and the gatewayUrl of cli.json (-CliConfigPath; a missing or unreadable file only skips that
+        comparison). localhost, 127.0.0.1 and ::1 count as one host.
+    #>
+    [CmdletBinding()]
+    param([AllowEmptyString()][string]$Url, [string]$CliConfigPath = '')
+    $key = {
+        param([string]$Text)
+        $u = $null
+        if (-not [Uri]::TryCreate($Text.Trim(), [UriKind]::Absolute, [ref]$u) -or $u.Scheme -notin 'http', 'https') { return $null }
+        $h = $u.Host.ToLowerInvariant().Trim('[', ']')
+        if ($h -in 'localhost', '127.0.0.1', '::1') { $h = 'loopback' }
+        return @{ Port = $u.Port; Key = "$($u.Scheme)://${h}:$($u.Port)" }
+    }
+    if (-not $Url -or -not $Url.Trim()) { return 'name the throwaway Gateway with -GatewayUrl or SOPHON_GATEWAY_URL' }
+    $target = & $key $Url
+    if ($null -eq $target) { return "'$Url' is not an absolute http or https URL" }
+    if ($target['Port'] -in 8080, 8470) { return "'$Url' uses port $($target['Port']), the port of a normal Gateway; start the throwaway Gateway on another port" }
+    if ($CliConfigPath -and (Test-Path -LiteralPath $CliConfigPath -PathType Leaf)) {
+        $configured = ''
+        try { $configured = [string]((Get-Content -LiteralPath $CliConfigPath -Raw | ConvertFrom-Json).gatewayUrl) } catch { $configured = '' }
+        if ($configured) {
+            $real = & $key $configured
+            if ($null -ne $real -and $real['Key'] -ceq $target['Key']) { return "'$Url' is the gatewayUrl of $CliConfigPath, the normal Gateway" }
+        }
+    }
+    return ''
+}
+
 Export-ModuleMember -Function @(
     'Get-AgentEvalSmokeIds', 'Import-AgentEvalData', 'Get-AgentEvalFixtureInfo', 'Get-AgentEvalContext',
     'Find-EvalLeak', 'Test-AgentEvalData', 'Format-AgentEvalFinding', 'New-AgentEvalTestContext',
     'Invoke-AgentEvalLintFixtures', 'New-AgentEvalWorkspace', 'Read-AgentEvalTranscript', 'Test-AgentEvalEvent',
-    'Get-AgentEvalScore', 'Test-EvalGlob'
+    'Get-AgentEvalScore', 'Test-EvalGlob', 'Test-AgentEvalGatewayUrl'
 )

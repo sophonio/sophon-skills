@@ -113,14 +113,18 @@ every fixture and patch as a git workspace, and `-Prepare` on two scenarios.
 
 This always works, whatever the headless runner can do.
 
-**Prepare a throwaway Sophon.** Use a throwaway Gateway or a separate data folder (`SOPHON_DATA_DIR`), so the
-tests never touch your real agents, memory or approvals. Make sure the injection-scan mode is not off: the
-install preview must show a scan verdict. Sophon CLI 2.2.x on PATH (`sophon --version`).
+**Prepare a throwaway Sophon.** Start a throwaway Gateway with `SOPHON_DATA_DIR` set to an empty folder and on
+a port of its own (not 8080 or 8470), and point the CLI at it with `SOPHON_GATEWAY_URL`, so the tests never touch
+your real agents, memory or approvals. A separate data folder alone is not enough: `sophon agents install` and
+`sophon exec` talk to the Gateway named by `SOPHON_GATEWAY_URL` or by `~/.sophon/config/cli.json`, whatever
+`SOPHON_DATA_DIR` says, so without the URL they reach your normal Gateway. Make sure the injection-scan mode is
+not off: the install preview must show a scan verdict. Sophon CLI 2.2.x on PATH (`sophon --version`).
 
 **Build and install the packages** you will upload, not the source folders:
 
 ```powershell
 $env:SOPHON_DATA_DIR = '<throwaway folder>'
+$env:SOPHON_GATEWAY_URL = '<throwaway Gateway URL>'   # the Gateway started with that data folder
 pwsh -NoProfile -File build/Build-AgentPackages.ps1
 Get-Content dist/agents/SHA256SUMS
 
@@ -184,7 +188,7 @@ confirm the assumptions that were accepted without a run:
 ## 4. The headless runner (unverified)
 
 ```powershell
-pwsh -NoProfile -File tests/agents/evals/Invoke-AgentEvals.ps1 -Run -DataDir <throwaway folder> -Tier pressure -Repeat 5 -MaxRuns 140
+pwsh -NoProfile -File tests/agents/evals/Invoke-AgentEvals.ps1 -Run -DataDir <throwaway folder> -GatewayUrl <throwaway Gateway URL> -Tier pressure -Repeat 5 -MaxRuns 140
 ```
 
 `-Run` is written against the stream-json contract of Sophon CLI 2.2.2 and **has not run against a Gateway**.
@@ -207,10 +211,16 @@ the CLI version, the SOUL hash and the pass counts per arm, and list the flagged
 treatment, a passed control) for a person to read.
 
 Guards: it refuses to run when `CI` or `GITHUB_ACTIONS` is set, requires `-DataDir` and refuses the default
-data folder, runs one repetition by default, and stops before starting when the planned runs exceed `-MaxRuns`
+data folder, requires `-GatewayUrl` (or `SOPHON_GATEWAY_URL`) and refuses the `gatewayUrl` of
+`~/.sophon/config/cli.json` and the ports 8080 and 8470, sets `SOPHON_GATEWAY_URL` for every child call, runs one
+repetition by default, and stops before starting when the planned runs exceed `-MaxRuns`
 (default 30). Manual scenarios, `SameRunAs` rows, rows whose agent is not in a roster yet and rows that need the
 reference skill are skipped with a reason. A pressure scenario whose rule is not registered yet runs its
 treatment arm only.
+
+Start the throwaway Gateway yourself before `-Run`, with `SOPHON_DATA_DIR` pointing at the folder you pass as
+`-DataDir`: the runner checks the URL, not which data folder that Gateway uses. The CLI still records its
+session list in `~/.sophon/config/cli-sessions.json`, keyed by the Gateway URL.
 
 ## 5. What to record
 
