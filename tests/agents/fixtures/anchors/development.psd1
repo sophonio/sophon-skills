@@ -152,6 +152,8 @@
     @{ Text = 'CHANGE: <diff file path | "working tree">, reviews only'; In = 'lead' }
     @{ Text = 'DESIGN: <DESIGN.md path | "sophon-default" | "plain">, UI work only'; In = 'lead' }
     @{ Text = 'its when-to-use text ends "Modes: … Brief keys: …"'; In = 'lead' }
+    # 3.0 design track: question headers and output words (souls of the five design-facing roles)
+    @{ Text = '`### Preference checks`'; In = @('accessibility-reviewer') }
   )
   Removed = @(
     @{ Text = 'MODE is gate, regression, write-tests, strategy, gaps or ui.'; Why = 'qa-engineer gains the perf and probe modes in 3.0; every 2.1.0 mode word stays, and the new list is anchored instead' }
