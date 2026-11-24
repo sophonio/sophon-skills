@@ -140,7 +140,7 @@
     @{ Text = 'MODE in a brief: direction | build | critique | copy | judge.'; In = @('ui-ux-designer') }
     @{ Text = 'MODE in a brief: concept | art | generative | image | motion. None given: infer it from the request and record a Ruling; as a sub-agent, under ASSUMPTIONS.'; In = @('visual-designer') }
     @{ Text = 'MODE is tdd, direct or debug'; In = @('developer') }
-    @{ Text = 'MODE is gate, regression, write-tests, strategy, gaps or ui.'; In = @('qa-engineer') }
+    @{ Text = 'MODE is gate, regression, write-tests, strategy, gaps, ui, perf or probe.'; In = @('qa-engineer') }
     @{ Text = 'ROLE: <role id> · MODE: <a mode from that role''s list> · ACCESS: read-only | write'; In = 'lead' }
     # The lead's controller text (3.0): verdicts it acts on, brief keys, modes from each companion's whenToUse
     @{ Text = '| code-reviewer | `APPROVE` with `SPEC: MET`; `ALL_ADDRESSED`; `COMPLETE` | `REQUEST_CHANGES`; `SPEC: GAPS`; `OPEN`; `GAPS` |'; In = 'lead' }
@@ -150,6 +150,7 @@
     @{ Text = 'its when-to-use text ends "Modes: … Brief keys: …"'; In = 'lead' }
   )
   Removed = @(
+    @{ Text = 'MODE is gate, regression, write-tests, strategy, gaps or ui.'; Why = 'qa-engineer gains the perf and probe modes in 3.0; every 2.1.0 mode word stays, and the new list is anchored instead' }
     @{ Text = 'CLEAN | ISSUES'; Why = 'the all-roles VERDICT line of 15b-findings-block goes in 3.0; security-reviewer states its words as "VERDICT CLEAN or ISSUES", which is anchored instead' }
     @{ Text = 'READY | NEEDS_DECISION'; Why = 'the all-roles VERDICT line of 15b-findings-block goes in 3.0; software-architect states its words as "VERDICT READY or NEEDS_DECISION", which is anchored instead' }
   )
