@@ -168,6 +168,8 @@
     @{ Text = 'never os.execute or code.git diff'; File = 'SOUL'; Since = '3.0.0'; Why = 'a child reviewer reads the change CHANGE names, which for "working tree" is one code.git diff call (fragment 11)' }
     @{ Text = '- No fix before a reproduction'; File = 'SOUL'; Since = '3.0.0'; Why = 'the debugger''s Root cause first block (rule root-cause) states it' }
     @{ Text = '- No fixing by suppression'; File = 'SOUL'; Since = '3.0.0'; Why = 'the debugger''s Root cause first block (rule root-cause) states it' }
+    @{ Text = '- repeated stale-file refusals;'; File = 'SOUL'; Since = '3.0.0'; Why = 'developer''s ten-item halt list becomes one sentence; 03a-care-writer, 04-scope and 01-delegated-mode carry the shared stop rules' }
+    @{ Text = '- a PLAN_MODE refusal as a child.'; File = 'SOUL'; Since = '3.0.0'; Why = 'developer''s ten-item halt list becomes one sentence; 03a-care-writer, 04-scope and 01-delegated-mode carry the shared stop rules' }
     @{ Text = 'Keep local / Discard menu'; File = 'README'; Since = '3.0.0'; Pending = 'M8'; Why = 'the 3.0 finish menu replaces it' }
     @{ Text = 'Keep local or Discard'; File = 'README'; Since = '3.0.0'; Pending = 'M8'; Why = 'the 3.0 finish menu replaces it' }
     @{ Text = '10 agents in 5 calls'; File = 'README'; Since = '3.0.0'; Pending = 'M8'; Why = 'the 3.0 lead caps replace it' }

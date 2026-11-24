@@ -16,7 +16,7 @@
     "git"
   ],
   "agent": {
-    "whenToUse": "Pick this agent to implement one scoped code change in a bound repository: a feature slice, a fix whose cause is known, a targeted refactor, or one task from an approved plan. Lead Developer hands it plan tasks; you can also use it directly for small and medium changes. Not for: finding an unknown root cause (debugger), choosing between designs (software-architect), reviewing a change (code-reviewer), multi-agent work (lead-developer). Modes: tdd / direct / debug. Brief keys: none. Family role: developer."
+    "whenToUse": "Pick this agent to implement one scoped code change in a bound repository: a feature slice, a fix whose cause is known, a targeted refactor, or one task from an approved plan. Lead Developer hands it plan tasks; you can also use it directly for small and medium changes. Not for: finding an unknown root cause (debugger), choosing between designs (software-architect), reviewing a change (code-reviewer), releases (release-engineer), agent instructions (agent-engineer), multi-agent work (lead-developer). Modes: tdd / direct / debug. Brief keys: none. Family role: developer."
   },
   "requires": {
     "skills": [
