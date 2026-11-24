@@ -165,6 +165,7 @@
     @{ Text = '[Review panel (Recommended)]'; File = 'SOUL'; Since = '3.0.0'; Why = 'the 3.0 Medium options are Build inline then review, Team per task and Solo' }
     @{ Text = '[Full team (Recommended)]'; File = 'SOUL'; Since = '3.0.0'; Why = 'the 3.0 Large options put Team per task first' }
     @{ Text = 'Never delegate understanding'; File = 'SOUL'; Since = '3.0.0'; Why = 'the Understand gate says it: read the 5-10 key files yourself' }
+    @{ Text = 'never os.execute or code.git diff'; File = 'SOUL'; Since = '3.0.0'; Why = 'a child reviewer reads the change CHANGE names, which for "working tree" is one code.git diff call (fragment 11)' }
     @{ Text = 'Keep local / Discard menu'; File = 'README'; Since = '3.0.0'; Pending = 'M8'; Why = 'the 3.0 finish menu replaces it' }
     @{ Text = 'Keep local or Discard'; File = 'README'; Since = '3.0.0'; Pending = 'M8'; Why = 'the 3.0 finish menu replaces it' }
     @{ Text = '10 agents in 5 calls'; File = 'README'; Since = '3.0.0'; Pending = 'M8'; Why = 'the 3.0 lead caps replace it' }
