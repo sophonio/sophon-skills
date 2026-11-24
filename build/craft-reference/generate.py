@@ -8,6 +8,7 @@ Inputs
                                             one topic per file: front matter (id, summary, reviewed), one
                                             "# " title line, an optional preamble and "## " sections
   build/craft-reference/sources.json        per upstream key: url, commit, label, ideasOnly, creditOnly, notice
+                                            (a creditOnly key that is not a repository has no url and commit)
   build/craft-reference/owner-review.json   topics that need the owner's sign-off, and the sign-offs
   build/craft-reference/released.json       ids and section ids of every published version
   skills/craft-reference/manifest.json      the skill version
@@ -460,10 +461,12 @@ def check_sources(registry, sources, credits, problems):
         if not isinstance(info, dict):
             problems.error("CRAFT-SOURCE", here, "an entry is an object")
             continue
+        # A creditOnly source that is not a repository (heuristic names cited by name) has no url and commit.
+        bare = info.get("creditOnly") is True and "url" not in info and "commit" not in info
         url = info.get("url", "")
-        if not isinstance(url, str) or not url.startswith("https://github.com/"):
+        if not bare and (not isinstance(url, str) or not url.startswith("https://github.com/")):
             problems.error("CRAFT-SOURCE", here, "url must be on https://github.com/")
-        if not isinstance(info.get("commit"), str) or not COMMIT_RE.match(info["commit"]):
+        if not bare and (not isinstance(info.get("commit"), str) or not COMMIT_RE.match(info["commit"])):
             problems.error("CRAFT-SOURCE", here, "commit must be 40 hex digits")
         label = info.get("label", "")
         if not isinstance(label, str) or not label or any(not (0x20 <= ord(c) <= 0x7E) for c in label):
@@ -572,6 +575,8 @@ def render_notices(registry, sources, credits):
         out.append("- Credit: %s" % (credit if credit else "recorded when the source is pinned, before its topic text is written"))
         if info.get("url") and info.get("commit"):
             out.append("- Source: %s at commit %s" % (info["url"], info["commit"]))
+        elif info.get("creditOnly") is True:
+            out.append("- Source: not a repository; cited by name only")
         else:
             out.append("- Source: not pinned yet; this version holds stub text only for its topics")
         out.append("- Topics: %s" % ", ".join("`%s`" % t for t in users[key]))

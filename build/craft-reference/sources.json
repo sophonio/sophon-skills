@@ -1,1 +1,137 @@
-{}
+{
+  "addyosmani": {
+    "url": "https://github.com/addyosmani/agent-skills",
+    "commit": "e997ac5b9a74eab332d5e9793bb38a38c8cfdd74",
+    "label": "addyosmani/agent-skills (MIT)"
+  },
+  "anthropic": {
+    "url": "https://github.com/anthropics/claude-plugins-official",
+    "commit": "d0d514288960e7a78e1a76e4a3ec694416458726",
+    "label": "Anthropic Claude Code plugins (Apache-2.0)"
+  },
+  "anthropicSecurityGuidance": {
+    "url": "https://github.com/anthropics/claude-plugins-official",
+    "commit": "d0d514288960e7a78e1a76e4a3ec694416458726",
+    "label": "Anthropic security-guidance plugin (Apache-2.0)"
+  },
+  "anthropicSecurityReview": {
+    "url": "https://github.com/anthropics/claude-code-security-review",
+    "commit": "0c6a49f1fa56a1d472575da86a94dbc1edb78eda",
+    "label": "claude-code-security-review (MIT)"
+  },
+  "anthropicSkills": {
+    "url": "https://github.com/anthropics/skills",
+    "commit": "e4bb5d960d87126ff3b3a8af1a104b7db67560ba",
+    "label": "Anthropic skills (Apache-2.0)"
+  },
+  "backendDesign": {
+    "url": "https://github.com/sheitabrk/backend-design",
+    "commit": "17b5e04dd7bd79fa398ced8079346f23537d9a03",
+    "label": "backend-design (MIT)"
+  },
+  "baselineUi": {
+    "url": "https://github.com/ibelick/ui-skills",
+    "commit": "7ef0076fce1dfa39dd2bc43b7dc13add6eda8a41",
+    "label": "baseline-ui (MIT)"
+  },
+  "bmadMethod": {
+    "url": "https://github.com/bmad-code-org/BMAD-METHOD",
+    "commit": "e435a22574fe55722841086e5566420178b98df3",
+    "label": "bmad-code-org/BMAD-METHOD (MIT)"
+  },
+  "caveman": {
+    "url": "https://github.com/JuliusBrussee/caveman",
+    "commit": "47c61be2d10a354f0c5cbe2b90959d24c06b16c6",
+    "label": "caveman (Apache-2.0)"
+  },
+  "compoundEngineering": {
+    "url": "https://github.com/EveryInc/compound-engineering-plugin",
+    "commit": "fcb5e3adc1890db34f482f73e2449f3c57a2f423",
+    "label": "compound-engineering-plugin (MIT)"
+  },
+  "designMd": {
+    "url": "https://github.com/google-labs-code/design.md",
+    "commit": "db977b3c1d1f309269f43d5d17ae828d54bd6ae3",
+    "label": "design.md (Apache-2.0)"
+  },
+  "emilSkills": {
+    "url": "https://github.com/emilkowalski/skills",
+    "commit": "64eb3deb9a5fbfa041faf783e0bc3fd635872e9c",
+    "label": "emilkowalski/skills (MIT)"
+  },
+  "gsdCore": {
+    "url": "https://github.com/open-gsd/gsd-core",
+    "commit": "455cd03c11c77172edaa9b7a69ce21a5f4edc124",
+    "label": "gsd-core (MIT)"
+  },
+  "gstack": {
+    "url": "https://github.com/garrytan/gstack",
+    "commit": "beca1d6f15065a4ba44ca70b2cbfba40b530447a",
+    "label": "gstack (MIT)"
+  },
+  "humanizer": {
+    "url": "https://github.com/blader/humanizer",
+    "commit": "a32f24407364c74c812b43c15926d638bee1e072",
+    "label": "humanizer (MIT)"
+  },
+  "impeccable": {
+    "url": "https://github.com/pbakaus/impeccable",
+    "commit": "b49177d32788f2dc585c42831d845dacf1ebed2c",
+    "label": "impeccable (Apache-2.0)"
+  },
+  "interfaceDesign": {
+    "url": "https://github.com/Dammyjay93/interface-design",
+    "commit": "2f9be3206855bcb2d1d0af262c8bae25cba6658d",
+    "label": "interface-design (MIT)"
+  },
+  "mattpocock": {
+    "url": "https://github.com/mattpocock/skills",
+    "commit": "d65391149dbb5fe76478e76fa8d5122b2aa5a70e",
+    "label": "mattpocock/skills (MIT)"
+  },
+  "nielsen": {
+    "label": "heuristic names after Jakob Nielsen",
+    "creditOnly": true
+  },
+  "playwright": {
+    "url": "https://github.com/microsoft/playwright",
+    "commit": "61a312169890982a6dc0d9a8ef8589fd919a8234",
+    "label": "Playwright (Apache-2.0)",
+    "notice": "Playwright\nCopyright (c) Microsoft Corporation\n\nThis software contains code derived from the Puppeteer project (https://github.com/puppeteer/puppeteer),\navailable under the Apache 2.0 license (https://github.com/puppeteer/puppeteer/blob/master/LICENSE)."
+  },
+  "pmSkills": {
+    "url": "https://github.com/phuryn/pm-skills",
+    "commit": "9af7bfd0bc47fdad43c2eaa7a43cd13918e7aaef",
+    "label": "pm-skills (MIT)"
+  },
+  "specKit": {
+    "url": "https://github.com/github/spec-kit",
+    "commit": "f61648db96b5ac5eb65a54577865dafc2c830a7c",
+    "label": "spec-kit (MIT)"
+  },
+  "superpowers": {
+    "url": "https://github.com/obra/superpowers",
+    "commit": "22f0b463e7a5e579904dd6211a520321035526f7",
+    "label": "superpowers (MIT)"
+  },
+  "systemDesignSkills": {
+    "url": "https://github.com/proyecto26/system-design-skills",
+    "commit": "228d57dc6fa7627a6426553fdd6ad0040e36f361",
+    "label": "system-design-skills (MIT)"
+  },
+  "tasteSkill": {
+    "url": "https://github.com/Leonxlnx/taste-skill",
+    "commit": "6c0b5c78f5d31776e2210305abaa210cdc0030bf",
+    "label": "taste-skill (MIT)"
+  },
+  "webDesignEngineer": {
+    "url": "https://github.com/ConardLi/garden-skills",
+    "commit": "f2d7adeaf53dcce3d0eb19cbffe8c04f4c636c2a",
+    "label": "web-design-engineer (MIT)"
+  },
+  "webInterfaceGuidelines": {
+    "url": "https://github.com/vercel-labs/web-interface-guidelines",
+    "commit": "434b7f91364665f2f733b310ec54809bf8f37937",
+    "label": "Vercel web-interface-guidelines (MIT)"
+  }
+}
