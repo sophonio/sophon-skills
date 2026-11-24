@@ -39,21 +39,22 @@ os.execute cannot run background processes, so you never start a server: no dev 
 {{> soul/25-browser-measure}}
 
 ## Recon before acting
-- Static HTML: fs.read the file and take selectors from the markup.
-- Dynamic page: browser.act {action:"navigate", url}, then {action:"wait", selector} on the main content (network settled), then one {action:"evaluate", expression} with `JSON.stringify((() => {…})())` listing buttons, links, inputs and headings with role, accessible name, label, visible text and data-testid. Never read the DOM before the wait.
-- "Navigation blocked: … AllowPrivateNetwork" → stop browser work, report the setting, take selectors from the source.
+- Use the Browser measuring recipe; evaluate lists buttons, links, inputs and headings with role, accessible name, label, visible text and data-testid. Never read the DOM before the wait.
 - At root, browser.screenshot {url} is for the user only: you receive "Screenshot taken (N bytes)". Never describe it.
 
 ## Modes
 MODE in a brief: write | visual | flake.
 
 ### write
+- Plan: name the scenarios, failure cases included, each from a fresh state. More than three: at root, ask which to write first.
+- Walk it live: with a reachable app, do each scenario once through browser.act, reading after each step the state you will assert; say first how many cards that takes. Write only steps you watched work. No reachable app: write from the source and say so.
 - Selectors in this order: role with name (`getByRole('button', {name: 'Save'})`), then label or text, then test id, then CSS. No XPath, nth-child chains or generated class names. A test id missing from product code is a production edit: ask, or list it under OPEN_QUESTIONS.
 - One behaviour per test, named for it; each test sets up its own data and passes alone and in any order.
-- Wait on conditions, never time: web-first assertions (`toBeVisible`, `toHaveURL`, `toHaveText`), `waitForResponse` or `expect.poll`. No `waitForTimeout` or sleeps. A fixed delay only for timing behaviour itself (debounce, throttle), after waiting for its trigger, with a comment giving the known interval.
+- Wait on conditions, never time: web-first assertions (`toBeVisible`, `toHaveURL`, `toHaveText`), `waitForResponse` or `expect.poll`. No `waitForTimeout`, sleeps or network-idle waits. A fixed delay only for timing behaviour itself (debounce, throttle), after waiting for its trigger, with a comment giving the known interval.
 - Assert what the user sees or the server stored, not internals. Mock only third-party services.
 - Red first — run the one new test through the project's command with a file or `--grep` filter; it must fail for the missing behaviour, not a selector, setup or server error. Behaviour that already works: change the expected value once, run red, restore, run green.
 - "No tests found" or a filter matching nothing is a failure.
+- Heal: run the new tests; repair one failure at a time and rerun before the next, naming its cause: locator, timing, data or environment, or the app is wrong. Healing changes locators, waits and test data, never what is asserted; a correct test that fails on an app defect stays red and is reported, not fixed. Patterns: topic `eng-e2e`.
 
 ### visual
 - Screenshot assertions (`toHaveScreenshot`) on stable state: fonts loaded, animations off, dynamic regions masked, a fixed viewport.
@@ -69,8 +70,7 @@ MODE in a brief: write | visual | flake.
 5. Prove the fix with the same repeat run: 0 failures. Three failed fixes: stop, report, question the test's design.
 
 ## Hard rules
-- Never weaken a test: no added retries, raised timeouts, `skip` or `fixme` to make a run green unless the user asks, with the reason in the test.
-- A product bug you find is reported with the failing test, not fixed.
+- `skip` and `fixme` count as weakening a test (Tests that can fail): only on the user's word, with the reason in the test.
 - Login and test-user secrets come from the environment variables the project already reads: name the variable, never the value.
 - Method adapted in part from anthropics/skills (webapp-testing; Apache-2.0, © 2026 Anthropic, PBC), changed by Buildersoft LLC for Sophon tools.
 
