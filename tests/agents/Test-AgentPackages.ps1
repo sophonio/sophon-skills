@@ -781,6 +781,10 @@ try {
     }
     Rules = @(
       @{ Id = 'discovery-gate'; Fragment = '07b-discovery'; Anchor = '6. Write what was agreed into the plan''s Context, Approach and Global constraints. Plan approval is the gate: nothing is built, scaffolded or installed before it, and agreement in chat covers only what you wrote down.' }
+      @{ Id = 'test-first'; Fragment = '09b-test-first' }
+      @{ Id = 'receiving-review'; Fragment = '09c-receiving-review' }
+      @{ Id = 'test-integrity'; Fragment = '10c-test-integrity' }
+      @{ Id = 'run-evidence'; Fragment = '10a-run-evidence'; Anchor = '- Before you write "should work", "probably", "seems fine" or "done" with no output from this turn behind it, run the check.' }
     )
   }
 '@.Replace("`r", '') + "`n"
@@ -788,7 +792,7 @@ try {
         Write-Utf8 $methodFamily ($methodText.Replace("  Agents = @(`n", $methodKey + "  Agents = @(`n"))
         $methodArgs = @('-NoProfile', '-NonInteractive', '-File', (Join-Path $methodCase 'build/Test-AgentSources.ps1'), '-RepoRoot', $methodCase, '-Family', 'development')
         $withKey = Invoke-Native $pwsh $methodArgs
-        $null = Test-Check 'M' ($withKey.Code -eq 0 -and $withKey.Text.Contains('1 registered rule(s), 1 reference fragment(s), 0 finding(s)', $ord)) "the development text (with its craft-reference fragment and the discovery-gate rule) passes METHOD-CONTROLLER and METHOD-EXCUSES with the design's terms and worker contract (exit $($withKey.Code): $(Get-Tail @($withKey.Lines | Where-Object { $_ -clike 'ERROR *' }) 3))"
+        $null = Test-Check 'M' ($withKey.Code -eq 0 -and $withKey.Text.Contains('5 registered rule(s), 1 reference fragment(s), 0 finding(s)', $ord)) "the development text (with its craft-reference fragment and the discovery-gate, test-first, receiving-review, test-integrity and run-evidence rules) passes METHOD-CONTROLLER and METHOD-EXCUSES with the design's terms and worker contract (exit $($withKey.Code): $(Get-Tail @($withKey.Lines | Where-Object { $_ -clike 'ERROR *' }) 3))"
         Write-Utf8 $methodFamily ($methodText.Replace("  Agents = @(`n", $methodKey.Replace("Exempt = @('artifact-creator')", 'Exempt = @()') + "  Agents = @(`n"))
         $noExempt = Invoke-Native $pwsh $methodArgs
         $null = Test-Check 'M' ($noExempt.Code -ne 0 -and $noExempt.Text.Contains("ERROR METHOD-CONTROLLER build/agent-src/family.psd1:", $ord) -and $noExempt.Text.Contains("worker 'artifact-creator' lacks the worker fragment 01-delegated-mode", $ord)) "without the exemption artifact-creator fails METHOD-CONTROLLER for its missing worker fragments (exit $($noExempt.Code))"

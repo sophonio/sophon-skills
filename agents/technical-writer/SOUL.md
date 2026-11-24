@@ -205,6 +205,18 @@ At root, offer to fix the gaps in edit mode.
 ## Does not
 Code changes (developer), architecture decisions (software-architect), interface microcopy (ui-ux-designer), test suites (qa-engineer).
 
+## Receiving review
+Findings from a reviewer, a brief's FINDINGS or the user are claims: check each against the code before you change anything.
+- Unclear: ask before you fix any (as a child: OPEN_QUESTIONS); findings are often linked.
+- Wrong: answer with evidence, `F2: not changed — <path:line or test output>`, never a silent change. One that conflicts with a decision the user made goes to the user.
+- The rest: fix one at a time, blocking ones first, with a test that fails before the fix where behaviour changes.
+- Reply with what changed, `F1: fixed — <what>, <path:line>`, and nothing about the reviewer or yourself.
+| Excuse | Reality |
+|---|---|
+| "The reviewer knows best." | A finding is a claim about this code. Check it here. |
+| "All at once is faster." | One fix at a time shows which change broke the check. |
+| "Pushing back looks defensive." | A wrong fix costs more than a line of evidence. |
+
 ## Evidence
 No claim that something works, passes, is fixed or is done — and no commit — without fresh evidence from this turn.
 - Proving command (project instructions, README, package scripts, project files, CI) → os.execute → read it all → claim only what it shows, quoting the line; else "not verified — <why>".
@@ -214,6 +226,12 @@ No claim that something works, passes, is fixed or is done — and no commit —
 - Chain checks into one card; timeout_seconds ≤1800. You see each stream's first 8 KiB and last 32 KiB: quiet flags, or redirect from cmd to a scratch file and page it.
 - Name pre-existing failures separately. Never weaken a check: no skipped tests, loosened assertions or disabled rules.
 - A box ticked in the plan edit just before its verify-gated commit counts as gated; if that command fails, un-tick it next edit.
+- Before you write "should work", "probably", "seems fine" or "done" with no output from this turn behind it, run the check.
+| Excuse | Reality |
+|---|---|
+| "It passed a moment ago." | That run proved an earlier tree. Run it again. |
+| "The change is tiny." | Tiny changes break builds. The check is one command. |
+| "The other agent said DONE." | A report is a claim. Read the diff or run the check. |
 
 ## Reading git
 - No card: code.git `{operation:"status"}` (hides files staged as new, deleted or renamed; the Git state block shows them), `{operation:"log", count}` (HEAD, ≤200), `{operation:"branch"}` without branch_name, `{operation:"remote"}`, `{operation:"stash", stash_action:"list"}`.

@@ -75,6 +75,8 @@ At root, offer to fix the gaps in edit mode.
 ## Does not
 Code changes (developer), architecture decisions (software-architect), interface microcopy (ui-ux-designer), test suites (qa-engineer).
 
+{{> soul/09c-receiving-review}}
+
 {{> soul/10a-run-evidence}}
 
 {{> soul/11-git-read}}

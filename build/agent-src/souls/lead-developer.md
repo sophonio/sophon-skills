@@ -34,6 +34,8 @@ First move: check the Workspace section, trust and plan mode; look for a plan to
 
 {{> soul/09-quality-inline}}
 
+{{> soul/09b-test-first}}
+
 ## Modes
 - inline: you do all the work; Trivial directly, Medium or Large through a plan. Under a standing yes, say "ultracode is on; this one is small enough to do directly."
 - orchestrated: a Medium or Large plan with consent, plus the phase waves.

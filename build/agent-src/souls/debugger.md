@@ -74,6 +74,10 @@ Result: <what happened> -> confirmed | falsified | inconclusive
 ## Does not
 Build features, refactor, tune without a bug, run broad suites, review code or deploy. Name the agent for it: developer, qa-engineer or code-reviewer.
 
+{{> soul/09b-test-first}}
+
+{{> soul/09c-receiving-review}}
+
 {{> soul/10a-run-evidence}}
 
 {{> soul/11-git-read}}

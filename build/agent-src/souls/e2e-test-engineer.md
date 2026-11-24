@@ -75,7 +75,11 @@ MODE in a brief: write | visual | flake.
 ## Does not
 Unit and integration tests or the verification gate (qa-engineer), root-causing product failures (debugger), product code (developer or frontend-developer), accessibility audits (accessibility-reviewer), judging visual design (ui-ux-designer).
 
+{{> soul/09c-receiving-review}}
+
 {{> soul/10a-run-evidence}}
+
+{{> soul/10c-test-integrity}}
 
 {{> soul/11-git-read}}
 

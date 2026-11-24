@@ -56,17 +56,21 @@
     @{ Text = 'REFUTED (unsure)'; In = @('accessibility-reviewer', 'code-reviewer', 'lead-developer', 'security-reviewer') }
     @{ Text = 'ADDRESSED | NOT_ADDRESSED'; In = @('accessibility-reviewer', 'code-reviewer', 'lead-developer', 'security-reviewer') }
     @{ Text = 'predates: yes|no'; In = @('accessibility-reviewer', 'code-reviewer', 'lead-developer', 'security-reviewer') }
-    # Verdict words
-    @{ Text = 'APPROVE | REQUEST_CHANGES'; In = @('accessibility-reviewer', 'code-reviewer', 'lead-developer', 'security-reviewer') }
-    @{ Text = 'SPEC: MET | GAPS | CANNOT_VERIFY'; In = @('accessibility-reviewer', 'code-reviewer', 'lead-developer', 'security-reviewer') }
-    @{ Text = 'ALL_ADDRESSED | OPEN'; In = @('accessibility-reviewer', 'code-reviewer', 'lead-developer', 'security-reviewer') }
-    @{ Text = 'COMPLETE | GAPS'; In = @('accessibility-reviewer', 'code-reviewer', 'lead-developer', 'security-reviewer') }
-    @{ Text = 'CLEAN | ISSUES'; In = @('accessibility-reviewer', 'code-reviewer', 'lead-developer', 'security-reviewer') }
-    @{ Text = 'PASS | PASS_WITH_WARNINGS | FAIL'; In = @('accessibility-reviewer', 'code-reviewer', 'lead-developer', 'qa-engineer', 'security-reviewer') }
-    @{ Text = 'ROOT_CAUSE_FOUND | NOT_REPRODUCED | INCONCLUSIVE'; In = @('accessibility-reviewer', 'code-reviewer', 'debugger', 'lead-developer', 'security-reviewer') }
-    @{ Text = 'CONFIRMED | FALSIFIED | INCONCLUSIVE'; In = @('accessibility-reviewer', 'code-reviewer', 'debugger', 'lead-developer', 'security-reviewer') }
-    @{ Text = 'READY | NEEDS_DECISION'; In = @('accessibility-reviewer', 'code-reviewer', 'lead-developer', 'security-reviewer') }
-    @{ Text = 'WINNER <n>'; In = @('accessibility-reviewer', 'code-reviewer', 'lead-developer', 'security-reviewer', 'ui-ux-designer') }
+    # Verdict words: since 3.0 each role states its own (15b no longer lists them); the lead's table is its role text
+    @{ Text = 'APPROVE | REQUEST_CHANGES'; In = @('code-reviewer') }
+    @{ Text = 'SPEC: MET | GAPS | CANNOT_VERIFY'; In = @('code-reviewer') }
+    @{ Text = 'ALL_ADDRESSED | OPEN'; In = @('code-reviewer') }
+    @{ Text = 'COMPLETE | GAPS'; In = @('code-reviewer') }
+    @{ Text = 'VERDICT CLEAN or ISSUES'; In = @('security-reviewer') }
+    @{ Text = 'CONFORMS | GAPS'; In = @('accessibility-reviewer') }
+    @{ Text = 'PASS | PASS_WITH_WARNINGS | FAIL'; In = @('qa-engineer') }
+    @{ Text = 'ROOT_CAUSE_FOUND | NOT_REPRODUCED | INCONCLUSIVE'; In = @('debugger') }
+    @{ Text = 'CONFIRMED | FALSIFIED | INCONCLUSIVE'; In = @('debugger') }
+    @{ Text = 'VERDICT READY or NEEDS_DECISION'; In = @('software-architect') }
+    @{ Text = 'WINNER <n>'; In = @('ui-ux-designer') }
+    # 3.0 findings-block lines (15b-findings-block)
+    @{ Text = 'CANNOT_VERIFY:'; In = @('accessibility-reviewer', 'code-reviewer', 'lead-developer', 'security-reviewer') }
+    @{ Text = 'DECLINED:'; In = @('accessibility-reviewer', 'code-reviewer', 'lead-developer', 'security-reviewer') }
     # Brief keys
     @{ Text = 'READ_FIRST'; In = 'all'; Except = @('artifact-creator') }
     @{ Text = 'WRITE_SCOPE'; In = 'all'; Except = @('artifact-creator') }
@@ -139,11 +143,16 @@
     @{ Text = 'MODE is gate, regression, write-tests, strategy, gaps or ui.'; In = @('qa-engineer') }
     @{ Text = 'ROLE: <role id> · MODE: <a mode from that role''s list> · ACCESS: read-only | write'; In = 'lead' }
   )
-  Removed = @()
+  Removed = @(
+    @{ Text = 'CLEAN | ISSUES'; Why = 'the all-roles VERDICT line of 15b-findings-block goes in 3.0; security-reviewer states its words as "VERDICT CLEAN or ISSUES", which is anchored instead' }
+    @{ Text = 'READY | NEEDS_DECISION'; Why = 'the all-roles VERDICT line of 15b-findings-block goes in 3.0; software-architect states its words as "VERDICT READY or NEEDS_DECISION", which is anchored instead' }
+  )
   Gone = @(
     @{ Text = '<m> deferred'; File = 'SOUL'; Since = '3.0.0'; Why = 'deferred is no longer a plan word in 3.0' }
     @{ Text = '- "Discard": "'; File = 'SOUL'; Since = '3.0.0'; Why = 'Discard is no longer a finish-menu label; it runs only when the user asks for it' }
     @{ Text = 'Ask everything at once'; File = 'SOUL'; Since = '3.0.0'; Why = 'the 3.0 question discipline asks only what is open, one open question per message' }
+    @{ Text = 'researcher, developer, UX n/a'; File = 'SOUL'; Since = '3.0.0'; Why = 'the all-roles VERDICT line of 15b-findings-block goes; each role states its own verdict words' }
+    @{ Text = 'per the verdict table'; File = 'SOUL'; Since = '3.0.0'; Why = 'code-reviewer states its verdict words in its Output section' }
     @{ Text = 'Keep local / Discard menu'; File = 'README'; Since = '3.0.0'; Pending = 'M8'; Why = 'the 3.0 finish menu replaces it' }
     @{ Text = 'Keep local or Discard'; File = 'README'; Since = '3.0.0'; Pending = 'M8'; Why = 'the 3.0 finish menu replaces it' }
     @{ Text = '10 agents in 5 calls'; File = 'README'; Since = '3.0.0'; Pending = 'M8'; Why = 'the 3.0 lead caps replace it' }

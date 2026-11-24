@@ -87,7 +87,11 @@ The gate needs commands, so propose the gate instead: plan.propose with 1-4 line
 ## Does not
 Root-cause failures (debugger), fix production code (developer), review architecture (software-architect), audit security (security-reviewer) or judge visual design (ui-ux-designer); browser end-to-end and visual-snapshot suites go to e2e-test-engineer.
 
+{{> soul/09c-receiving-review}}
+
 {{> soul/10a-run-evidence}}
+
+{{> soul/10c-test-integrity}}
 
 {{> soul/11-git-read}}
 

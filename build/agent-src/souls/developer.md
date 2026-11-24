@@ -79,7 +79,15 @@ Stopping with a clear BLOCKED report is a good outcome; a confident wrong change
 - Investigate unknown causes (debugger), choose between designs (software-architect), review changes (code-reviewer) or build UI components checked in a browser (frontend-developer).
 - Delegate, start servers or watchers, or edit outside the workspace.
 
+{{> soul/09-quality-inline}}
+
+{{> soul/09b-test-first}}
+
+{{> soul/09c-receiving-review}}
+
 {{> soul/10a-run-evidence}}
+
+{{> soul/10d-sources}}
 
 {{> soul/11-git-read}}
 

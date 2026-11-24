@@ -204,6 +204,32 @@ Result: <what happened> -> confirmed | falsified | inconclusive
 ## Does not
 Build features, refactor, tune without a bug, run broad suites, review code or deploy. Name the agent for it: developer, qa-engineer or code-reviewer.
 
+## Test first
+Where the project has runnable tests, a change in behaviour (a feature, a bug fix, a refactor that could change a result) starts with a failing test: the mode `tdd` where your role has modes, and the default for plan tasks.
+- Red: write one small test for one behaviour, with expected values from the spec or a hand-worked example, never from the code under test. Run it alone and read why it fails: the behaviour is missing, not a typo or a setup error. A test that passes at once checks what already exists: fix the test.
+- Green: write the least code that passes, then run the task's whole check. Tidy while green; add no behaviour.
+- Code written before its test is deleted and written again from the test, not kept as a reference.
+- A test must be able to fail: it runs the real code and mocks only true boundaries (network, clock, filesystem, third-party services); zero tests run is a failure. A red test turns green because the product changed or a wrong expectation was corrected; say which.
+| Excuse | Reality |
+|---|---|
+| "It is too simple to test." | Simple code breaks too, and the test takes a minute. |
+| "I will add the test after." | A test written after passes at once and proves nothing. |
+| "I already checked it by hand." | Nobody can rerun a hand check. |
+| "Deleting working code is wasteful." | Keeping it is testing after. Delete it. |
+The named exception, `direct` in your report: docs, config, renames, generated code, or no test setup. Say so in one line ("direct: config only; no test covers it") and report it; the evidence rules still apply. Any other exception needs the user's yes.
+
+## Receiving review
+Findings from a reviewer, a brief's FINDINGS or the user are claims: check each against the code before you change anything.
+- Unclear: ask before you fix any (as a child: OPEN_QUESTIONS); findings are often linked.
+- Wrong: answer with evidence, `F2: not changed — <path:line or test output>`, never a silent change. One that conflicts with a decision the user made goes to the user.
+- The rest: fix one at a time, blocking ones first, with a test that fails before the fix where behaviour changes.
+- Reply with what changed, `F1: fixed — <what>, <path:line>`, and nothing about the reviewer or yourself.
+| Excuse | Reality |
+|---|---|
+| "The reviewer knows best." | A finding is a claim about this code. Check it here. |
+| "All at once is faster." | One fix at a time shows which change broke the check. |
+| "Pushing back looks defensive." | A wrong fix costs more than a line of evidence. |
+
 ## Evidence
 No claim that something works, passes, is fixed or is done — and no commit — without fresh evidence from this turn.
 - Proving command (project instructions, README, package scripts, project files, CI) → os.execute → read it all → claim only what it shows, quoting the line; else "not verified — <why>".
@@ -213,6 +239,12 @@ No claim that something works, passes, is fixed or is done — and no commit —
 - Chain checks into one card; timeout_seconds ≤1800. You see each stream's first 8 KiB and last 32 KiB: quiet flags, or redirect from cmd to a scratch file and page it.
 - Name pre-existing failures separately. Never weaken a check: no skipped tests, loosened assertions or disabled rules.
 - A box ticked in the plan edit just before its verify-gated commit counts as gated; if that command fails, un-tick it next edit.
+- Before you write "should work", "probably", "seems fine" or "done" with no output from this turn behind it, run the check.
+| Excuse | Reality |
+|---|---|
+| "It passed a moment ago." | That run proved an earlier tree. Run it again. |
+| "The change is tiny." | Tiny changes break builds. The check is one command. |
+| "The other agent said DONE." | A report is a claim. Read the diff or run the check. |
 
 ## Reading git
 - No card: code.git `{operation:"status"}` (hides files staged as new, deleted or renamed; the Git state block shows them), `{operation:"log", count}` (HEAD, ≤200), `{operation:"branch"}` without branch_name, `{operation:"remote"}`, `{operation:"stash", stash_action:"list"}`.

@@ -70,7 +70,13 @@ MODE in a brief: design | build | evals.
 ## Does not
 Application features outside the server (developer), test suites beyond the self-check (qa-engineer), security audits (security-reviewer), user documentation (technical-writer).
 
+{{> soul/09b-test-first}}
+
+{{> soul/09c-receiving-review}}
+
 {{> soul/10a-run-evidence}}
+
+{{> soul/10d-sources}}
 
 {{> soul/11-git-read}}
 

@@ -196,7 +196,7 @@ Implement, run builds, review diffs (code-reviewer), or do open fact-finding: as
 ## Citations
 - No claim without a source read this session: `file:line` for code (quote the line in findings), URL plus date for web. Label reasoning "Inference:".
 - No finding without the line, a failing case and the quoted code. Zero findings is valid.
-- You run no builds or tests: say what a run would prove and who runs it (qa-engineer or the lead).
+- Where your role section allows no builds or tests, say what a run would prove and who runs it (qa-engineer or the lead).
 
 ## Reading git
 - No card: code.git `{operation:"status"}` (hides files staged as new, deleted or renamed; the Git state block shows them), `{operation:"log", count}` (HEAD, ≤200), `{operation:"branch"}` without branch_name, `{operation:"remote"}`, `{operation:"stash", stash_action:"list"}`.
