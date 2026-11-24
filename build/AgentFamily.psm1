@@ -29,7 +29,11 @@
                                and pinned
       AllowRestrictedMentions  restricted tool names that may be named un-negated (never pinned)
                                A SkillPolicy skill may also name Fragment = '<NN-id>', its reference fragment: the
-                               only source whose lines may name that skill's tools (METHOD-REFERENCE)
+                               only source whose lines may name that skill's tools (METHOD-REFERENCE), which an
+                               agent includes exactly when it uses the skill (LINT-SKILL-FRAGMENT); and TopicIndex =
+                               '<repo path>', the JSON id list its topic pointers are checked against (LINT-TOPIC,
+                               with the topics.lock.json beside it for section ids). A policy skill no agent uses
+                               fails LINT-SKILL-UNUSED (Test-AgentSkillUse)
       RosterOrder              the agent ids of the README roster table, in table order (DOC-COUNT derives the
                                table and companion counts from it)
       Method                   the registry of tested rules: @{ Controller = @{ Fragments; Terms; Allow };
@@ -969,16 +973,29 @@ function Test-AgentFamilyOptionalKeys {
                 $errors.Add((New-AgentComposeError $p $line 'SkillPolicy.Skills must list 1-16 skills'))
             }
             $seenSkills = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+            $seenFragments = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
             foreach ($skill in $skills) {
                 $name = if ($skill -is [hashtable]) { $skill['Name'] } else { $null }
                 $skillKeys = if ($skill -is [hashtable]) { [string[]]@($skill.Keys) } else { [string[]]@() }
-                $extraKeys = @($skillKeys | Where-Object { -not (Test-AgentInList @('Name', 'MinVersion', 'Fragment') $_) })
+                $extraKeys = @($skillKeys | Where-Object { -not (Test-AgentInList @('Name', 'MinVersion', 'Fragment', 'TopicIndex') $_) })
                 if ($skill -isnot [hashtable] -or $name -isnot [string] -or -not $script:SkillNameRegex.IsMatch($name) -or $extraKeys.Count -gt 0) {
-                    $errors.Add((New-AgentComposeError $p $line "SkillPolicy.Skills entry '$name' must be @{ Name = '<skill>'; MinVersion = 'x.y.z'; Fragment = '<NN-id>' } (MinVersion and Fragment optional) with a name matching ^[a-z0-9][a-z0-9-]{1,63}$"))
+                    $errors.Add((New-AgentComposeError $p $line "SkillPolicy.Skills entry '$name' must be @{ Name = '<skill>'; MinVersion = 'x.y.z'; Fragment = '<NN-id>'; TopicIndex = '<repo path>' } (MinVersion, Fragment and TopicIndex optional) with a name matching ^[a-z0-9][a-z0-9-]{1,63}$"))
                     continue
                 }
                 if ($skill.ContainsKey('Fragment') -and ($skill['Fragment'] -isnot [string] -or -not $script:FragmentIdRegex.IsMatch($skill['Fragment']))) {
                     $errors.Add((New-AgentComposeError $p $line "SkillPolicy.Skills '$name': Fragment '$($skill['Fragment'])' must be a fragment id (NN-name)"))
+                }
+                if ($skill.ContainsKey('Fragment') -and $skill['Fragment'] -is [string] -and -not $seenFragments.Add($skill['Fragment'])) {
+                    $errors.Add((New-AgentComposeError $p $line "SkillPolicy.Skills '$name': Fragment $($skill['Fragment']) is already the reference fragment of another skill"))
+                }
+                if ($skill.ContainsKey('TopicIndex')) {
+                    $topicIndex = $skill['TopicIndex']
+                    if ($topicIndex -isnot [string] -or $topicIndex -notmatch '^[A-Za-z0-9_.-]+(/[A-Za-z0-9_.-]+)*$' -or $topicIndex -match '(^|/)\.\.?(/|$)') {
+                        $errors.Add((New-AgentComposeError $p $line "SkillPolicy.Skills '$name': TopicIndex '$topicIndex' must be a repository-relative path with forward slashes"))
+                    }
+                    elseif ($RepoRoot -and -not [System.IO.File]::Exists((Join-AgentRepoPath (Resolve-AgentFullPath -Path $RepoRoot) $topicIndex))) {
+                        $errors.Add((New-AgentComposeError $p $line "SkillPolicy.Skills '$name': TopicIndex $topicIndex does not exist"))
+                    }
                 }
                 if (-not $seenSkills.Add($name)) {
                     $errors.Add((New-AgentComposeError $p $line "SkillPolicy.Skills lists $name twice"))
@@ -2304,6 +2321,304 @@ function Invoke-AgentMethodFixtures {
 }
 
 # ---------------------------------------------------------------------------------------------
+# Skill use (LINT-SKILL-FRAGMENT, LINT-SKILL-UNUSED, LINT-TOPIC)
+# ---------------------------------------------------------------------------------------------
+
+# A topic pointer: the word "topic" or "topics", then one or more backticked ids separated by commas, "and"
+# or "or"; an id may be followed by ", section" and a backticked section id.
+$script:TopicItemPattern = '`(?<id>[a-z][a-z0-9-]*)`(?:,\s*section\s+`(?<section>[a-z][a-z0-9-]*)`)?'
+$script:TopicPointerRegex = [regex]::new('(?<![\w-])[Tt]opics?\s+' + $script:TopicItemPattern + '(?:(?:\s*,\s*(?:and\s+|or\s+)?|\s+(?:and|or)\s+)' + $script:TopicItemPattern + ')*', 'CultureInvariant')
+$script:TopicItemRegex = [regex]::new($script:TopicItemPattern, 'CultureInvariant')
+
+function Test-AgentUsesSkill {
+    # True when the agent entry uses the policy skill: no Skills key means every policy skill.
+    param($Agent, [string]$Skill)
+    if ($Agent -isnot [hashtable] -or -not $Agent.ContainsKey('Skills')) { return $true }
+    Test-AgentInList ([string[]]@(Get-AgentItems $Agent['Skills'])) $Skill
+}
+
+function Get-AgentTopicPointers {
+    <#
+    .SYNOPSIS
+        The topic pointers on one line: @(@{ Id; Section }), in order (Section is '' when absent).
+    #>
+    param([string]$Text)
+    , @(foreach ($pointer in $script:TopicPointerRegex.Matches($Text)) {
+            foreach ($item in $script:TopicItemRegex.Matches($pointer.Value)) {
+                @{ Id = $item.Groups['id'].Value; Section = $(if ($item.Groups['section'].Success) { $item.Groups['section'].Value } else { '' }) }
+            }
+        })
+}
+
+function Read-AgentTopicIndex {
+    <#
+    .SYNOPSIS
+        Reads a SkillPolicy skill's TopicIndex (a JSON array of @{ id; usedBy; ... }) and the topics.lock.json beside
+        it (its topics[].sections): @{ Path; Ids; UsedBy (id -> string[]); Sections (id -> string[]); Errors }.
+    #>
+    param([Parameter(Mandatory)][string]$RepoRoot, [Parameter(Mandatory)][string]$RelativePath)
+    $errors = [System.Collections.Generic.List[string]]::new()
+    $ids = [System.Collections.Generic.List[string]]::new()
+    $usedBy = @{}
+    $sections = @{}
+    $full = Join-AgentRepoPath (Resolve-AgentFullPath -Path $RepoRoot) $RelativePath
+    try {
+        foreach ($entry in @(Get-Content -LiteralPath $full -Raw -Encoding utf8 | ConvertFrom-Json -AsHashtable)) {
+            if ($entry -isnot [System.Collections.IDictionary] -or $entry['id'] -isnot [string]) { $errors.Add("$RelativePath holds an entry without an id"); continue }
+            $ids.Add($entry['id'])
+            $usedBy[$entry['id']] = [string[]]@(Get-AgentItems $entry['usedBy'] | Where-Object { $_ -is [string] })
+        }
+    }
+    catch { $errors.Add("cannot read ${RelativePath}: $($_.Exception.Message)") }
+    $lockRel = ($RelativePath -replace '[^/\\]+$', '') + 'topics.lock.json'
+    $lockFull = Join-AgentRepoPath (Resolve-AgentFullPath -Path $RepoRoot) $lockRel
+    if ([System.IO.File]::Exists($lockFull)) {
+        try {
+            $lock = Get-Content -LiteralPath $lockFull -Raw -Encoding utf8 | ConvertFrom-Json -AsHashtable
+            foreach ($topic in @(Get-AgentItems $lock['topics'])) {
+                if ($topic -is [System.Collections.IDictionary] -and $topic['id'] -is [string]) {
+                    $sections[$topic['id']] = [string[]]@(Get-AgentItems $topic['sections'] | Where-Object { $_ -is [string] })
+                }
+            }
+        }
+        catch { $errors.Add("cannot read ${lockRel}: $($_.Exception.Message)") }
+    }
+    else { $errors.Add("$lockRel is missing (run python -B build/craft-reference/generate.py)") }
+    @{ Path = $RelativePath; Ids = [string[]]$ids.ToArray(); UsedBy = $usedBy; Sections = $sections; Errors = $errors.ToArray() }
+}
+
+function Test-AgentSkillUse {
+    <#
+    .SYNOPSIS
+        LINT-SKILL-FRAGMENT, LINT-SKILL-UNUSED and LINT-TOPIC for one family. Emits @{ Rule; Path; Line; Message; Note }.
+    .DESCRIPTION
+        Family is the family data; Results the compose results of the agents checked (Id, Text, LineMap,
+        Included). TopicIndexes maps a SkillPolicy skill name to its Read-AgentTopicIndex result. FullRoster says
+        Results covers the whole roster (LINT-SKILL-UNUSED and the LINT-TOPIC presence rules need it).
+          LINT-SKILL-FRAGMENT  an agent includes a skill's Fragment exactly when it uses that skill (its Skills key)
+          LINT-SKILL-UNUSED    a SkillPolicy skill that no roster agent uses
+          LINT-TOPIC           a pointer ("topic `<id>`", ", section `<id>`") names an id missing from the skill's
+                               TopicIndex, or a section missing from topics.lock.json beside it; an agent that does
+                               not use the skill carries a pointer. With Release also: an agent that uses the
+                               skill names no topic, and the agents naming a topic differ from its usedBy list;
+                               without Release those two print as one note each (Note = $true).
+        Pointer findings are reported at the source line through the line map, once per line.
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)][hashtable]$Family,
+        [Parameter(Mandatory)][AllowEmptyCollection()][object[]]$Results,
+        [hashtable]$TopicIndexes = @{},
+        [bool]$FullRoster = $true,
+        [bool]$Release = $false,
+        [string]$FamilyPath = $script:FamilyRelPath,
+        [string]$RepoRoot = ''
+    )
+    $lineOf = {
+        param([string]$AgentId, [string]$Key)
+        if (-not $RepoRoot) { return 0 }
+        $lineArgs = @{ RepoRoot = $RepoRoot }
+        if ($AgentId) { $lineArgs['AgentId'] = $AgentId }
+        if ($Key) { $lineArgs['Key'] = $Key }
+        Get-AgentFamilyLine @lineArgs
+    }
+    $found = [System.Collections.Generic.List[object]]::new()
+    $keys = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+    $add = {
+        param([string]$Rule, [string]$Path, [int]$Line, [string]$Message, [bool]$Note = $false)
+        if ($keys.Add("$Rule|$Path|$Line|$Message")) { $found.Add(@{ Rule = $Rule; Path = $Path; Line = $Line; Message = $Message; Note = $Note }) }
+    }
+    $policy = $Family['SkillPolicy']
+    $skills = @(if ($policy -is [hashtable]) { @(Get-AgentItems $policy['Skills']) | Where-Object { $_ -is [hashtable] -and $_['Name'] -is [string] } })
+    $agentsById = @{}
+    $roster = @(Get-AgentItems $Family['Agents'] | Where-Object { $_ -is [hashtable] })
+    foreach ($agent in $roster) { $id = Get-AgentIdOf $agent; if ($id) { $agentsById[$id] = $agent } }
+
+    foreach ($skill in $skills) {
+        $name = [string]$skill['Name']
+        # ---- LINT-SKILL-UNUSED ----
+        if ($FullRoster -and @($roster | Where-Object { Test-AgentUsesSkill $_ $name }).Count -eq 0) {
+            & $add 'LINT-SKILL-UNUSED' $FamilyPath (& $lineOf -Key 'SkillPolicy') "SkillPolicy skill '$name' is used by no agent (every agent sets Skills without it); drop it from SkillPolicy"
+        }
+        # ---- LINT-SKILL-FRAGMENT ----
+        $fragmentId = if ($skill['Fragment'] -is [string]) { [string]$skill['Fragment'] } else { '' }
+        if ($fragmentId) {
+            foreach ($result in $Results) {
+                $id = [string]$result['Id']
+                $agent = $agentsById[$id]
+                if ($null -eq $agent) { continue }
+                $uses = Test-AgentUsesSkill $agent $name
+                $includes = Test-AgentInList ([string[]]@($result['Included'])) $fragmentId
+                if ($uses -and -not $includes) {
+                    & $add 'LINT-SKILL-FRAGMENT' $FamilyPath (& $lineOf -AgentId $id) "agent '$id' uses skill '$name' but does not include its reference fragment $fragmentId; add it to Fragments and the template"
+                }
+                elseif ($includes -and -not $uses) {
+                    & $add 'LINT-SKILL-FRAGMENT' $FamilyPath (& $lineOf -AgentId $id) "agent '$id' includes $fragmentId, the reference fragment of skill '$name', but does not use that skill (its Skills key)"
+                }
+            }
+        }
+        # ---- LINT-TOPIC ----
+        if (-not $TopicIndexes.ContainsKey($name)) { continue }
+        $index = $TopicIndexes[$name]
+        foreach ($e in @($index['Errors'])) { & $add 'LINT-TOPIC' ([string]$index['Path']) 0 $e }
+        $known = [System.Collections.Generic.HashSet[string]]::new([string[]]@($index['Ids']), [StringComparer]::Ordinal)
+        $namedBy = @{}
+        $silent = [System.Collections.Generic.List[string]]::new()
+        foreach ($result in $Results) {
+            $id = [string]$result['Id']
+            $agent = $agentsById[$id]
+            if ($null -eq $agent) { continue }
+            $uses = Test-AgentUsesSkill $agent $name
+            $lines = Get-AgentComposedLines -Result $result
+            $map = @($result['LineMap'])
+            $named = 0
+            for ($i = 0; $i -lt $lines.Length -and $i -lt $map.Count; $i++) {
+                $pointers = Get-AgentTopicPointers -Text $lines[$i]
+                if ($pointers.Count -eq 0) { continue }
+                $source = [string]$map[$i]['Source']
+                $line = [int]$map[$i]['Line']
+                if (-not $uses) {
+                    & $add 'LINT-TOPIC' $source $line "agent '$id' does not use skill '$name' but this line points at topic '$($pointers[0]['Id'])'"
+                    continue
+                }
+                foreach ($pointer in $pointers) {
+                    $topic = [string]$pointer['Id']
+                    if (-not $known.Contains($topic)) {
+                        & $add 'LINT-TOPIC' $source $line "topic '$topic' is not in $($index['Path'])"
+                        continue
+                    }
+                    $named++
+                    if (-not $namedBy.ContainsKey($topic)) { $namedBy[$topic] = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal) }
+                    [void]$namedBy[$topic].Add($id)
+                    $section = [string]$pointer['Section']
+                    if ($section -and -not (Test-AgentInList ([string[]]@($index['Sections'][$topic])) $section)) {
+                        & $add 'LINT-TOPIC' $source $line "topic '$topic' has no section '$section' (topics.lock.json: $(@($index['Sections'][$topic]) -join ', '))"
+                    }
+                }
+            }
+            if ($uses -and $named -eq 0) { $silent.Add($id) }
+        }
+        if (-not $FullRoster) { continue }
+        $differ = [System.Collections.Generic.List[string]]::new()
+        foreach ($topic in @($index['Ids'])) {
+            $want = [string[]]@($index['UsedBy'][$topic] | Sort-Object -Culture ([Globalization.CultureInfo]::InvariantCulture))
+            $have = [string[]]@(if ($namedBy.ContainsKey($topic)) { @($namedBy[$topic]) | Sort-Object -Culture ([Globalization.CultureInfo]::InvariantCulture) })
+            if (($want -join ',') -cne ($have -join ',')) {
+                if ($Release) { & $add 'LINT-TOPIC' ([string]$index['Path']) 0 "topic '$topic' is named by [$($have -join ', ')] but its usedBy is [$($want -join ', ')]" }
+                else { $differ.Add($topic) }
+            }
+        }
+        if ($Release) {
+            foreach ($id in $silent) { & $add 'LINT-TOPIC' $FamilyPath (& $lineOf -AgentId $id) "agent '$id' uses skill '$name' but names no topic" }
+        }
+        else {
+            if ($silent.Count -gt 0) { & $add 'LINT-TOPIC' $FamilyPath 0 "$($silent.Count) agent(s) use skill '$name' but name no topic yet: $($silent -join ', ')" $true }
+            if ($differ.Count -gt 0) { & $add 'LINT-TOPIC' ([string]$index['Path']) 0 "$($differ.Count) topic(s) are named by agents other than their usedBy list: $($differ -join ', ')" $true }
+        }
+    }
+    $found.ToArray()
+}
+
+function Invoke-AgentSkillUseFixtures {
+    <#
+    .SYNOPSIS
+        Runs tests/agents/fixtures/skills/cases.psd1 through Test-AgentSkillUse and returns @{ Count; Failures }.
+    .DESCRIPTION
+        A case holds SkillPolicy, Topics (@(@{ id; usedBy; sections })), Release, Agents (each @{ Id; Skills;
+        Template = @(lines) }; a missing Skills key means every policy skill, $null or @() none) and Fragments
+        (@{ '<NN-id>' = @(lines) }). The file's Base supplies any of them a case leaves out; a case's Fragments are
+        merged over the Base ones and its Templates replace single agent templates. Expect 'fail' passes when a
+        finding that is not a note carries Rule (and, with Path and Line, at that place); 'note' when a note carries
+        Rule; 'pass' when there is no finding apart from notes.
+    #>
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][string]$RepoRoot)
+    $file = Join-AgentRepoPath (Resolve-AgentFullPath -Path $RepoRoot) 'tests/agents/fixtures/skills/cases.psd1'
+    if (-not [System.IO.File]::Exists($file)) {
+        return @{ Count = 0; Failures = @([pscustomobject]@{ Name = '(file)'; Expect = 'present'; Rule = ''; Got = 'missing'; Detail = $file }) }
+    }
+    $data = Import-PowerShellDataFile -LiteralPath $file
+    $base = if ($data['Base'] -is [hashtable]) { $data['Base'] } else { @{} }
+    $failures = [System.Collections.Generic.List[object]]::new()
+    $count = 0
+    foreach ($case in @(Get-AgentItems $data['Cases'])) {
+        $count++
+        $name = [string]$case['Name']
+        try {
+            $pick = { param($key) if ($case.ContainsKey($key)) { $case[$key] } else { $base[$key] } }
+            $family = @{ Agents = @() }
+            $policy = & $pick 'SkillPolicy'
+            if ($null -ne $policy) { $family['SkillPolicy'] = $policy }
+            $fragments = @{}
+            foreach ($source in @($base['Fragments'], $case['Fragments'])) {
+                if ($source -is [hashtable]) { foreach ($k in $source.Keys) { $fragments[[string]$k] = $source[$k] } }
+            }
+            $sources = @{}
+            foreach ($k in $fragments.Keys) { $sources["fragments/soul/$k.md"] = ConvertTo-AgentFixtureLines $fragments[$k] }
+            $results = [System.Collections.Generic.List[object]]::new()
+            foreach ($agent in @(Get-AgentItems (& $pick 'Agents'))) {
+                $id = [string]$agent['Id']
+                $entry = @{ Id = $id }
+                if ($agent.ContainsKey('Skills')) { $entry['Skills'] = [string[]]@(Get-AgentItems $agent['Skills']) }
+                $family['Agents'] += , $entry
+                $templatePath = "souls/$id.md"
+                $template = $agent['Template']
+                if ($case['Templates'] -is [hashtable] -and $case['Templates'].ContainsKey($id)) { $template = $case['Templates'][$id] }
+                $sources[$templatePath] = ConvertTo-AgentFixtureLines $template
+                $state = @{
+                    Sources = $sources; FragmentsDir = 'fragments/soul'; Omit = [string[]]@()
+                    Lines = [System.Collections.Generic.List[string]]::new()
+                    Map = [System.Collections.Generic.List[object]]::new()
+                    Included = [System.Collections.Generic.List[string]]::new()
+                }
+                Expand-AgentFixtureSource -State $state -Path $templatePath
+                $text = if ($state['Lines'].Count -gt 0) { ($state['Lines'] -join "`n") + "`n" } else { '' }
+                $results.Add(@{ Id = $id; Text = $text; LineMap = $state['Map'].ToArray(); Included = $state['Included'].ToArray() })
+            }
+            $indexes = @{}
+            $topics = & $pick 'Topics'
+            if ($null -ne $topics -and $policy -is [hashtable]) {
+                $usedBy = @{}
+                $sections = @{}
+                $ids = [System.Collections.Generic.List[string]]::new()
+                foreach ($topic in @(Get-AgentItems $topics)) {
+                    $ids.Add([string]$topic['id'])
+                    $usedBy[[string]$topic['id']] = [string[]]@(Get-AgentItems $topic['usedBy'])
+                    $sections[[string]$topic['id']] = [string[]]@(Get-AgentItems $topic['sections'])
+                }
+                foreach ($skill in @(Get-AgentItems $policy['Skills'])) {
+                    if ($skill -is [hashtable] -and $skill['TopicIndex'] -is [string]) {
+                        $indexes[[string]$skill['Name']] = @{ Path = [string]$skill['TopicIndex']; Ids = [string[]]$ids.ToArray(); UsedBy = $usedBy; Sections = $sections; Errors = @() }
+                    }
+                }
+            }
+            $release = [bool](& $pick 'Release')
+            $issues = @(Test-AgentSkillUse -Family $family -Results $results.ToArray() -TopicIndexes $indexes -Release $release -FamilyPath 'family')
+        }
+        catch {
+            $failures.Add([pscustomobject]@{ Name = $name; Expect = $case['Expect']; Rule = $case['Rule']; Got = 'exception'; Detail = $_.Exception.Message })
+            continue
+        }
+        $errorsOnly = @($issues | Where-Object { -not $_['Note'] })
+        $want = [string]$case['Rule']
+        $ok = switch ([string]$case['Expect']) {
+            'pass' { $errorsOnly.Count -eq 0 }
+            'note' { $errorsOnly.Count -eq 0 -and @($issues | Where-Object { $_['Note'] -and (Test-AgentSame $_['Rule'] $want) }).Count -gt 0 }
+            default {
+                $hits = @($errorsOnly | Where-Object { Test-AgentSame $_['Rule'] $want })
+                if ($case.ContainsKey('Path')) { $hits = @($hits | Where-Object { (Test-AgentSame $_['Path'] $case['Path']) -and (-not $case.ContainsKey('Line') -or $_['Line'] -eq $case['Line']) }) }
+                $hits.Count -gt 0
+            }
+        }
+        if (-not $ok) {
+            $detail = @($issues | Select-Object -First 4 | ForEach-Object { "$($_['Rule'])$(if ($_['Note']) { ' (note)' }) $($_['Path']):$($_['Line']): $($_['Message'])" }) -join ' | '
+            $failures.Add([pscustomobject]@{ Name = $name; Expect = $case['Expect']; Rule = $want; Got = (@($issues | ForEach-Object { $_['Rule'] } | Select-Object -Unique) -join ','); Detail = $detail })
+        }
+    }
+    @{ Count = $count; Failures = $failures.ToArray() }
+}
+
+# ---------------------------------------------------------------------------------------------
 # Document counts (DOC-COUNT)
 # ---------------------------------------------------------------------------------------------
 
@@ -2803,6 +3118,10 @@ Export-ModuleMember -Function @(
     'Get-AgentMethodSpans'
     'Test-AgentMethod'
     'Invoke-AgentMethodFixtures'
+    'Get-AgentTopicPointers'
+    'Read-AgentTopicIndex'
+    'Test-AgentSkillUse'
+    'Invoke-AgentSkillUseFixtures'
     'Test-AgentDocCounts'
     'Test-AgentAnchors'
     'Compare-AgentSoulText'

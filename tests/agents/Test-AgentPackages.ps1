@@ -31,7 +31,8 @@
            AllowRestrictedMentions, and the development
            family still failing LINT-SKILL and MAN-REQUIRES as before. Needs no Sophon CLI.
       M    the Method registry: tests/agents/fixtures/method/cases.psd1 (Invoke-AgentMethodFixtures) for METHOD-CONTROLLER,
-           METHOD-EXCUSES and METHOD-REFERENCE, then a temporary copy whose development family gains a Method key;
+           METHOD-EXCUSES and METHOD-REFERENCE, tests/agents/fixtures/skills/cases.psd1 (Invoke-AgentSkillUseFixtures)
+           for LINT-SKILL-FRAGMENT, LINT-SKILL-UNUSED and LINT-TOPIC, then a temporary copy whose development family gains a Method key;
            in-memory anchor cases (ANCHOR-MISSING, ANCHOR-GONE, data errors); a smoke run of Compare-AgentSouls.ps1;
            the scenario lint of the instruction tests on tests/agents/fixtures/evals/cases.psd1
            (Invoke-AgentEvalLintFixtures in tests/agents/evals/AgentEvals.psm1), the transcript scorer on two
@@ -747,6 +748,13 @@ try {
         }
         if ($methodRun['Count'] -eq 0) { Add-Fail 'M' 'no cases in tests/agents/fixtures/method/cases.psd1' }
         elseif (@($methodRun['Failures']).Count -eq 0) { Add-Pass 'M' "$($methodRun['Count']) method fixture case(s) behave as expected" }
+        $skillRun = Invoke-AgentSkillUseFixtures -RepoRoot $RepoRoot
+        foreach ($failure in @($skillRun['Failures'])) {
+            $rule = if ($failure.Rule) { " $($failure.Rule)" } else { '' }
+            Add-Fail 'M' "fixture skills/$($failure.Name): expected $($failure.Expect)$rule, got '$($failure.Got)': $($failure.Detail)"
+        }
+        if ($skillRun['Count'] -eq 0) { Add-Fail 'M' 'no cases in tests/agents/fixtures/skills/cases.psd1' }
+        elseif (@($skillRun['Failures']).Count -eq 0) { Add-Pass 'M' "$($skillRun['Count']) skill-use fixture case(s) (LINT-SKILL-FRAGMENT, LINT-SKILL-UNUSED, LINT-TOPIC) behave as expected" }
 
         $methodCase = Join-Path $tempRoot 'case-method'
         New-RepoCopy $methodCase

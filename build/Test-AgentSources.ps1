@@ -10,7 +10,9 @@
                                  NUL, tabs or hidden characters; one trailing LF; size limits; LICENSE copy
       B  composer                build/Compose-AgentSouls.ps1 -Check in a child pwsh (SOULs, and the READMEs of a
                                  family with a readmes/ folder)
-      C  tool-name lint          SOUL.md, TOOLS.md, README.md, manifest displayName/description/whenToUse
+      C  tool-name lint          SOUL.md, TOOLS.md, README.md, manifest displayName/description/whenToUse;
+                                 LINT-SKILL-FRAGMENT (an agent includes a skill's reference Fragment exactly when
+                                 it uses that skill) and LINT-SKILL-UNUSED (a SkillPolicy skill no agent uses)
       D  preflight               the same texts through the scanner replay; every fragment <= 4,096 B (or its
                                  FragmentCaps limit; BUDGET-FRAGMENT) and
                                  starts with its only "## " heading
@@ -32,7 +34,10 @@
                                  source line, once (Test-AgentMethod in build/AgentFamily.psm1); with
                                  tests/agents/fixtures/anchors/<family>.psd1, ANCHOR-MISSING (a listed string is
                                  absent from a composed SOUL or README) and ANCHOR-GONE (a Gone string is still
-                                 present once FamilyVersion reaches its Since) (Test-AgentAnchors)
+                                 present once FamilyVersion reaches its Since) (Test-AgentAnchors); LINT-TOPIC
+                                 (topic pointers against a SkillPolicy skill's TopicIndex and topics.lock.json; an
+                                 agent without the skill carries none; under -Release every skill user names a
+                                 topic and each topic's users equal its usedBy, else one note each)
 
     The repository pass (no -Family, no -Agents) also runs
       N  documents               DOC-COUNT: a number of 10 or more before "agents", "packages" or "companions" in
@@ -459,6 +464,17 @@ $allowedSkillToolsById = @{}
 foreach ($id in $selected) { $allowedSkillToolsById[$id] = [string[]](Get-AgentAllowedSkillTools -Family $fam -Catalog $catalog -AgentId $id) }
 $allowRestricted = [string[]]@(@(Get-AgentField $fam 'AllowRestrictedMentions' @()) | Where-Object { $_ -is [string] })
 $skillPolicy = Get-AgentSkillPolicy $fam
+# Skill use (Test-AgentSkillUse): LINT-SKILL-FRAGMENT and LINT-SKILL-UNUSED are reported in C, LINT-TOPIC in M. A
+# policy skill's TopicIndex (and the topics.lock.json beside it) is read once.
+$topicIndexes = @{}
+foreach ($policySkill in @(Get-AgentField (Get-AgentField $fam 'SkillPolicy') 'Skills' @())) {
+    $topicIndexRel = Get-AgentField $policySkill 'TopicIndex'
+    if ($topicIndexRel -is [string] -and (Test-Path -LiteralPath (Join-Path $RepoRoot $topicIndexRel) -PathType Leaf)) {
+        $topicIndexes[[string](Get-AgentField $policySkill 'Name')] = Read-AgentTopicIndex -RepoRoot $RepoRoot -RelativePath $topicIndexRel
+    }
+}
+$skillUseResults = @(foreach ($id in $selected) { if ($composedById.ContainsKey($id)) { $composedById[$id] } })
+$skillUse = @(Test-AgentSkillUse -Family $fam -Results $skillUseResults -TopicIndexes $topicIndexes -FullRoster ($requested.Count -eq 0) -Release ([bool]$Release) -FamilyPath $familyRel -RepoRoot $RepoRoot)
 
 # Manifest texts per agent: parsed object, raw text, and the scanned fields with their manifest.json lines.
 $manifests = @{}
@@ -502,6 +518,8 @@ foreach ($id in $selected) {
         }
     }
 }
+
+foreach ($issue in @($skillUse | Where-Object { $_['Rule'] -ne 'LINT-TOPIC' })) { Add-SourceError $issue['Rule'] $issue['Path'] $issue['Line'] $issue['Message'] }
 
 # =============================================================================================================
 Enter-Section 'D' 'Preflight (scanner replay)'
@@ -846,6 +864,19 @@ if ($null -eq $methodData -and $referenceSkills.Count -eq 0) {
     $methodIssues = @(Test-AgentMethod -Family $fam -Results $methodResults -SourceLines $sourceLines -Negation (Get-AgentNegationRegex) -SkillTools $skillTools -FullRoster ($requested.Count -eq 0) -RepoRoot $RepoRoot)
     foreach ($issue in $methodIssues) { Add-SourceError $issue['Rule'] $issue['Path'] $issue['Line'] $issue['Message'] }
     Write-Host "  $(@(Get-AgentField $methodData 'Rules' @()).Count) registered rule(s), $($referenceSkills.Count) reference fragment(s), $($methodIssues.Count) finding(s)"
+}
+
+# LINT-TOPIC: only when a SkillPolicy skill names a TopicIndex. Before -Release the two presence rules print as notes.
+if ($topicIndexes.Count -eq 0) {
+    Write-Host '  topic pointers skipped: no SkillPolicy skill names a TopicIndex'
+} else {
+    $topicIssues = @($skillUse | Where-Object { $_['Rule'] -eq 'LINT-TOPIC' })
+    foreach ($issue in $topicIssues) {
+        if ($issue['Note']) { Write-Host "  note LINT-TOPIC $($issue['Path']): $($issue['Message']) (an error under -Release)" }
+        else { Add-SourceError 'LINT-TOPIC' $issue['Path'] $issue['Line'] $issue['Message'] }
+    }
+    $indexText = @($topicIndexes.GetEnumerator() | ForEach-Object { "$($_.Key) $(@($_.Value['Ids']).Count) topic(s)" }) -join ', '
+    Write-Host "  topic pointers checked against $indexText; $(@($topicIssues | Where-Object { -not $_['Note'] }).Count) finding(s)"
 }
 
 # Anchors: only when the family has an anchor file. ANCHOR-MISSING and ANCHOR-GONE (Test-AgentAnchors).
