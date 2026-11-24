@@ -32,7 +32,9 @@
            family still failing LINT-SKILL and MAN-REQUIRES as before. Needs no Sophon CLI.
       M    the Method registry: tests/agents/fixtures/method/cases.psd1 (Invoke-AgentMethodFixtures) for METHOD-CONTROLLER,
            METHOD-EXCUSES and METHOD-REFERENCE, then a temporary copy whose development family gains a Method key;
-           in-memory anchor cases (ANCHOR-MISSING, ANCHOR-GONE, data errors); a smoke run of Compare-AgentSouls.ps1.
+           in-memory anchor cases (ANCHOR-MISSING, ANCHOR-GONE, data errors); a smoke run of Compare-AgentSouls.ps1;
+           the scenario lint of the instruction tests on tests/agents/fixtures/evals/cases.psd1
+           (Invoke-AgentEvalLintFixtures in tests/agents/evals/AgentEvals.psm1).
       N    documents: DOC-COUNT from the repository pass of Test-AgentSources, plus a temporary copy with planted counts:
            number words and digits, qualifiers, a History phrase, and -Release turning the warning into an error.
 
@@ -772,6 +774,20 @@ try {
         $null = Test-Check 'M' ($noExempt.Code -ne 0 -and $noExempt.Text.Contains("ERROR METHOD-CONTROLLER build/agent-src/family.psd1:", $ord) -and $noExempt.Text.Contains("worker 'artifact-creator' lacks the worker fragment 01-delegated-mode", $ord)) "without the exemption artifact-creator fails METHOD-CONTROLLER for its missing worker fragments (exit $($noExempt.Code))"
     } catch {
         Add-Fail 'M' "the method cases failed to run: $($_.Exception.Message) (line $($_.InvocationInfo.ScriptLineNumber))"
+    }
+
+    # ---- M: the scenario lint -------------------------------------------------------------------------------
+    # The instruction tests' lint (tests/agents/evals/AgentEvals.psm1) on its in-memory cases.
+    Write-Host 'Running the scenario lint cases ...'
+    try {
+        Import-Module (Join-Path $RepoRoot 'tests/agents/evals/AgentEvals.psm1') -Force
+        $evalCases = Join-Path $RepoRoot 'tests/agents/fixtures/evals/cases.psd1'
+        $evalRun = Invoke-AgentEvalLintFixtures -CasesPath $evalCases
+        foreach ($failure in @($evalRun['Failures'])) { Add-Fail 'M' "fixture evals/$($failure['Name']): expected $($failure['Expect']), got '$($failure['Got'])'" }
+        if ($evalRun['Count'] -eq 0) { Add-Fail 'M' 'no cases in tests/agents/fixtures/evals/cases.psd1' }
+        elseif (@($evalRun['Failures']).Count -eq 0) { Add-Pass 'M' "$($evalRun['Count']) scenario lint fixture case(s) behave as expected" }
+    } catch {
+        Add-Fail 'M' "the scenario lint cases failed to run: $($_.Exception.Message) (line $($_.InvocationInfo.ScriptLineNumber))"
     }
 
     # ---- M: anchors ---------------------------------------------------------------------------------------
