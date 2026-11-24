@@ -110,8 +110,7 @@
        Uses = @(@{ Text = '"Concept"'; Agent = 'visual-designer' })
        Pass = @(@{ Question = 'Concept' }, @{ NoWrite = '**' })
        Fail = @(@{ Tool = 'fs.write' }, @{ Tool = 'image.generate' })
-       Read = 'A concept and one question under "Concept". No file and no image.generate call.'
-       Pending = 'M6' }
+       Read = 'A concept and one question under "Concept". No file and no image.generate call.' }
 
     @{ Id = 'ACC-17'; Tier = 'acceptance'; Agent = 'e2e-test-engineer'; Fixture = 'repo-ui-bare'; Setup = @()
        Turns = @('Write an end-to-end test for the login redirect.')

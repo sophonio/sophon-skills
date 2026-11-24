@@ -154,6 +154,7 @@
     @{ Text = 'its when-to-use text ends "Modes: … Brief keys: …"'; In = 'lead' }
     # 3.0 design track: question headers and output words (souls of the five design-facing roles)
     @{ Text = '`### Preference checks`'; In = @('accessibility-reviewer') }
+    @{ Text = 'header "Concept"'; In = @('visual-designer') }
   )
   Removed = @(
     @{ Text = 'MODE is gate, regression, write-tests, strategy, gaps or ui.'; Why = 'qa-engineer gains the perf and probe modes in 3.0; every 2.1.0 mode word stays, and the new list is anchored instead' }
