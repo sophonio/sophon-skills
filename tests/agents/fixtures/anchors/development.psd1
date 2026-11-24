@@ -142,6 +142,8 @@
     @{ Text = 'MODE is tdd, direct or debug'; In = @('developer') }
     @{ Text = 'MODE is gate, regression, write-tests, strategy, gaps, ui, perf or probe.'; In = @('qa-engineer') }
     @{ Text = 'ROLE: <role id> · MODE: <a mode from that role''s list> · ACCESS: read-only | write'; In = 'lead' }
+    # 3.0 brief keys of the engineering reviewers (M6)
+    @{ Text = '- CHANGE: a diff file path, or "working tree".'; In = @('code-reviewer') }
     # The lead's controller text (3.0): verdicts it acts on, brief keys, modes from each companion's whenToUse
     @{ Text = '| code-reviewer | `APPROVE` with `SPEC: MET`; `ALL_ADDRESSED`; `COMPLETE` | `REQUEST_CHANGES`; `SPEC: GAPS`; `OPEN`; `GAPS` |'; In = 'lead' }
     @{ Text = 'Any other role: its FINDINGS and SUMMARY decide, not the verdict word.'; In = 'lead' }

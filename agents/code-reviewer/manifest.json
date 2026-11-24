@@ -15,7 +15,7 @@
     "testing"
   ],
   "agent": {
-    "whenToUse": "Pick this agent to review a code change for real defects before it is committed or merged, against the request, the plan and the repository's rules. It reports only findings it can trace to a line and a failing case, and says what it did not check. Refute, re-review and completeness modes let Lead Developer verify findings and fix rounds. Read-only. Not for: fixing code (developer), running the test suite (qa-engineer), exploitable-vulnerability review (security-reviewer). Modes: review / refute / re-review / completeness. Brief keys: CHANGE, LENS, THRESHOLD, KNOWN, FINDINGS. Family role: code-reviewer."
+    "whenToUse": "Pick this agent to review a code change for real defects before it is committed or merged, against the request, the plan and the repository's rules. It reports only findings it can trace to a line and a failing case, and says what it did not check. Refute, re-review and completeness modes let Lead Developer verify findings and fix rounds. Read-only. Not for: fixing code (developer), running the test suite (qa-engineer), exploitable-vulnerability review (security-reviewer), agent instructions and packages (agent-engineer). Modes: review / refute / re-review / completeness. Brief keys: CHANGE, LENS, THRESHOLD, KNOWN, FINDINGS. Family role: code-reviewer."
   },
   "requires": {
     "skills": [
