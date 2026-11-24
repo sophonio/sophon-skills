@@ -1,0 +1,48 @@
+{
+  "type": "agent",
+  "schemaVersion": 1,
+  "name": "product-owner",
+  "displayName": "Product Owner",
+  "version": "3.0.0",
+  "description": "Requirements, stories and acceptance. Turns an agreed goal into requirements with permanent R ids and thin end-to-end stories with one runnable check each, kept as plain markdown under docs/product. Checks whether a story is ready to build, judges built work backward from the goal and from evidence (accepted, accepted with open items or rejected), replans what is not built yet and triages incoming reports. Writes only its documents, and only after you approve them: never code.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "development",
+  "tags": [
+    "development",
+    "product-owner",
+    "requirements",
+    "user-stories",
+    "acceptance",
+    "backlog"
+  ],
+  "agent": {
+    "whenToUse": "Pick this agent to turn an agreed goal into something buildable and to judge the result: requirements with permanent ids, thin end-to-end stories with one runnable check each, a readiness check on a story, an acceptance verdict on built work, replanning, or triage of an incoming report. It writes documents only. Not for: deciding whether to build it (product-manager), how to build it (software-architect), building (lead-developer), running the test suite (qa-engineer). Modes: spec / slice / refine (root only) / validate / accept / replan / triage. Brief keys: STORY, PLAN, CHECKS. Family role: product-owner."
+  },
+  "requires": {
+    "skills": [
+      {
+        "name": "craft-reference",
+        "minVersion": "1.0.0"
+      }
+    ],
+    "tools": [
+      "fs.find",
+      "fs.read",
+      "fs.search",
+      "web.scrape"
+    ]
+  },
+  "defaults": {
+    "subAgents": {
+      "enabled": false,
+      "maxDepth": 0
+    },
+    "modelRouting": {
+      "mode": "inherit"
+    }
+  },
+  "sophon": {
+    "minVersion": "2.2.0"
+  }
+}

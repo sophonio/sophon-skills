@@ -9,9 +9,10 @@
 # SoulCap (bytes of the composed SOUL.md; data only, not packaged), by tier, option A of the 3.0 ledger
 # (docs/plans/2026-11-23-agents-v3-design.md, "Fragment matrix and byte ledger"): lead 62464; design writers
 # (ui-ux-designer, frontend-developer, design-system-engineer, visual-designer) 51200; writers 44032; readers
-# (software-architect, code-reviewer, security-reviewer, accessibility-reviewer) 28672; researcher and
-# artifact-creator 22528. Each agent keeps at least 5% of its cap free: under 8% free warns (BUDGET-HEADROOM),
-# under 5% fails a release build (Test-AgentSources.ps1 -Release), and over the cap always fails (BUDGET-SOUL).
+# (software-architect, code-reviewer, security-reviewer, accessibility-reviewer, product-manager, product-owner)
+# 28672; researcher and artifact-creator 22528. Each agent keeps at least 5% of its cap free: under 8% free warns
+# (BUDGET-HEADROOM), under 5% fails a release build (Test-AgentSources.ps1 -Release), and over the cap always
+# fails (BUDGET-SOUL).
 # The platform limit is 65536. Raising a cap is a change to this file and this comment only.
 # RoleCap (bytes of souls/<id>.md without include and comment lines) is each agent's planned role text from the
 # same ledger, rounded up to the next 100; over it fails (BUDGET-ROLE), and -Release requires it of every agent.
@@ -49,7 +50,11 @@
     'e2e-test-engineer',
     'accessibility-reviewer',
     'mcp-integration-engineer',
-    'technical-writer'
+    'technical-writer',
+    'product-manager',
+    'product-owner',
+    'release-engineer',
+    'agent-engineer'
   )
   CreditsSentence = 'Workflow patterns adapted, not copied, from obra/superpowers (MIT, © 2025 Jesse Vincent) and Anthropic''s Claude Code plugins (feature-dev, pr-review-toolkit, code-review, security-review, frontend-design; Apache-2.0).'
   ReadmeCaps = @{ Lead = 24576; Other = 12288 }
@@ -87,6 +92,10 @@
       @{ Id = 'run-evidence'; Fragment = '10a-run-evidence'; Anchor = '- Before you write "should work", "probably", "seems fine" or "done" with no output from this turn behind it, run the check.' }
       @{ Id = 'discovery-gate'; Fragment = '07b-discovery'; Anchor = '6. Write what was agreed into the plan''s Context, Approach and Global constraints. Plan approval is the gate: nothing is built, scaffolded or installed before it, and agreement in chat covers only what you wrote down.' }
       @{ Id = 'root-cause'; Agent = 'debugger'; Anchor = '## Root cause first' }
+      @{ Id = 'premises-first'; Agent = 'product-manager'; Anchor = 'No document is drafted before the premises are answered.' }
+      @{ Id = 'split-never-shrink'; Agent = 'product-owner'; Anchor = '1. Story 01 is the thinnest path that runs end to end through every layer the requirements touch, even when it does very little.' }
+      @{ Id = 'outward-gate'; Agent = 'release-engineer'; Anchor = '## The outward gate' }
+      @{ Id = 'control-first'; Agent = 'agent-engineer'; Anchor = '1. Red first. Write the scenario that tempts the failure, and have the control arm run without the new text. A control that does not fail means there is nothing to write: say so and stop.' }
     )
   }
   Values = @{
@@ -133,6 +142,42 @@
         '14-no-delegation',
         '15a-status-block',
         '15b-findings-block',
+        '16-reporting'
+      )
+      Credits = @('superpowers', 'anthropic')
+    }
+    @{
+      Id = 'agent-engineer'
+      DisplayName = 'Agent Engineer'
+      Summary = 'agent instructions: design / rule / test / review / diagnose'
+      Changes = 'agent and skill instruction files'
+      Commits = 'yes'
+      SoulCap = 44032
+      RoleCap = 5500
+      Writer = $true
+      SubAgents = @{ enabled = $false; maxDepth = 0 }
+      Effort = 'high'
+      Fragments = @(
+        '01-delegated-mode',
+        '02-tools-workspace',
+        '03a-care-writer',
+        '04-scope',
+        '05-asking',
+        '06-todo',
+        '07-sizing',
+        '07b-discovery',
+        '08a-plan-format',
+        '08b-plan-run',
+        '08c-plan-card',
+        '09c-receiving-review',
+        '10a-run-evidence',
+        '11-git-read',
+        '12a-git-commit',
+        '12b-git-finish',
+        '13-data-hygiene',
+        '18-reference-topics',
+        '14-no-delegation',
+        '15a-status-block',
         '16-reporting'
       )
       Credits = @('superpowers', 'anthropic')
@@ -459,6 +504,65 @@
       Credits = @('superpowers', 'anthropic', 'anthropicSkills')
     }
     @{
+      Id = 'product-manager'
+      DisplayName = 'Product Manager'
+      Summary = 'discover / analyst / brief / PRD / prioritise / pre-mortem'
+      Changes = 'its product documents only'
+      Commits = 'no'
+      SoulCap = 28672
+      RoleCap = 6600
+      Writer = $false
+      SubAgents = @{ enabled = $false; maxDepth = 0 }
+      Effort = 'high'
+      Fragments = @(
+        '01-delegated-mode',
+        '02-tools-workspace',
+        '03b-care-reader',
+        '04-scope',
+        '05-asking',
+        '06-todo',
+        '08d-save-document',
+        '10b-cite-evidence',
+        '13-data-hygiene',
+        '18-reference-topics',
+        '14-no-delegation',
+        '15a-status-block',
+        '16-reporting',
+        '17-prose-check'
+      )
+      Credits = @('superpowers', 'anthropic')
+    }
+    @{
+      Id = 'product-owner'
+      DisplayName = 'Product Owner'
+      Summary = 'spec / slice / refine / validate / accept / replan / triage'
+      Changes = 'its requirements and story files only'
+      Commits = 'no'
+      SoulCap = 28672
+      RoleCap = 7400
+      Writer = $false
+      SubAgents = @{ enabled = $false; maxDepth = 0 }
+      Effort = 'high'
+      Fragments = @(
+        '01-delegated-mode',
+        '02-tools-workspace',
+        '03b-care-reader',
+        '04-scope',
+        '05-asking',
+        '06-todo',
+        '08d-save-document',
+        '10b-cite-evidence',
+        '11-git-read',
+        '13-data-hygiene',
+        '18-reference-topics',
+        '14-no-delegation',
+        '15a-status-block',
+        '16-reporting',
+        '17-prose-check'
+      )
+      Credits = @('superpowers', 'anthropic')
+    }
+    @{
       Id = 'qa-engineer'
       DisplayName = 'QA Engineer'
       Summary = 'verification gate, regression checks, tests'
@@ -483,6 +587,41 @@
         '09c-receiving-review',
         '10a-run-evidence',
         '10c-test-integrity',
+        '11-git-read',
+        '12a-git-commit',
+        '12b-git-finish',
+        '13-data-hygiene',
+        '18-reference-topics',
+        '14-no-delegation',
+        '15a-status-block',
+        '16-reporting'
+      )
+      Credits = @('superpowers', 'anthropic')
+    }
+    @{
+      Id = 'release-engineer'
+      DisplayName = 'Release Engineer'
+      Summary = 'check / ship / deploy / watch / upgrade / rollback'
+      Changes = 'version, changelog and dependency files'
+      Commits = 'yes'
+      SoulCap = 44032
+      RoleCap = 6500
+      Writer = $true
+      SubAgents = @{ enabled = $false; maxDepth = 0 }
+      Effort = 'default'
+      Fragments = @(
+        '01-delegated-mode',
+        '02-tools-workspace',
+        '03a-care-writer',
+        '04-scope',
+        '05-asking',
+        '06-todo',
+        '07-sizing',
+        '08a-plan-format',
+        '08b-plan-run',
+        '08c-plan-card',
+        '09c-receiving-review',
+        '10a-run-evidence',
         '11-git-read',
         '12a-git-commit',
         '12b-git-finish',

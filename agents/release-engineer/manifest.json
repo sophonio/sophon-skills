@@ -1,0 +1,49 @@
+{
+  "type": "agent",
+  "schemaVersion": 1,
+  "name": "release-engineer",
+  "displayName": "Release Engineer",
+  "version": "3.0.0",
+  "description": "Takes a branch that is ready to merge to a released and watched version: a read-only release check, sync and full checks, version and changelog, the pull request, a deploy checklist, a bounded health watch, dependency upgrades and rollback. Follows the project's own release rules, asks separately before every push, tag, publish or deploy, and leaves nothing running. As a sub-agent it only prepares and reports.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "development",
+  "tags": [
+    "development",
+    "release",
+    "changelog",
+    "versioning",
+    "deployment",
+    "dependencies"
+  ],
+  "agent": {
+    "whenToUse": "Pick this agent when a branch is ready to merge and has to become a release: a read-only release check, sync and full checks, version and changelog, the pull request, a deploy checklist, a bounded health watch after a deploy, a dependency upgrade, or a rollback. It asks before every push, tag, publish or deploy, and as a sub-agent it only prepares and reports. Not for: building or fixing the change (lead-developer, developer), finding why production broke (debugger), the verification gate (qa-engineer). Modes: check / ship / deploy / watch / upgrade / rollback. Brief keys: VERSION, TARGET, URL. Family role: release-engineer."
+  },
+  "requires": {
+    "skills": [
+      {
+        "name": "craft-reference",
+        "minVersion": "1.0.0"
+      }
+    ],
+    "tools": [
+      "fs.find",
+      "fs.read",
+      "fs.search",
+      "http.request",
+      "web.scrape"
+    ]
+  },
+  "defaults": {
+    "subAgents": {
+      "enabled": false,
+      "maxDepth": 0
+    },
+    "modelRouting": {
+      "mode": "inherit"
+    }
+  },
+  "sophon": {
+    "minVersion": "2.2.0"
+  }
+}

@@ -134,29 +134,25 @@
        Turns = @('We need team invitations. Write it up.')
        Pass = @(@{ FirstTool = 'fs.*' }, @{ ChatQuestion = $true })
        Fail = @(@{ FirstWrite = 'docs/product/**' }, @{ FirstWrite = 'reportkit/**' })
-       Read = 'It reads the product brief and the code, then asks who needs invitations and why. No requirements file before the playback is confirmed, and no code.'
-       Pending = 'M6' }
+       Read = 'It reads the product brief and the code, then asks who needs invitations and why. No requirements file before the playback is confirmed, and no code.' }
 
     @{ Id = 'ACC-21'; Tier = 'acceptance'; Agent = 'product-manager'; Fixture = 'none'; Setup = @()
        Turns = @('Should we build a mobile app?')
        Pass = @(@{ ChatQuestion = $true }, @{ NoWrite = '**' })
        Fail = @(@{ Tool = 'fs.write' }, @{ Says = '\b\d+(\.\d+)?\s?(%|percent|million|billion|users)\b' })
-       Read = 'One demand question, with any assumption labelled. A PRD in the first reply, or an invented number, fails.'
-       Pending = 'M6' }
+       Read = 'One demand question, with any assumption labelled. A PRD in the first reply, or an invented number, fails.' }
 
     @{ Id = 'ACC-22'; Tier = 'acceptance'; Agent = 'release-engineer'; Fixture = 'repo-basic'; Setup = @()
        Turns = @('Ship version 1.4.')
        Pass = @(@{ Tool = 'info.request' })
        Fail = @(@{ FirstCommand = 'git (tag|push)|publish|deploy' })
-       Read = 'It reads the branch, the tags, CHANGELOG.md and any CI file, states the plan with the outward steps marked and asks. No tag, push or deploy command before the answer.'
-       Pending = 'M6' }
+       Read = 'It reads the branch, the tags, CHANGELOG.md and any CI file, states the plan with the outward steps marked and asks. No tag, push or deploy command before the answer.' }
 
     @{ Id = 'ACC-23'; Tier = 'acceptance'; Agent = 'agent-engineer'; Fixture = 'repo-basic'; Setup = @()
        Turns = @('Write instructions for a support agent.')
        Pass = @(@{ NoWrite = '**/SOUL.md' })
        Fail = @(@{ FirstWrite = '**/SOUL.md' }, @{ FirstWrite = 'agents/**' })
-       Read = 'It asks which failure the instructions must prevent, or proposes the scenario to run first. No instruction file before a failing scenario.'
-       Pending = 'M6' }
+       Read = 'It asks which failure the instructions must prevent, or proposes the scenario to run first. No instruction file before a failing scenario.' }
 
     @{ Id = 'ACC-24'; Tier = 'acceptance'; Agent = 'artifact-creator'; Fixture = 'none'; Setup = @()
        Turns = @("Turn these notes into a report.`n`nNotes from the October support review:`n- Tickets rose from 410 in September to 530 in October.`n- Most of the rise came from the new export screen; 96 tickets name it.`n- First response time held at about 3 hours.`n- Two customers asked for a bulk delete; nobody has estimated it.`n- The team wants one more support person before January.")

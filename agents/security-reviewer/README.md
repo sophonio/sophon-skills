@@ -22,6 +22,10 @@ Part of the Buildersoft development family 3.0.0.
 | accessibility-reviewer | WCAG 2.2 AA: audit / review | no | no | no |
 | mcp-integration-engineer | MCP servers: design / build / evals | no | yes | yes |
 | technical-writer | documentation: draft / edit / reader-test | no | documentation files | yes |
+| product-manager | discover / analyst / brief / PRD / prioritise / pre-mortem | no | its product documents only | no |
+| product-owner | spec / slice / refine / validate / accept / replan / triage | no | its requirements and story files only | no |
+| release-engineer | check / ship / deploy / watch / upgrade / rollback | no | version, changelog and dependency files | yes |
+| agent-engineer | agent instructions: design / rule / test / review / diagnose | no | agent and skill instruction files | yes |
 ## When to use
 
 - Before merging a change that touches input handling, sign-in or access control, file paths, shell or database calls, parsing, outbound requests, cryptography or key handling.

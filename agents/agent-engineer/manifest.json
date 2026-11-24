@@ -1,0 +1,50 @@
+{
+  "type": "agent",
+  "schemaVersion": 1,
+  "name": "agent-engineer",
+  "displayName": "Agent Engineer",
+  "version": "3.0.0",
+  "description": "Designs, writes, tests and reviews the instructions of Sophon agents and skills: SOUL text, TOOLS pins and manifests. Chooses the cheapest form that works, writes the failing scenario before the instruction, compares a control arm with the changed text, and reviews a package against the platform's size and scanner rules. Its diagnose mode reads a finished session and explains its cost, repeated work or a plan that was not followed. Never installs or publishes a package.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "development",
+  "tags": [
+    "development",
+    "agents",
+    "prompt-engineering",
+    "skills",
+    "evals"
+  ],
+  "agent": {
+    "whenToUse": "Pick this agent to design, change, test, review or diagnose a Sophon agent package or skill: SOUL instructions, TOOLS pins and manifests. It writes the failing scenario before the instruction, reviews a package against the platform's size and scanner rules, and reads a finished session to explain its cost, repeated work or a plan that was not followed. Not for: MCP servers (mcp-integration-engineer), application code (developer), user documentation (technical-writer), code review (code-reviewer). Modes: design / rule / test / review / diagnose. Brief keys: PACKAGE, FAILURE, SESSION. Family role: agent-engineer."
+  },
+  "requires": {
+    "skills": [
+      {
+        "name": "craft-reference",
+        "minVersion": "1.0.0"
+      }
+    ],
+    "tools": [
+      "agent.list",
+      "fs.find",
+      "fs.info",
+      "fs.read",
+      "fs.search",
+      "session.history",
+      "web.scrape"
+    ]
+  },
+  "defaults": {
+    "subAgents": {
+      "enabled": false,
+      "maxDepth": 0
+    },
+    "modelRouting": {
+      "mode": "inherit"
+    }
+  },
+  "sophon": {
+    "minVersion": "2.2.0"
+  }
+}

@@ -68,6 +68,11 @@
     @{ Text = 'CONFIRMED | FALSIFIED | INCONCLUSIVE'; In = @('debugger') }
     @{ Text = 'VERDICT READY or NEEDS_DECISION'; In = @('software-architect') }
     @{ Text = 'WINNER <n>'; In = @('ui-ux-designer') }
+    @{ Text = 'READY | NOT_READY'; In = @('product-owner') }
+    @{ Text = 'ACCEPTED | ACCEPTED_WITH_OPEN_ITEMS | REJECTED'; In = @('product-owner') }
+    @{ Text = 'READY_TO_SHIP | NOT_READY'; In = @('release-engineer') }
+    @{ Text = 'HEALTHY | DEGRADED | NO_SIGNAL'; In = @('release-engineer') }
+    @{ Text = 'PASSES | FAILS'; In = @('agent-engineer') }
     # 3.0 findings-block lines (15b-findings-block)
     @{ Text = 'CANNOT_VERIFY:'; In = @('accessibility-reviewer', 'code-reviewer', 'lead-developer', 'security-reviewer') }
     @{ Text = 'DECLINED:'; In = @('accessibility-reviewer', 'code-reviewer', 'lead-developer', 'security-reviewer') }
@@ -81,7 +86,7 @@
     @{ Text = 'Task:'; In = 'all'; Except = @('artifact-creator') }
     @{ Text = 'Additional instructions:'; In = 'all'; Except = @('artifact-creator') }
     @{ Text = 'CHANGE names the change to read'; In = 'all'; Except = @('artifact-creator') }
-    @{ Text = 'CHANGE "working tree"'; In = 'all'; Except = @('artifact-creator') }
+    @{ Text = 'CHANGE "working tree"'; In = 'all'; Except = @('artifact-creator', 'product-manager') }
     @{ Text = 'DESIGN (the design source for UI work)'; In = 'all'; Except = @('artifact-creator') }
     # Consent words and question labels
     @{ Text = '(Recommended)'; In = 'all'; Except = @('artifact-creator') }
@@ -141,6 +146,15 @@
     @{ Text = 'MODE in a brief: concept | art | generative | image | motion. None given: infer it from the request and record a Ruling; as a sub-agent, under ASSUMPTIONS.'; In = @('visual-designer') }
     @{ Text = 'MODE is tdd, direct or debug'; In = @('developer') }
     @{ Text = 'MODE is gate, regression, write-tests, strategy, gaps, ui, perf or probe.'; In = @('qa-engineer') }
+    @{ Text = 'MODE: discover | analyst | brief | prd | prioritise | pre-mortem.'; In = @('product-manager') }
+    @{ Text = 'MODE: spec | slice | refine | validate | accept | replan | triage.'; In = @('product-owner') }
+    @{ Text = 'MODE: check | ship | deploy | watch | upgrade | rollback.'; In = @('release-engineer') }
+    @{ Text = 'MODE: design | rule | test | review | diagnose.'; In = @('agent-engineer') }
+    @{ Text = 'SUBJECT (the idea, question or document) and SOURCES'; In = @('product-manager') }
+    @{ Text = 'STORY (a story or requirements path), PLAN (the plan that built it) and CHECKS'; In = @('product-owner') }
+    @{ Text = 'VERSION, TARGET (the environment or registry), URL (a health address) and CHANGE'; In = @('release-engineer') }
+    @{ Text = 'PACKAGE (the agent or skill folder), FAILURE (the observed behaviour, quoted, or a scenario path) and SESSION'; In = @('agent-engineer') }
+    @{ Text = 'The watch ended at <time>. Nothing is watching now.'; In = @('release-engineer') }
     @{ Text = 'ROLE: <role id> · MODE: <a mode from that role''s list> · ACCESS: read-only | write'; In = 'lead' }
     # 3.0 brief keys of the engineering reviewers (M6)
     @{ Text = '- CHANGE: a diff file path, or "working tree".'; In = @('code-reviewer') }
