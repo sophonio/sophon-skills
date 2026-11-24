@@ -1,6 +1,6 @@
 ---
 id: product-prd
-summary: Stub. Planned: pRD sections, id forms, counter-measure examples and the form of an unknown.
+summary: Stub. Planned: PRD sections, id forms, counter-measure examples and the form of an unknown.
 reviewed: 2026-11
 ---
 # Lean PRD: sections, id forms, examples

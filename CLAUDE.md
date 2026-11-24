@@ -82,9 +82,12 @@ the rosters. The tools take `-Family <id>` to work on one family (default: all).
 `docs/plans/2026-11-15-ffmpeg-video-design.md`.
 
 - **SkillPolicy is the only way an agent uses skill tools.** A family's `SkillPolicy` names skills
-  (`requires.skills` must equal it); only their tools may be named or pinned, and they never go in
-  `requires.tools` (sorted built-in pins plus `ExtraRequiredTools`). The development family has none,
-  so a skill tool there fails `LINT-SKILL`. `AllowRestrictedMentions` lets a family name a
+  (`requires.skills` must equal the agent's share of it: the roster key `Skills`, absent meaning all
+  and `@()` meaning none); only their tools may be named or pinned, and they never go in
+  `requires.tools` (sorted built-in pins plus `ExtraRequiredTools`). The development family's policy
+  is `craft-reference`; its tools appear only in that skill's `Fragment` (`18-reference-topics`),
+  and topic ids named in SOUL text must exist in `build/craft-reference/topics.index.json`
+  (`LINT-TOPIC`). `AllowRestrictedMentions` lets a family name a
   restricted tool (video: `message.send`), never pin it.
 - **Files.** Only the 7 package files may live in `agents/<id>/` (`manifest.json`, `SOUL.md`,
   `VOICE.md`, `HEARTBEAT.md`, `TOOLS.md`, `README.md`, `LICENSE`); anything else is `not_packaged`
