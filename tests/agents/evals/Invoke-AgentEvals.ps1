@@ -14,13 +14,15 @@
                    for each pressure scenario, the control SOUL composed with -Omit <rule> and its package built
                    with 'sophon dev build'. Prints the install lines and the exact turns to paste. Installs
                    nothing and calls no Gateway.
-    -Run           The headless runner. UNVERIFIED: it is written against the stream-json contract of Sophon CLI
-                   2.2.2 (src/Sophon.CLI/Headless/StreamJsonSink.cs) and has not run against a Gateway; spike 5
-                   of the design must confirm its five facts first (see README.md). It installs both arms on
-                   the throwaway Gateway at -GatewayUrl (or SOPHON_GATEWAY_URL), which must have been started
-                   with SOPHON_DATA_DIR set to -DataDir, pipes each turn to 'sophon exec ... --output-format
-                   stream-json -', scores the first moves and writes transcripts and a summary to
-                   dist/evals/<date>/. Guards: refuses under CI or GITHUB_ACTIONS, requires -DataDir and refuses
+    -Run           The headless runner, against the stream-json contract of Sophon CLI 2.2.2 as spike 5 found it
+                   (docs/plans/2026-11-24-agents-v3-spike-results.md, S5 and "Runner defects"). It installs both
+                   arms with --yes --id on the throwaway Gateway at -GatewayUrl (or SOPHON_GATEWAY_URL), which
+                   must have been started with SOPHON_DATA_DIR set to -DataDir, pipes each turn to 'sophon exec
+                   ... --include-agents --output-format stream-json -' from inside the workspace copy (the CLI
+                   sends its current folder as the binding's cwd), records each turn's exit code, stderr and
+                   result status, scores the first moves of the runs that did not error, archives the sessions
+                   it created and writes transcripts, a summary and the delete commands to dist/evals/<date>/.
+                   Guards: refuses under CI or GITHUB_ACTIONS, requires -DataDir and refuses
                    the default data folder, requires the Gateway URL and refuses the gatewayUrl of cli.json and
                    the ports 8080 and 8470, sets SOPHON_GATEWAY_URL for every child call, one repetition by
                    default, stops before starting when the planned runs exceed -MaxRuns.
@@ -155,10 +157,13 @@ function New-EvalControlPackage([hashtable]$Row, [string]$Into) {
     return @{ Package = $file[0].FullName; Removed = ($out -join "`n"); Soul = (Join-Path $composeOut "$agentId/SOUL.md") }
 }
 
+function Get-EvalVersion([string]$AgentId) {
+    # The version of agents/<id>/manifest.json: the package the runner installs is the one of this build.
+    return [string]((Get-Content -LiteralPath (Join-Path $RepoRoot "agents/$AgentId/manifest.json") -Raw | ConvertFrom-Json).version)
+}
+
 function Get-EvalPackage([string]$AgentId) {
-    $file = @(Get-ChildItem -LiteralPath (Join-Path $RepoRoot 'dist/agents') -Filter "$AgentId-*.sophon-agent" -ErrorAction SilentlyContinue | Select-Object -First 1)
-    if ($file.Count -eq 0) { throw "dist/agents has no $AgentId package: run build/Build-AgentPackages.ps1 first" }
-    return $file[0].FullName
+    return Get-AgentEvalPackage -Directory (Join-Path $RepoRoot 'dist/agents') -AgentId $AgentId -Version (Get-EvalVersion $AgentId)
 }
 
 $stamp = Get-Date -Format 'yyyy-MM-dd-HHmmss'
@@ -180,9 +185,9 @@ if ($PSCmdlet.ParameterSetName -eq 'Prepare') {
             if ($arm -eq 'control') {
                 $control = New-EvalControlPackage $row (Join-Path $dir 'control')
                 Write-Host "  control package: $($control['Package'])"
-                Write-Host "    install: sophon agents install --file `"$($control['Package'])`" --id $(Get-EvalControlId $row)"
+                Write-Host "    install: sophon agents install --file `"$($control['Package'])`" --id $(Get-EvalControlId $row) --show-files --yes"
             } else {
-                Write-Host "  treatment: sophon agents install --file (Get-Item dist/agents/$($row['Agent'])-*.sophon-agent) --show-files"
+                Write-Host "  treatment: sophon agents install --file dist/agents/$($row['Agent'])-$(Get-EvalVersion ([string]$row['Agent'])).sophon-agent --id $($row['Agent']) --show-files --yes"
             }
         }
         if ($row.ContainsKey('Mode') -and $row['Mode'] -eq 'plan') { Write-Host '  mode: turn plan mode on before the first message' }
@@ -201,7 +206,7 @@ if ($PSCmdlet.ParameterSetName -eq 'Prepare') {
     exit 0
 }
 
-# ---- Run (unverified until spike 5) --------------------------------------------------------------------------
+# ---- Run (sophon exec as spike 5 found it) --------------------------------------------------------------------
 if ($env:CI -or $env:GITHUB_ACTIONS) { Write-Host 'Invoke-AgentEvals: -Run refuses to run under CI' -ForegroundColor Red; exit 1 }
 $DataDir = [IO.Path]::GetFullPath($DataDir)
 $defaultData = [IO.Path]::GetFullPath((Join-Path ([Environment]::GetFolderPath('UserProfile')) '.sophon'))
@@ -234,73 +239,101 @@ $env:SOPHON_DATA_DIR = $DataDir
 $env:SOPHON_GATEWAY_URL = $GatewayUrl
 $cliVersion = (@(& $sophon.Source --version 2>&1) | Select-Object -First 1)
 $installed = @{}
+$sessions = [System.Collections.Generic.List[string]]::new()
 $rows = [System.Collections.Generic.List[object]]::new()
 foreach ($item in $plan) {
     $row = $item['Row']; $arm = $item['Arm']
     $agentId = [string]$row['Agent']
     $runDir = Join-Path $OutDir "$($row['Id'])/$arm-$($item['Rep'])"
     New-Item -ItemType Directory -Path $runDir -Force | Out-Null
+    # The treatment keeps the agent's own id, so a lead's delegate calls still name its companions; --id makes
+    # the install replace an agent of that id instead of landing under the next free one.
     $installId = if ($arm -eq 'control') { Get-EvalControlId $row } else { $agentId }
     if (-not $installed.ContainsKey($installId)) {
-        if ($arm -eq 'control') {
-            $control = New-EvalControlPackage $row (Join-Path $OutDir "$($row['Id'])/control-build")
-            $pkg = $control['Package']; $soul = $control['Soul']
-            & $sophon.Source agents install --file $pkg --id $installId | Out-Null
-        } else {
-            $pkg = Get-EvalPackage $agentId; $soul = Join-Path $RepoRoot "agents/$agentId/SOUL.md"
-            & $sophon.Source agents install --file $pkg | Out-Null
-        }
-        if ($LASTEXITCODE -ne 0) { throw "sophon agents install failed for $installId" }
-        $installed[$installId] = (Get-FileHash -LiteralPath $soul -Algorithm SHA256).Hash.ToLowerInvariant()
+        $pkg = if ($arm -eq 'control') { (New-EvalControlPackage $row (Join-Path $OutDir "$($row['Id'])/control-build"))['Package'] } else { Get-EvalPackage $agentId }
+        $out = @(& $sophon.Source agents install --file $pkg --id $installId --yes 2>&1 | ForEach-Object { "$_" })
+        if ($LASTEXITCODE -ne 0) { throw "sophon agents install failed for ${installId} (exit $LASTEXITCODE): $($out -join ' / ')" }
+        [IO.File]::WriteAllLines((Join-Path $OutDir "install-$installId.txt"), [string[]]$out)
+        $installed[$installId] = Get-AgentEvalPackageSoulHash -Package $pkg
     }
     $workspace = Join-Path $runDir 'workspace'
     if ($row['Fixture'] -ne 'none') { New-AgentEvalWorkspace -Fixtures $context['Fixtures'] -Name $row['Fixture'] -Destination $workspace -Setup ([string[]]@($row['Setup'] | Where-Object { $_ })) | Out-Null }
     else { New-Item -ItemType Directory -Path $workspace -Force | Out-Null }
     $session = ''
     $lines = [System.Collections.Generic.List[string]]::new()
+    $turnStatus = $null
     $n = 0
     foreach ($turn in (Get-EvalTurns $row)) {
         $n++
-        $cliArgs = @('exec', '--agent', $installId, '--workspace', $workspace, '--trust-workspace', '--output-format', 'stream-json', '--timeout', "$TimeoutSeconds")
-        if ($row.ContainsKey('Mode') -and $row['Mode'] -eq 'plan') { $cliArgs += @('--permission-mode', 'plan') }
-        if ($session) { $cliArgs += @('--session', $session) }
-        $cliArgs += '-'
-        $turnLines = @($turn | & $sophon.Source @cliArgs 2>$null | ForEach-Object { "$_" })
+        $cliArgs = Get-AgentEvalExecArgs -AgentId $installId -Workspace $workspace -TimeoutSeconds $TimeoutSeconds -Session $session -Plan:($row.ContainsKey('Mode') -and $row['Mode'] -eq 'plan')
+        $stderrFile = Join-Path $runDir "turn-$n.stderr"
+        # The CLI sends its current folder as the binding's cwd; from anywhere else the Gateway refuses the turn
+        # (workspace_refused).
+        Push-Location -LiteralPath $workspace
+        try { $turnLines = @($turn | & $sophon.Source @cliArgs 2> $stderrFile | ForEach-Object { "$_" }); $exitCode = $LASTEXITCODE } finally { Pop-Location }
         [IO.File]::WriteAllLines((Join-Path $runDir "turn-$n.ndjson"), [string[]]$turnLines)
         foreach ($l in $turnLines) {
-            if (-not $session -and $l -match '"type":"session\.started"') { try { $session = [string](($l | ConvertFrom-Json).sessionId) } catch { } }
+            if ($l -match '"type":"session\.started"') {
+                try { $s = [string](($l | ConvertFrom-Json).sessionId); if ($s -and -not $session) { $session = $s }; if ($s -and -not $sessions.Contains($s)) { $sessions.Add($s) } } catch { }
+            }
         }
         $lines.Clear(); foreach ($l in $turnLines) { $lines.Add($l) }   # only the last turn is scored
+        $turnStatus = Get-AgentEvalRunStatus -Result (Read-AgentEvalTranscript -Lines ([string[]]$turnLines)).Result -ExitCode $exitCode
+        if ($turnStatus['Error']) { break }   # a later turn would continue a session that never ran
     }
-    $moves = Read-AgentEvalTranscript -Lines $lines.ToArray()
+    $moves = Read-AgentEvalTranscript -Lines ($lines.ToArray()) -Workspace $workspace
     $score = Get-AgentEvalScore -Scenario $row -Moves $moves -Markers ([string[]]@($result['Markers']))
     $cost = if ($null -ne $moves['Result'] -and $moves['Result']['usage'] -is [hashtable]) { $moves['Result']['usage']['costUsd'] } else { $null }
     $rows.Add([pscustomobject]@{
-            Id = $row['Id']; Arm = $arm; Rep = $item['Rep']; Passed = $score['Passed']
+            Id = $row['Id']; Arm = $arm; Rep = $item['Rep']
+            Error = $turnStatus['Error']; Passed = (-not $turnStatus['Error'] -and $score['Passed'])
+            Status = $turnStatus['Status']; ExitCode = $turnStatus['ExitCode']; Cards = $turnStatus['Approvals']; Questions = $turnStatus['Questions']
+            Delegates = @($moves['Calls'] | Where-Object { $_['Tool'] -ceq 'agent.delegate' }).Count
             First = if (@($moves['Calls']).Count) { $moves['Calls'][0]['Tool'] } else { '(none)' }
             Missed = $score['Missed'] -join '; '; Tripped = $score['Tripped'] -join '; '
             Soul = $installed[$installId].Substring(0, 12); Cost = $cost; Dir = $runDir
         })
-    Write-Host ("  {0,-8} {1,-9} #{2} {3}  first {4}" -f $row['Id'], $arm, $item['Rep'], $(if ($score['Passed']) { 'pass' } else { 'FAIL' }), $rows[-1].First)
+    $verdict = if ($turnStatus['Error']) { 'ERROR' } elseif ($score['Passed']) { 'pass' } else { 'FAIL' }
+    Write-Host ("  {0,-8} {1,-9} #{2} {3,-5} first {4}; {5}, exit {6}" -f $row['Id'], $arm, $item['Rep'], $verdict, $rows[-1].First, $turnStatus['Status'], $turnStatus['ExitCode'])
 }
 
-# Summary: control against treatment per scenario, and the transcripts a person should read.
+# Cleanup: 'sophon sessions archive' needs no prompt. 'sophon agents delete' and 'sophon sessions delete' always
+# ask and have no --yes, so a script without a console cannot run them: they are written out for a person.
+$archived = 0
+foreach ($s in $sessions) {
+    $null = @(& $sophon.Source sessions archive $s 2>&1)
+    if ($LASTEXITCODE -eq 0) { $archived++ } else { Write-Host "  could not archive session $s (exit $LASTEXITCODE)" -ForegroundColor Yellow }
+}
+
+# Summary: control against treatment per scenario, the run errors, and the transcripts a person should read.
 $summaryLines = [System.Collections.Generic.List[string]]::new()
 $summaryLines.Add("# Eval run $stamp")
 $summaryLines.Add('')
-$summaryLines.Add("CLI: $cliVersion. Repetitions: $Repeat. Data folder: a throwaway Gateway.")
+$summaryLines.Add("CLI: $cliVersion. Repetitions: $Repeat. Data folder: a throwaway Gateway. Record the model with these results.")
 $summaryLines.Add('')
-$summaryLines.Add('| Id | Arm | Passed | Runs | SOUL sha256 | First calls |')
-$summaryLines.Add('|---|---|---|---|---|---|')
+$summaryLines.Add('| Id | Arm | Passed | Runs | Errors | Cards | Questions | Delegates | SOUL sha256 | First calls |')
+$summaryLines.Add('|---|---|---|---|---|---|---|---|---|---|')
 foreach ($group in @($rows | Group-Object Id, Arm)) {
     $first = $group.Group[0]
-    $summaryLines.Add("| $($first.Id) | $($first.Arm) | $(@($group.Group | Where-Object Passed).Count) | $($group.Count) | $($first.Soul) | $(@($group.Group | ForEach-Object First) -join ', ') |")
+    $g = @($group.Group)
+    $summaryLines.Add("| $($first.Id) | $($first.Arm) | $(@($g | Where-Object Passed).Count) | $($g.Count - @($g | Where-Object Error).Count) | $(@($g | Where-Object Error).Count) | $((@($g | ForEach-Object Cards) | Measure-Object -Sum).Sum) | $((@($g | ForEach-Object Questions) | Measure-Object -Sum).Sum) | $((@($g | ForEach-Object Delegates) | Measure-Object -Sum).Sum) | $($first.Soul) | $(@($g | ForEach-Object First) -join ', ') |")
 }
 $summaryLines.Add('')
-$summaryLines.Add('Flagged for reading (a failed treatment or a passed control):')
+$summaryLines.Add('Runs counts the scored runs; an error (exit 1, a status of failed, timeout or connection_error, or no result line) is not scored. Cards and questions are the denied counts of the result line, which count calls.')
+$summaryLines.Add('')
+$summaryLines.Add('Flagged for reading (a run error, a failed treatment or a passed control):')
 foreach ($r in $rows) {
-    if (($r.Arm -eq 'treatment' -and -not $r.Passed) -or ($r.Arm -eq 'control' -and $r.Passed)) { $summaryLines.Add("- $($r.Id) $($r.Arm) #$($r.Rep): $($r.Dir) (missed: $($r.Missed); tripped: $($r.Tripped))") }
+    if ($r.Error) { $summaryLines.Add("- $($r.Id) $($r.Arm) #$($r.Rep): run error, status $($r.Status), exit $($r.ExitCode): $($r.Dir) (see turn-<n>.stderr)") }
+    elseif (($r.Arm -eq 'treatment' -and -not $r.Passed) -or ($r.Arm -eq 'control' -and $r.Passed)) { $summaryLines.Add("- $($r.Id) $($r.Arm) #$($r.Rep): $($r.Dir) (missed: $($r.Missed); tripped: $($r.Tripped))") }
 }
+$summaryLines.Add('')
+$summaryLines.Add("Cleanup: $archived of $($sessions.Count) session(s) archived. Deleting needs a console (each command asks y/n), or stop the throwaway Gateway and remove its data folder:")
+$summaryLines.Add('')
+$summaryLines.Add('```')
+foreach ($id in @($installed.Keys | Sort-Object)) { $summaryLines.Add("sophon agents delete $id") }
+foreach ($s in $sessions) { $summaryLines.Add("sophon sessions delete $s") }
+$summaryLines.Add('```')
 [IO.File]::WriteAllLines((Join-Path $OutDir 'summary.md'), $summaryLines.ToArray())
-Write-Host "Invoke-AgentEvals: $($rows.Count) run(s); summary at $(Join-Path $OutDir 'summary.md')" -ForegroundColor Green
-exit 0
+$errorCount = @($rows | Where-Object Error).Count
+Write-Host "Invoke-AgentEvals: $($rows.Count) run(s), $errorCount run error(s), $archived session(s) archived; summary and delete commands at $(Join-Path $OutDir 'summary.md')" -ForegroundColor $(if ($errorCount) { 'Yellow' } else { 'Green' })
+exit $(if ($errorCount) { 1 } else { 0 })

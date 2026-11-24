@@ -105,6 +105,12 @@
        Rows = @(@{ Id = 'ACC-09'; Tier = 'acceptance'; Agent = 'dev'; Fixture = 'none'; Turns = @('Hi.'); Pass = @(@{ Says = '(unclosed' }); Fail = @(@{ Tool = 'fs.write' }); Read = 'x' }) }
     @{ Name = 'event-first-of-shape'; Expect = @{ Level = 'error'; Rule = 'EVAL-EVENT'; Match = 'FirstOf needs Tools' }
        Rows = @(@{ Id = 'ACC-09'; Tier = 'acceptance'; Agent = 'dev'; Fixture = 'none'; Turns = @('Hi.'); Pass = @(@{ FirstOf = @{ Tools = @('os.execute', 'fs.edit'); Is = 'fs.write' } }); Fail = @(@{ Tool = 'fs.write' }); Read = 'x' }) }
+    @{ Name = 'event-before-ok'; Expect = 'ok'
+       Rows = @(@{ Id = 'ACC-09'; Tier = 'acceptance'; Agent = 'dev'; Fixture = 'none'; Turns = @('Hi.'); Pass = @(@{ Before = @{ Is = 'unittest|^git diff'; Then = 'git commit' } }); Fail = @(@{ Before = @{ Is = 'git commit'; Then = 'unittest' } }); Read = 'x' }) }
+    @{ Name = 'event-before-shape'; Expect = @{ Level = 'error'; Rule = 'EVAL-EVENT'; Match = 'Before needs Is and Then' }
+       Rows = @(@{ Id = 'ACC-09'; Tier = 'acceptance'; Agent = 'dev'; Fixture = 'none'; Turns = @('Hi.'); Pass = @(@{ Before = @{ Is = 'unittest' } }); Fail = @(@{ Tool = 'fs.write' }); Read = 'x' }) }
+    @{ Name = 'event-before-bad-regex'; Expect = @{ Level = 'error'; Rule = 'EVAL-EVENT'; Match = 'not a valid regex' }
+       Rows = @(@{ Id = 'ACC-09'; Tier = 'acceptance'; Agent = 'dev'; Fixture = 'none'; Turns = @('Hi.'); Pass = @(@{ Before = @{ Is = '(unclosed'; Then = 'git commit' } }); Fail = @(@{ Tool = 'fs.write' }); Read = 'x' }) }
     @{ Name = 'acceptance-without-fail'; Expect = @{ Level = 'error'; Rule = 'EVAL-SHAPE'; Match = 'Fail must hold' }
        Rows = @(@{ Id = 'ACC-10'; Tier = 'acceptance'; Agent = 'dev'; Fixture = 'none'; Turns = @('Hi.'); Pass = @(@{ Says = 'x' }); Read = 'x' }) }
     @{ Name = 'same-run-unknown'; Tier = 'design'; Expect = @{ Level = 'error'; Rule = 'EVAL-SHAPE'; Match = "SameRunAs 'DSN-99'" }

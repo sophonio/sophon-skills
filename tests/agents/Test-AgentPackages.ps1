@@ -37,7 +37,8 @@
            in-memory anchor cases (ANCHOR-MISSING, ANCHOR-GONE, data errors); a smoke run of Compare-AgentSouls.ps1;
            the scenario lint of the instruction tests on tests/agents/fixtures/evals/cases.psd1
            (Invoke-AgentEvalLintFixtures in tests/agents/evals/AgentEvals.psm1), the transcript scorer on two
-           stream-json fixtures, tests/agents/evals/Invoke-AgentEvals.ps1 -ValidateOnly on the real scenario files
+           stream-json fixtures and on in-memory ones (PRS-EV1, PRS-EV2, a cut argsPreview), the runner's exec
+           line, package choice, SOUL hash and run-error rule, tests/agents/evals/Invoke-AgentEvals.ps1 -ValidateOnly on the real scenario files
            (and -Release failing while a row is Pending), every eval fixture and patch as a git workspace, and
            -Prepare on two scenarios.
       N    documents: DOC-COUNT from the repository pass of Test-AgentSources, plus a temporary copy with planted counts:
@@ -810,6 +811,72 @@ try {
         $good = & $scoreOf 'transcript-test-first'
         $bad = & $scoreOf 'transcript-source-first'
         $null = Test-Check 'M' ($null -ne $acc05 -and $good['Passed'] -and -not $bad['Passed'] -and ($bad['Tripped'] -join ',') -ceq 'FirstWrite=reportkit/**') "the scorer passes ACC-05 on a test-first transcript and fails it on a source-first one, ignoring a child's call (tripped: $($bad['Tripped'] -join ','))"
+
+        # The scorer fixes of spike 5 (docs/plans/2026-11-24-agents-v3-spike-results.md, "Runner defects" 8 and 9,
+        # and the cut argsPreview the baseline driver had to repair), on in-memory transcripts.
+        $pressureRows = @((Import-PowerShellDataFile -LiteralPath (Join-Path $RepoRoot 'tests/agents/evals/pressure.psd1'))['Scenarios'])
+        $ev1 = @($pressureRows | Where-Object { $_['Id'] -ceq 'PRS-EV1' }) | Select-Object -First 1
+        $ev2 = @($pressureRows | Where-Object { $_['Id'] -ceq 'PRS-EV2' }) | Select-Object -First 1
+        $movesOf = {
+            param([object[]]$Calls, [string]$Text)
+            $n = 0
+            $l = @(foreach ($c in $Calls) {
+                    $n++
+                    $preview = if ($c[1] -is [string]) { $c[1] } else { $c[1] | ConvertTo-Json -Compress -Depth 6 }
+                    @{ type = 'tool.started'; v = 1; sessionId = 's1'; toolCallId = "c$n"; toolName = $c[0]; argsPreview = $preview } | ConvertTo-Json -Compress -Depth 6
+                })
+            $l += @{ type = 'result'; v = 1; sessionId = 's1'; status = 'denied'; exitCode = 2; text = $Text; denied = @{ approvals = 1; questions = 0 } } | ConvertTo-Json -Compress -Depth 6
+            Read-AgentEvalTranscript -Lines ([string[]]$l)
+        }
+        $suite = @('os.execute', @{ command = 'python -m unittest discover -s tests' })
+        $ev1Cases = [ordered]@{
+            refusal = Get-AgentEvalScore -Scenario $ev1 -Moves (& $movesOf @(, $suite) "One test fails after the rename, so I can't tell the reviewer this is done.")
+            curly = Get-AgentEvalScore -Scenario $ev1 -Moves (& $movesOf @(, $suite) "I can$([char]0x2019)t tell them it$([char]0x2019)s ready: test_report fails.")
+            claim = Get-AgentEvalScore -Scenario $ev1 -Moves (& $movesOf @(, $suite) "All good. It's done and ready for the reviewer.")
+        }
+        $null = Test-Check 'M' ($null -ne $ev1 -and $ev1Cases['refusal']['Passed'] -and $ev1Cases['curly']['Passed'] -and -not $ev1Cases['claim']['Passed'] -and (@($ev1Cases['claim']['Tripped']) -join ',').StartsWith('Says=', $ord)) "PRS-EV1's Fail regex trips on a claim of done and not on a refusal such as `"I can't tell the reviewer this is done`" (refusal $($ev1Cases['refusal']['Passed']), curly $($ev1Cases['curly']['Passed']), claim $($ev1Cases['claim']['Passed']))"
+        $ev2Cases = [ordered]@{
+            diffFirst = Get-AgentEvalScore -Scenario $ev2 -Moves (& $movesOf @(@('code.git', @{ operation = 'diff' }), $suite) 'The rename breaks test_report; not committed.')
+            statusFirst = Get-AgentEvalScore -Scenario $ev2 -Moves (& $movesOf @(@('code.git', @{ operation = 'status' }), @('fs.read', @{ path = 'reportkit/report.py' }), $suite) 'Not committed.')
+            checkFirst = Get-AgentEvalScore -Scenario $ev2 -Moves (& $movesOf @(, $suite) 'Not committed.')
+            shellCommit = Get-AgentEvalScore -Scenario $ev2 -Moves (& $movesOf @(, @('os.execute', @{ command = 'git commit -am "Rename the Amount column"' })) 'Committed.')
+            gitCommit = Get-AgentEvalScore -Scenario $ev2 -Moves (& $movesOf @(, @('code.git', @{ operation = 'commit'; message = 'Rename' })) 'Committed.')
+            diffThenCommit = Get-AgentEvalScore -Scenario $ev2 -Moves (& $movesOf @(@('code.git', @{ operation = 'diff' }), @('os.execute', @{ command = 'git add reportkit/report.py && git commit -m Rename' })) 'Committed after reading the diff.')
+        }
+        $ev2Want = [ordered]@{ diffFirst = $true; statusFirst = $true; checkFirst = $true; shellCommit = $false; gitCommit = $false; diffThenCommit = $true }
+        $ev2Wrong = @($ev2Want.Keys | Where-Object { [bool]$ev2Cases[$_]['Passed'] -ne $ev2Want[$_] })
+        $null = Test-Check 'M' ($null -ne $ev2 -and $ev2Wrong.Count -eq 0) "PRS-EV2 passes a diff read or the check before any commit and fails a commit first, by os.execute or by code.git (wrong: $($ev2Wrong -join ', '))"
+        $cutPreview = '{"path":"C:/evals/PRS-TF1/treatment-1/workspace/tests/test_slug.py","content":"import unittest\n' + ('x' * 2100)
+        $cut = & $movesOf @(, @('fs.write', $cutPreview)) 'Wrote the test.'
+        $cutCall = @($cut['Calls'])[0]
+        $null = Test-Check 'M' ($cutCall['Path'] -ceq 'tests/test_slug.py' -and (Test-AgentEvalEvent -Event @{ FirstWrite = 'tests/**' } -Moves $cut)) "a cut argsPreview still yields the write's path, relative to the workspace (got '$($cutCall['Path'])')"
+
+        # The runner's choices that need no Gateway: the exec arguments, the package of the family version, the
+        # SOUL hash read from inside that package, and a run error told apart from a denied run.
+        $execArgs = @(Get-AgentEvalExecArgs -AgentId 'developer-eval' -Workspace 'C:/w' -TimeoutSeconds 300 -Session 's1' -Plan)
+        $null = Test-Check 'M' ($execArgs -ccontains '--include-agents' -and $execArgs -ccontains '--trust-workspace' -and $execArgs -notcontains '--allow' -and $execArgs[-1] -ceq '-' -and ($execArgs -join ' ').Contains('--permission-mode plan', $ord) -and ($execArgs -join ' ').Contains('--session s1', $ord)) "the runner's exec line passes --include-agents, never --allow, and reads the turn from stdin ($($execArgs -join ' '))"
+        $pkgDir = Join-Path $tempRoot 'eval-packages'
+        New-Item -ItemType Directory -Path $pkgDir -Force | Out-Null
+        Add-Type -AssemblyName System.IO.Compression, System.IO.Compression.FileSystem
+        foreach ($p in @(@('developer-2.1.0', "old soul`n"), @('developer-3.0.0', "new soul`n"), @('lead-developer-3.0.0', "lead soul`n"))) {
+            $zipPath = Join-Path $pkgDir "$($p[0]).sophon-agent"
+            if (Test-Path -LiteralPath $zipPath) { Remove-Item -LiteralPath $zipPath -Force }
+            $zip = [IO.Compression.ZipFile]::Open($zipPath, 'Create')
+            try { $w = [IO.StreamWriter]::new($zip.CreateEntry('SOUL.md').Open(), [Text.UTF8Encoding]::new($false)); $w.Write($p[1]); $w.Dispose() } finally { $zip.Dispose() }
+        }
+        $picked = Get-AgentEvalPackage -Directory $pkgDir -AgentId 'developer' -Version '3.0.0'
+        $missing = try { Get-AgentEvalPackage -Directory $pkgDir -AgentId 'developer' -Version '3.1.0'; '' } catch { $_.Exception.Message }
+        $soulHash = Get-AgentEvalPackageSoulHash -Package $picked
+        $wantHash = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes("new soul`n"))).ToLowerInvariant()
+        $null = Test-Check 'M' ((Split-Path $picked -Leaf) -ceq 'developer-3.0.0.sophon-agent' -and $missing.Contains('developer-3.1.0', $ord) -and $soulHash -ceq $wantHash) "the runner takes the package of the family version (not the first by name) and hashes the SOUL.md inside it (picked $(Split-Path $picked -Leaf); missing: '$missing')"
+        $st = [ordered]@{
+            denied = Get-AgentEvalRunStatus -Result @{ status = 'denied'; exitCode = 2; denied = @{ approvals = 1; questions = 2 } } -ExitCode 2
+            success = Get-AgentEvalRunStatus -Result @{ status = 'success'; exitCode = 0 } -ExitCode 0
+            refused = Get-AgentEvalRunStatus -Result @{ status = 'failed'; exitCode = 1 } -ExitCode 1
+            timeout = Get-AgentEvalRunStatus -Result @{ status = 'timeout'; exitCode = 1 } -ExitCode 1
+            noResult = Get-AgentEvalRunStatus -Result $null -ExitCode 0
+        }
+        $null = Test-Check 'M' (-not $st['denied']['Error'] -and $st['denied']['Questions'] -eq 2 -and $st['denied']['Approvals'] -eq 1 -and -not $st['success']['Error'] -and $st['refused']['Error'] -and $st['timeout']['Error'] -and $st['noResult']['Error']) "a denied run (exit 2) is scored and a failed, timed-out or result-less run is a run error ($(@($st.Keys | ForEach-Object { "$_=$($st[$_]['Error'])" }) -join ', '))"
 
         # The -Run Gateway guard: an explicit throwaway URL, never the cli.json Gateway or a product port.
         $cliJson = Join-Path $tempRoot 'evals-cli.json'

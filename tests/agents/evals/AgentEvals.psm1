@@ -22,13 +22,16 @@ $script:PendingRegex = '^M[0-9]+$'
 $script:SmokeIdRegex = '^[A-Z]+[0-9]+$'
 $script:WriteTools = @('fs.write', 'fs.edit', 'fs.multi_edit', 'fs.apply_patch', 'fs.create_directory', 'fs.copy', 'fs.move', 'fs.delete')
 $script:CommandTools = @('os.execute', 'os.execute_sandboxed')
-# Event kinds a Pass or Fail entry may use, with the type of their value. Only first moves are observable:
-# a run gets no approvals, so it ends at the first card or question.
+# Event kinds a Pass or Fail entry may use, with the type of their value. A run gets no approvals: a card is
+# rejected and a question skipped, and the turn goes on, so the first moves are the evidence and the calls after
+# a refusal are the agent continuing (spike 5).
 $script:EventKinds = [ordered]@{
     FirstTool    = 'string'     # the first tool call (a tool name; * allowed)
     FirstWrite   = 'string'     # the path of the first write, as a glob (** any depth)
     FirstCommand = 'string'     # a regex the first command text matches
     FirstOf      = 'hashtable'  # @{ Tools = @(...); Is = '<tool>' }: of these tools, the one called first
+    Before       = 'hashtable'  # @{ Is = '<regex>'; Then = '<regex>' }: a command matching Is comes before any
+                                # command matching Then (os.execute text; code.git as 'git <operation>')
     Question     = 'string'     # an info.request question with this header
     FirstOption  = 'string'     # a regex the first option label of the first question matches
     ChatQuestion = 'bool'       # the turn ends with a question in chat (no info.request)
@@ -367,6 +370,13 @@ function Test-EvalEventShape($EventList, [string]$Field, [string[]]$Tools) {
         }
         if ($kind -ceq 'FirstOf' -and (@(Get-EvalItems $value['Tools']).Count -lt 2 -or -not ($value['Is'] -is [string]) -or @(Get-EvalItems $value['Tools']) -notcontains $value['Is'])) {
             "$Field FirstOf needs Tools (two or more) and Is (one of them)"
+        }
+        if ($kind -ceq 'Before') {
+            if ($value.Count -ne 2 -or -not ($value['Is'] -is [string] -and $value['Is']) -or -not ($value['Then'] -is [string] -and $value['Then'])) {
+                "$Field Before needs Is and Then, two command regexes, and nothing else"
+            } else {
+                foreach ($k in 'Is', 'Then') { try { [void][regex]::new([string]$value[$k]) } catch { "$Field Before $k '$($value[$k])' is not a valid regex" } }
+            }
         }
         if ($kind -ceq 'MaxCalls' -and (-not ($value['Tool'] -is [string]) -or -not ($value['Max'] -is [int]) -or $value['Max'] -lt 0)) {
             "$Field MaxCalls needs Tool and a whole-number Max"
@@ -821,12 +831,26 @@ function Read-AgentEvalTranscript {
         Parses a `sophon exec --output-format stream-json` transcript (one JSON object per line) into the first
         moves the scorer reads.
     .DESCRIPTION
-        Returns @{ Calls = @(@{ Tool; Args; Path; Command; Header; Options; Content }); Approvals; Text; Result }.
-        A call comes from its tool.started line (toolName, argsPreview); argsPreview is parsed as JSON when it
-        is complete. Unverified against a live run until spike 5 (see README).
+        Returns @{ Calls = @(@{ Tool; Args; Path; Command; Header; Options; Content; Cut }); Approvals; Text;
+        Result }. A call comes from its tool.started line (toolName, argsPreview). argsPreview is parsed as JSON
+        when it is complete; the CLI cuts it at 2,048 characters, and a cut preview yields its path, command,
+        headers and option labels by pattern (Cut = $true). A path is made relative to -Workspace, or to the
+        last '/workspace/' folder in it, with forward slashes. A code.git call's Command is 'git <operation>'.
+        A child's call (parentSessionId) is not this agent's move. Checked against live runs in spike 5.
     #>
     [CmdletBinding()]
-    param([Parameter(Mandatory)][string[]]$Lines)
+    param([Parameter(Mandatory)][AllowEmptyCollection()][AllowEmptyString()][string[]]$Lines, [string]$Workspace = '')
+    $field = { param([string]$Raw, [string]$Name) $m = [regex]::Match($Raw, '"' + $Name + '"\s*:\s*"((?:[^"\\]|\\.)*)"?'); if ($m.Success) { try { [regex]::Unescape($m.Groups[1].Value) } catch { $m.Groups[1].Value } } else { '' } }
+    $root = $Workspace.Replace('\', '/').TrimEnd('/')
+    $relative = {
+        param([string]$Path)
+        if (-not $Path) { return '' }
+        $p = $Path.Replace('\', '/')
+        if ($root -and $p.StartsWith("$root/", [StringComparison]::OrdinalIgnoreCase)) { $p = $p.Substring($root.Length + 1) }
+        else { $i = $p.LastIndexOf('/workspace/', [StringComparison]::OrdinalIgnoreCase); if ($i -ge 0) { $p = $p.Substring($i + 11) } }
+        while ($p.StartsWith('./')) { $p = $p.Substring(2) }
+        return $p.TrimStart('/')
+    }
     $calls = [System.Collections.Generic.List[hashtable]]::new()
     $approvals = 0
     $text = ''
@@ -845,16 +869,32 @@ function Read-AgentEvalTranscript {
                 $preview = [string]$event['argsPreview']
                 if ($preview) { try { $callArgs = $preview | ConvertFrom-Json -AsHashtable -ErrorAction Stop } catch { $callArgs = @{ raw = $preview } } }
                 $first = if ($callArgs.ContainsKey('questions') -and @($callArgs['questions']).Count -gt 0) { @($callArgs['questions'])[0] } else { $null }
-                $calls.Add(@{
-                        Tool    = [string]$event['toolName']
-                        Args    = $callArgs
-                        Path    = [string]$(if ($callArgs.ContainsKey('path')) { $callArgs['path'] } elseif ($callArgs.ContainsKey('file_path')) { $callArgs['file_path'] } else { '' })
-                        Command = [string]$(if ($callArgs.ContainsKey('command')) { $callArgs['command'] } else { '' })
-                        Header  = [string]$(if ($null -ne $first -and $first -is [hashtable] -and $first.ContainsKey('header')) { $first['header'] } else { '' })
-                        Headers = [string[]]@(foreach ($q in @($callArgs['questions'])) { if ($q -is [hashtable]) { [string]$q['header'] } })
-                        Options = [string[]]@(if ($null -ne $first -and $first -is [hashtable]) { foreach ($o in @($first['options'])) { if ($o -is [hashtable]) { [string]$o['label'] } } })
-                        Content = [string]$(if ($callArgs.ContainsKey('content')) { $callArgs['content'] } elseif ($callArgs.ContainsKey('new_string')) { $callArgs['new_string'] } elseif ($callArgs.ContainsKey('raw')) { $callArgs['raw'] } else { '' })
-                    })
+                $tool = [string]$event['toolName']
+                $call = @{
+                    Tool    = $tool
+                    Args    = $callArgs
+                    Path    = [string]$(if ($callArgs.ContainsKey('path')) { $callArgs['path'] } elseif ($callArgs.ContainsKey('file_path')) { $callArgs['file_path'] } else { '' })
+                    Command = [string]$(if ($callArgs.ContainsKey('command')) { $callArgs['command'] } else { '' })
+                    Header  = [string]$(if ($null -ne $first -and $first -is [hashtable] -and $first.ContainsKey('header')) { $first['header'] } else { '' })
+                    Headers = [string[]]@(foreach ($q in @($callArgs['questions'])) { if ($q -is [hashtable]) { [string]$q['header'] } })
+                    Options = [string[]]@(if ($null -ne $first -and $first -is [hashtable]) { foreach ($o in @($first['options'])) { if ($o -is [hashtable]) { [string]$o['label'] } } })
+                    Content = [string]$(if ($callArgs.ContainsKey('content')) { $callArgs['content'] } elseif ($callArgs.ContainsKey('new_string')) { $callArgs['new_string'] } elseif ($callArgs.ContainsKey('raw')) { $callArgs['raw'] } else { '' })
+                    Cut     = $callArgs.ContainsKey('raw')
+                }
+                if ($call['Cut']) {
+                    $raw = [string]$callArgs['raw']
+                    if (-not $call['Path']) { $call['Path'] = & $field $raw '(?:path|file_path)' }
+                    if (-not $call['Command']) { $call['Command'] = & $field $raw 'command' }
+                    $heads = [string[]]@([regex]::Matches($raw, '"header"\s*:\s*"((?:[^"\\]|\\.)*)"') | ForEach-Object { [regex]::Unescape($_.Groups[1].Value) })
+                    if ($heads.Count -gt 0) { $call['Header'] = $heads[0]; $call['Headers'] = $heads }
+                    # Option labels of the first question only: those before a second "header".
+                    $firstQ = $raw; $second = [regex]::Matches($raw, '"header"\s*:'); if ($second.Count -gt 1) { $firstQ = $raw.Substring(0, $second[1].Index) }
+                    $call['Options'] = [string[]]@([regex]::Matches($firstQ, '"label"\s*:\s*"((?:[^"\\]|\\.)*)"') | ForEach-Object { [regex]::Unescape($_.Groups[1].Value) })
+                    if ($tool -ceq 'code.git') { $callArgs['operation'] = & $field $raw 'operation' }
+                }
+                if ($tool -ceq 'code.git' -and -not $call['Command'] -and $callArgs.ContainsKey('operation') -and $callArgs['operation']) { $call['Command'] = "git $($callArgs['operation'])" }
+                $call['Path'] = & $relative $call['Path']
+                $calls.Add($call)
             }
             'approval.requested' { $approvals++ }
             'message.completed' { if (-not $event['parentSessionId']) { $text = [string]$event['text'] } }
@@ -883,6 +923,14 @@ function Test-AgentEvalEvent {
         'FirstOf' {
             $hit = @($calls | Where-Object { $t = $_['Tool']; @($value['Tools'] | Where-Object { & $match $t $_ }).Count -gt 0 }) | Select-Object -First 1
             return ($null -ne $hit -and (& $match $hit['Tool'] $value['Is']))
+        }
+        'Before' {
+            $texts = @($calls | Where-Object { ($_['Tool'] -in $script:CommandTools -or $_['Tool'] -ceq 'code.git') -and $_['Command'] } | ForEach-Object { [string]$_['Command'] })
+            foreach ($t in $texts) {
+                if ([regex]::IsMatch($t, $value['Is'])) { return $true }
+                if ([regex]::IsMatch($t, $value['Then'])) { return $false }
+            }
+            return $false
         }
         'Question' { return (@($questions | Where-Object { $_['Headers'] -ccontains $value }).Count -gt 0) }
         'FirstOption' { return ($questions.Count -gt 0 -and $questions[0]['Options'].Count -gt 0 -and [regex]::IsMatch($questions[0]['Options'][0], $value)) }
@@ -917,6 +965,74 @@ function Get-AgentEvalScore {
     foreach ($e in @(Get-EvalItems $Scenario['Pass'])) { if (Test-AgentEvalEvent -Event $e -Moves $Moves -Markers $Markers) { $held.Add((& $show $e)) } else { $missed.Add((& $show $e)) } }
     foreach ($e in @(Get-EvalItems $Scenario['Fail'])) { if (Test-AgentEvalEvent -Event $e -Moves $Moves -Markers $Markers) { $tripped.Add((& $show $e)) } }
     @{ Passed = ($missed.Count -eq 0 -and $tripped.Count -eq 0); Held = $held.ToArray(); Missed = $missed.ToArray(); Tripped = $tripped.ToArray() }
+}
+
+function Get-AgentEvalExecArgs {
+    <#
+    .SYNOPSIS
+        The arguments of one 'sophon exec' turn of the runner; the turn itself goes on stdin ('-').
+    .DESCRIPTION
+        --include-agents puts a delegated child's events in the stream (the scorer still keeps them apart through
+        parentSessionId). --allow is never passed, so every card is rejected and every question skipped. The CLI
+        sends its current folder as the binding's cwd, so the caller runs this from inside -Workspace.
+    #>
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][string]$AgentId, [Parameter(Mandatory)][string]$Workspace, [int]$TimeoutSeconds = 300, [string]$Session = '', [switch]$Plan)
+    $a = @('exec', '--agent', $AgentId, '--workspace', $Workspace, '--trust-workspace', '--include-agents', '--output-format', 'stream-json', '--timeout', "$TimeoutSeconds")
+    if ($Plan) { $a += @('--permission-mode', 'plan') }
+    if ($Session) { $a += @('--session', $Session) }
+    $a += '-'
+    return [string[]]$a
+}
+
+function Get-AgentEvalPackage {
+    <#
+    .SYNOPSIS
+        The package <AgentId>-<Version>.sophon-agent in -Directory, or an error naming the file that is missing.
+    .DESCRIPTION
+        The version is the one of agents/<id>/manifest.json, so a 2.1.0 package left in dist/agents is never taken
+        for the 3.0.0 one, and 'developer-*' never matches another agent's package.
+    #>
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][string]$Directory, [Parameter(Mandatory)][string]$AgentId, [Parameter(Mandatory)][string]$Version)
+    $path = Join-Path $Directory "$AgentId-$Version.sophon-agent"
+    if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { throw "$Directory has no $AgentId-$Version.sophon-agent: run build/Build-AgentPackages.ps1 first" }
+    return [IO.Path]::GetFullPath($path)
+}
+
+function Get-AgentEvalPackageSoulHash {
+    # The sha256 (lower-case hex) of the SOUL.md inside a package, which is the text the installed agent runs.
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][string]$Package)
+    Add-Type -AssemblyName System.IO.Compression, System.IO.Compression.FileSystem
+    $zip = [IO.Compression.ZipFile]::OpenRead($Package)
+    try {
+        $entry = @($zip.Entries | Where-Object { $_.FullName -ceq 'SOUL.md' }) | Select-Object -First 1
+        if ($null -eq $entry) { throw "$Package has no SOUL.md at its root" }
+        $stream = $entry.Open()
+        try { return [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($stream)).ToLowerInvariant() } finally { $stream.Dispose() }
+    } finally { $zip.Dispose() }
+}
+
+function Get-AgentEvalRunStatus {
+    <#
+    .SYNOPSIS
+        Reads a turn's result line and exit code: @{ Error; Status; ExitCode; Approvals; Questions }.
+    .DESCRIPTION
+        Exit 2 with status denied is a normal outcome (a card was rejected or a question skipped; denied counts
+        calls). Exit 1, a status of failed, timeout or connection_error, or no result line at all is a run error:
+        the row is not scored.
+    #>
+    [CmdletBinding()]
+    param([AllowNull()]$Result, [int]$ExitCode)
+    $status = if ($Result -is [hashtable] -and $Result['status']) { [string]$Result['status'] } else { '(no result line)' }
+    $denied = if ($Result -is [hashtable] -and $Result['denied'] -is [hashtable]) { $Result['denied'] } else { @{} }
+    $isError = ($Result -isnot [hashtable]) -or $ExitCode -eq 1 -or $status -in 'failed', 'timeout', 'connection_error'
+    @{
+        Error = [bool]$isError; Status = $status; ExitCode = $ExitCode
+        Approvals = [int]$(if ($denied.ContainsKey('approvals')) { $denied['approvals'] } else { 0 })
+        Questions = [int]$(if ($denied.ContainsKey('questions')) { $denied['questions'] } else { 0 })
+    }
 }
 
 function Test-AgentEvalGatewayUrl {
@@ -959,5 +1075,6 @@ Export-ModuleMember -Function @(
     'Get-AgentEvalSmokeIds', 'Import-AgentEvalData', 'Get-AgentEvalFixtureInfo', 'Get-AgentEvalContext',
     'Find-EvalLeak', 'Test-AgentEvalData', 'Format-AgentEvalFinding', 'New-AgentEvalTestContext',
     'Invoke-AgentEvalLintFixtures', 'New-AgentEvalWorkspace', 'Read-AgentEvalTranscript', 'Test-AgentEvalEvent',
-    'Get-AgentEvalScore', 'Test-EvalGlob', 'Test-AgentEvalGatewayUrl'
+    'Get-AgentEvalScore', 'Test-EvalGlob', 'Test-AgentEvalGatewayUrl', 'Get-AgentEvalExecArgs', 'Get-AgentEvalPackage',
+    'Get-AgentEvalPackageSoulHash', 'Get-AgentEvalRunStatus'
 )
