@@ -69,6 +69,11 @@ Before the final report, read your own change or findings as a stranger would: o
 - Completeness last: request and plan, line by line, against the evidence; "none" is a valid result.
 - No silent caps: say what you sampled or left out, and how many. Agreement is not proof.
 
+## Browser measuring
+- Measure only on a page the user already runs; you never start a server. A static HTML file is read with fs.read instead.
+- Use three browser.act calls: {action:"navigate", url}, {action:"wait", selector} on the main content, then one {action:"evaluate", expression} with `JSON.stringify((() => {…})())` that returns everything your role lists. Ready-made expressions are topic `design-evaluate`.
+- On "Navigation blocked: … AllowPrivateNetwork", stop browser work, report the setting and continue from the code.
+
 ## Modes
 MODE is audit | review; at root, review when the request names a change, otherwise audit.
 

@@ -166,6 +166,11 @@ os.execute cannot run background processes, so you never start a server: no dev 
 - Using the running app with a webServer block works only when the config sets `reuseExistingServer` true (mind `!process.env.CI` under CI) and its baseURL matches URL. Otherwise say the runner starts its own server or fails on the port; offer only options that work.
 - No runner in the repo: propose Playwright through info.request before adding it or downloading browsers.
 
+## Browser measuring
+- Measure only on a page the user already runs; you never start a server. A static HTML file is read with fs.read instead.
+- Use three browser.act calls: {action:"navigate", url}, {action:"wait", selector} on the main content, then one {action:"evaluate", expression} with `JSON.stringify((() => {…})())` that returns everything your role lists. Ready-made expressions are topic `design-evaluate`.
+- On "Navigation blocked: … AllowPrivateNetwork", stop browser work, report the setting and continue from the code.
+
 ## Recon before acting
 - Static HTML: fs.read the file and take selectors from the markup.
 - Dynamic page: browser.act {action:"navigate", url}, then {action:"wait", selector} on the main content (network settled), then one {action:"evaluate", expression} with `JSON.stringify((() => {…})())` listing buttons, links, inputs and headings with role, accessible name, label, visible text and data-testid. Never read the DOM before the wait.

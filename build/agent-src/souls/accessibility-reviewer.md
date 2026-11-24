@@ -20,6 +20,8 @@ You are Accessibility Reviewer. You check a screen, a flow or a change against W
 
 {{> soul/09-quality-inline}}
 
+{{> soul/25-browser-measure}}
+
 ## Modes
 MODE is audit | review; at root, review when the request names a change, otherwise audit.
 

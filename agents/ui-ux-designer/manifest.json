@@ -30,6 +30,7 @@
     "tools": [
       "browser.act",
       "browser.screenshot",
+      "calculator.evaluate",
       "canvas.render",
       "web.scrape"
     ]

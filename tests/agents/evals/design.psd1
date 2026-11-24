@@ -10,7 +10,6 @@
 @{
   Tier = 'design'
   Markers = @{
-    Pending = 'M5'
     Uses = @(
       @{ Text = '#09071A'; Fragment = '21-sophon-default'; Kind = 'page, dark' }
       @{ Text = '#F8FAFC'; Fragment = '21-sophon-default'; Kind = 'page, light' }
@@ -43,24 +42,21 @@
        Uses = @(@{ Text = 'A system someone chose is never a "default look".'; Fragment = '20-design-source' })
        Pass = @(@{ NoTool = 'canvas.render' }, @{ NoMarker = $true }, @{ Says = 'token|DESIGN\.md' })
        Fail = @(@{ Question = 'Direction' }, @{ NoMarker = $false })
-       Read = 'No direction round: the proposal extends the tokens of DESIGN.md and src/styles/tokens.css (the serif face, the orange primary). No Sophon value in any attempted write.'
-       Pending = 'M5' }
+       Read = 'No direction round: the proposal extends the tokens of DESIGN.md and src/styles/tokens.css (the serif face, the orange primary). No Sophon value in any attempted write.' }
 
     @{ Id = 'DSN-05'; Tier = 'design'; Agent = 'frontend-developer'; Fixture = 'repo-ui-bare'; Setup = @()
        Turns = @('Add a status badge component for boards: active, paused or archived.')
        Uses = @(@{ Text = '[Sophon design default (Recommended)] [Plain standard] [Direction round]'; Fragment = '20-design-source' })
        Pass = @(@{ Question = 'Design' }, @{ FirstOption = '^Sophon design default \(Recommended\)$' }, @{ NoMarker = $true })
        Fail = @(@{ NoMarker = $false })
-       Read = 'One question with the header "Design" whose first option is "Sophon design default (Recommended)". No Sophon value in a write before the pick.'
-       Pending = 'M5' }
+       Read = 'One question with the header "Design" whose first option is "Sophon design default (Recommended)". No Sophon value in a write before the pick.' }
 
     @{ Id = 'DSN-06'; Tier = 'design'; Agent = 'design-system-engineer'; Fixture = 'repo-ui-bare'; Setup = @()
        Turns = @('We need a light and a dark theme for this app.')
        Uses = @(@{ Text = '"Theme"'; Agent = 'design-system-engineer' }, @{ Text = 'For interface work, the first source that exists decides the look.'; Fragment = '20-design-source' })
        Pass = @(@{ Question = 'Theme' }, @{ FirstOption = 'Sophon.*\(Recommended\)' }, @{ NoWrite = '**' })
        Fail = @(@{ FirstWrite = '**/*.css' })
-       Read = 'Three options side by side under the header "Theme", the Sophon default first and Recommended. No answer applies nothing.'
-       Pending = 'M5' }
+       Read = 'Three options side by side under the header "Theme", the Sophon default first and Recommended. No answer applies nothing.' }
 
     @{ Id = 'DSN-07'; Tier = 'design'; Agent = 'lead-developer'; Fixture = 'repo-ui-bare'; Setup = @()
        Turns = @('Just build it: add a billing settings page.')
@@ -75,8 +71,7 @@
        Uses = @(@{ Text = 'return your options as text with STATUS NEEDS_CONTEXT'; Fragment = '20-design-source' })
        Pass = @(@{ Says = 'NEEDS_CONTEXT' }, @{ NoWrite = '**' })
        Fail = @(@{ Tool = 'fs.write' }, @{ Tool = 'fs.edit' })
-       Read = 'Delegated with no DESIGN key on a project with no system: it builds nothing and returns its options as text with STATUS NEEDS_CONTEXT.'
-       Pending = 'M5' }
+       Read = 'Delegated with no DESIGN key on a project with no system: it builds nothing and returns its options as text with STATUS NEEDS_CONTEXT.' }
 
     @{ Id = 'DSN-09'; Tier = 'design'; Agent = 'lead-developer'; Fixture = 'repo-ui-bare'; Setup = @()
        Turns = @('no subagents: add an archive page that lists archived boards with a restore button.')
@@ -114,7 +109,6 @@
        Uses = @(@{ Text = 'then the styles its screens already use'; Fragment = '20-design-source' })
        Pass = @(@{ NoMarker = $true })
        Fail = @(@{ Question = 'Design' }, @{ NoMarker = $false })
-       Read = 'No "Design" question: the stylesheet the screens already use is the project''s system. The component extends it; no Sophon value in any attempted write.'
-       Pending = 'M5' }
+       Read = 'No "Design" question: the stylesheet the screens already use is the project''s system. The component extends it; no Sophon value in any attempted write.' }
   )
 }
