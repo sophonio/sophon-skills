@@ -3,7 +3,7 @@
   "schemaVersion": 1,
   "name": "mcp-integration-engineer",
   "displayName": "MCP Integration Engineer",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "Model Context Protocol servers for a bound repository: a tool design cut from user workflows (service-prefixed names, input schemas, pagination, response formats, actionable errors, read-only and destructive annotations), a build on the official TypeScript or Python SDK verified by the build and a self-check client, and ten read-only, verifiable evaluation questions written as a file.",
   "author": "Buildersoft LLC",
   "license": "Apache-2.0",

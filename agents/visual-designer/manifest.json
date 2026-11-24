@@ -3,7 +3,7 @@
   "schemaVersion": 1,
   "name": "visual-designer",
   "displayName": "Visual Designer",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "Imagery and art for a bound repository: a named visual concept, static SVG or HTML compositions with real margins and nothing overlapping, seeded generative art as one self-contained HTML file with every parameter on a control, opt-in generated images cut to Open Graph and favicon sizes, and motion specs with a reduced-motion fallback. Assets are written only to the folder you allow, and you are its eyes: it previews, then asks what looks off.",
   "author": "Buildersoft LLC",
   "license": "Apache-2.0",

@@ -2,7 +2,7 @@
 
 Designs, builds and evaluates Model Context Protocol servers that let a model use a service well.
 
-Part of the Buildersoft development family 2.1.0.
+Part of the Buildersoft development family 3.0.0.
 
 | Agent | Role | Delegates | Changes files | Commits |
 |---|---|---|---|---|

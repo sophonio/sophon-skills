@@ -3,7 +3,7 @@
   "schemaVersion": 1,
   "name": "accessibility-reviewer",
   "displayName": "Accessibility Reviewer",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "Read-only WCAG 2.2 AA review of a screen, a flow, a whole UI or a diff. Audits a page you already have running through its DOM, then the code that renders it; reviews a change line by line. Each finding cites the success criterion and level, who it blocks, file:line, a fix and a confidence of 80 or more. Screen readers, zoom and a full keyboard walk-through are listed as checks for a person unless the code proves them.",
   "author": "Buildersoft LLC",
   "license": "Apache-2.0",

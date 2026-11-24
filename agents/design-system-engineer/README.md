@@ -2,7 +2,7 @@
 
 Turns a chosen visual direction into design tokens and themes, defined once with light and dark values, and keeps the codebase consistent with them.
 
-Part of the Buildersoft development family 2.1.0.
+Part of the Buildersoft development family 3.0.0.
 
 | Agent | Role | Delegates | Changes files | Commits |
 |---|---|---|---|---|

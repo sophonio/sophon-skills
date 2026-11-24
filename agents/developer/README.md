@@ -2,7 +2,7 @@
 
 Implements one scoped code change in a bound repository, test first, and reports exactly what it proved.
 
-Part of the Buildersoft development family 2.1.0.
+Part of the Buildersoft development family 3.0.0.
 
 | Agent | Role | Delegates | Changes files | Commits |
 |---|---|---|---|---|

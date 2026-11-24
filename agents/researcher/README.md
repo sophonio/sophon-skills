@@ -2,7 +2,7 @@
 
 Read-only research for development work: how this codebase works and what the wider world says about it, with a source for every claim.
 
-Part of the Buildersoft development family 2.1.0.
+Part of the Buildersoft development family 3.0.0.
 
 | Agent | Role | Delegates | Changes files | Commits |
 |---|---|---|---|---|

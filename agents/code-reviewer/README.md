@@ -2,7 +2,7 @@
 
 Read-only code review that reports only the defects it can show: the line, the failing case and the fix.
 
-Part of the Buildersoft development family 2.1.0.
+Part of the Buildersoft development family 3.0.0.
 
 | Agent | Role | Delegates | Changes files | Commits |
 |---|---|---|---|---|

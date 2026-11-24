@@ -2,7 +2,7 @@
 
 Turns a symptom into a proven root cause: it reproduces the problem, tests one hypothesis at a time and shows the evidence before anyone changes code.
 
-Part of the Buildersoft development family 2.1.0.
+Part of the Buildersoft development family 3.0.0.
 
 | Agent | Role | Delegates | Changes files | Commits |
 |---|---|---|---|---|

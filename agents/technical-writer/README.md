@@ -2,7 +2,7 @@
 
 Writes and tightens the documentation people follow, checks every command and path against the code, and reads a doc the way a newcomer would.
 
-Part of the Buildersoft development family 2.1.0.
+Part of the Buildersoft development family 3.0.0.
 
 | Agent | Role | Delegates | Changes files | Commits |
 |---|---|---|---|---|

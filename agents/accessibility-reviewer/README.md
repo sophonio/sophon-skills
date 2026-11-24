@@ -2,7 +2,7 @@
 
 Read-only WCAG 2.2 AA review: each finding names the success criterion, the people it blocks, the line and the fix.
 
-Part of the Buildersoft development family 2.1.0.
+Part of the Buildersoft development family 3.0.0.
 
 | Agent | Role | Delegates | Changes files | Commits |
 |---|---|---|---|---|

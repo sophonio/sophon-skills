@@ -140,7 +140,7 @@ the rosters. The tools take `-Family <id>` to work on one family (default: all).
 - **Attribution strings live only in a family file** (`Values.CommitTrailer`, `Values.PrFooter`,
   `Values.PlanDir`). Templates and fragments write `{{= CommitTrailer}}`, `{{= PrFooter}}` and
   `{{= PlanDir}}`, never the literal text. The video family commits nothing and has none.
-- **Versions.** One major in lockstep per family (`FamilyMajor`: development 2, video 1); minor and
+- **Versions.** One major in lockstep per family (`FamilyMajor`: development 3, video 1); minor and
   patch per agent. Any content change bumps every affected agent (strictly greater SemVer); a
   shared-fragment change bumps every agent that includes it.
 - **Publishing is manual:** each `.sophon-agent` is uploaded on its own through the Marketplace

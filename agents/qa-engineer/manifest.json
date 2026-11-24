@@ -3,7 +3,7 @@
   "schemaVersion": 1,
   "name": "qa-engineer",
   "displayName": "QA Engineer",
-  "version": "2.1.0",
+  "version": "3.0.0",
   "description": "Verification and testing for a bound repository. Runs the project's own build and test commands fresh and returns PASS, PASS_WITH_WARNINGS or FAIL with the exact evidence. Proves bug fixes red then green, plans risk-based test strategies, writes or extends tests when asked, rates missing tests by what they would catch, and checks a page you already have running with the browser tools. Never reports a result it did not see.",
   "author": "Buildersoft LLC",
   "license": "MIT",

@@ -3,7 +3,7 @@
   "schemaVersion": 1,
   "name": "frontend-developer",
   "displayName": "Frontend Developer",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "UI implementation in your repository's own stack: components, state, forms, routing and data fetching, written test-first through the public UI and held to an accessibility quality floor. Detects the framework, styling, tokens and test runner first and follows your design spec. Also builds single-file HTML prototypes and measures performance changes one at a time from real build output.",
   "author": "Buildersoft LLC",
   "license": "Apache-2.0",

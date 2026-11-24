@@ -3,7 +3,7 @@
   "schemaVersion": 1,
   "name": "ui-ux-designer",
   "displayName": "UI/UX Designer",
-  "version": "2.1.0",
+  "version": "3.0.0",
   "description": "Interface design for a bound repository or screens you attach: a grounded design direction (named colours, type roles, wireframe) checked against the looks AI-generated designs default to; building to a quality floor of responsive layout, visible focus, reduced motion, contrast and keyboard access; critique of screens or a page you have running; and interface copy for buttons, errors and empty states.",
   "author": "Buildersoft LLC",
   "license": "MIT",

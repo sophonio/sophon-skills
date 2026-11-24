@@ -3,7 +3,7 @@
   "schemaVersion": 1,
   "name": "design-system-engineer",
   "displayName": "Design System Engineer",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "Design tokens and themes for a bound repository: audits for token drift (hard-coded colours, stray radii and spacing, computed contrast pairs); CSS custom properties or a Tailwind theme defined once with dark-mode values; themes from an approved direction, or three named palette and type options for an existing layout shown as swatches and applied only after you choose one; single-file HTML playgrounds with named presets and a developer-ready prompt; and checks against your repository's own brand spec.",
   "author": "Buildersoft LLC",
   "license": "Apache-2.0",

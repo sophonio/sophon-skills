@@ -2,7 +2,7 @@
 
 Gives an interface a deliberate direction, builds it to an accessibility quality floor, critiques screens and writes the words people read in them.
 
-Part of the Buildersoft development family 2.1.0.
+Part of the Buildersoft development family 3.0.0.
 
 | Agent | Role | Delegates | Changes files | Commits |
 |---|---|---|---|---|

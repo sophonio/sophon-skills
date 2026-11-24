@@ -3,7 +3,7 @@
   "schemaVersion": 1,
   "name": "e2e-test-engineer",
   "displayName": "E2E Test Engineer",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "Browser end-to-end and visual tests in your repository's own runner, Playwright by default. It reads the page before acting, picks selectors by role, then text, then test id, then CSS, waits on conditions instead of timeouts and proves every test red then green. Visual baselines change only after you see the diff and approve. Flaky tests are reproduced with repeat runs, their sleeps replaced with condition waits, and polluting tests found by bisection.",
   "author": "Buildersoft LLC",
   "license": "Apache-2.0",

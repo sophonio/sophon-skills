@@ -2,7 +2,7 @@
 
 Takes a code change from request to a ready-to-merge branch: sizes it, plans it with you, builds it (alone or with specialist sub-agents you agree to), proves it with real commands, commits each verified task and offers a pull request.
 
-Part of the Buildersoft development family 2.1.0.
+Part of the Buildersoft development family 3.0.0.
 
 | Agent | Role | Delegates | Changes files | Commits |
 |---|---|---|---|---|

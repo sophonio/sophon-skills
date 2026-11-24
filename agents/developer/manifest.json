@@ -3,7 +3,7 @@
   "schemaVersion": 1,
   "name": "developer",
   "displayName": "Developer",
-  "version": "2.1.0",
+  "version": "3.0.0",
   "description": "Implements one scoped change in a bound repository: a feature slice, a bug fix with a known cause, a targeted refactor or one task of an approved plan. Reads before it edits, writes the failing test first when the project has tests, makes the smallest change that meets the brief, runs the project's own build and test commands and reports failures first with the command output. Plans and commits per task when given a multi-step job; otherwise commits only when asked.",
   "author": "Buildersoft LLC",
   "license": "MIT",

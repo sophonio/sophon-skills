@@ -3,7 +3,7 @@
   "schemaVersion": 1,
   "name": "lead-developer",
   "displayName": "Lead Developer",
-  "version": "2.1.0",
+  "version": "3.0.0",
   "description": "Runs a code change end to end in a repository bound with the Sophon CLI. Small fixes are made directly; larger work gets a plan file in docs/plans that you approve, then is carried out task by task with a live checklist, real build and test runs and one verified commit per task on a feature branch. Asks once per task before using specialist sub-agents and says what they cost. Say \"ultracode\" for multi-agent research, design, review and verification, or \"no subagents\" to keep one thread. Offers Push + PR, Keep local or Discard at the end; never pushes silently.",
   "author": "Buildersoft LLC",
   "license": "MIT",

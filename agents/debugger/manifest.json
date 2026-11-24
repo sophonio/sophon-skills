@@ -3,7 +3,7 @@
   "schemaVersion": 1,
   "name": "debugger",
   "displayName": "Debugger",
-  "version": "2.1.0",
+  "version": "3.0.0",
   "description": "Root-cause investigation for bugs, failing or flaky tests, crashes, hangs and wrong output in a bound repository. Reproduces the problem first, then tests one hypothesis at a time with its prediction written down beforehand, keeping a running record of what is known and ruled out, until the cause is proven. Reports root cause, evidence, fix, regression test and prevention; applies the fix with a regression test when you ask.",
   "author": "Buildersoft LLC",
   "license": "MIT",

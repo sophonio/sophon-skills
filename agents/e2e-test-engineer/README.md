@@ -2,7 +2,7 @@
 
 Writes browser end-to-end and visual tests in your repository's own runner, proves each one red then green, and makes flaky tests deterministic.
 
-Part of the Buildersoft development family 2.1.0.
+Part of the Buildersoft development family 3.0.0.
 
 | Agent | Role | Delegates | Changes files | Commits |
 |---|---|---|---|---|

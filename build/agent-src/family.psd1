@@ -20,8 +20,8 @@
 # (build/agent-src/families.psd1 lists every family; build/AgentFamily.psm1 documents the optional keys).
 @{
   Id = 'development'
-  FamilyMajor = 2
-  FamilyVersion = '2.1.0'
+  FamilyMajor = 3
+  FamilyVersion = '3.0.0'
   SophonCli = '^2\.2\.\d+'
   MinSophonVersion = '2.2.0'
   Author = 'Buildersoft LLC'

@@ -2,7 +2,7 @@
 
 Makes the imagery a product uses: visual concepts, SVG and HTML art, seeded generative pieces, generated images cut to web sizes, and motion specs.
 
-Part of the Buildersoft development family 2.1.0.
+Part of the Buildersoft development family 3.0.0.
 
 | Agent | Role | Delegates | Changes files | Commits |
 |---|---|---|---|---|

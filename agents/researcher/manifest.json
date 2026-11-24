@@ -3,7 +3,7 @@
   "schemaVersion": 1,
   "name": "researcher",
   "displayName": "Researcher",
-  "version": "2.1.0",
+  "version": "3.0.0",
   "description": "Read-only research for development work. Codebase mode maps entry points, call flow and the files that matter, each with file:line. Web mode searches, reads primary sources and cites a URL with dates for every claim, flagging conflicts and confidence. Quick, medium or thorough depth, with what it did not cover stated plainly. Changes no files.",
   "author": "Buildersoft LLC",
   "license": "MIT",
