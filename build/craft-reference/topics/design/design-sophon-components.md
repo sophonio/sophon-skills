@@ -47,10 +47,10 @@ Usage: amounts over a period.
 
 ```
 +------------------------------------------------------------+
-| Page title                          [< November 2026 UTC >]|
-| [stat] [stat] [meter: 80% of budget, stated in text]       |
+| Page title                                     [< Period >]|
+| [stat] [stat] [stat]                                       |
 | [chart .................................................]  |
-| Breakdown table: item, amount (estimated, currency), share |
+| Breakdown table: item, amount, share                       |
 +------------------------------------------------------------+
 ```
 
@@ -106,7 +106,6 @@ The heading, toolbar and filter bar stay mounted; only the region below them cha
 | Empty | the answer has no rows | one sentence and one first action |
 | Error | network failure, 5xx, an unexpected 4xx | what failed and Retry; a 429 shows the wait it names and retries once |
 | No access | a 403, or the access model denies it | says so, naming the permission when the answer names it |
-| Locked | a ceiling or the plan tier turns the feature off | says who or what turned it off; no control is enabled |
 
 - A page the person may not open is hidden from navigation and shows No access when reached by URL, never a silent redirect.
 - An action the person may not take is shown disabled with the reason, and a way to request access where one exists.
@@ -125,6 +124,7 @@ The heading, toolbar and filter bar stay mounted; only the region below them cha
 - Row actions sit in a row menu. A destructive one opens a confirming dialog.
 - Paging is by keyset for server data, or by client pages for short lists.
 - The filter bar keeps its state in the URL: search, chips, a date range and Clear.
+- Search waits about 300 ms after typing and keeps the previous results on screen while the new ones load.
 
 ## Forms
 
@@ -145,16 +145,9 @@ The heading, toolbar and filter bar stay mounted; only the region below them cha
 - A command palette reaches every page by keyboard, fed by the navigation list and naming each page by its visible label.
 - The result of a change appears as a short toast in a polite live region.
 
-## Request budget
-
-- At most four requests of the page's own on first paint; combine reads, or defer one to a tab.
-- No polling on list pages: refresh on window focus or after a change. A running job polls only while it runs and the tab is visible.
-- Search waits 300 ms after typing; the waited text is the query, the previous results stay on screen, and the search box stays mounted.
-
 ## Product wording
 
 - A shared space is a workspace, and a person in it is a member.
-- Amounts say "estimated" and name the currency. Months are UTC and say so ("resets on the 1st, 00:00 UTC").
 - A permission or feature is named by its label, never by its internal key.
 - Status words sit beside their colour. Sentence case for labels and buttons; a button says what it does.
 - Copy uses commas and full stops, not dashes, as the Sophon website asks.

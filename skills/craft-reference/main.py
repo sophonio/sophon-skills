@@ -18,10 +18,10 @@ import sys
 # Every document line is one physical line that starts with a quote (the import scan reads every line).
 SKILL_NAME = "craft-reference"
 SKILL_VERSION = "1.0.0"
-CORPUS_SHA256 = "15930c9ce0e500da4a332d8255c22972504549fc62a04f76eb24183571e81938"
+CORPUS_SHA256 = "5d36444a9ac7baa43b2a0ef9e89963b2cc43ab3d17e2e736567124df85d28ca7"
 INDEX = [
 {"id": "design-sophon-default", "family": "design", "title": "Sophon default: full token tables", "bytes": 10061, "summary": "Sophon product look (2026-11): dark and light roles, status, type, space, radius, depth, motion, themes, fonts, Banned.", "sections": ["dark-roles", "light-roles", "status-colours", "type", "space-and-radius", "elevation", "motion-tokens", "other-themes", "fonts", "banned-list"], "origin": "original", "reviewed": "2026-11", "sources": "Sources: original text by Buildersoft LLC."},
-{"id": "design-sophon-components", "family": "design", "title": "Sophon default: archetypes, layout and components", "bytes": 7809, "summary": "Sophon page archetypes with wireframes, density, layout measures, text ladder, page states, components and wording.", "sections": ["page-archetypes", "density", "layout-measures", "shell-text-ladder", "page-states", "navigation", "tables", "forms", "empty-states", "command-surface", "request-budget", "product-wording"], "origin": "original", "reviewed": "2026-11", "sources": "Sources: original text by Buildersoft LLC."},
+{"id": "design-sophon-components", "family": "design", "title": "Sophon default: archetypes, layout and components", "bytes": 7302, "summary": "Sophon page archetypes with wireframes, density, layout measures, text ladder, page states, components and wording.", "sections": ["page-archetypes", "density", "layout-measures", "shell-text-ladder", "page-states", "navigation", "tables", "forms", "empty-states", "command-surface", "product-wording"], "origin": "original", "reviewed": "2026-11", "sources": "Sources: original text by Buildersoft LLC."},
 {"id": "design-schools", "family": "design", "title": "Design schools: six recipes in one anatomy", "bytes": 7442, "summary": "Six design schools as recipes in one anatomy: thesis, fit, palette with ratios, type, space, shape, motion, moves.", "sections": ["index", "swiss", "editorial", "modern-tool", "brutalist", "warm-humanist", "experimental"], "origin": "adapted", "reviewed": "2026-11", "sources": "Sources: web-design-engineer (MIT)."},
 {"id": "design-open-systems", "family": "design", "title": "Open design systems: five recipes", "bytes": 8082, "summary": "Five public design systems as facts in one anatomy: licence, fit, colour model, type, space, shape, depth, motion.", "sections": ["material-3", "carbon", "primer", "fluent-2", "radix"], "origin": "original", "reviewed": "2026-11", "sources": "Sources: original text by Buildersoft LLC."},
 {"id": "design-directions-round", "family": "design", "title": "Direction round: option anatomy and examples", "bytes": 3502, "summary": "Direction option anatomy as a fill-in template, one filled example, safer and bolder redraws, a side-by-side picker.", "sections": ["option-anatomy", "filled-example", "safer-and-bolder", "picker-layout"], "origin": "adapted", "reviewed": "2026-11", "sources": "Sources: impeccable (Apache-2.0); interface-design (MIT); emilkowalski/skills (MIT)."},
@@ -309,10 +309,10 @@ DOCS = {
 "\n"
 "```\n"
 "+------------------------------------------------------------+\n"
-"| Page title                          [< November 2026 UTC >]|\n"
-"| [stat] [stat] [meter: 80% of budget, stated in text]       |\n"
+"| Page title                                     [< Period >]|\n"
+"| [stat] [stat] [stat]                                       |\n"
 "| [chart .................................................]  |\n"
-"| Breakdown table: item, amount (estimated, currency), share |\n"
+"| Breakdown table: item, amount, share                       |\n"
 "+------------------------------------------------------------+\n"
 "```\n"
 "\n"
@@ -376,7 +376,6 @@ DOCS = {
 "| Empty | the answer has no rows | one sentence and one first action |\n"
 "| Error | network failure, 5xx, an unexpected 4xx | what failed and Retry; a 429 shows the wait it names and retries once |\n"
 "| No access | a 403, or the access model denies it | says so, naming the permission when the answer names it |\n"
-"| Locked | a ceiling or the plan tier turns the feature off | says who or what turned it off; no control is enabled |\n"
 "\n"
 "- A page the person may not open is hidden from navigation and shows No access when reached by URL, never a silent redirect.\n"
 "- An action the person may not take is shown disabled with the reason, and a way to request access where one exists.\n"
@@ -399,6 +398,7 @@ DOCS = {
 "- Row actions sit in a row menu. A destructive one opens a confirming dialog.\n"
 "- Paging is by keyset for server data, or by client pages for short lists.\n"
 "- The filter bar keeps its state in the URL: search, chips, a date range and Clear.\n"
+"- Search waits about 300 ms after typing and keeps the previous results on screen while the new ones load.\n"
 "\n"
 )),
 ("forms", (
@@ -426,19 +426,10 @@ DOCS = {
 "- The result of a change appears as a short toast in a polite live region.\n"
 "\n"
 )),
-("request-budget", (
-"## Request budget\n"
-"\n"
-"- At most four requests of the page's own on first paint; combine reads, or defer one to a tab.\n"
-"- No polling on list pages: refresh on window focus or after a change. A running job polls only while it runs and the tab is visible.\n"
-"- Search waits 300 ms after typing; the waited text is the query, the previous results stay on screen, and the search box stays mounted.\n"
-"\n"
-)),
 ("product-wording", (
 "## Product wording\n"
 "\n"
 "- A shared space is a workspace, and a person in it is a member.\n"
-"- Amounts say \"estimated\" and name the currency. Months are UTC and say so (\"resets on the 1st, 00:00 UTC\").\n"
 "- A permission or feature is named by its label, never by its internal key.\n"
 "- Status words sit beside their colour. Sentence case for labels and buttons; a button says what it does.\n"
 "- Copy uses commas and full stops, not dashes, as the Sophon website asks.\n"

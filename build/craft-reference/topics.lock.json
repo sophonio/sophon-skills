@@ -1,8 +1,8 @@
 {
   "generatedBy": "build/craft-reference/generate.py",
   "skillVersion": "1.0.0",
-  "corpus": "15930c9ce0e500da4a332d8255c22972504549fc62a04f76eb24183571e81938",
-  "corpusBytes": 175674,
+  "corpus": "5d36444a9ac7baa43b2a0ef9e89963b2cc43ab3d17e2e736567124df85d28ca7",
+  "corpusBytes": 175167,
   "topics": [
     {
       "id": "design-sophon-default",
@@ -23,8 +23,8 @@
     },
     {
       "id": "design-sophon-components",
-      "bytes": 7809,
-      "sha256": "1eb1935ab975cb7f3e6e04d791111087d7fb0503b8e4bef67fa3825e0e2c09bb",
+      "bytes": 7302,
+      "sha256": "d60f60d548663d9e3c73690e15c057439e2b21153a97114818c50c7302b933ac",
       "sections": [
         "page-archetypes",
         "density",
@@ -36,7 +36,6 @@
         "forms",
         "empty-states",
         "command-surface",
-        "request-budget",
         "product-wording"
       ]
     },

@@ -202,7 +202,7 @@ The current Sophon product look, dated 2026-11, as dark / light pairs. It applie
 - Depth: soft slate shadows in light; a 1 px inner highlight and a ring in dark. Hairlines divide regions. A field's edge needs 3:1, so draw it in the muted text colour.
 - Motion: 80, 150, 220 or 320 ms on cubic-bezier(0.16, 1, 0.3, 1), transform and opacity only, to mark a state change.
 - One primary action per page at most. Destructive actions sit in a row menu or a drawer footer, behind a confirming dialog.
-- The toolbar stays mounted while the region below it shows loading (skeleton rows, never a full-page spinner), empty (one sentence and a first action), error (with Retry), no access or locked (each saying why).
+- The toolbar stays mounted while the region below it shows loading (skeleton rows, never a full-page spinner), empty (one sentence and a first action), error (with Retry) or no access (saying why).
 - Banned here outright: the six generated defaults of the Design checks, and also gradients on text or controls, backdrop blur, blob or mesh backgrounds, count-up statistics and raw colour values in components.
 - The full tables are topic `design-sophon-default`.
 

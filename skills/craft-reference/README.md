@@ -42,7 +42,7 @@ Generated from `build/craft-reference/topics.index.json` by `build/craft-referen
 | Id | Family | Title | Sections | Bytes | Origin |
 |---|---|---|---|---|---|
 | `design-sophon-default` | design | Sophon default: full token tables | 10 | 10061 of 10240 | original |
-| `design-sophon-components` | design | Sophon default: archetypes, layout and components | 12 | 7809 of 8192 | original |
+| `design-sophon-components` | design | Sophon default: archetypes, layout and components | 11 | 7302 of 8192 | original |
 | `design-schools` | design | Design schools: six recipes in one anatomy | 7 | 7442 of 11264 | adapted |
 | `design-open-systems` | design | Open design systems: five recipes | 5 | 8082 of 9216 | original |
 | `design-directions-round` | design | Direction round: option anatomy and examples | 4 | 3502 of 4096 | adapted |
