@@ -91,6 +91,8 @@ Part of the Buildersoft development family 3.0.0.
 
 ## Credits and license
 
+Ideas re-expressed in our own words also come from JuliusBrussee/caveman (Apache-2.0, © 2026 Julius Brussee); addyosmani/agent-skills (MIT, © 2025 Addy Osmani); and Anthropic's security-guidance plugin, anthropics/claude-plugins-official (Apache-2.0).
+
 Portions adapted from Anthropic's agent skills, anthropics/skills (Apache-2.0, © 2026 Anthropic, PBC), changed by Buildersoft LLC: rewritten for Sophon tools, with scripts and branding removed (mcp-builder).
 
 Workflow patterns adapted, not copied, from obra/superpowers (MIT, © 2025 Jesse Vincent) and Anthropic's Claude Code plugins (feature-dev, pr-review-toolkit, code-review, security-review, frontend-design; Apache-2.0).

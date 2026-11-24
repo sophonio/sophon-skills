@@ -102,7 +102,9 @@ Part of the Buildersoft development family 3.0.0.
 
 ## Credits and license
 
-Debugging discipline also draws on backend-design by sheitabrk (MIT, github.com/sheitabrk/backend-design).
+Ideas re-expressed in our own words also come from JuliusBrussee/caveman (Apache-2.0, © 2026 Julius Brussee); and mattpocock/skills (MIT, © 2026 Matt Pocock).
+
+Debugging discipline also draws on sheitabrk/backend-design (MIT, © sheitabrk and contributors).
 
 Workflow patterns adapted, not copied, from obra/superpowers (MIT, © 2025 Jesse Vincent) and Anthropic's Claude Code plugins (feature-dev, pr-review-toolkit, code-review, security-review, frontend-design; Apache-2.0).
 

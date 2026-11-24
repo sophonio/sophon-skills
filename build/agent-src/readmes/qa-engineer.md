@@ -93,5 +93,7 @@ Sophon shows an approval card for every call at Medium risk or above. For an age
 
 ## Credits and license
 
+Ideas re-expressed in our own words also come from JuliusBrussee/caveman (Apache-2.0, © 2026 Julius Brussee); addyosmani/agent-skills (MIT, © 2025 Addy Osmani); and open-gsd/gsd-core (MIT, © 2026 Open GSD).
+
 Workflow patterns adapted, not copied, from obra/superpowers (MIT, © 2025 Jesse Vincent) and Anthropic's Claude Code plugins (feature-dev, pr-review-toolkit, code-review, security-review, frontend-design; Apache-2.0).
 Licensed under the MIT License; see LICENSE.

@@ -8,7 +8,7 @@ file is included in this skill.
 
 ## addyosmani
 
-- Credit: recorded when the source is pinned, before its topic text is written
+- Credit: addyosmani/agent-skills (MIT, © 2025 Addy Osmani)
 - Source: https://github.com/addyosmani/agent-skills at commit e997ac5b9a74eab332d5e9793bb38a38c8cfdd74
 - Topics: `eng-perf-measure`, `eng-sources-versions`
 
@@ -24,7 +24,7 @@ Ideas and structure re-expressed in new words for Sophon by Buildersoft LLC; no 
 
 ## anthropicSecurityGuidance
 
-- Credit: recorded when the source is pinned, before its topic text is written
+- Credit: Anthropic's security-guidance plugin, anthropics/claude-plugins-official (Apache-2.0)
 - Source: https://github.com/anthropics/claude-plugins-official at commit d0d514288960e7a78e1a76e4a3ec694416458726
 - Topics: `eng-security-checklist`
 
@@ -32,7 +32,7 @@ Ideas and structure re-expressed in new words for Sophon by Buildersoft LLC; no 
 
 ## anthropicSecurityReview
 
-- Credit: recorded when the source is pinned, before its topic text is written
+- Credit: anthropics/claude-code-security-review (MIT, © 2025 Anthropic)
 - Source: https://github.com/anthropics/claude-code-security-review at commit 0c6a49f1fa56a1d472575da86a94dbc1edb78eda
 - Topics: `eng-security-checklist`
 
@@ -48,7 +48,7 @@ Ideas and structure re-expressed in new words for Sophon by Buildersoft LLC; no 
 
 ## baselineUi
 
-- Credit: recorded when the source is pinned, before its topic text is written
+- Credit: baseline-ui from ibelick/ui-skills (MIT, © 2026 Julien Thibeaut)
 - Source: https://github.com/ibelick/ui-skills at commit 7ef0076fce1dfa39dd2bc43b7dc13add6eda8a41
 - Topics: `design-generated-defaults`, `design-frontend-floors`
 
@@ -56,7 +56,7 @@ Ideas and structure re-expressed in new words for Sophon by Buildersoft LLC; no 
 
 ## bmadMethod
 
-- Credit: recorded when the source is pinned, before its topic text is written
+- Credit: bmad-code-org/BMAD-METHOD (MIT, © 2025 BMad Code, LLC)
 - Source: https://github.com/bmad-code-org/BMAD-METHOD at commit e435a22574fe55722841086e5566420178b98df3
 - Topics: `product-prd`
 
@@ -64,7 +64,7 @@ Ideas and structure re-expressed in new words for Sophon by Buildersoft LLC; no 
 
 ## compoundEngineering
 
-- Credit: recorded when the source is pinned, before its topic text is written
+- Credit: EveryInc/compound-engineering-plugin (MIT, © 2025 Every)
 - Source: https://github.com/EveryInc/compound-engineering-plugin at commit fcb5e3adc1890db34f482f73e2449f3c57a2f423
 - Topics: `release-deploy-rollback`
 
@@ -72,7 +72,7 @@ Ideas and structure re-expressed in new words for Sophon by Buildersoft LLC; no 
 
 ## designMd
 
-- Credit: recorded when the source is pinned, before its topic text is written
+- Credit: google-labs-code/design.md (Apache-2.0)
 - Source: https://github.com/google-labs-code/design.md at commit db977b3c1d1f309269f43d5d17ae828d54bd6ae3
 - Topics: `design-md-template`
 
@@ -80,7 +80,7 @@ Ideas and structure re-expressed in new words for Sophon by Buildersoft LLC; no 
 
 ## emilSkills
 
-- Credit: recorded when the source is pinned, before its topic text is written
+- Credit: emilkowalski/skills (MIT, © 2026 Emil Kowalski)
 - Source: https://github.com/emilkowalski/skills at commit 64eb3deb9a5fbfa041faf783e0bc3fd635872e9c
 - Topics: `design-directions-round`, `design-motion`, `design-variants`
 
@@ -88,7 +88,7 @@ Ideas and structure re-expressed in new words for Sophon by Buildersoft LLC; no 
 
 ## gsdCore
 
-- Credit: recorded when the source is pinned, before its topic text is written
+- Credit: open-gsd/gsd-core (MIT, © 2026 Open GSD)
 - Source: https://github.com/open-gsd/gsd-core at commit 455cd03c11c77172edaa9b7a69ce21a5f4edc124
 - Topics: `product-tickets`
 
@@ -96,7 +96,7 @@ Ideas and structure re-expressed in new words for Sophon by Buildersoft LLC; no 
 
 ## gstack
 
-- Credit: recorded when the source is pinned, before its topic text is written
+- Credit: garrytan/gstack (MIT, © 2026 Garry Tan)
 - Source: https://github.com/garrytan/gstack at commit beca1d6f15065a4ba44ca70b2cbfba40b530447a
 - Topics: `product-discovery`, `release-deploy-rollback`
 
@@ -104,7 +104,7 @@ Ideas and structure re-expressed in new words for Sophon by Buildersoft LLC; no 
 
 ## humanizer
 
-- Credit: recorded when the source is pinned, before its topic text is written
+- Credit: blader/humanizer (MIT, © 2025 Siqi Chen)
 - Source: https://github.com/blader/humanizer at commit a32f24407364c74c812b43c15926d638bee1e072
 - Topics: `eng-docs-accuracy`
 
@@ -112,7 +112,7 @@ Ideas and structure re-expressed in new words for Sophon by Buildersoft LLC; no 
 
 ## impeccable
 
-- Credit: recorded when the source is pinned, before its topic text is written
+- Credit: pbakaus/impeccable (Apache-2.0, © 2025 Paul Bakaus)
 - Source: https://github.com/pbakaus/impeccable at commit b49177d32788f2dc585c42831d845dacf1ebed2c
 - Topics: `design-directions-round`, `design-generated-defaults`, `design-critique-rubric`, `design-refinement-verbs`
 
@@ -120,7 +120,7 @@ Ideas and structure re-expressed in new words for Sophon by Buildersoft LLC; no 
 
 ## interfaceDesign
 
-- Credit: recorded when the source is pinned, before its topic text is written
+- Credit: Dammyjay93/interface-design (MIT, © 2026 Damola Akinleye)
 - Source: https://github.com/Dammyjay93/interface-design at commit 2f9be3206855bcb2d1d0af262c8bae25cba6658d
 - Topics: `design-directions-round`, `design-md-template`
 
@@ -128,7 +128,7 @@ Ideas and structure re-expressed in new words for Sophon by Buildersoft LLC; no 
 
 ## mattpocock
 
-- Credit: recorded when the source is pinned, before its topic text is written
+- Credit: mattpocock/skills (MIT, © 2026 Matt Pocock)
 - Source: https://github.com/mattpocock/skills at commit d65391149dbb5fe76478e76fa8d5122b2aa5a70e
 - Topics: `product-tickets`, `eng-test-quality`, `eng-debugging-tactics`, `eng-adr`, `eng-docs-accuracy`
 
@@ -136,7 +136,7 @@ Ideas and structure re-expressed in new words for Sophon by Buildersoft LLC; no 
 
 ## nielsen
 
-- Credit: recorded when the source is pinned, before its topic text is written
+- Credit: the names of Jakob Nielsen's ten usability heuristics (cited by name only)
 - Source: not a repository; cited by name only
 - Topics: `design-critique-rubric`
 - Credit only: names are used, no text or structure is adapted.
@@ -145,7 +145,7 @@ Ideas and structure re-expressed in new words for Sophon by Buildersoft LLC; no 
 
 ## playwright
 
-- Credit: recorded when the source is pinned, before its topic text is written
+- Credit: microsoft/playwright (Apache-2.0, portions © Microsoft Corporation and © 2017 Google Inc.)
 - Source: https://github.com/microsoft/playwright at commit 61a312169890982a6dc0d9a8ef8589fd919a8234
 - Topics: `eng-e2e`
 
@@ -163,7 +163,7 @@ Ideas and structure re-expressed in new words for Sophon by Buildersoft LLC; no 
 
 ## pmSkills
 
-- Credit: recorded when the source is pinned, before its topic text is written
+- Credit: phuryn/pm-skills (MIT, © 2026 Pawel Huryn)
 - Source: https://github.com/phuryn/pm-skills at commit 9af7bfd0bc47fdad43c2eaa7a43cd13918e7aaef
 - Topics: `product-brief`
 
@@ -171,7 +171,7 @@ Ideas and structure re-expressed in new words for Sophon by Buildersoft LLC; no 
 
 ## specKit
 
-- Credit: recorded when the source is pinned, before its topic text is written
+- Credit: github/spec-kit (MIT, © GitHub, Inc.)
 - Source: https://github.com/github/spec-kit at commit f61648db96b5ac5eb65a54577865dafc2c830a7c
 - Topics: `product-prd`, `product-discovery`, `product-tickets`
 
@@ -187,7 +187,7 @@ Ideas and structure re-expressed in new words for Sophon by Buildersoft LLC; no 
 
 ## tasteSkill
 
-- Credit: recorded when the source is pinned, before its topic text is written
+- Credit: Leonxlnx/taste-skill (MIT, © 2026 Leonxlnx)
 - Source: https://github.com/Leonxlnx/taste-skill at commit 6c0b5c78f5d31776e2210305abaa210cdc0030bf
 - Topics: `design-generated-defaults`
 
@@ -195,7 +195,7 @@ Ideas and structure re-expressed in new words for Sophon by Buildersoft LLC; no 
 
 ## webDesignEngineer
 
-- Credit: recorded when the source is pinned, before its topic text is written
+- Credit: web-design-engineer from ConardLi/garden-skills (MIT, © 2026)
 - Source: https://github.com/ConardLi/garden-skills at commit f2d7adeaf53dcce3d0eb19cbffe8c04f4c636c2a
 - Topics: `design-schools`, `design-generated-defaults`
 
@@ -203,7 +203,7 @@ Ideas and structure re-expressed in new words for Sophon by Buildersoft LLC; no 
 
 ## webInterfaceGuidelines
 
-- Credit: recorded when the source is pinned, before its topic text is written
+- Credit: vercel-labs/web-interface-guidelines (MIT, © 2025 Vercel Labs)
 - Source: https://github.com/vercel-labs/web-interface-guidelines at commit 434b7f91364665f2f733b310ec54809bf8f37937
 - Topics: `design-generated-defaults`, `design-motion`, `design-frontend-floors`
 

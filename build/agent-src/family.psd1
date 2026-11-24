@@ -112,6 +112,30 @@
     superpowers = 'obra/superpowers (MIT, © 2025 Jesse Vincent)'
     anthropic = 'Anthropic''s Claude Code plugins (feature-dev, pr-review-toolkit, code-review, security-review, frontend-design; Apache-2.0)'
     anthropicSkills = 'Portions adapted from Anthropic''s agent skills, anthropics/skills (Apache-2.0, © 2026 Anthropic, PBC), changed by Buildersoft LLC: rewritten for Sophon tools, with scripts and branding removed'
+    caveman = 'JuliusBrussee/caveman (Apache-2.0, © 2026 Julius Brussee)'
+    humanizer = 'blader/humanizer (MIT, © 2025 Siqi Chen)'
+    compoundEngineering = 'EveryInc/compound-engineering-plugin (MIT, © 2025 Every)'
+    addyosmani = 'addyosmani/agent-skills (MIT, © 2025 Addy Osmani)'
+    anthropicSecurityGuidance = 'Anthropic''s security-guidance plugin, anthropics/claude-plugins-official (Apache-2.0)'
+    anthropicSecurityReview = 'anthropics/claude-code-security-review (MIT, © 2025 Anthropic)'
+    backendDesign = 'sheitabrk/backend-design (MIT, © sheitabrk and contributors)'
+    baselineUi = 'baseline-ui from ibelick/ui-skills (MIT, © 2026 Julien Thibeaut)'
+    bmadMethod = 'bmad-code-org/BMAD-METHOD (MIT, © 2025 BMad Code, LLC)'
+    designMd = 'google-labs-code/design.md (Apache-2.0)'
+    emilSkills = 'emilkowalski/skills (MIT, © 2026 Emil Kowalski)'
+    gsdCore = 'open-gsd/gsd-core (MIT, © 2026 Open GSD)'
+    gstack = 'garrytan/gstack (MIT, © 2026 Garry Tan)'
+    impeccable = 'pbakaus/impeccable (Apache-2.0, © 2025 Paul Bakaus)'
+    interfaceDesign = 'Dammyjay93/interface-design (MIT, © 2026 Damola Akinleye)'
+    mattpocock = 'mattpocock/skills (MIT, © 2026 Matt Pocock)'
+    nielsen = 'the names of Jakob Nielsen''s ten usability heuristics (cited by name only)'
+    playwright = 'microsoft/playwright (Apache-2.0, portions © Microsoft Corporation and © 2017 Google Inc.)'
+    pmSkills = 'phuryn/pm-skills (MIT, © 2026 Pawel Huryn)'
+    specKit = 'github/spec-kit (MIT, © GitHub, Inc.)'
+    systemDesignSkills = 'proyecto26/system-design-skills (MIT, © 2026 Proyecto 26)'
+    tasteSkill = 'Leonxlnx/taste-skill (MIT, © 2026 Leonxlnx)'
+    webDesignEngineer = 'web-design-engineer from ConardLi/garden-skills (MIT, © 2026)'
+    webInterfaceGuidelines = 'vercel-labs/web-interface-guidelines (MIT, © 2025 Vercel Labs)'
   }
   Agents = @(
     @{
@@ -144,7 +168,7 @@
         '15b-findings-block',
         '16-reporting'
       )
-      Credits = @('superpowers', 'anthropic')
+      Credits = @('superpowers', 'anthropic', 'caveman')
     }
     @{
       Id = 'agent-engineer'
@@ -180,7 +204,7 @@
         '15a-status-block',
         '16-reporting'
       )
-      Credits = @('superpowers', 'anthropic')
+      Credits = @('superpowers', 'anthropic', 'caveman')
     }
     @{
       Id = 'artifact-creator'
@@ -227,7 +251,7 @@
         '15b-findings-block',
         '16-reporting'
       )
-      Credits = @('superpowers', 'anthropic')
+      Credits = @('superpowers', 'anthropic', 'caveman', 'anthropicSecurityGuidance')
     }
     @{
       Id = 'debugger'
@@ -263,7 +287,7 @@
         '15a-status-block',
         '16-reporting'
       )
-      Credits = @('superpowers', 'anthropic')
+      Credits = @('superpowers', 'anthropic', 'caveman', 'mattpocock', 'backendDesign')
     }
     @{
       Id = 'design-system-engineer'
@@ -305,7 +329,7 @@
         '15a-status-block',
         '16-reporting'
       )
-      Credits = @('superpowers', 'anthropic', 'anthropicSkills')
+      Credits = @('superpowers', 'anthropic', 'anthropicSkills', 'caveman', 'designMd', 'interfaceDesign', 'emilSkills', 'webDesignEngineer', 'tasteSkill')
     }
     @{
       Id = 'developer'
@@ -344,7 +368,7 @@
         '15a-status-block',
         '16-reporting'
       )
-      Credits = @('superpowers', 'anthropic')
+      Credits = @('superpowers', 'anthropic', 'caveman', 'mattpocock', 'addyosmani')
     }
     @{
       Id = 'e2e-test-engineer'
@@ -382,7 +406,7 @@
         '15a-status-block',
         '16-reporting'
       )
-      Credits = @('superpowers', 'anthropic', 'anthropicSkills')
+      Credits = @('superpowers', 'anthropic', 'anthropicSkills', 'caveman', 'playwright')
     }
     @{
       Id = 'frontend-developer'
@@ -423,7 +447,7 @@
         '15a-status-block',
         '16-reporting'
       )
-      Credits = @('superpowers', 'anthropic', 'anthropicSkills')
+      Credits = @('superpowers', 'anthropic', 'anthropicSkills', 'caveman', 'interfaceDesign', 'emilSkills', 'webDesignEngineer', 'tasteSkill', 'webInterfaceGuidelines')
     }
     @{
       Id = 'lead-developer'
@@ -463,7 +487,7 @@
         '15b-findings-block',
         '16-reporting'
       )
-      Credits = @('superpowers', 'anthropic')
+      Credits = @('superpowers', 'anthropic', 'caveman', 'compoundEngineering')
     }
     @{
       Id = 'mcp-integration-engineer'
@@ -501,7 +525,7 @@
         '15a-status-block',
         '16-reporting'
       )
-      Credits = @('superpowers', 'anthropic', 'anthropicSkills')
+      Credits = @('superpowers', 'anthropic', 'anthropicSkills', 'caveman', 'addyosmani', 'anthropicSecurityGuidance')
     }
     @{
       Id = 'product-manager'
@@ -530,7 +554,7 @@
         '16-reporting',
         '17-prose-check'
       )
-      Credits = @('superpowers', 'anthropic')
+      Credits = @('superpowers', 'anthropic', 'caveman', 'humanizer', 'gstack', 'bmadMethod', 'pmSkills')
     }
     @{
       Id = 'product-owner'
@@ -560,7 +584,7 @@
         '16-reporting',
         '17-prose-check'
       )
-      Credits = @('superpowers', 'anthropic')
+      Credits = @('superpowers', 'anthropic', 'caveman', 'humanizer', 'bmadMethod', 'specKit', 'mattpocock', 'gsdCore')
     }
     @{
       Id = 'qa-engineer'
@@ -596,7 +620,7 @@
         '15a-status-block',
         '16-reporting'
       )
-      Credits = @('superpowers', 'anthropic')
+      Credits = @('superpowers', 'anthropic', 'caveman', 'addyosmani', 'gsdCore')
     }
     @{
       Id = 'release-engineer'
@@ -631,7 +655,7 @@
         '15a-status-block',
         '16-reporting'
       )
-      Credits = @('superpowers', 'anthropic')
+      Credits = @('superpowers', 'anthropic', 'caveman', 'gstack')
     }
     @{
       Id = 'researcher'
@@ -661,7 +685,7 @@
         '15a-status-block',
         '16-reporting'
       )
-      Credits = @('superpowers', 'anthropic')
+      Credits = @('superpowers', 'anthropic', 'caveman', 'addyosmani')
     }
     @{
       Id = 'security-reviewer'
@@ -692,7 +716,7 @@
         '15b-findings-block',
         '16-reporting'
       )
-      Credits = @('superpowers', 'anthropic')
+      Credits = @('superpowers', 'anthropic', 'caveman', 'anthropicSecurityGuidance', 'anthropicSecurityReview')
     }
     @{
       Id = 'software-architect'
@@ -725,7 +749,7 @@
         '16-reporting',
         '17-prose-check'
       )
-      Credits = @('superpowers', 'anthropic')
+      Credits = @('superpowers', 'anthropic', 'caveman', 'humanizer', 'mattpocock', 'specKit', 'backendDesign', 'systemDesignSkills')
     }
     @{
       Id = 'technical-writer'
@@ -762,7 +786,7 @@
         '16-reporting',
         '17-prose-check'
       )
-      Credits = @('superpowers', 'anthropic')
+      Credits = @('superpowers', 'anthropic', 'caveman', 'humanizer', 'mattpocock')
     }
     @{
       Id = 'ui-ux-designer'
@@ -803,7 +827,7 @@
         '15a-status-block',
         '16-reporting'
       )
-      Credits = @('superpowers', 'anthropic')
+      Credits = @('superpowers', 'anthropic', 'caveman', 'impeccable', 'designMd', 'interfaceDesign', 'emilSkills', 'webDesignEngineer', 'tasteSkill', 'nielsen')
     }
     @{
       Id = 'visual-designer'
@@ -842,7 +866,7 @@
         '15a-status-block',
         '16-reporting'
       )
-      Credits = @('superpowers', 'anthropic', 'anthropicSkills')
+      Credits = @('superpowers', 'anthropic', 'anthropicSkills', 'caveman', 'interfaceDesign', 'emilSkills', 'webDesignEngineer', 'tasteSkill')
     }
   )
 }

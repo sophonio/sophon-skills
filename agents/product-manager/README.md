@@ -87,4 +87,6 @@ It interviews and drafts as usual but cannot save; the draft stays in the chat u
 
 ## Credits and license
 
+Ideas re-expressed in our own words also come from JuliusBrussee/caveman (Apache-2.0, © 2026 Julius Brussee); blader/humanizer (MIT, © 2025 Siqi Chen); garrytan/gstack (MIT, © 2026 Garry Tan); bmad-code-org/BMAD-METHOD (MIT, © 2025 BMad Code, LLC); and phuryn/pm-skills (MIT, © 2026 Pawel Huryn).
+
 Workflow patterns adapted, not copied, from obra/superpowers (MIT, © 2025 Jesse Vincent) and Anthropic's Claude Code plugins (feature-dev, pr-review-toolkit, code-review, security-review, frontend-design; Apache-2.0). Licensed under the MIT License; see LICENSE.

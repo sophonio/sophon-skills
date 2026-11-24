@@ -95,6 +95,8 @@ Part of the Buildersoft development family 3.0.0.
 
 ## Credits and license
 
+Ideas re-expressed in our own words also come from JuliusBrussee/caveman (Apache-2.0, © 2026 Julius Brussee); blader/humanizer (MIT, © 2025 Siqi Chen); and mattpocock/skills (MIT, © 2026 Matt Pocock).
+
 The section-by-section drafting method is inspired by Anthropic's doc-coauthoring skill and written independently.
 
 Workflow patterns adapted, not copied, from obra/superpowers (MIT, © 2025 Jesse Vincent) and Anthropic's Claude Code plugins (feature-dev, pr-review-toolkit, code-review, security-review, frontend-design; Apache-2.0).
