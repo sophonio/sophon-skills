@@ -1,13 +1,13 @@
 {
   "generatedBy": "build/craft-reference/generate.py",
   "skillVersion": "1.0.0",
-  "corpus": "4494fbb7a9bd683813143fe2b6703d33e25b3283d0182b3fe9ac6e6f771f3292",
-  "corpusBytes": 15198,
+  "corpus": "15930c9ce0e500da4a332d8255c22972504549fc62a04f76eb24183571e81938",
+  "corpusBytes": 175674,
   "topics": [
     {
       "id": "design-sophon-default",
-      "bytes": 694,
-      "sha256": "a39636ec0af2b9210ebca8aace4a58a9c0ff186ff3627fb33fe7088979916a22",
+      "bytes": 10061,
+      "sha256": "74c08749cc49c22391e38149f7d983a2a48bfee15c9e21da0a3dfec651a96f1c",
       "sections": [
         "dark-roles",
         "light-roles",
@@ -23,8 +23,8 @@
     },
     {
       "id": "design-sophon-components",
-      "bytes": 780,
-      "sha256": "84039557c8a95df6775a489c3de55aed6aee244b023712c82d9d1bd8d9313d78",
+      "bytes": 7809,
+      "sha256": "1eb1935ab975cb7f3e6e04d791111087d7fb0503b8e4bef67fa3825e0e2c09bb",
       "sections": [
         "page-archetypes",
         "density",
@@ -36,13 +36,14 @@
         "forms",
         "empty-states",
         "command-surface",
+        "request-budget",
         "product-wording"
       ]
     },
     {
       "id": "design-schools",
-      "bytes": 521,
-      "sha256": "242761296cda1ce5869c6cfc76a622ea6a709743f253d5b2455f86b606c9815d",
+      "bytes": 7442,
+      "sha256": "bbcf1fbfd1f4baa00974c1cfca809f0b4f8a3c427fa514965db333f195471bff",
       "sections": [
         "index",
         "swiss",
@@ -55,8 +56,8 @@
     },
     {
       "id": "design-open-systems",
-      "bytes": 389,
-      "sha256": "7814193e6157aa054a5493cb7a2242ac6acd5b8e8176f498aa29c0df3a21a8e9",
+      "bytes": 8082,
+      "sha256": "5a904a7461b44f74a69b90faeab8dead280c8dcd383a11bb47f52dffdfdaf935",
       "sections": [
         "material-3",
         "carbon",
@@ -67,8 +68,8 @@
     },
     {
       "id": "design-directions-round",
-      "bytes": 375,
-      "sha256": "f83e930030610c7a7205d3c5202645fcee9fa9ada99e05bf541d78cb20d4037a",
+      "bytes": 3502,
+      "sha256": "89c28c928c85b033d1b754b60ba8e3a4a734dd7d782ce18281cc2f4a44ac2518",
       "sections": [
         "option-anatomy",
         "filled-example",
@@ -78,8 +79,8 @@
     },
     {
       "id": "design-generated-defaults",
-      "bytes": 505,
-      "sha256": "40e9408131e7f0ec350dab027c6c21d6e25def9e382659e6ddef6ddb39199d4e",
+      "bytes": 8111,
+      "sha256": "ba5e8ad29c22070fcf5fa25e4e44f4568a25db17ab1f3df50f6f30aaf985cbf2",
       "sections": [
         "type",
         "colour",
@@ -92,8 +93,8 @@
     },
     {
       "id": "design-critique-rubric",
-      "bytes": 370,
-      "sha256": "f2453c19c14ee5a39c750d49123808c4169a5729760cc91ffa15638a480378d6",
+      "bytes": 5982,
+      "sha256": "213c557a05b62e3834d1e154288bb95a2bddea803ac2a6feb805d4951064644a",
       "sections": [
         "heuristics",
         "personas",
@@ -103,8 +104,8 @@
     },
     {
       "id": "design-refinement-verbs",
-      "bytes": 409,
-      "sha256": "362568098df42452f810a30de2426db2714e276885cb39a7848ec8c98208c0db",
+      "bytes": 3836,
+      "sha256": "2e02c0a6bb0952c0cfade0a823dbf7615cb9526b97c41c6022a01ef33ef6a24d",
       "sections": [
         "bolder",
         "quieter",
@@ -115,8 +116,8 @@
     },
     {
       "id": "design-motion",
-      "bytes": 378,
-      "sha256": "577aa87c189776ae4aa4a359df9f841f34233b403d6bc943851d6a81aaf569c3",
+      "bytes": 4220,
+      "sha256": "0e399b012d47bb71af31663b5c31d453709d12400fbb2e5d84e68315e4d3e53d",
       "sections": [
         "purpose",
         "duration-and-easing",
@@ -126,8 +127,8 @@
     },
     {
       "id": "design-md-template",
-      "bytes": 361,
-      "sha256": "b63a24db978ad3f0cc451cc63f32aa92c0cc264f121697831d7348144333af36",
+      "bytes": 5102,
+      "sha256": "69df519f482331c679f6632670569735e844ac529786ca989efa2f20f217b558",
       "sections": [
         "skeleton",
         "token-block",
@@ -137,8 +138,8 @@
     },
     {
       "id": "design-frontend-floors",
-      "bytes": 271,
-      "sha256": "e9ca987fab1e71976cf201b38b4b5ba1b2b45c903b750b22ed738440d700d454",
+      "bytes": 4628,
+      "sha256": "e7656a34d3cabe80e5828bbe182222ecfc6e82c02604aba076864d2c7271e63a",
       "sections": [
         "use-what-exists",
         "the-interaction-floor"
@@ -146,8 +147,8 @@
     },
     {
       "id": "design-states-matrix",
-      "bytes": 319,
-      "sha256": "9b263782dec808ba48692c3f1bb057ae1faf57f03d4c2b6e2ec3afeb3440897f",
+      "bytes": 4619,
+      "sha256": "38d28ab481f8ff19f97be25096ac7e70fe729a9c1ead6fc3588bdbf2edf08184",
       "sections": [
         "control-states",
         "page-states",
@@ -156,8 +157,8 @@
     },
     {
       "id": "design-variants",
-      "bytes": 297,
-      "sha256": "e633ed17f3ad41ac03a620f03a5ed5a0b3b60c5683ab56bc8fc41c7654111175",
+      "bytes": 1456,
+      "sha256": "0b6769c4993bb94007d91d6d79b228c0a98036418f3f3af2a4f38cc562617fad",
       "sections": [
         "axes",
         "comparison-table",
@@ -166,8 +167,8 @@
     },
     {
       "id": "design-a11y-preferences",
-      "bytes": 333,
-      "sha256": "1c47034fdf5c6ced37bbd6b78a4e6f576614f767ed55138c419dfa96c82a861e",
+      "bytes": 3624,
+      "sha256": "5572f0f95d99f0ca4729c30a8a412450446277f41cd87e11b7e269fd8c693e09",
       "sections": [
         "reduced-motion",
         "contrast-preference",
@@ -176,8 +177,8 @@
     },
     {
       "id": "design-token-guards",
-      "bytes": 371,
-      "sha256": "b20301986c784db14098d0581a1e78de5fbd1997ddf9750bef25d37517cde9a0",
+      "bytes": 4013,
+      "sha256": "9cfdae6c33c586115dbe298c491bd9dce7d76ca66471e4f7c7ed91bc16dabbd6",
       "sections": [
         "literal-guard",
         "parity-guard",
@@ -187,8 +188,8 @@
     },
     {
       "id": "design-evaluate",
-      "bytes": 544,
-      "sha256": "835b8dcf71b0b8707c110bbaf39dab95acd09968641e8de51b1e8faeccfc055d",
+      "bytes": 5107,
+      "sha256": "34d6be0ce8a29ec4e556eafa5d4b0a5386ad6a094a69ff94759201ee6b5588fa",
       "sections": [
         "overflow",
         "target-sizes",
@@ -201,8 +202,8 @@
     },
     {
       "id": "product-brief",
-      "bytes": 312,
-      "sha256": "f56b20f755a152cd8da4b4b67201031ec3a360583f6b44a39756ddf9635e5090",
+      "bytes": 3029,
+      "sha256": "ec655c38c40dce477c017f6e01cd45ee4c252a0238d9ceaf307124184a3d9e23",
       "sections": [
         "brief-skeleton",
         "product-md-skeleton",
@@ -211,8 +212,8 @@
     },
     {
       "id": "product-prd",
-      "bytes": 352,
-      "sha256": "adb1fe11e98768f817dc47f39ecb9350194d60119f9e2fca00448be94ae7b573",
+      "bytes": 4094,
+      "sha256": "6e5bfc6dc26c2eb2668ce7a59fc0fc2922d5e34c90a2dae61b25d602fa831947",
       "sections": [
         "sections",
         "id-forms",
@@ -222,8 +223,8 @@
     },
     {
       "id": "product-discovery",
-      "bytes": 309,
-      "sha256": "06b174c31a92739addcb422f57aec40d9fa26607244df589ad70c6abaaa5c12c",
+      "bytes": 2979,
+      "sha256": "3cea7dd77d77b06f02f705cb44f1c59ac6a4cc8b210cc0fe6c9af3054ded5d2f",
       "sections": [
         "question-bank",
         "premise-forms",
@@ -232,8 +233,8 @@
     },
     {
       "id": "product-prioritisation",
-      "bytes": 355,
-      "sha256": "99fdf29054351c90be01dad319b4e2447bfafbbd03679ce8756f168d689b0713",
+      "bytes": 2637,
+      "sha256": "a62f26974d8b8e73cca09da5a9ebfeb25edcaec21e8d3b70cf6b95636eb22b7c",
       "sections": [
         "risk-first",
         "rice",
@@ -243,8 +244,8 @@
     },
     {
       "id": "product-tickets",
-      "bytes": 441,
-      "sha256": "703f8784e24ba4a7913cb3a97664e1bfe196812493d461a439e81edf24918a8d",
+      "bytes": 4370,
+      "sha256": "d4725d2665e61e499fb09f82cd07d86224fdeb042a5118fc3b4f077cf510e9d2",
       "sections": [
         "requirements-file",
         "story-file",
@@ -255,8 +256,8 @@
     },
     {
       "id": "product-slicing",
-      "bytes": 307,
-      "sha256": "985b24d0cafdc8430276c074547852cfc3eead5f9bee84a736602ed846971909",
+      "bytes": 3518,
+      "sha256": "18006d6a3726c3de79c58cab5a1bf13034d82ebf18d7b102ba48469e860a0ba1",
       "sections": [
         "thin-paths",
         "split-patterns",
@@ -265,8 +266,8 @@
     },
     {
       "id": "product-acceptance",
-      "bytes": 263,
-      "sha256": "47b97064957694f1669d4a6da735ac0f3f9bf1efb706f07339b777402cd324e0",
+      "bytes": 3831,
+      "sha256": "0e8da2dd305f1ddff2e762947e30255511f40720e49a65dd5606be1b6272fa28",
       "sections": [
         "criteria-patterns",
         "evidence-table"
@@ -274,44 +275,52 @@
     },
     {
       "id": "eng-review-checks",
-      "bytes": 177,
-      "sha256": "eef85868d5d24f7abb95d46c6f3afc1b4fed31495fb9a2a4a8567080f0c2a128",
+      "bytes": 4588,
+      "sha256": "ba763ff783a8020c8f2712635ca1027031ad9df27e42b5dd051c7a815ad92a18",
       "sections": [
-        "checks-by-class"
+        "logic",
+        "state",
+        "contracts",
+        "structure",
+        "worked"
       ]
     },
     {
       "id": "eng-silent-failures",
-      "bytes": 198,
-      "sha256": "12a6d2897196390fb08c72d846916611ce63cde9b9528577d064cf479e9275fa",
+      "bytes": 3038,
+      "sha256": "a8e37ff3e5073a5c20abd610c6347f15af5563130c69337247bd7f705cf129aa",
       "sections": [
-        "patterns-by-idiom"
+        "patterns-by-idiom",
+        "fine",
+        "question"
       ]
     },
     {
       "id": "eng-test-quality",
-      "bytes": 329,
-      "sha256": "38c0dbf760e43e63b44f9d7a1b0f13fa7b319f55f74e531794dbc32a1500a586",
+      "bytes": 4540,
+      "sha256": "7cb325e11fedce39898186631603ddffbddd0d133ee36f04489ef809d5b84672",
       "sections": [
         "tautology-and-vacuity",
+        "naming",
         "what-to-mock",
         "boundary-values"
       ]
     },
     {
       "id": "eng-debugging-tactics",
-      "bytes": 321,
-      "sha256": "7a10445bb6a6d74ce1859f7538adc8c78b444d915f1e36634956c930608da9c0",
+      "bytes": 4618,
+      "sha256": "da8ebd8e2b5dc295feb9411bc8286b1265b261bd7a05c82f08efaffafe83dd3d",
       "sections": [
         "reproduction-rungs",
+        "hypotheses",
         "tactics-by-symptom",
         "bisect"
       ]
     },
     {
       "id": "eng-security-checklist",
-      "bytes": 263,
-      "sha256": "8cf6559084733bb39a348699f0b5a8f57e16cd123b8a52c095644e9291f1f050",
+      "bytes": 5784,
+      "sha256": "1265f03bfaa6a93fe6e0dc524a6c47e6a3e73f135aea7c15f0f9f7b93514d9a7",
       "sections": [
         "checklist-by-class",
         "high-miss"
@@ -319,17 +328,18 @@
     },
     {
       "id": "eng-privacy-sweep",
-      "bytes": 247,
-      "sha256": "348649eb18df872c2699b4081fd6b3dba423002b5780520ab67af9b6d4964d3d",
+      "bytes": 3031,
+      "sha256": "07a87334599af19fbff10bffec273dd25e82323160da92d7e5dff5bdf16fa9f1",
       "sections": [
+        "kinds",
         "field-sheet",
         "leak-points"
       ]
     },
     {
       "id": "eng-adr",
-      "bytes": 325,
-      "sha256": "8759c77a27e0768e33d3fbfaa60d31ae5fe0a45d2d77bab8e4c9d2134be1b842",
+      "bytes": 2539,
+      "sha256": "9c1b3da4b138856d0b83c7ca7ab250f4f25df521c775f95153b4b80e18866983",
       "sections": [
         "three-part-gate",
         "short-form",
@@ -338,8 +348,8 @@
     },
     {
       "id": "eng-api-contract",
-      "bytes": 454,
-      "sha256": "21ff0638f1b1b049a3688d60a75232ac44e74a202d0f18e06cc2974f363ccb40",
+      "bytes": 2760,
+      "sha256": "f6ab92da65c61fe464523a2808db8ec602f7687699a28d7e483e51bf6e2b3405",
       "sections": [
         "operations-and-shapes",
         "errors",
@@ -351,8 +361,8 @@
     },
     {
       "id": "eng-e2e",
-      "bytes": 360,
-      "sha256": "1956c5fb8b7af71cdcca6a53a3f7d1a5d77c92e93a71b7413a26256b2bb25836",
+      "bytes": 3435,
+      "sha256": "4e8c585f6f1d6745945e888d8b44e3d8d2eb88e722079bc820f624ec76f38566",
       "sections": [
         "locators",
         "waits",
@@ -362,8 +372,8 @@
     },
     {
       "id": "eng-mcp-contract",
-      "bytes": 313,
-      "sha256": "458014e0240754928bdfc1b7f32e81e4dad04b187af717380ca0dafdea29cb74",
+      "bytes": 3603,
+      "sha256": "13394528fc47240b72cfbf8d4f5df67aa62945ecdc9ebcc2a87c024f0e22e32d",
       "sections": [
         "tool-contract",
         "schemas-and-errors",
@@ -372,19 +382,20 @@
     },
     {
       "id": "eng-perf-measure",
-      "bytes": 356,
-      "sha256": "b85897440dc203b9a3d50958e40fbf36c54832517d4a9054b11b3d8a3b4d185b",
+      "bytes": 2554,
+      "sha256": "6f3298d6ae5f1d4af144efd80335f54369b19ab0709210a8dd7676a878a232d3",
       "sections": [
         "terms",
         "baseline",
         "noise-test",
-        "reporting"
+        "reporting",
+        "web-vitals"
       ]
     },
     {
       "id": "eng-sources-versions",
-      "bytes": 324,
-      "sha256": "964ad719faa7c9c42586050d2d8f56a063f93677a114c0895a277ae6c06454aa",
+      "bytes": 1955,
+      "sha256": "6374c01d7f79a7563e00893d5951fc0e03dac8226f4236577f7c68621bc78165",
       "sections": [
         "version-in-use",
         "source-ranking",
@@ -393,8 +404,8 @@
     },
     {
       "id": "eng-docs-accuracy",
-      "bytes": 382,
-      "sha256": "c0aa757b341ae7fd1c9be590226a283a43280591998edb08d55981b7bc7f77bb",
+      "bytes": 3063,
+      "sha256": "dbfea04debdc3b445e7c3f8ddb5a40753fd4673c34eaf551cc23c2a9ecb59d4e",
       "sections": [
         "quoted-items",
         "glossary",
@@ -404,8 +415,8 @@
     },
     {
       "id": "release-ship",
-      "bytes": 388,
-      "sha256": "a7977967299e83f2327d638bfa6783c4a8bcff8e6a9dc947218ca89c4384cea5",
+      "bytes": 3515,
+      "sha256": "8d40f4f3030b975269b83cd263a297f98dca3768cd139153eec54e7b3e3e1079",
       "sections": [
         "version-places",
         "changelog-forms",
@@ -415,46 +426,49 @@
     },
     {
       "id": "release-deploy-rollback",
-      "bytes": 418,
-      "sha256": "2d88a69c9b52bd074afef05f05238dd064ebce07f127572f1e2a90552c2ffbd4",
+      "bytes": 3994,
+      "sha256": "432f09825535462584833807f15dbfc1228da017fa8211198fae4de6b5e49425",
       "sections": [
         "before",
-        "during",
+        "do",
         "after",
         "health-signals",
-        "rollback-options"
+        "watch-loop-forms",
+        "rollback-options",
+        "keeping-the-lesson"
       ]
     },
     {
       "id": "agent-pressure-tests",
-      "bytes": 382,
-      "sha256": "28d787b421520bd20b50ef1a8a0e162badc8d5a6bb33b03a07a83026b85f5a95",
+      "bytes": 4127,
+      "sha256": "87119a6656e6a0b763492448531207ea9a7deeeed42fde785994313ad7c38754",
       "sections": [
-        "scenario-format",
-        "pressure-kinds",
-        "run-tables",
-        "reading-results"
+        "format",
+        "pressures",
+        "runs",
+        "reading"
       ]
     },
     {
       "id": "agent-instruction-style",
-      "bytes": 327,
-      "sha256": "3e37630dbbc3c0a952d683190030780bc581065e0bcb587e3c019362bf822e05",
+      "bytes": 3498,
+      "sha256": "716884acdfb958e765c87d66adbf478244f27d171af30c0953daafeb985b7e77",
       "sections": [
-        "instruction-forms",
-        "excuse-table-format",
-        "positive-recipes"
+        "forms",
+        "excuse-table",
+        "recipes",
+        "wording"
       ]
     },
     {
       "id": "agent-package-facts",
-      "bytes": 378,
-      "sha256": "dad526815dc5713b8d33e1645f82b434f6567a06d5234de780716f4f13b6dfe7",
+      "bytes": 2980,
+      "sha256": "772d6c1a44503412984e0923452d734d4717ce09de3b7f6efe943eaceb0352d8",
       "sections": [
-        "package-files",
+        "files",
         "limits",
-        "tools-md-grammar",
-        "scanner-families"
+        "tools-md",
+        "scanners"
       ]
     }
   ]
