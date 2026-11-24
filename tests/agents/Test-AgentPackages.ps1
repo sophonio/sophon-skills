@@ -880,9 +880,9 @@ try {
             dev    = @{ SOUL = "STATUS: DONE`n"; README = "Push + open PR`n" }
             reader = @{ SOUL = "STATUS: DONE`nold words`n"; README = "none`n" }
         }
-        $runAnchors = { param([hashtable]$Data, [string]$Version = '2.1.0', [string[]]$Selected = @())
+        $runAnchors = { param([hashtable]$Data, [string]$Version = '2.1.0', [string[]]$Selected = @(), [switch]$Release)
             $f = $anchorFamily.Clone(); $f['FamilyVersion'] = $Version
-            Test-AgentAnchors -Data $Data -DataPath 'anchors.psd1' -Family $f -Texts $anchorTexts -Selected $Selected }
+            Test-AgentAnchors -Data $Data -DataPath 'anchors.psd1' -Family $f -Texts $anchorTexts -Selected $Selected -Release:$Release }
         $ok = & $runAnchors @{ Anchors = @(@{ Text = 'STATUS: DONE'; In = 'all' }, @{ Text = 'Exit Code:'; In = 'writers'; Except = @('dev') }, @{ Text = 'Push + open PR'; In = @('dev'); File = 'README' }) }
         $null = Test-Check 'M' (@($ok['Findings']).Count -eq 0 -and @($ok['Errors']).Count -eq 0 -and $ok['Checked'] -eq 5) "anchors carried by their set, an Except and an id list pass ($(@($ok['Findings']).Count) finding(s), $($ok['Checked']) placement(s))"
         $missing = & $runAnchors @{ Anchors = @(@{ Text = 'Exit Code:'; In = 'writers' }) }
@@ -894,6 +894,13 @@ try {
         $after = & $runAnchors $gone '3.0.0'
         $null = Test-Check 'M' (@($before['Findings']).Count -eq 1 -and $before['Pending'] -eq 1 -and $before['Findings'][0]['Path'] -ceq 'agents/lead/README.md' -and
             @($after['Findings']).Count -eq 2 -and @($after['Findings'] | Where-Object { $_['Rule'] -ceq 'ANCHOR-GONE' -and $_['Path'] -ceq 'agents/reader/SOUL.md' -and $_['Line'] -eq 2 }).Count -eq 1) 'a Gone string fails ANCHOR-GONE at its line, and one with a later Since stays pending'
+        $held = @{ Gone = @(@{ Text = 'old words'; File = 'SOUL'; Since = '3.0.0'; Pending = 'M5'; Why = 'fixture' }) }
+        $heldDaily = & $runAnchors $held '3.0.0'
+        $heldRelease = & $runAnchors $held '3.0.0' -Release
+        $heldBad = & $runAnchors @{ Gone = @(@{ Text = 'old words'; File = 'SOUL'; Pending = 'soon'; Why = 'fixture' }) } '3.0.0'
+        $null = Test-Check 'M' (@($heldDaily['Findings']).Count -eq 0 -and $heldDaily['Pending'] -eq 1 -and
+            @($heldRelease['Findings']).Count -eq 1 -and $heldRelease['Findings'][0]['Rule'] -ceq 'ANCHOR-GONE' -and $heldRelease['Findings'][0]['Path'] -ceq 'anchors.psd1' -and
+            @($heldBad['Errors']).Count -eq 1) 'a Gone string Pending a milestone stays pending, fails under -Release, and a Pending that is no milestone is a data error'
         $bad = & $runAnchors @{ Anchors = @(@{ Text = 'x'; In = @('nobody') }, @{ Text = 'y'; In = 'all'; File = 'TOOLS' }, @{ Text = 'z'; In = 'all' }); Removed = @(@{ Text = 'z'; Why = 'fixture' }) }
         $null = Test-Check 'M' (@($bad['Errors']).Count -eq 3) "an unknown agent id, a bad File and an anchor also under Removed are data errors ($(@($bad['Errors']).Count) error(s))"
     } catch {

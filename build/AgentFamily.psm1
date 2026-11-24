@@ -2757,8 +2757,10 @@ function Test-AgentAnchors {
         Anchors: @{ Text; In; File; Except }. In is 'all', 'writers', 'readers', 'lead' or a list of agent ids; File
         is 'SOUL' (default) or 'README'; Except removes agent ids from a named set.
         Removed: @{ Text; Why }: an anchor dropped on purpose; listing the same Text under Anchors is an error.
-        Gone: @{ Text; File; Since; Why }: 2.x wording that must be absent from every agent's File once
-        FamilyVersion is at least Since (SemVer core); before that it is counted as pending.
+        Gone: @{ Text; File; Since; Pending; Why }: 2.x wording that must be absent from every agent's File once
+        FamilyVersion is at least Since (SemVer core); before that it is counted as pending. Pending = 'M<n>'
+        names the milestone that rewrites the text: until then the entry is counted as pending too, and with
+        -Release a remaining Pending is an ANCHOR-GONE finding (delete the key in the commit that rewrites it).
         Returns @{ Findings; Errors; Anchors; Checked; Pending }.
     #>
     [CmdletBinding()]
@@ -2769,7 +2771,8 @@ function Test-AgentAnchors {
         [Parameter(Mandatory)][string]$DataPath,
         [Parameter(Mandatory)][hashtable]$Family,
         [Parameter(Mandatory)][hashtable]$Texts,
-        [AllowEmptyCollection()][string[]]$Selected = @()
+        [AllowEmptyCollection()][string[]]$Selected = @(),
+        [switch]$Release
     )
     $findings = [System.Collections.Generic.List[object]]::new()
     $errors = [System.Collections.Generic.List[object]]::new()
@@ -2850,6 +2853,13 @@ function Test-AgentAnchors {
             if (-not $since.Success) { $errors.Add((New-AgentComposeError $DataPath $line "Since '$($entry['Since'])' is not x.y.z")); continue }
             $sinceVersion = [version]::new([int]$since.Groups[1].Value, [int]$since.Groups[2].Value, [int]$since.Groups[3].Value)
             if ($null -eq $familyVersion -or $familyVersion -lt $sinceVersion) { $pending++; continue }
+        }
+        if ($null -ne $entry['Pending']) {
+            $milestone = [string]$entry['Pending']
+            if ($milestone -cnotmatch '^M[0-9]+$') { $errors.Add((New-AgentComposeError $DataPath $line "Pending '$milestone' must be a milestone such as 'M5'")); continue }
+            if (-not $Release) { $pending++; continue }
+            $findings.Add(@{ Rule = 'ANCHOR-GONE'; Path = $DataPath; Line = $line; Message = "'$text' is still Pending $milestone; rewrite the text and delete the key (-Release)" })
+            continue
         }
         foreach ($id in $check) {
             if (-not $Texts.ContainsKey($id)) { continue }

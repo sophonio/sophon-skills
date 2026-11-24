@@ -7,8 +7,11 @@
 #   (default) or 'README'. ANCHOR-MISSING: a listed agent's composed file lacks Text.
 # Removed: @{ Text; Why }: an anchor removed or changed on purpose. Move its entry here, and add the same row
 #   to the design document's "Changed on purpose" table.
-# Gone: @{ Text; File; Since; Why }: 2.x wording 3.0 replaces. ANCHOR-GONE: an agent's file still carries
-#   Text once FamilyVersion is at least Since; before that the entry is counted as pending.
+# Gone: @{ Text; File; Since; Pending; Why }: 2.x wording 3.0 replaces. ANCHOR-GONE: an agent's file still
+#   carries Text once FamilyVersion is at least Since; before that the entry is counted as pending.
+#   Pending = 'M<n>' is the milestone that rewrites the text (M4 sets FamilyVersion 3.0.0 before M5 and M8
+#   rewrite it): until then the entry is pending too, and -Release fails while the key remains. Delete the key
+#   in the commit that rewrites the text.
 #
 # New 3.0 strings (the CHANGE and DESIGN keys, "parked", "Merge into", the new verdict words) are added here
 # as they land.
@@ -119,11 +122,11 @@
   )
   Removed = @()
   Gone = @(
-    @{ Text = '<m> deferred'; File = 'SOUL'; Since = '3.0.0'; Why = 'deferred is no longer a plan word in 3.0' }
-    @{ Text = 'Keep local / Discard menu'; File = 'README'; Since = '3.0.0'; Why = 'the 3.0 finish menu replaces it' }
-    @{ Text = 'Keep local or Discard'; File = 'README'; Since = '3.0.0'; Why = 'the 3.0 finish menu replaces it' }
-    @{ Text = '10 agents in 5 calls'; File = 'README'; Since = '3.0.0'; Why = 'the 3.0 lead caps replace it' }
-    @{ Text = 'a plan of at most 25 lines'; File = 'README'; Since = '3.0.0'; Why = 'the 3.0 plan format replaces it' }
-    @{ Text = 'What''s new in 2.0.0'; File = 'README'; Since = '3.0.0'; Why = 'the 3.0 upgrade notes replace it' }
+    @{ Text = '<m> deferred'; File = 'SOUL'; Since = '3.0.0'; Pending = 'M5'; Why = 'deferred is no longer a plan word in 3.0' }
+    @{ Text = 'Keep local / Discard menu'; File = 'README'; Since = '3.0.0'; Pending = 'M8'; Why = 'the 3.0 finish menu replaces it' }
+    @{ Text = 'Keep local or Discard'; File = 'README'; Since = '3.0.0'; Pending = 'M8'; Why = 'the 3.0 finish menu replaces it' }
+    @{ Text = '10 agents in 5 calls'; File = 'README'; Since = '3.0.0'; Pending = 'M8'; Why = 'the 3.0 lead caps replace it' }
+    @{ Text = 'a plan of at most 25 lines'; File = 'README'; Since = '3.0.0'; Pending = 'M8'; Why = 'the 3.0 plan format replaces it' }
+    @{ Text = 'What''s new in 2.0.0'; File = 'README'; Since = '3.0.0'; Pending = 'M8'; Why = 'the 3.0 upgrade notes replace it' }
   )
 }

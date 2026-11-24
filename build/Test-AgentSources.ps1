@@ -34,7 +34,8 @@
                                  source line, once (Test-AgentMethod in build/AgentFamily.psm1); with
                                  tests/agents/fixtures/anchors/<family>.psd1, ANCHOR-MISSING (a listed string is
                                  absent from a composed SOUL or README) and ANCHOR-GONE (a Gone string is still
-                                 present once FamilyVersion reaches its Since) (Test-AgentAnchors); LINT-TOPIC
+                                 present once FamilyVersion reaches its Since, unless it is still Pending a
+                                 milestone; under -Release a remaining Pending is an error) (Test-AgentAnchors); LINT-TOPIC
                                  (topic pointers against a SkillPolicy skill's TopicIndex and topics.lock.json; an
                                  agent without the skill carries none; under -Release every skill user names a
                                  topic and each topic's users equal its usedBy, else one note each)
@@ -890,10 +891,10 @@ if (-not (Test-Path -LiteralPath $anchorFull -PathType Leaf)) {
     if ($anchorData -is [hashtable]) {
         $anchorTexts = @{}
         foreach ($id in $selected) { $anchorTexts[$id] = @{ SOUL = $texts[$id]['SOUL.md']; README = $texts[$id]['README.md'] } }
-        $anchorRun = Test-AgentAnchors -Data $anchorData -DataLines ([IO.File]::ReadAllLines($anchorFull)) -DataPath $anchorRel -Family $fam -Texts $anchorTexts -Selected ([string[]]$selected)
+        $anchorRun = Test-AgentAnchors -Data $anchorData -DataLines ([IO.File]::ReadAllLines($anchorFull)) -DataPath $anchorRel -Family $fam -Texts $anchorTexts -Selected ([string[]]$selected) -Release:$Release
         foreach ($e in @($anchorRun['Errors'])) { Add-SourceError 'ANCHOR-DATA' $e['Path'] $e['Line'] $e['Message'] }
         foreach ($f in @($anchorRun['Findings'])) { Add-SourceError $f['Rule'] $f['Path'] $f['Line'] $f['Message'] }
-        Write-Host "  $($anchorRun['Anchors']) anchor(s), $($anchorRun['Checked']) placement(s) checked, $($anchorRun['Pending']) gone string(s) pending their Since version, $(@($anchorRun['Findings']).Count) finding(s)"
+        Write-Host "  $($anchorRun['Anchors']) anchor(s), $($anchorRun['Checked']) placement(s) checked, $($anchorRun['Pending']) gone string(s) pending their Since version or milestone, $(@($anchorRun['Findings']).Count) finding(s)"
     }
 }
 
