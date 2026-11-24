@@ -264,6 +264,8 @@ The 17 composed SOUL sizes at 2.1.0 are the "2.1.0 B" column of the ledger's tok
 
 **Spike results.** None of the six M0 spikes, the Gateway checks G1 to G8 or the save-routine screen check has run. Each gets a row here (date, CLI version, what ran, the text observed, the verdict) when it runs; the questions, pass conditions and fallbacks are in the tests section under "The M0 spikes" and in the reference-skill section under "Checks on a throwaway Gateway".
 
+The six M0 spikes ran on 2026-11-24 on the local test Gateway (CLI 2.2.2); their results, the open G-checks, the 2.1.0 baseline sweep and the runner defects are recorded in [`2026-11-24-agents-v3-spike-results.md`](2026-11-24-agents-v3-spike-results.md).
+
 **Eval baselines.** Not recorded yet. M2 records the scenario results against the 2.1.0 packages in `tests/agents/evals/results/2.1.0.md`, and this document then cites that file.
 
 **What is proven so far.** Every fragment draft and every role draft passed the repository's tool-name lint and scanner preflight, run read-only; the ledger model reproduces all 17 composed SOULs of 2.1.0 with a difference of 0 B. Nothing has run against a live agent, and the new wording is untested until the pressure scenarios run.
