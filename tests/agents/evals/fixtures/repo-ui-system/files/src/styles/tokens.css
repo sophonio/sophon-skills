@@ -1,0 +1,24 @@
+:root {
+  --color-page: #FBF7F0;
+  --color-surface: #FFFDF9;
+  --color-text: #2B2118;
+  --color-muted: #6B5B4B;
+  --color-line: #D8CBB8;
+  --color-primary: #C2410C;
+  --color-on-primary: #FFFFFF;
+
+  --font-body: Fraunces, Georgia, serif;
+  --text-body: 16px;
+  --leading-body: 24px;
+  --text-label: 13px;
+  --text-title: 32px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  --radius-button: 2px;
+}

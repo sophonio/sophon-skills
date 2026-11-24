@@ -1,0 +1,25 @@
+diff --git a/docs/product/export/requirements.md b/docs/product/export/requirements.md
+new file mode 100644
+index 0000000..1e6c028
+--- /dev/null
++++ b/docs/product/export/requirements.md
+@@ -0,0 +1,19 @@
++# Requirements: report export
++
++Status: approved
++Approved: 2026-11-18
++
++## Intent
++
++Finance copies the report table into spreadsheets by hand every week. They want to take the report
++out of reportkit in a file instead, with the same columns as the table.
++
++## Requirements
++
++- R1. A user can export the report as a CSV file, one row per report line, with the table's columns.
++- R2. A user can export the report as a PDF file that looks like the reports page.
++- R3. An export holds only the lines the current region filter shows.
++
++## Out of scope
++
++- Scheduled or emailed exports.

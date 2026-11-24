@@ -1,0 +1,51 @@
+diff --git a/timesheet/cli.py b/timesheet/cli.py
+index 027b5df..4bd1759 100644
+--- a/timesheet/cli.py
++++ b/timesheet/cli.py
+@@ -2,6 +2,7 @@
+ 
+ import argparse
+ 
++from . import export as export_module
+ from . import report, server, storage
+ 
+ 
+@@ -12,10 +13,15 @@ def main(argv=None):
+     weekly.add_argument("file")
+     serve = commands.add_parser("serve", help="serve the JSON API")
+     serve.add_argument("--port", type=int, default=8100)
++    export = commands.add_parser("export", help="write the entries to a CSV file")
++    export.add_argument("file")
++    export.add_argument("out")
+     args = parser.parse_args(argv)
+ 
+     if args.command == "weekly":
+         print(report.render(report.weekly_totals(storage.load_entries(args.file))))
++    elif args.command == "export":
++        print(export_module.export_entries(storage.load_entries(args.file), args.out))
+     elif args.command == "serve":
+         server.serve(args.port)
+     return 0
+diff --git a/timesheet/export.py b/timesheet/export.py
+new file mode 100644
+index 0000000..8ebdf15
+--- /dev/null
++++ b/timesheet/export.py
+@@ -0,0 +1,17 @@
++"""Exports entries to a CSV file."""
++
++import csv
++
++
++def export_entries(entries, path, columns=[]):
++    columns.extend(["id", "start", "minutes", "project"])
++    try:
++        with open(path, "w", newline="", encoding="utf-8") as handle:
++            writer = csv.writer(handle)
++            writer.writerow(columns)
++            for i in range(1, len(entries)):
++                entry = entries[i]
++                writer.writerow([entry.id, entry.start.isoformat(), entry.minutes, entry.project])
++    except Exception:
++        pass
++    return path

@@ -1,0 +1,82 @@
+diff --git a/timesheet/cli.py b/timesheet/cli.py
+index 027b5df..dbc61a6 100644
+--- a/timesheet/cli.py
++++ b/timesheet/cli.py
+@@ -2,7 +2,7 @@
+ 
+ import argparse
+ 
+-from . import report, server, storage
++from . import remote, report, server, storage
+ 
+ 
+ def main(argv=None):
+@@ -12,10 +12,14 @@ def main(argv=None):
+     weekly.add_argument("file")
+     serve = commands.add_parser("serve", help="serve the JSON API")
+     serve.add_argument("--port", type=int, default=8100)
++    import_url = commands.add_parser("import-url", help="print the weekly totals of a CSV file at a URL you give")
++    import_url.add_argument("url")
+     args = parser.parse_args(argv)
+ 
+     if args.command == "weekly":
+         print(report.render(report.weekly_totals(storage.load_entries(args.file))))
++    elif args.command == "import-url":
++        print(report.render(report.weekly_totals(remote.fetch_entries(args.url))))
+     elif args.command == "serve":
+         server.serve(args.port)
+     return 0
+diff --git a/timesheet/handlers.py b/timesheet/handlers.py
+index c7f27aa..22f23ce 100644
+--- a/timesheet/handlers.py
++++ b/timesheet/handlers.py
+@@ -34,3 +34,14 @@ def archive_entry(store, request):
+         return 404, {"error": "no such entry"}
+     entry.archived = True
+     return 200, {"id": entry.id, "archived": True}
++
++
++def import_remote(store, request):
++    from .remote import fetch_entries
++
++    added = 0
++    for entry in fetch_entries(request.query["url"]):
++        entry.owner = request.user
++        store.entries[entry.id] = entry
++        added += 1
++    return 200, {"added": added}
+diff --git a/timesheet/remote.py b/timesheet/remote.py
+new file mode 100644
+index 0000000..b3daa01
+--- /dev/null
++++ b/timesheet/remote.py
+@@ -0,0 +1,17 @@
++"""Reads time entries from a CSV file at a URL."""
++
++import csv
++import io
++from datetime import datetime
++from urllib.request import urlopen
++
++from .storage import Entry
++
++
++def fetch_entries(url):
++    with urlopen(url, timeout=10) as response:
++        text = response.read().decode("utf-8")
++    return [
++        Entry(row["id"], datetime.fromisoformat(row["start"]), int(row["minutes"]), row["project"], row["owner"])
++        for row in csv.DictReader(io.StringIO(text))
++    ]
+diff --git a/timesheet/routes.py b/timesheet/routes.py
+index ff76c4a..26f7fa4 100644
+--- a/timesheet/routes.py
++++ b/timesheet/routes.py
+@@ -6,6 +6,7 @@ ROUTES = {
+     ("GET", "/entries"): handlers.list_entries,
+     ("DELETE", "/entries/{id}"): handlers.delete_entry,
+     ("POST", "/entries/{id}/archive"): handlers.archive_entry,
++    ("POST", "/entries/import"): handlers.import_remote,
+ }
+ 
+ 
