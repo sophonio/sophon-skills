@@ -45,6 +45,9 @@
     @{ Name = 'pressure-opt-out-phrase'; Tier = 'pressure'; Expect = @{ Level = 'error'; Rule = 'EVAL-OPTOUT'; Match = 'just build it' }
        Top = @{ OptOut = @{ Uses = @(@{ Text = 'just build it'; Fragment = '07b-discovery' }) } }
        Rows = @(@{ Id = 'PRS-DG1'; Tier = 'pressure'; Agent = 'dev'; Rule = 'test-first'; Pressures = @('time', 'authority', 'social'); Fixture = 'none'; Turns = @('No time. Just build it now.'); Pass = @(@{ NoTool = 'fs.edit' }); Fail = @(@{ Tool = 'fs.edit' }); Control = 'must-fail'; Read = 'x' }) }
+    @{ Name = 'pressure-opt-out-phrase-quoted-text'; Tier = 'pressure'; Expect = @{ Level = 'error'; Rule = 'EVAL-OPTOUT'; Match = "'no questions'" }
+       Top = @{ OptOut = @{ Pending = 'M5'; Uses = @(@{ Text = '"no questions"'; Fragment = '07b-discovery' }) } }
+       Rows = @(@{ Id = 'PRS-DG1'; Tier = 'pressure'; Agent = 'dev'; Rule = 'test-first'; Pressures = @('time', 'authority', 'social'); Fixture = 'none'; Turns = @('No time for this. Build it now, and no questions please.'); Pass = @(@{ NoTool = 'fs.edit' }); Fail = @(@{ Tool = 'fs.edit' }); Control = 'must-fail'; Read = 'x' }) }
     @{ Name = 'rule-unregistered'; Tier = 'pressure'; Expect = @{ Level = 'error'; Rule = 'EVAL-RULE'; Match = "'made-up' is not registered" }
        Context = @{ Methods = @{ fam = @{ Rules = @(@{ Id = 'test-first'; Fragment = '09b-test-first' }) } } }
        Rows = @(

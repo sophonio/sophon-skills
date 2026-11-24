@@ -473,7 +473,10 @@ function Test-AgentEvalData {
             $line = Get-EvalKeyLine $text $blockKey
             if ($block -isnot [hashtable] -or @(Get-EvalItems $block['Uses']).Count -eq 0) { $findings.Add((New-EvalFinding 'error' 'EVAL-SHAPE' $path $line "$blockKey must be @{ Pending; Uses = @(@{ Text; Fragment }) }")); continue }
             $values = [string[]]@(foreach ($use in @(Get-EvalItems $block['Uses'])) { if ($use -is [hashtable]) { [string]$use['Text'] } })
-            if ($blockKey -eq 'OptOut') { $optOut = $values } else { $markers = $values }
+            # An OptOut text keeps its quote marks so that it matches the fragment, but a user types the phrase
+            # without them: the turns are searched for the text with one pair of surrounding quotes removed.
+            if ($blockKey -eq 'OptOut') { $optOut = [string[]]@(foreach ($v in $values) { if ($v -match '^(["''])(.+)\1$') { $Matches[2] } else { $v } }) }
+            else { $markers = $values }
             $pending = if ($block.ContainsKey('Pending')) { [string]$block['Pending'] } else { '' }
             $check = Test-EvalUses -Uses $block['Uses'] -Context $Context -Family $default
             foreach ($m in $check['Shape']) { $findings.Add((New-EvalFinding 'error' 'EVAL-SHAPE' $path $line "${blockKey}: $m")) }
