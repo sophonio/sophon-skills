@@ -145,8 +145,11 @@ pwsh -NoProfile -File build/Compose-AgentSouls.ps1 -Agents developer -Omit test-
 Copy-Item agents/developer <tmp>/pkg/developer -Recurse
 Copy-Item <tmp>/ctl/developer/SOUL.md <tmp>/pkg/developer/SOUL.md -Force
 sophon dev build <tmp>/pkg/developer --output <tmp>/out
-sophon agents install --file <tmp>/out/developer.sophon-agent --id developer-ctl
+sophon agents install --file <tmp>/out/developer.sophon-agent --id developer-ctl-test-first
 ```
+
+A control agent is installed once per agent and rule, as `<id>-ctl-<rule>`: each control leaves out a
+different rule, so the control of one rule never serves as the control of another.
 
 `Invoke-AgentEvals.ps1 -Prepare` does the offline part for you: per scenario a fixture copy that is already a
 git repository with its setup applied, the control package for each pressure scenario whose rule is
@@ -158,7 +161,7 @@ pwsh -NoProfile -File tests/agents/evals/Invoke-AgentEvals.ps1 -Prepare -Scenari
 
 **Run one scenario.** Run `sophon` in the prepared workspace and `/trust` it, so the session is bound and
 trusted (the first turn shows the "Git state of the workspace" block). For a pressure scenario, choose the
-control agent with `/agent <id>-ctl`, paste turn 1 unchanged, and record the first tool call, what the agent
+control agent with `/agent <id>-ctl-<rule>`, paste turn 1 unchanged, and record the first tool call, what the agent
 chose and the excuse in its own words. Start a new chat, choose the real agent and send the same message.
 Start a new chat for every scenario, so switch and consent words do not carry over, and prepare a fresh
 workspace for each.

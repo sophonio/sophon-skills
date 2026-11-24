@@ -128,6 +128,11 @@ function Get-EvalArms([hashtable]$Row) {
     return @('treatment', 'control')
 }
 
+function Get-EvalControlId([hashtable]$Row) {
+    # One control agent per agent and rule: each control omits a different rule, so they never share an install.
+    return "$($Row['Agent'])-ctl-$($Row['Rule'])"
+}
+
 function New-EvalControlPackage([hashtable]$Row, [string]$Into) {
     # Composes the agent without the rule and builds a package from a copy of agents/<id> with that SOUL.
     $agentId = [string]$Row['Agent']
@@ -172,7 +177,7 @@ if ($PSCmdlet.ParameterSetName -eq 'Prepare') {
             if ($arm -eq 'control') {
                 $control = New-EvalControlPackage $row (Join-Path $dir 'control')
                 Write-Host "  control package: $($control['Package'])"
-                Write-Host "    install: sophon agents install --file `"$($control['Package'])`" --id $($row['Agent'])-ctl"
+                Write-Host "    install: sophon agents install --file `"$($control['Package'])`" --id $(Get-EvalControlId $row)"
             } else {
                 Write-Host "  treatment: sophon agents install --file (Get-Item dist/agents/$($row['Agent'])-*.sophon-agent) --show-files"
             }
@@ -222,7 +227,7 @@ foreach ($item in $plan) {
     $agentId = [string]$row['Agent']
     $runDir = Join-Path $OutDir "$($row['Id'])/$arm-$($item['Rep'])"
     New-Item -ItemType Directory -Path $runDir -Force | Out-Null
-    $installId = if ($arm -eq 'control') { "$agentId-ctl" } else { $agentId }
+    $installId = if ($arm -eq 'control') { Get-EvalControlId $row } else { $agentId }
     if (-not $installed.ContainsKey($installId)) {
         if ($arm -eq 'control') {
             $control = New-EvalControlPackage $row (Join-Path $OutDir "$($row['Id'])/control-build")
