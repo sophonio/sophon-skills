@@ -438,7 +438,13 @@ family):
 - A policy skill may also name `Fragment = '<NN-id>'`, its reference fragment: `METHOD-REFERENCE`
   then allows that skill's tools only on lines from that fragment, which must carry the sentence
   "If the tool is missing or refused, work from what you carry."
-- The development family has no SkillPolicy, so a skill tool name there still fails `LINT-SKILL`.
+- A policy skill may name `TopicIndex = '<repo path>'`, its JSON id list: `LINT-TOPIC` checks every
+  "topic `<id>`" pointer (and ", section `<id>`") against it and the `topics.lock.json` beside it.
+  `LINT-SKILL-FRAGMENT` requires the reference fragment exactly in the agents that use the skill, and
+  `LINT-SKILL-UNUSED` fails a policy skill no agent uses.
+- The development family's SkillPolicy names `craft-reference` (fragment `18-reference-topics`, topic
+  index `build/craft-reference/topics.index.json`); Artifact Creator sets `Skills = @()`, so a skill
+  tool name in its text still fails `LINT-SKILL`.
 
 **Derived rules.** The attribution checks apply only to an agent whose sources use
 `{{= CommitTrailer}}` or `{{= PrFooter}}`, and the `whenToUse` sibling rule only when the roster

@@ -191,6 +191,12 @@ order is fixed:
 The agent's `requires.skills[].minVersion` must be a version that is approved and live. Raise it
 only after the newer skill version is approved, and bump the agent version when you do.
 
+The same order holds for `craft-reference`, which every development agent except Artifact Creator
+requires: publish it (`pwsh -File build/Publish-MarketplacePackages.ps1 -Skills craft-reference`)
+and wait until its version is approved before uploading any of those agents. Run
+`python -B build/craft-reference/generate.py --check --release` first; it fails until the topic
+sources are pinned and the owner has signed off the Sophon topics.
+
 ## 8. Releasing a vendored skill (ffmpeg-video)
 
 `ffmpeg-video` ships [kajisho5/ffmpeg-skill](https://github.com/kajisho5/ffmpeg-skill) unchanged
