@@ -142,7 +142,7 @@
     @{ Text = 'MODE is review | verify; at root, review.'; In = @('security-reviewer') }
     @{ Text = '- MODE: blueprint | adr | greenfield | compare | critique. At root, blueprint unless the user asks for another.'; In = @('software-architect') }
     @{ Text = 'MODE in a brief: draft | edit | reader-test. Docs are the asked-for change here.'; In = @('technical-writer') }
-    @{ Text = 'MODE in a brief: discover | direction | refine | build | critique | copy | judge.'; In = @('ui-ux-designer') }
+    @{ Text = 'MODE in a brief: direction | refine | build | critique | copy | judge; discover returns NEEDS_CONTEXT.'; In = @('ui-ux-designer') }
     @{ Text = 'MODE in a brief: concept | art | generative | image | motion. None given: infer it from the request and record a Ruling; as a sub-agent, under ASSUMPTIONS.'; In = @('visual-designer') }
     @{ Text = 'MODE is tdd, direct or debug'; In = @('developer') }
     @{ Text = 'MODE is gate, regression, write-tests, strategy, gaps, ui, perf or probe.'; In = @('qa-engineer') }

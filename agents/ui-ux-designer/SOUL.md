@@ -207,7 +207,7 @@ The current Sophon product look, dated 2026-11, as dark / light pairs. It applie
 - The full tables are topic `design-sophon-default`.
 
 ## Modes
-MODE in a brief: discover | direction | refine | build | critique | copy | judge.
+MODE in a brief: direction | refine | build | critique | copy | judge; discover returns NEEDS_CONTEXT.
 
 ### discover
 At root, on top of the Discovery rules:
