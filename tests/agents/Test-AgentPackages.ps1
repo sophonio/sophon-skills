@@ -487,7 +487,10 @@ try {
         if (-not $budgetText.Contains("  Agents = @(`n")) { throw 'the family copy has no Agents line' }
         $capArgs = @('-NoProfile', '-NonInteractive', '-File', (Join-Path $budgetCase 'build/Test-AgentSources.ps1'), '-RepoRoot', $budgetCase, '-Family', 'development', '-Agents', 'developer')
         $capRuns = @(foreach ($caps in "@{ '04-scope' = 100 }", "@{ '04-scope' = 700 }", "@{ '99-nothing' = 450 }", "@{ '04-scope' = 5000 }") {
-                Write-Utf8 $budgetFamily ($budgetText.Replace("  Agents = @(`n", "  FragmentCaps = $caps`n  Agents = @(`n"))
+                # The family's own FragmentCaps line (if any) is replaced, so the copy holds the key once.
+                $capBase = [regex]::Replace($budgetText, '(?m)^  FragmentCaps = .*
+', '')
+                Write-Utf8 $budgetFamily ($capBase.Replace("  Agents = @(`n", "  FragmentCaps = $caps`n  Agents = @(`n"))
                 Invoke-Native $pwsh $capArgs
             })
         Write-Utf8 $budgetFamily $budgetText
@@ -616,14 +619,17 @@ try {
             $mediaFamily = Import-PowerShellDataFile -LiteralPath (Join-Path $mediaDir 'family.psd1')
             $devFamily = $dev['Data']
             $mediaTools = Get-AgentAllowedSkillTools -Family $mediaFamily -Catalog $catalogL
-            $devTools = Get-AgentAllowedSkillTools -Family $devFamily -Catalog $catalogL
-            $null = Test-Check 'L' ([string]::Equals(($mediaTools -join ','), 'mediakit.inspect.probe,mediakit.project.render', $ord) -and $devTools.Length -eq 0) "SkillPolicy allows exactly the tools of its skills (SkillToolOwner); the development family allows none (got '$($mediaTools -join ',')' and '$($devTools -join ',')')"
+            # The development family's SkillPolicy names craft-reference; artifact-creator opts out (Skills = @()).
+            $devFamilyTools = Get-AgentAllowedSkillTools -Family $devFamily -Catalog $catalogL
+            $devTools = Get-AgentAllowedSkillTools -Family $devFamily -Catalog $catalogL -AgentId 'artifact-creator'
+            $null = Test-Check 'L' ([string]::Equals(($mediaTools -join ','), 'mediakit.inspect.probe,mediakit.project.render', $ord) -and
+                [string]::Equals(($devFamilyTools -join ','), 'craft.read,craft.topics', $ord) -and $devTools.Length -eq 0) "SkillPolicy allows exactly the tools of its skills (SkillToolOwner); the development family allows craft-reference's tools, artifact-creator none (got '$($mediaTools -join ',')', '$($devFamilyTools -join ',')' and '$($devTools -join ',')')"
             # The distinct rule ids of a result, comma-joined ('' for none): a string never unrolls to $null.
             $rulesOf = { param($issues) [string](@(@($issues | Where-Object { $null -ne $_ }) | ForEach-Object { $_.Rule } | Select-Object -Unique) -join ',') }
             $skillLine = 'Check the clip with mediakit.inspect.probe first.'
             $devSkill = & $rulesOf (Invoke-ToolNameLint -Text $skillLine -Path 'L' -Kind 'soul' -Catalog $catalogL -AllowedSkillTools $devTools)
             $mediaSkill = & $rulesOf (Invoke-ToolNameLint -Text $skillLine -Path 'L' -Kind 'soul' -Catalog $catalogL -AllowedSkillTools $mediaTools)
-            $null = Test-Check 'L' (($devSkill -join ',') -ceq 'LINT-SKILL' -and $mediaSkill.Length -eq 0) "a skill tool name fails LINT-SKILL in the development family and passes only through the SkillPolicy (got '$($devSkill -join ',')' and '$($mediaSkill -join ',')')"
+            $null = Test-Check 'L' (($devSkill -join ',') -ceq 'LINT-SKILL' -and $mediaSkill.Length -eq 0) "a skill tool name fails LINT-SKILL for artifact-creator and passes only through the SkillPolicy (got '$($devSkill -join ',')' and '$($mediaSkill -join ',')')"
             $sendLine = 'Send the clip with message.send when the user asks.'
             $devSend = & $rulesOf (Invoke-ToolNameLint -Text $sendLine -Path 'L' -Kind 'soul' -Catalog $catalogL -AllowRestrictedMentions ([string[]]@(Get-AgentField $devFamily 'AllowRestrictedMentions' @())))
             $mediaSend = & $rulesOf (Invoke-ToolNameLint -Text $sendLine -Path 'L' -Kind 'soul' -Catalog $catalogL -AllowRestrictedMentions ([string[]]@($mediaFamily['AllowRestrictedMentions'])))
@@ -709,8 +715,8 @@ try {
                 Set-AgentFamilyContext -Entry @{ Id = $saved['Id']; Path = $saved['FamilyRelPath'] } | Out-Null
             }
 
-            # The development family keeps the single-family rule: requires holds tools only.
-            $devId = $devRoster[0]
+            # An agent that opts out of every policy skill keeps the single-family rule: requires holds tools only.
+            $devId = 'artifact-creator'
             $devRaw = [IO.File]::ReadAllText((Join-Path $famCase "agents/$devId/manifest.json"))
             $devToolsMd = Read-ToolsMd -Text ([IO.File]::ReadAllText((Join-Path $famCase "agents/$devId/TOOLS.md"))) -Path 'L/TOOLS.md'
             $devSkillsRaw = $devRaw.Replace("  `"requires`": {`n", "  `"requires`": {`n    `"skills`": [`n      {`n        `"name`": `"media-kit`"`n      }`n    ],`n")
@@ -779,7 +785,7 @@ try {
         Write-Utf8 $methodFamily ($methodText.Replace("  Agents = @(`n", $methodKey + "  Agents = @(`n"))
         $methodArgs = @('-NoProfile', '-NonInteractive', '-File', (Join-Path $methodCase 'build/Test-AgentSources.ps1'), '-RepoRoot', $methodCase, '-Family', 'development')
         $withKey = Invoke-Native $pwsh $methodArgs
-        $null = Test-Check 'M' ($withKey.Code -eq 0 -and $withKey.Text.Contains('0 registered rule(s), 0 reference fragment(s), 0 finding(s)', $ord)) "the 2.1.0 development text passes METHOD-CONTROLLER with the design's terms and worker contract (exit $($withKey.Code): $(Get-Tail @($withKey.Lines | Where-Object { $_ -clike 'ERROR *' }) 3))"
+        $null = Test-Check 'M' ($withKey.Code -eq 0 -and $withKey.Text.Contains('0 registered rule(s), 1 reference fragment(s), 0 finding(s)', $ord)) "the development text (with its craft-reference fragment) passes METHOD-CONTROLLER with the design's terms and worker contract (exit $($withKey.Code): $(Get-Tail @($withKey.Lines | Where-Object { $_ -clike 'ERROR *' }) 3))"
         Write-Utf8 $methodFamily ($methodText.Replace("  Agents = @(`n", $methodKey.Replace("Exempt = @('artifact-creator')", 'Exempt = @()') + "  Agents = @(`n"))
         $noExempt = Invoke-Native $pwsh $methodArgs
         $null = Test-Check 'M' ($noExempt.Code -ne 0 -and $noExempt.Text.Contains("ERROR METHOD-CONTROLLER build/agent-src/family.psd1:", $ord) -and $noExempt.Text.Contains("worker 'artifact-creator' lacks the worker fragment 01-delegated-mode", $ord)) "without the exemption artifact-creator fails METHOD-CONTROLLER for its missing worker fragments (exit $($noExempt.Code))"
