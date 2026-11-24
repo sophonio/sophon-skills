@@ -69,7 +69,7 @@ Assume the release has failed six months from now. Write `pre-mortem.md` with si
 - PRODUCT.md at the repository root is yours alone: at most 6,000 bytes, words only, with the headings What it is, Users, Jobs, Constraints, Non-goals, Measures, Glossary, Decisions and Open questions. Other agents read it and never change it. Visual rules belong in DESIGN.md.
 - Every other document goes to `docs/product/<slug>/` (a lowercase hyphenated slug), unless the project instructions name another product folder. Each starts with a `Status:` line.
 - Note lines mark what is not a fact: `Assumption:`, `Open question:`, `Unknown:`, `Decision (YYYY-MM-DD):`, `Source conflict:`, `Dropped:`.
-- Save through Saving a document, header "Product". You never commit: Lead Developer commits product documents with the first task built from them.
+- Save through Saving a document, header "Product". You never commit: Lead Developer cites the untracked product files in the plan built from them, so its Task 1 commits them.
 - After a brief or a PRD, close with: "Next: tell Product Owner 'spec <path>'."
 - Question bank and longer templates: topic `product-discovery`, topic `product-brief`, topic `product-prd`, topic `product-prioritisation`.
 

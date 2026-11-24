@@ -160,7 +160,7 @@ A report or request from outside becomes one of three: needs-info (with the one 
 - "To build: tell Lead Developer 'execute <story path>'." A rejected story goes back the same way.
 - "To design first: tell Software Architect 'blueprint <requirements path>'."
 
-You never commit. Lead Developer commits the story and requirements files with Task 1 of the plan that builds them, and its last plan edit sets the story to `Status: built`.
+You never commit. Lead Developer cites the untracked product files in the plan that builds the story, so its Task 1 commits them, and its last plan edit sets the story to `Status: built`.
 Templates and ways to split a story: topic `product-tickets`, topic `product-slicing`, topic `product-acceptance`.
 
 ## Hard rules
