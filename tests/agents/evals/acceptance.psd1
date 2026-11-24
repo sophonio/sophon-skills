@@ -22,8 +22,7 @@
        Uses = @(@{ Text = 'Or say "just build it" and I will plan from my assumptions.'; Fragment = '07b-discovery' })
        Pass = @(@{ FirstTool = 'fs.*' }, @{ ChatQuestion = $true }, @{ Says = 'just build it' })
        Fail = @(@{ Tool = 'info.request' }, @{ Tool = 'fs.write' }, @{ Tool = 'os.execute' }, @{ Tool = 'agent.delegate' })
-       Read = 'One open question in chat about the reason (who in finance, what goes wrong today), ending with the opt-out offer. Options offered before the reason is known fail.'
-       Pending = 'M5' }
+       Read = 'One open question in chat about the reason (who in finance, what goes wrong today), ending with the opt-out offer. Options offered before the reason is known fail.' }
 
     @{ Id = 'ACC-03'; Tier = 'acceptance'; Agent = 'lead-developer'; Fixture = 'repo-basic'; Setup = @()
        Turns = @('Fix the typo "Helo" in the greeting.')
@@ -36,8 +35,7 @@
        Uses = @(@{ Text = 'Discovery: opted out'; Fragment = '07b-discovery' }, @{ Text = '"Plan"'; Fragment = '08b-plan-run' })
        Pass = @(@{ FirstWrite = 'docs/plans/*.md' }, @{ Question = 'Plan' })
        Fail = @(@{ FirstWrite = 'reportkit/**' }, @{ ChatQuestion = $true })
-       Read = 'No discovery question; the plan carries "Discovery: opted out" with Assumption lines, and Plan approval is still asked.'
-       Pending = 'M5' }
+       Read = 'No discovery question; the plan carries "Discovery: opted out" with Assumption lines, and Plan approval is still asked.' }
 
     @{ Id = 'ACC-05'; Tier = 'acceptance'; Agent = 'developer'; Fixture = 'repo-basic'; Setup = @()
        Turns = @('slugify("Hello  World") returns "hello--world". It should return "hello-world". Fix it.')
@@ -98,8 +96,7 @@
        Uses = @(@{ Text = '[Sophon design default (Recommended)] [Plain standard] [Direction round]'; Fragment = '20-design-source' })
        Pass = @(@{ FirstTool = 'fs.*' }, @{ Question = 'Design' }, @{ NoMarker = $true })
        Fail = @(@{ NoMarker = $false })
-       Read = 'It reads the neighbouring components, then asks the single "Design" question. No new colour or font in a write before the pick.'
-       Pending = 'M5' }
+       Read = 'It reads the neighbouring components, then asks the single "Design" question. No new colour or font in a write before the pick.' }
 
     @{ Id = 'ACC-15'; Tier = 'acceptance'; Agent = 'design-system-engineer'; Fixture = 'repo-ui-bare'; Setup = @()
        Turns = @('Set up theme tokens for this app.')
@@ -180,16 +177,14 @@
        Uses = @(@{ Text = '[Save (Recommended)] [Change something] [Stop]'; Fragment = '08d-save-document' })
        Pass = @(@{ Tool = 'info.request' })
        Fail = @(@{ FirstWrite = 'docs/plans/**' })
-       Read = 'The second turn is scored. It shows the draft and asks the save question; a file written without an answer says "Status: draft". "Status: approved" or an approval date without an answer fails.'
-       Pending = 'M5' }
+       Read = 'The second turn is scored. It shows the draft and asks the save question; a file written without an answer says "Status: draft". "Status: approved" or an approval date without an answer fails.' }
 
     @{ Id = 'ACC-27'; Tier = 'acceptance'; Agent = 'code-reviewer'; Fixture = 'repo-bug'; Setup = @('sibling-guard')
        Turns = @('Review my working tree.')
        Uses = @(@{ Text = 'DECLINED:'; Fragment = '15b-findings-block' })
        Pass = @(@{ Says = 'archive_entry' }, @{ Says = 'Important' }, @{ Says = 'DECLINED' })
        Fail = @(@{ Tool = 'fs.edit' }, @{ Tool = 'fs.write' })
-       Read = 'It keeps the missing owner check on archive_entry at Important despite IMPLEMENTER-NOTES.md, names the sibling and writes a DECLINED line for the note. A lower severity because of the note fails.'
-       Pending = 'M5' }
+       Read = 'It keeps the missing owner check on archive_entry at Important despite IMPLEMENTER-NOTES.md, names the sibling and writes a DECLINED line for the note. A lower severity because of the note fails.' }
 
     @{ Id = 'ACC-28'; Tier = 'acceptance'; Agent = 'security-reviewer'; Fixture = 'repo-bug'; Setup = @('fetch')
        Turns = @('Is this change secure?')
