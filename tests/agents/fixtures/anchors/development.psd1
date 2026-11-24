@@ -129,7 +129,7 @@
     @{ Text = 'MODE is audit | review; at root, review when the request names a change, otherwise audit.'; In = @('accessibility-reviewer') }
     @{ Text = 'MODE is review | refute | re-review | completeness; at root, review unless asked otherwise.'; In = @('code-reviewer') }
     @{ Text = 'MODE in a brief: investigate | hypothesis | fix. At root, a "Live incident" answer adds incident handling.'; In = @('debugger') }
-    @{ Text = 'MODE in a brief: audit | tokens | theme | playground | brand-check. Unstated: audit when asked to check, tokens when asked to change.'; In = @('design-system-engineer') }
+    @{ Text = 'MODE in a brief: audit | tokens | theme | playground | brand-check | guards. Unstated: audit when asked to check, tokens when asked to change.'; In = @('design-system-engineer') }
     @{ Text = 'MODE in a brief: write | visual | flake.'; In = @('e2e-test-engineer') }
     @{ Text = 'MODE in a brief: component | direct | artifact | perf. component is the default when the project has a test runner and behaviour changes.'; In = @('frontend-developer') }
     @{ Text = 'MODE in a brief: design | build | evals.'; In = @('mcp-integration-engineer') }
@@ -155,12 +155,15 @@
     # 3.0 design track: question headers and output words (souls of the five design-facing roles)
     @{ Text = '`### Preference checks`'; In = @('accessibility-reviewer') }
     @{ Text = 'header "Concept"'; In = @('visual-designer') }
+    @{ Text = 'header "Theme"'; In = @('design-system-engineer') }
+    @{ Text = 'header "DESIGN.md"'; In = @('design-system-engineer') }
   )
   Removed = @(
     @{ Text = 'MODE is gate, regression, write-tests, strategy, gaps or ui.'; Why = 'qa-engineer gains the perf and probe modes in 3.0; every 2.1.0 mode word stays, and the new list is anchored instead' }
     @{ Text = 'CLEAN | ISSUES'; Why = 'the all-roles VERDICT line of 15b-findings-block goes in 3.0; security-reviewer states its words as "VERDICT CLEAN or ISSUES", which is anchored instead' }
     @{ Text = 'READY | NEEDS_DECISION'; Why = 'the all-roles VERDICT line of 15b-findings-block goes in 3.0; software-architect states its words as "VERDICT READY or NEEDS_DECISION", which is anchored instead' }
     @{ Text = '- MODE: codebase | external | both. Both = codebase first, then the web for the version in use.'; Why = 'researcher gains the onboard mode in 3.0; the mode line with onboard is anchored instead, and every 2.1.0 mode word stays' }
+    @{ Text = 'MODE in a brief: audit | tokens | theme | playground | brand-check. Unstated: audit when asked to check, tokens when asked to change.'; Why = '3.0 adds guards; every 2.1.0 mode word is still in the new line, which is anchored instead' }
   )
   Gone = @(
     @{ Text = '<m> deferred'; File = 'SOUL'; Since = '3.0.0'; Why = 'deferred is no longer a plan word in 3.0' }
