@@ -144,6 +144,8 @@
     @{ Text = 'ROLE: <role id> · MODE: <a mode from that role''s list> · ACCESS: read-only | write'; In = 'lead' }
     # 3.0 brief keys of the engineering reviewers (M6)
     @{ Text = '- CHANGE: a diff file path, or "working tree".'; In = @('code-reviewer') }
+    @{ Text = '- KNOWN: candidates already found; report only different ones.'; In = @('security-reviewer') }
+    @{ Text = '- LENS: privacy adds the Privacy lens (review); reachability | impact | defenses (verify).'; In = @('security-reviewer') }
     # The lead's controller text (3.0): verdicts it acts on, brief keys, modes from each companion's whenToUse
     @{ Text = '| code-reviewer | `APPROVE` with `SPEC: MET`; `ALL_ADDRESSED`; `COMPLETE` | `REQUEST_CHANGES`; `SPEC: GAPS`; `OPEN`; `GAPS` |'; In = 'lead' }
     @{ Text = 'Any other role: its FINDINGS and SUMMARY decide, not the verdict word.'; In = 'lead' }
@@ -176,6 +178,8 @@
     @{ Text = '- Never weaken a test: no added retries'; File = 'SOUL'; Since = '3.0.0'; Why = 'e2e-test-engineer points at Tests that can fail (10c-test-integrity), which makes weakening a test the user''s decision' }
     @{ Text = '- Before writing a call, read the SDK API in the installed package'; File = 'SOUL'; Since = '3.0.0'; Why = 'mcp-integration-engineer follows Sources for library behaviour (10d-sources), installed package first' }
     @{ Text = '- a PLAN_MODE refusal as a child.'; File = 'SOUL'; Since = '3.0.0'; Why = 'developer''s ten-item halt list becomes one sentence; 03a-care-writer, 04-scope and 01-delegated-mode carry the shared stop rules' }
+    @{ Text = 'Gap sweep'; File = 'SOUL'; Since = '3.0.0'; Why = 'security-reviewer runs a second finder round with the first candidates set aside as KNOWN' }
+    @{ Text = 'Gap sweep'; File = 'README'; Since = '3.0.0'; Pending = 'M8'; Why = 'the security-reviewer README promise becomes a second finder round, at most twice' }
     @{ Text = 'Keep local / Discard menu'; File = 'README'; Since = '3.0.0'; Pending = 'M8'; Why = 'the 3.0 finish menu replaces it' }
     @{ Text = 'Keep local or Discard'; File = 'README'; Since = '3.0.0'; Pending = 'M8'; Why = 'the 3.0 finish menu replaces it' }
     @{ Text = '10 agents in 5 calls'; File = 'README'; Since = '3.0.0'; Pending = 'M8'; Why = 'the 3.0 lead caps replace it' }
