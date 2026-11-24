@@ -13,6 +13,8 @@
 # artifact-creator 22528. Each agent keeps at least 5% of its cap free: under 8% free warns (BUDGET-HEADROOM),
 # under 5% fails a release build (Test-AgentSources.ps1 -Release), and over the cap always fails (BUDGET-SOUL).
 # The platform limit is 65536. Raising a cap is a change to this file and this comment only.
+# RoleCap (bytes of souls/<id>.md without include and comment lines) is each agent's planned role text from the
+# same ledger, rounded up to the next 100; over it fails (BUDGET-ROLE), and -Release requires it of every agent.
 # License: the family default (MIT, the root LICENSE). An agent may set License = 'Apache-2.0' (LICENSE copies
 # build/licenses/Apache-2.0.txt); the frontend and design agents added in 2.1 are Apache-2.0 because they adapt
 # Apache-2.0 upstream text.
@@ -109,6 +111,7 @@
       Changes = 'no'
       Commits = 'no'
       SoulCap = 28672
+      RoleCap = 10000
       Writer = $false
       SubAgents = @{ enabled = $false; maxDepth = 0 }
       Effort = 'high'
@@ -137,6 +140,7 @@
       Id = 'artifact-creator'
       DisplayName = 'Artifact Creator'
       SoulCap = 22528
+      RoleCap = 4500
       Writer = $false
       License = 'Apache-2.0'
       Category = 'productivity'
@@ -154,6 +158,7 @@
       Changes = 'no'
       Commits = 'no'
       SoulCap = 28672
+      RoleCap = 6500
       Writer = $false
       SubAgents = @{ enabled = $false; maxDepth = 0 }
       Effort = 'high'
@@ -185,6 +190,7 @@
       Changes = 'fix + regression test, when asked'
       Commits = 'yes'
       SoulCap = 44032
+      RoleCap = 7100
       Writer = $true
       SubAgents = @{ enabled = $false; maxDepth = 0 }
       Effort = 'high'
@@ -220,6 +226,7 @@
       Changes = 'tokens, themes, components'
       Commits = 'yes'
       SoulCap = 51200
+      RoleCap = 7500
       Writer = $true
       SubAgents = @{ enabled = $false; maxDepth = 0 }
       Effort = 'default'
@@ -261,6 +268,7 @@
       Changes = 'yes'
       Commits = 'yes'
       SoulCap = 44032
+      RoleCap = 4200
       Writer = $true
       SubAgents = @{ enabled = $false; maxDepth = 0 }
       Effort = 'default'
@@ -299,6 +307,7 @@
       Changes = 'e2e tests'
       Commits = 'yes'
       SoulCap = 44032
+      RoleCap = 7400
       Writer = $true
       SubAgents = @{ enabled = $false; maxDepth = 0 }
       Effort = 'default'
@@ -336,6 +345,7 @@
       Changes = 'yes'
       Commits = 'yes'
       SoulCap = 51200
+      RoleCap = 7900
       Writer = $true
       SubAgents = @{ enabled = $false; maxDepth = 0 }
       Effort = 'default'
@@ -376,6 +386,7 @@
       Changes = 'yes'
       Commits = 'yes'
       SoulCap = 62464
+      RoleCap = 19300
       Writer = $true
       SubAgents = @{ enabled = $true; maxDepth = 1 }
       Effort = 'high'
@@ -415,6 +426,7 @@
       Changes = 'yes'
       Commits = 'yes'
       SoulCap = 44032
+      RoleCap = 7500
       Writer = $true
       SubAgents = @{ enabled = $false; maxDepth = 0 }
       Effort = 'default'
@@ -452,6 +464,7 @@
       Changes = 'tests, when asked'
       Commits = 'yes'
       SoulCap = 44032
+      RoleCap = 7500
       Writer = $true
       SubAgents = @{ enabled = $false; maxDepth = 0 }
       Effort = 'default'
@@ -487,6 +500,7 @@
       Changes = 'no'
       Commits = 'no'
       SoulCap = 22528
+      RoleCap = 3500
       Writer = $false
       SubAgents = @{ enabled = $false; maxDepth = 0 }
       Effort = 'default'
@@ -516,6 +530,7 @@
       Changes = 'no'
       Commits = 'no'
       SoulCap = 28672
+      RoleCap = 7600
       Writer = $false
       SubAgents = @{ enabled = $false; maxDepth = 0 }
       Effort = 'high'
@@ -546,6 +561,7 @@
       Changes = 'its plan or ADR file only'
       Commits = 'no'
       SoulCap = 28672
+      RoleCap = 5500
       Writer = $false
       SubAgents = @{ enabled = $false; maxDepth = 0 }
       Effort = 'high'
@@ -578,6 +594,7 @@
       Changes = 'documentation files'
       Commits = 'yes'
       SoulCap = 44032
+      RoleCap = 7500
       Writer = $true
       SubAgents = @{ enabled = $false; maxDepth = 0 }
       Effort = 'default'
@@ -614,6 +631,7 @@
       Changes = 'UI presentation files'
       Commits = 'yes'
       SoulCap = 51200
+      RoleCap = 8000
       Writer = $true
       SubAgents = @{ enabled = $false; maxDepth = 0 }
       Effort = 'default'
@@ -654,6 +672,7 @@
       Changes = 'asset files'
       Commits = 'yes'
       SoulCap = 51200
+      RoleCap = 7500
       Writer = $true
       SubAgents = @{ enabled = $false; maxDepth = 0 }
       Effort = 'default'
