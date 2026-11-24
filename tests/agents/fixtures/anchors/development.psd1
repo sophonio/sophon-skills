@@ -133,7 +133,7 @@
     @{ Text = 'MODE in a brief: write | visual | flake.'; In = @('e2e-test-engineer') }
     @{ Text = 'MODE in a brief: component | direct | artifact | perf. component is the default when the project has a test runner and behaviour changes.'; In = @('frontend-developer') }
     @{ Text = 'MODE in a brief: design | build | evals.'; In = @('mcp-integration-engineer') }
-    @{ Text = '- MODE: codebase | external | both. Both = codebase first, then the web for the version in use.'; In = @('researcher') }
+    @{ Text = '- MODE: codebase | external | both | onboard. Both = codebase first, then the web for the version in use.'; In = @('researcher') }
     @{ Text = 'MODE is review | verify; at root, review.'; In = @('security-reviewer') }
     @{ Text = '- MODE: blueprint | adr | greenfield | compare | critique. At root, blueprint unless the user asks for another.'; In = @('software-architect') }
     @{ Text = 'MODE in a brief: draft | edit | reader-test. Docs are the asked-for change here.'; In = @('technical-writer') }
@@ -153,6 +153,7 @@
     @{ Text = 'MODE is gate, regression, write-tests, strategy, gaps or ui.'; Why = 'qa-engineer gains the perf and probe modes in 3.0; every 2.1.0 mode word stays, and the new list is anchored instead' }
     @{ Text = 'CLEAN | ISSUES'; Why = 'the all-roles VERDICT line of 15b-findings-block goes in 3.0; security-reviewer states its words as "VERDICT CLEAN or ISSUES", which is anchored instead' }
     @{ Text = 'READY | NEEDS_DECISION'; Why = 'the all-roles VERDICT line of 15b-findings-block goes in 3.0; software-architect states its words as "VERDICT READY or NEEDS_DECISION", which is anchored instead' }
+    @{ Text = '- MODE: codebase | external | both. Both = codebase first, then the web for the version in use.'; Why = 'researcher gains the onboard mode in 3.0; the mode line with onboard is anchored instead, and every 2.1.0 mode word stays' }
   )
   Gone = @(
     @{ Text = '<m> deferred'; File = 'SOUL'; Since = '3.0.0'; Why = 'deferred is no longer a plan word in 3.0' }
