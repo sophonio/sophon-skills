@@ -142,6 +142,12 @@
     @{ Text = 'MODE is tdd, direct or debug'; In = @('developer') }
     @{ Text = 'MODE is gate, regression, write-tests, strategy, gaps or ui.'; In = @('qa-engineer') }
     @{ Text = 'ROLE: <role id> · MODE: <a mode from that role''s list> · ACCESS: read-only | write'; In = 'lead' }
+    # The lead's controller text (3.0): verdicts it acts on, brief keys, modes from each companion's whenToUse
+    @{ Text = '| code-reviewer | `APPROVE` with `SPEC: MET`; `ALL_ADDRESSED`; `COMPLETE` | `REQUEST_CHANGES`; `SPEC: GAPS`; `OPEN`; `GAPS` |'; In = 'lead' }
+    @{ Text = 'Any other role: its FINDINGS and SUMMARY decide, not the verdict word.'; In = 'lead' }
+    @{ Text = 'CHANGE: <diff file path | "working tree">, reviews only'; In = 'lead' }
+    @{ Text = 'DESIGN: <DESIGN.md path | "sophon-default" | "plain">, UI work only'; In = 'lead' }
+    @{ Text = 'its when-to-use text ends "Modes: … Brief keys: …"'; In = 'lead' }
   )
   Removed = @(
     @{ Text = 'CLEAN | ISSUES'; Why = 'the all-roles VERDICT line of 15b-findings-block goes in 3.0; security-reviewer states its words as "VERDICT CLEAN or ISSUES", which is anchored instead' }
@@ -153,6 +159,12 @@
     @{ Text = 'Ask everything at once'; File = 'SOUL'; Since = '3.0.0'; Why = 'the 3.0 question discipline asks only what is open, one open question per message' }
     @{ Text = 'researcher, developer, UX n/a'; File = 'SOUL'; Since = '3.0.0'; Why = 'the all-roles VERDICT line of 15b-findings-block goes; each role states its own verdict words' }
     @{ Text = 'per the verdict table'; File = 'SOUL'; Since = '3.0.0'; Why = 'code-reviewer states its verdict words in its Output section' }
+    @{ Text = 'Modes · role keys:'; File = 'SOUL'; Since = '3.0.0'; Why = 'the lead reads modes and brief keys from each companion''s whenToUse "Modes:" line' }
+    @{ Text = 'counts as a v2 install'; File = 'SOUL'; Since = '3.0.0'; Why = 'a local match reports no version, and a missing version counts as current' }
+    @{ Text = 'at most 10 agents in 5 delegate calls'; File = 'SOUL'; Since = '3.0.0'; Why = 'the 3.0 lead caps are 20 in 10 and 44 in 22' }
+    @{ Text = '[Review panel (Recommended)]'; File = 'SOUL'; Since = '3.0.0'; Why = 'the 3.0 Medium options are Build inline then review, Team per task and Solo' }
+    @{ Text = '[Full team (Recommended)]'; File = 'SOUL'; Since = '3.0.0'; Why = 'the 3.0 Large options put Team per task first' }
+    @{ Text = 'Never delegate understanding'; File = 'SOUL'; Since = '3.0.0'; Why = 'the Understand gate says it: read the 5-10 key files yourself' }
     @{ Text = 'Keep local / Discard menu'; File = 'README'; Since = '3.0.0'; Pending = 'M8'; Why = 'the 3.0 finish menu replaces it' }
     @{ Text = 'Keep local or Discard'; File = 'README'; Since = '3.0.0'; Pending = 'M8'; Why = 'the 3.0 finish menu replaces it' }
     @{ Text = '10 agents in 5 calls'; File = 'README'; Since = '3.0.0'; Pending = 'M8'; Why = 'the 3.0 lead caps replace it' }
