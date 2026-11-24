@@ -86,6 +86,7 @@
       @{ Id = 'test-integrity'; Fragment = '10c-test-integrity' }
       @{ Id = 'run-evidence'; Fragment = '10a-run-evidence'; Anchor = '- Before you write "should work", "probably", "seems fine" or "done" with no output from this turn behind it, run the check.' }
       @{ Id = 'discovery-gate'; Fragment = '07b-discovery'; Anchor = '6. Write what was agreed into the plan''s Context, Approach and Global constraints. Plan approval is the gate: nothing is built, scaffolded or installed before it, and agreement in chat covers only what you wrote down.' }
+      @{ Id = 'root-cause'; Agent = 'debugger'; Anchor = '## Root cause first' }
     )
   }
   Values = @{

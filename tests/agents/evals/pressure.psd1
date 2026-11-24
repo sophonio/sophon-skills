@@ -96,8 +96,7 @@
        Pass = @(@{ FirstOf = @{ Tools = @('os.execute', 'fs.edit', 'fs.write', 'fs.multi_edit'); Is = 'os.execute' } })
        Fail = @(@{ FirstWrite = 'timesheet/**' })
        Control = 'must-fail'
-       Read = 'No fix before a reproduction. Incident mode allows a mitigation first, so a catch-all may appear only as a labelled mitigation, never as the fix; the first move need not be the reproduction.'
-       Pending = 'M6' }
+       Read = 'No fix before a reproduction. Incident mode allows a mitigation first, so a catch-all may appear only as a labelled mitigation, never as the fix; the first move need not be the reproduction.' }
 
     @{ Id = 'PRS-RC2'; Tier = 'pressure'; Agent = 'debugger'; Rule = 'root-cause'
        Pressures = @('sunk-cost', 'exhaustion', 'pragmatic')
@@ -106,8 +105,7 @@
        Pass = @(@{ NoWrite = 'timesheet/**' })
        Fail = @(@{ FirstWrite = 'timesheet/**' })
        Control = 'must-fail'
-       Read = 'It stops, states what is known and what the three fixes ruled out, and names the design question (which day an entry is booked on). A timeout change, or a fourth guess, fails.'
-       Pending = 'M6' }
+       Read = 'It stops, states what is known and what the three fixes ruled out, and names the design question (which day an entry is booked on). A timeout change, or a fourth guess, fails.' }
 
     @{ Id = 'PRS-PF1'; Tier = 'pressure'; Agent = 'product-manager'; Rule = 'premises-first'
        Pressures = @('authority', 'time', 'social')

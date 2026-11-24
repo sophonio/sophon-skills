@@ -767,15 +767,17 @@ try {
         elseif (@($skillRun['Failures']).Count -eq 0) { Add-Pass 'M' "$($skillRun['Count']) skill-use fixture case(s) (LINT-SKILL-FRAGMENT, LINT-SKILL-UNUSED, LINT-TOPIC) behave as expected" }
 
         # The development family carries the Method key since M5 (the design's controller terms, worker contract
-        # and the five fragment rules); the real sources must pass it, and a copy without the exemption must fail.
+        # and the five fragment rules; the role-text rules join in M6); the real sources must pass it, and a copy
+        # without the exemption must fail.
         $realFamily = Import-PowerShellDataFile -LiteralPath (Join-Path $RepoRoot 'build/agent-src/family.psd1')
         $realMethod = $realFamily['Method']
         $realRules = @(if ($realMethod -is [hashtable]) { @($realMethod['Rules']) | ForEach-Object { [string]$_['Id'] } })
         $wantRules = @('discovery-gate', 'test-first', 'receiving-review', 'test-integrity', 'run-evidence')
-        $null = Test-Check 'M' ($realMethod -is [hashtable] -and (@($realRules | Sort-Object) -join ',') -ceq (@($wantRules | Sort-Object) -join ',') -and (@($realMethod['Worker']['Exempt']) -join ',') -ceq 'artifact-creator') "the development family's Method key registers the five fragment rules ($($wantRules -join ', ')) and exempts artifact-creator only (got: $($realRules -join ', '))"
+        $missingRules = @($wantRules | Where-Object { $realRules -cnotcontains $_ })
+        $null = Test-Check 'M' ($realMethod -is [hashtable] -and $missingRules.Count -eq 0 -and (@($realMethod['Worker']['Exempt']) -join ',') -ceq 'artifact-creator') "the development family's Method key registers the five fragment rules ($($wantRules -join ', ')) and exempts artifact-creator only (got: $($realRules -join ', '))"
         $methodArgsReal = @('-NoProfile', '-NonInteractive', '-File', (Join-Path $RepoRoot 'build/Test-AgentSources.ps1'), '-RepoRoot', $RepoRoot, '-Family', 'development')
         $withKey = Invoke-Native $pwsh $methodArgsReal
-        $null = Test-Check 'M' ($withKey.Code -eq 0 -and $withKey.Text.Contains('5 registered rule(s), 1 reference fragment(s), 0 finding(s)', $ord)) "the development text (with its craft-reference fragment and the discovery-gate, test-first, receiving-review, test-integrity and run-evidence rules) passes METHOD-CONTROLLER, METHOD-EXCUSES and METHOD-REFERENCE (exit $($withKey.Code): $(Get-Tail @($withKey.Lines | Where-Object { $_ -clike 'ERROR *' }) 3))"
+        $null = Test-Check 'M' ($withKey.Code -eq 0 -and $withKey.Text.Contains("$($realRules.Count) registered rule(s), 1 reference fragment(s), 0 finding(s)", $ord)) "the development text (with its craft-reference fragment and its $($realRules.Count) registered rules) passes METHOD-CONTROLLER, METHOD-EXCUSES and METHOD-REFERENCE (exit $($withKey.Code): $(Get-Tail @($withKey.Lines | Where-Object { $_ -clike 'ERROR *' }) 3))"
         $methodCase = Join-Path $tempRoot 'case-method'
         New-RepoCopy $methodCase
         $methodFamily = Join-Path $methodCase 'build/agent-src/family.psd1'
