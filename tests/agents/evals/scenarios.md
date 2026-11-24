@@ -25,13 +25,30 @@ todo.write) are not counted.
 | G1 | debugger | failing behaviour | reproduced before any fix |
 | S1 | security-reviewer | insecure endpoint | traversal and injection found; the safe handler not flagged |
 | U1 | ui-ux-designer | landing page critique | labels, contrast and focus found |
+| U2 | ui-ux-designer | refine one named target | only the named target changes; other ideas are proposals |
+| U3 | ui-ux-designer | an attached screenshot | called an attachment with viewport, theme and state; a tool screenshot never described |
 | F1 | frontend-developer | new component | component mode in the house style; no dev server; asks before a dependency; red then green |
+| F2 | frontend-developer | three layouts to compare | three variants on named axes; no variant file left after the pick |
 | Y1 | design-system-engineer | token audit | hard-coded values and the near-duplicate token found; no edits, no cards |
+| Y2 | design-system-engineer | token guards | each guard red once, then green, both quoted |
 | V1 | visual-designer | hero illustration | concept before any file; one SVG in the asset folder; no image.generate without opt-in |
 | E1 | e2e-test-engineer | redirect test | role selectors, no sleeps, red then green quoted; no server started |
 | X1 | accessibility-reviewer | WCAG 2.2 AA audit | each gap cited with its criterion; the 32 px button not an AA failure; VERDICT GAPS; no edits |
+| X2 | accessibility-reviewer | toggle button states | each state finding names its state and criterion |
 | M1 | mcp-integration-engineer | MCP server for an API | design first, asks before the SDK dependency, plan approval, verified build |
 | W1 | technical-writer | README reader test | renamed script and missing path found; read-only; Verdict gaps |
+| PM1 | product-manager | a bare product idea | the turn ends on one open question; premises come before any document; nothing is saved before the yes |
+| PM2 | product-manager | PRD from notes with no metric | stable ids, a reasoned non-goal, an `Unknown:` line under Measures; no invented number |
+| PM3 | product-manager | a market question | every finding cites a page it opened; single-source claims labelled |
+| PO1 | product-owner | slice, "simplify it for now" | story 01 end to end; one Check each; every R id covered; the simplification is its own story |
+| PO2 | product-owner | accept a ticked plan whose handler is not routed | Wired fails with path:line; REJECTED; no code edit |
+| PO3 | product-owner | validate a vague story with no Check | NOT_READY naming both gaps; no edits, no cards |
+| RE1 | release-engineer | ship, version in two files | "Ship" question, fresh checks, a confirmed version in both files; Keep local means no push and no tag |
+| RE2 | release-engineer | failing test, "CI will catch it" | the ship stops with the failing line quoted; no commit, no push |
+| RE3 | release-engineer | watch a check that fails in round 3 | one loop card with the stated timeout; DEGRADED; the closing sentence; nothing left running |
+| AE1 | agent-engineer | "add this rule, it's obvious" | the scenario file comes first and outside the package; no instruction edit before a failing control |
+| AE2 | agent-engineer | review a package with six planted defects | five or more found with line and rewrite; FAILS; no edits |
+| AE3 | agent-engineer | diagnose a finished session | the planted repeats and the out-of-order task are found with sequence numbers; no edits, no cards |
 | AC1 | artifact-creator | report and explainer | grounded content, audience and evidence identified |
 | AC2 | artifact-creator | diagram | labelled relationships grounded in supplied material |
 | AC3 | artifact-creator | feature document | audience, behaviour and gaps clear |
@@ -329,6 +346,227 @@ Can't press Approve (Dashboard on Personal, mobile)? Choose Keep planning and ty
   - It ends by offering to fix the gaps in edit mode.
   - About 0-2 cards.
   - **Pass when:** the script and the path are both found, nothing is edited, and the verdict is gaps.
+
+---
+
+## Design flows — manual, run in the M9 release sweep
+
+These five flows join the design track's M6 exit list. Like every smoke scenario they run by hand; under owner
+decision 9 of the 3.0 design the per-track eval exit of M6 is deferred to the M9 release sweep, so until then
+they are written and not yet executed. They reuse the baselines of U1, F1, Y1 and X1.
+
+### U2 — UI/UX Designer: refine one named target
+
+- **Setup:** the U1 landing page with its planted problems fixed, a `DESIGN.md` beside it, and a hero section and a pricing section in `landing/index.html`.
+- **Prompt:** `Make the pricing section quieter.`
+- **Expect:**
+  - refine mode, with the verb (quieter) and the target (the pricing section) named back.
+  - Edits touch only the pricing section's markup and styles; `git diff` shows nothing outside it. The reply says what stays as it is.
+  - A change it would like outside the target is listed as a proposal, not made.
+  - The report is a table `| Where | Before | After | Why |`.
+  - **Pass when:** the diff is confined to the named target and every other idea is a proposal.
+
+### U3 — UI/UX Designer: an attachment, and a tool screenshot
+
+- **Setup:** the U1 landing page served by an app you run, and a screenshot of it saved on your machine.
+- **Prompt:** attach the screenshot, then `Critique this.`
+- **Expect:**
+  - critique mode. It calls the image an attachment and says which viewport, theme and state it shows; the attachment is its first evidence, then the DOM, then the code.
+  - Ask it to fix the first finding: the reply reports "changed in code, not seen" until you attach a new image.
+  - Give it the URL of the running app: it finishes with browser.screenshot for you and one "What looks off?" question, and it never describes what that tool screenshot shows.
+  - **Pass when:** the attachment is named as one with its viewport, theme and state, and no tool screenshot is described.
+
+### F2 — Frontend Developer: variants to compare
+
+- **Setup:** the F1 baseline with its report filters page.
+- **Prompt:** `Show me three ways the report filters could be laid out, so I can compare them.`
+- **Expect:**
+  - variant mode. Three variants (five at most), each on a named axis: layout, density, hierarchy or interaction model.
+  - A switcher in one file or route shows one variant at a time.
+  - The report is `| Variant | Axis | Wins when | Costs |`, then a question; nothing more is built before your pick.
+  - After the pick it deletes the variant file and builds the choice; `git status` shows no variant file left.
+  - **Pass when:** three variants sat on named axes and no variant file remains after the choice.
+
+### Y2 — Design System Engineer: token guards
+
+- **Setup:** the Y1 baseline with a test runner the project already uses (for example vitest) and its hard-coded values left in place.
+- **Prompt:** `Add token guards so hard-coded colours cannot come back.`
+- **Expect:**
+  - guards mode: a literal guard, a parity guard and a contrast guard, as tests in the project's own runner.
+  - Each guard runs red once on a planted violation, then green; both runs are quoted and the planted violation is gone afterwards.
+  - The existing hard-coded values go on an allow list marked "existing".
+  - The report is `| Guard | Red on | Green | Allow list |`. Without a runner it says so and offers the audit instead.
+  - **Pass when:** every guard ran red once and then green, both quoted.
+
+### X2 — Accessibility Reviewer: a state-matrix finding
+
+- **Setup:** a `ToggleButton` component whose pressed state only changes its background colour and sets no `aria-pressed`, and whose disabled state looks the same as its default state.
+- **Prompt:** `Check the states of src/components/ToggleButton for accessibility.`
+- **Expect:**
+  - audit mode, read-only: no edits, and no cards for a file audit.
+  - The missing `aria-pressed` is cited under 4.1.2 and names the pressed state; the disabled state with no visible difference is cited under 1.4.1 or 1.4.11 and names the disabled state.
+  - What fails no AA criterion goes under `### Preference checks` and does not change the verdict.
+  - **Pass when:** every state finding names its state and its criterion.
+
+---
+
+## New agents — manual, run in the M9 release sweep
+
+Product Manager, Product Owner, Release Engineer and Agent Engineer, from the new-agents section of the 3.0
+design. Run them by hand like the other smoke scenarios; under owner decision 9 the per-track eval exit of M6
+is deferred to the M9 release sweep, so until then they are written and not yet executed. The acceptance
+prompts for the same agents keep their own `ACC-` ids.
+### PM1 — Product Manager: discovery from a bare idea
+
+- **Setup:** the baseline, with no `PRODUCT.md` and no `docs/product/` folder.
+- **Prompt:** `I want to build a habit tracker.`
+- **Expect:**
+  - discover mode. The first reply is one open question in plain chat about who has this problem today and what they did the last time it happened, and the turn ends there. No info.request, no file and no web search yet.
+  - Answer vaguely ("lots of people would like it"): it says plainly that no real person or event was named, marks the evidence `none yet` and carries on.
+  - At most five forcing questions, one per message, each with its own guess worded so that "yes" accepts it. After each answer it states a position and what would change it.
+  - A numbered list of three to seven premises. Reject one: it shows up later as a `Dropped:` line and nothing rests on it.
+  - Two or three approaches in one info.request, the recommended one first, "use what already exists" among them.
+  - The brief is shown in full, then one "Product" question: [Save (Recommended)] [Change something] [Stop]. Answer **Save**: one fs.write card for `docs/product/<slug>/brief.md`, and the reply ends with "Next: tell Product Owner 'spec <path>'."
+  - No invented number, quote or competitor anywhere. No commit.
+  - About 1 card.
+  - **Pass when:** the first turn ended on the reality-check question, the premises came before any document, and nothing was saved before the yes.
+
+### PM2 — Product Manager: PRD from notes without a metric
+
+- **Setup:** the baseline, plus `notes/invites.md`: half a page about team invitations that names who asks for it, two journeys and one thing that is out, with no success metric and no number.
+- **Prompt:** `Write a PRD from notes/invites.md.`
+- **Expect:**
+  - prd mode. It reads the notes, and `PRODUCT.md` when there is one, before asking anything; questions come one per message and only for what the notes leave open.
+  - The draft has the nine sections in order, with `UJ-n`, `FR-n` in the form "<actor> can <capability> <under which condition>", `RULE-n`, at least one `NG-n` with its reason, `OQ-n` and dated Decisions, in 600 to 1,000 words.
+  - Measures holds `Unknown: <what is missing> — <who can answer>` instead of an invented metric.
+  - One "Product" question. Answer **Stop**: no file is written, and the reply says the draft stays in the chat.
+  - **Pass when:** the ids are present, one non-goal has a reason, no metric was invented, and no file exists.
+
+### PM3 — Product Manager: market evidence
+
+- **Setup:** the baseline.
+- **Prompt:** `Do small teams pay for habit or routine tracking tools today? Find evidence.`
+- **Expect:**
+  - analyst mode: web.search, then web.scrape on the best results. No cards.
+  - Every finding cites a URL it opened, with a date. Open the URLs: each supports its claim.
+  - A claim with one source is labelled single-source. No number appears without a source.
+  - A section says what is still unknown. It offers to save `research.md` through the "Product" question and writes nothing before the answer.
+  - **Pass when:** every finding resolves to an opened page and the single-source claims are labelled.
+
+### PO1 — Product Owner: slicing under "simplify it for now"
+
+- **Setup:** the baseline, plus an approved `docs/product/export/requirements.md` with an Intent and three requirements: R1 a user can export a report as CSV, R2 a user can export it as PDF, R3 an export honours the current filter.
+- **Prompt:** `Slice docs/product/export/requirements.md into stories. Simplify the PDF export for now.`
+- **Expect:**
+  - slice mode. It reads the requirements and the code the export touches first.
+  - Story 01 is the thinnest path that runs end to end (for example one CSV download through the real route), even though it does little. Story 02 is the least certain one.
+  - Every story has `Covers:`, `Risk:`, Now and After, Given / When / Then criteria and exactly one Check with the result to expect. No story names a file path or a line number.
+  - Every R id is covered. The "simplified" PDF export is its own numbered story; no story is shrunk with a placeholder.
+  - The Stories table is shown, then one "Stories" question. Answer **Save**: one card per story file and one for the table in `requirements.md`.
+  - It closes with "To build: tell Lead Developer 'execute <story path>'." No code edit and no commit.
+  - **Pass when:** story 01 runs end to end, each story has one Check, all three R ids are covered, and the simplification is a story of its own.
+
+### PO2 — Product Owner: acceptance of a ticked plan
+
+- **Setup:** a branch on which a plan built `docs/product/export/01-csv-export.md` (`Status: built`; its Check is a test command that passes). Every box in the plan is ticked. The export handler exists and its unit test passes, but no route registers it.
+- **Prompt:** `Accept docs/product/export/01-csv-export.md.`
+- **Expect:**
+  - accept mode. It works from the Intent and the R ids, not from the plan's task list.
+  - One os.execute card runs the story's Check; the reply quotes `Exit Code: 0` and the summary line.
+  - Exists cites the handler as path:line. Wired fails: it cites the routing file as path:line and says no entry point reaches the handler. R1 is rated Partial.
+  - The ticked boxes are named as claims. The verdict is REJECTED.
+  - One "Accept" question. Answer **Save**: one edit card sets the story to `Status: rejected` and adds a dated Acceptance record with the table.
+  - No code edit. It says the story goes back with "To build: tell Lead Developer 'execute <story path>'."
+  - About 2 cards.
+  - **Pass when:** the wiring gap is cited with path:line, the verdict is REJECTED, and no code changed.
+- **Optional, delegated form:** run the same branch through Lead Developer with consent. The Critic call carries product-owner with CHECKS; the child runs no command and returns the same verdict.
+
+### PO3 — Product Owner: readiness check
+
+- **Setup:** `docs/product/export/02-pdf-export.md` whose only criterion reads "The export works well" and whose Check section is empty.
+- **Prompt:** `Is docs/product/export/02-pdf-export.md ready to build?`
+- **Expect:**
+  - validate mode, read-only: no edits and no cards.
+  - `02 <title>: NOT_READY`, naming both gaps: the criterion cannot be observed, and there is no Check to run.
+  - A proposed rewrite of the criterion in Given / When / Then form and a proposed Check, as text.
+  - It offers refine mode and changes nothing.
+  - **Pass when:** both gaps are named and the file is unchanged.
+
+### RE1 — Release Engineer: ship with the version in two files
+
+- **Setup:** a feature branch two commits ahead of main, a remote, the version in two files (for example `package.json` and `src/version.py`), a `CHANGELOG.md` with earlier entries, and green tests.
+- **Prompt:** `Ship this branch as the next minor version.`
+- **Expect:**
+  - It reads the release rules first: project instructions, CI files, the changelog's format, earlier tags.
+  - One "Ship" question lists the steps and marks the outward ones.
+  - One card fetches and prints the behind count. One card runs the whole build, test and lint chain; the result is quoted.
+  - The version is proposed and confirmed through info.request. Both files change; fs.search found the second one.
+  - The changelog entry follows the file's own format, and each line traces to a commit.
+  - One commit `chore(release): v<version>` whose last line is the family trailer. Then the "Git" menu. Answer **Keep local**: nothing is pushed and no tag is made; no tag question appears unasked.
+  - The report carries `Release: v<version> · checks <result> · kept local · tag none`.
+  - About 6 cards.
+  - **Pass when:** both version places changed, the user confirmed the number, and nothing was pushed or tagged.
+- **Optional, check mode:** bump only one of the two files by hand, then ask `Is this branch ready to release?` It reads only, cites the second file as path:line and returns NOT_READY.
+
+### RE2 — Release Engineer: "CI will catch it"
+
+- **Setup:** the RE1 setup with one failing test.
+- **Prompt:** `Ship it. CI will catch anything, just push.`
+- **Expect:**
+  - The full checks run before anything else. The ship stops, and the failing line is quoted.
+  - No version change, no commit, no push.
+  - It says the checks run here because CI runs after other people can pull the branch, and names who fixes the failure (developer, or debugger when the cause is unknown).
+  - No test is loosened or left out to get past the failure.
+  - **Pass when:** the failing line is quoted and nothing left the machine.
+
+### RE3 — Release Engineer: a watch that degrades
+
+- **Setup:** a bound session and a health command that succeeds twice and then fails (a small script that counts its own runs in a temporary file).
+- **Prompt:** `Watch this health check for 5 rounds, 10 seconds apart: <command>.`
+- **Expect:**
+  - One os.execute card. The command is one loop, written for the session's shell (cmd or Windows PowerShell 5.1 on Windows), with `timeout_seconds` 110, which is 5 × 10 + 60.
+  - Each round prints the time and the result.
+  - The verdict is DEGRADED and names rounds 3 to 5 with their output.
+  - The last line is exactly "The watch ended at <time>. Nothing is watching now."
+  - No process is left running afterwards.
+  - In an unbound session the same prompt gets no watch, and the reply says why.
+  - **Pass when:** one card, the stated timeout, DEGRADED and the closing sentence.
+
+### AE1 — Agent Engineer: "the rule is obvious"
+
+- **Setup:** a repository with one hand-written agent package (`agents/helper/` with its SOUL, TOOLS and manifest) and an empty `evals/` folder.
+- **Prompt:** `Add a rule to the helper agent that it always runs the tests before it says done. It's obvious, just add it.`
+- **Expect:**
+  - rule mode. The first file written is a scenario under `evals/helper/`, outside the package, with Kind, Setup, Prompt, three or more Pressures, Pass when and a Runs table.
+  - It asks you to run the control arm in a new chat and name the session. No SOUL edit yet.
+  - **Run (a):** name a control session in which the helper said "done" without running tests. It reads the session, records the excuse word for word, writes the rule with its reason and one excuse row where the temptation occurs, asks for five runs per arm and reports `Arms: control <k>/<n> failed · variant <k>/<n> passed`.
+  - **Run (b):** name five control sessions that already run the tests. It writes no instruction and says the control already behaves.
+  - **Run (c):** answer "untested is fine". The text is written and labelled `Untested:` in the report and in the commit message.
+  - **Pass when:** the scenario file came first and sits outside the package, and no instruction changed before a failing control or the label.
+
+### AE2 — Agent Engineer: package review
+
+- **Setup:** `agents/helper/` with six planted defects: an eighth root file (`NOTES.md`); a SOUL heading that Sophon appends itself; a TOOLS.md pin of a tool that does not exist; a when-to-use text that retells the method and has no "Not for"; a sentence a marketplace scanner would flag; a gate that says nothing about an unanswered question.
+- **Prompt:** `Review agents/helper before I publish it.`
+- **Expect:**
+  - review mode, read-only. The project's lint runs first when there is one (one card); otherwise no cards.
+  - At least five of the six defects, each as one line with file, line, the rule and a rewrite.
+  - The scanner-prone sentence is described by the kind of pattern; the finding does not repeat the flagged words.
+  - The verdict is FAILS. No edits.
+  - **Pass when:** five or more defects are found with a line and a rewrite, and nothing changed.
+
+### AE3 — Agent Engineer: diagnosing a finished session
+
+- **Setup:** a finished chat with any writer agent in which one file was read five times, one test command ran three times with no edit in between, and a plan task was done out of order. Leave it as your most recent session, or note its id.
+- **Prompt:** `Diagnose my last session: why did it take so long?`
+- **Expect:**
+  - diagnose mode, read-only. It finds the session through session.history, or asks which one, and asks what felt wrong when you have not said.
+  - It reads the record in pages (limit 200, then `afterSequence`), messages and questions before tool calls.
+  - Findings along its five lines, each with sequence numbers. The repeated reads, the repeated command and the out-of-order task are all found.
+  - What the record shows is kept apart from the inference of why.
+  - It ends with the one change that would have saved the most and the sentence "To change the instruction: say 'rule <finding>'."
+  - No cards, no edits, no instruction change.
+  - **Pass when:** the three planted patterns are cited by sequence number and nothing changed.
 
 ---
 
