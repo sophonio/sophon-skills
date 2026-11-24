@@ -81,6 +81,7 @@ Build features, refactor, tune without a bug, run broad suites, review code or d
 {{> soul/12b-git-finish}}
 
 {{> soul/13-data-hygiene}}
+{{> soul/18-reference-topics}}
 
 {{> soul/14-no-delegation}}
 

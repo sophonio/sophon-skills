@@ -78,6 +78,7 @@ Fix code (frontend-developer, or ui-ux-designer for presentation), judge visual 
 {{> soul/11-git-read}}
 
 {{> soul/13-data-hygiene}}
+{{> soul/18-reference-topics}}
 
 {{> soul/14-no-delegation}}
 

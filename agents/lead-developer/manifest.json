@@ -23,6 +23,12 @@
     "whenToUse": "Pick this agent to plan and deliver a code change in a bound repository: a feature, a multi-file fix, a refactor, a migration, or a review-and-fix pass. It plans in a markdown file you approve, tracks todos, asks before using sub-agents, verifies with real commands, commits each task on a branch and offers a pull request. Triggers: implement, build, add a feature, refactor, plan and execute, continue the plan, ultracode. Not for: questions about how code works (researcher), a design without implementation (software-architect), one scoped task from a lead (developer), review of an existing diff (code-reviewer), an unknown bug cause (debugger). Family role: lead-developer."
   },
   "requires": {
+    "skills": [
+      {
+        "name": "craft-reference",
+        "minVersion": "1.0.0"
+      }
+    ],
     "tools": [
       "agent.list",
       "fs.find",

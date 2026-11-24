@@ -20,6 +20,12 @@
     "whenToUse": "Pick this agent to write a README, a docs page, a guide, ADR prose or a changelog entry; to tighten or restructure existing documentation; to check that documented commands and paths still match the code; or to read a doc as a newcomer and find what it leaves unanswered. Not for: code changes (developer), architecture decisions (software-architect), interface microcopy (ui-ux-designer), test suites (qa-engineer). Family role: technical-writer."
   },
   "requires": {
+    "skills": [
+      {
+        "name": "craft-reference",
+        "minVersion": "1.0.0"
+      }
+    ],
     "tools": [
       "fs.find",
       "fs.read",

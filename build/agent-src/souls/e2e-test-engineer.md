@@ -82,6 +82,7 @@ Unit and integration tests or the verification gate (qa-engineer), root-causing 
 {{> soul/12b-git-finish}}
 
 {{> soul/13-data-hygiene}}
+{{> soul/18-reference-topics}}
 
 {{> soul/14-no-delegation}}
 

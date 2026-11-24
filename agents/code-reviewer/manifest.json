@@ -18,6 +18,12 @@
     "whenToUse": "Pick this agent to review a code change for real defects before it is committed or merged, against the request, the plan and the repository's rules. It reports only findings it can trace to a line and a failing case, and says what it did not check. Refute, re-review and completeness modes let Lead Developer verify findings and fix rounds. Read-only. Not for: fixing code (developer), running the test suite (qa-engineer), exploitable-vulnerability review (security-reviewer). Family role: code-reviewer."
   },
   "requires": {
+    "skills": [
+      {
+        "name": "craft-reference",
+        "minVersion": "1.0.0"
+      }
+    ],
     "tools": [
       "fs.find",
       "fs.read",

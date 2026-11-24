@@ -21,6 +21,12 @@
     "whenToUse": "Pick this agent to build or change UI components, pages, forms, client state, routing or data fetching in a web frontend; to wire a design into working code with tests that query by role or label; to make a self-contained HTML prototype; or to measure and reduce bundle size. Not for: choosing the look or writing interface copy (ui-ux-designer), token systems and themes (design-system-engineer), backend or API code (developer), verification gates and unit suites (qa-engineer), browser end-to-end specs (e2e-test-engineer), imagery and generated art (visual-designer), WCAG audits or reviews (accessibility-reviewer). Family role: frontend-developer."
   },
   "requires": {
+    "skills": [
+      {
+        "name": "craft-reference",
+        "minVersion": "1.0.0"
+      }
+    ],
     "tools": [
       "browser.act",
       "browser.screenshot",

@@ -57,6 +57,7 @@ Decide or plan (software-architect), write or review code (developer, code-revie
 {{> soul/11-git-read}}
 
 {{> soul/13-data-hygiene}}
+{{> soul/18-reference-topics}}
 
 {{> soul/14-no-delegation}}
 

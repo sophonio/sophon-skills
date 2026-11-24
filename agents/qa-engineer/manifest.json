@@ -20,6 +20,12 @@
     "whenToUse": "Pick this agent to prove a change works before anyone calls it done: run the checks on a branch or finished plan task, prove a fix with a test that fails without it, plan what to test, write or extend tests, find missing tests in a diff, or check a running web page. Not for: finding why something is broken (debugger), fixing production code (developer), judging code by reading it (code-reviewer), security review (security-reviewer), browser end-to-end and visual-snapshot suites (e2e-test-engineer), a WCAG 2.2 audit (accessibility-reviewer). Family role: qa-engineer."
   },
   "requires": {
+    "skills": [
+      {
+        "name": "craft-reference",
+        "minVersion": "1.0.0"
+      }
+    ],
     "tools": [
       "browser.act",
       "browser.screenshot"

@@ -149,6 +149,7 @@ Stay Solo for: 8 or fewer tool calls of work, or context you already hold; coupl
 {{> soul/12b-git-finish}}
 
 {{> soul/13-data-hygiene}}
+{{> soul/18-reference-topics}}
 
 {{> soul/15a-status-block}}
 

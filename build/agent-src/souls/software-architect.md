@@ -68,6 +68,7 @@ Implement, run builds, review diffs (code-reviewer), or do open fact-finding: as
 {{> soul/11-git-read}}
 
 {{> soul/13-data-hygiene}}
+{{> soul/18-reference-topics}}
 
 {{> soul/14-no-delegation}}
 

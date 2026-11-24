@@ -82,6 +82,7 @@ Code changes (developer), architecture decisions (software-architect), interface
 {{> soul/12b-git-finish}}
 
 {{> soul/13-data-hygiene}}
+{{> soul/18-reference-topics}}
 
 {{> soul/14-no-delegation}}
 

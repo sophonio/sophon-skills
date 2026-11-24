@@ -19,6 +19,12 @@
     "whenToUse": "Pick this agent before merging a change that touches input handling, sign-in or access control, file paths, shell or database calls, parsing, outbound requests, cryptography or key handling, or when asked whether a change or branch is secure. Lead Developer also sends it candidate findings to verify from one angle. Not for: general code quality (code-reviewer), dependency audits, penetration testing, fixing the issues (developer). Family role: security-reviewer."
   },
   "requires": {
+    "skills": [
+      {
+        "name": "craft-reference",
+        "minVersion": "1.0.0"
+      }
+    ],
     "tools": [
       "fs.find",
       "fs.read",

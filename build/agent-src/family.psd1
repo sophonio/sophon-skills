@@ -51,6 +51,15 @@
   )
   CreditsSentence = 'Workflow patterns adapted, not copied, from obra/superpowers (MIT, © 2025 Jesse Vincent) and Anthropic''s Claude Code plugins (feature-dev, pr-review-toolkit, code-review, security-review, frontend-design; Apache-2.0).'
   ReadmeCaps = @{ Lead = 24576; Other = 12288 }
+  # The optional Marketplace skill craft-reference (skills/craft-reference): every agent but artifact-creator
+  # (Skills = @()) uses it, requires it in requires.skills, pins craft.read and includes the reference fragment;
+  # its topic ids are checked against TopicIndex (LINT-TOPIC).
+  SkillPolicy = @{
+    Skills = @(
+      @{ Name = 'craft-reference'; MinVersion = '1.0.0'; Fragment = '18-reference-topics'; TopicIndex = 'build/craft-reference/topics.index.json' }
+    )
+  }
+  FragmentCaps = @{ '18-reference-topics' = 450 }
   Values = @{
     CommitTrailer = 'Co-Authored-By: Sophon <noreply@buildersoft.io>'
     PrFooter = '🤖 Generated with [Sophon](https://sophon.buildersoft.io)'
@@ -89,6 +98,7 @@
         '10b-cite-evidence',
         '11-git-read',
         '13-data-hygiene',
+        '18-reference-topics',
         '14-no-delegation',
         '15a-status-block',
         '15b-findings-block',
@@ -106,6 +116,7 @@
       RequiredTags = @('productivity')
       SubAgents = @{ enabled = $false; maxDepth = 0 }
       Effort = 'default'
+      Skills = @()
       Fragments = @('13-data-hygiene')
       Credits = @()
     }
@@ -130,6 +141,7 @@
         '10b-cite-evidence',
         '11-git-read',
         '13-data-hygiene',
+        '18-reference-topics',
         '14-no-delegation',
         '15a-status-block',
         '15b-findings-block',
@@ -162,6 +174,7 @@
         '12a-git-commit',
         '12b-git-finish',
         '13-data-hygiene',
+        '18-reference-topics',
         '14-no-delegation',
         '15a-status-block',
         '16-reporting'
@@ -194,6 +207,7 @@
         '12a-git-commit',
         '12b-git-finish',
         '13-data-hygiene',
+        '18-reference-topics',
         '14-no-delegation',
         '15a-status-block',
         '16-reporting'
@@ -225,6 +239,7 @@
         '12a-git-commit',
         '12b-git-finish',
         '13-data-hygiene',
+        '18-reference-topics',
         '14-no-delegation',
         '15a-status-block',
         '16-reporting'
@@ -257,6 +272,7 @@
         '12a-git-commit',
         '12b-git-finish',
         '13-data-hygiene',
+        '18-reference-topics',
         '14-no-delegation',
         '15a-status-block',
         '16-reporting'
@@ -289,6 +305,7 @@
         '12a-git-commit',
         '12b-git-finish',
         '13-data-hygiene',
+        '18-reference-topics',
         '14-no-delegation',
         '15a-status-block',
         '16-reporting'
@@ -321,6 +338,7 @@
         '12a-git-commit',
         '12b-git-finish',
         '13-data-hygiene',
+        '18-reference-topics',
         '15a-status-block',
         '15b-findings-block',
         '16-reporting'
@@ -353,6 +371,7 @@
         '12a-git-commit',
         '12b-git-finish',
         '13-data-hygiene',
+        '18-reference-topics',
         '14-no-delegation',
         '15a-status-block',
         '16-reporting'
@@ -384,6 +403,7 @@
         '12a-git-commit',
         '12b-git-finish',
         '13-data-hygiene',
+        '18-reference-topics',
         '14-no-delegation',
         '15a-status-block',
         '16-reporting'
@@ -411,6 +431,7 @@
         '10b-cite-evidence',
         '11-git-read',
         '13-data-hygiene',
+        '18-reference-topics',
         '14-no-delegation',
         '15a-status-block',
         '16-reporting'
@@ -438,6 +459,7 @@
         '10b-cite-evidence',
         '11-git-read',
         '13-data-hygiene',
+        '18-reference-topics',
         '14-no-delegation',
         '15a-status-block',
         '15b-findings-block',
@@ -466,6 +488,7 @@
         '10b-cite-evidence',
         '11-git-read',
         '13-data-hygiene',
+        '18-reference-topics',
         '14-no-delegation',
         '15a-status-block',
         '16-reporting'
@@ -498,6 +521,7 @@
         '12a-git-commit',
         '12b-git-finish',
         '13-data-hygiene',
+        '18-reference-topics',
         '14-no-delegation',
         '15a-status-block',
         '16-reporting'
@@ -529,6 +553,7 @@
         '12a-git-commit',
         '12b-git-finish',
         '13-data-hygiene',
+        '18-reference-topics',
         '14-no-delegation',
         '15a-status-block',
         '16-reporting'
@@ -561,6 +586,7 @@
         '12a-git-commit',
         '12b-git-finish',
         '13-data-hygiene',
+        '18-reference-topics',
         '14-no-delegation',
         '15a-status-block',
         '16-reporting'
