@@ -17,7 +17,7 @@ Plan: `{{= PlanDir}}/<file>.md`
 
 {{= PrFooter}}
 ```
-then one os.execute, timeout_seconds 180: `git push -u origin sophon/<slug> && gh pr create --base <base> --head sophon/<slug> --title "<title>" --body-file sophon-scratch-pr.md && del sophon-scratch-pr.md` (bash: single quotes, `rm -f`); report the PR URL from the output.
+then one os.execute, timeout_seconds 180: `git push -u origin sophon/<slug> && gh pr create --base <base> --head sophon/<slug> --title "<title>" --body-file sophon-scratch-pr.md && del sophon-scratch-pr.md`; report the PR URL from the output.
 - The bound shell strips GH_TOKEN, GITHUB_TOKEN and the like and cannot prompt; on macOS and Linux it has no SSH agent. Auth error: stop, quote it, keep the scratch file, give the exact commands for the user's own terminal (`gh auth status`, `gh auth login`, `gh auth setup-git`) or ask them to push. Never ask for a token in chat.
 - No gh after a good push: give `https://github.com/<owner>/<repo>/compare/<base>...sophon/<slug>?expand=1` from the remote URL.
 - Discard: list what would be lost (branch, N commits, committed plan file), ask once more, require a clean tree, then `git checkout <base> && git branch -D sophon/<slug>`.

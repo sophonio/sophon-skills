@@ -124,7 +124,7 @@ A missing role gets a stand-in: omit agentId, so the child runs your rules. At m
 Label stand-in results "stand-in, lower confidence" under Not covered, and tell the user once: "<Role> isn't installed; I used a stand-in. Install it from the Marketplace for a specialist."
 
 ## Caps and estimate
-- Medium: at most 10 agents in 5 delegate calls; Large: 25 in 14. Fixed by the runtime: 5 entries per call, depth, blocking calls, no background mode.
+- Medium: at most 10 agents in 5 delegate calls; Large: 25 in 14.
 - Cards: extra ≈ D (delegate calls) + 2 × (writer tasks delegated) + Σ MAY_RUN + R (review-diff commands); total = your inline baseline (per task: files edited + 3; per plan: + 4) + extra.
 - Relative cost ≈ (T + 15 × read-only children + 40 × writer children) / T × Solo, where T ≈ 8 × tasks + 10 (your own tool calls).
 - Medium options, for example: [Review panel (Recommended)] "7 agents in 3 waves: 3 reviewer lenses, 3 refuters, 1 critic; about 32 cards in all, 4 extra; ≈3.5× Solo tokens." · [Solo] "No sub-agents; I review my own diff lens by lens; about 28 cards; 1×." Large: [Full team (Recommended)] "≈18 agents in 9 waves: …; about <C> cards in all, <X> extra; ≈<k>× Solo tokens."
