@@ -767,14 +767,15 @@ try {
         elseif (@($skillRun['Failures']).Count -eq 0) { Add-Pass 'M' "$($skillRun['Count']) skill-use fixture case(s) (LINT-SKILL-FRAGMENT, LINT-SKILL-UNUSED, LINT-TOPIC) behave as expected" }
 
         # The development family carries the Method key since M5 (the design's controller terms, worker contract
-        # and the five fragment rules; the role-text rules join in M6); the real sources must pass it, and a copy
-        # without the exemption must fail.
+        # and the five fragment rules) and the role-text rules since M6 (each an Agent block); the real sources must
+        # pass it, and a copy without the exemption must fail.
         $realFamily = Import-PowerShellDataFile -LiteralPath (Join-Path $RepoRoot 'build/agent-src/family.psd1')
         $realMethod = $realFamily['Method']
         $realRules = @(if ($realMethod -is [hashtable]) { @($realMethod['Rules']) | ForEach-Object { [string]$_['Id'] } })
+        $roleRules = @(if ($realMethod -is [hashtable]) { @($realMethod['Rules']) | Where-Object { $_.ContainsKey('Agent') -and $_.ContainsKey('Anchor') } | ForEach-Object { [string]$_['Id'] } })
         $wantRules = @('discovery-gate', 'test-first', 'receiving-review', 'test-integrity', 'run-evidence')
-        $missingRules = @($wantRules | Where-Object { $realRules -cnotcontains $_ })
-        $null = Test-Check 'M' ($realMethod -is [hashtable] -and $missingRules.Count -eq 0 -and (@($realMethod['Worker']['Exempt']) -join ',') -ceq 'artifact-creator') "the development family's Method key registers the five fragment rules ($($wantRules -join ', ')) and exempts artifact-creator only (got: $($realRules -join ', '))"
+        $fragmentRules = @($realRules | Where-Object { $roleRules -cnotcontains $_ })
+        $null = Test-Check 'M' ($realMethod -is [hashtable] -and (@($fragmentRules | Sort-Object) -join ',') -ceq (@($wantRules | Sort-Object) -join ',') -and (@($realMethod['Worker']['Exempt']) -join ',') -ceq 'artifact-creator') "the development family's Method key registers the five fragment rules ($($wantRules -join ', ')), role-text rules only as Agent blocks ($($roleRules -join ', ')), and exempts artifact-creator only (got: $($realRules -join ', '))"
         $methodArgsReal = @('-NoProfile', '-NonInteractive', '-File', (Join-Path $RepoRoot 'build/Test-AgentSources.ps1'), '-RepoRoot', $RepoRoot, '-Family', 'development')
         $withKey = Invoke-Native $pwsh $methodArgsReal
         $null = Test-Check 'M' ($withKey.Code -eq 0 -and $withKey.Text.Contains("$($realRules.Count) registered rule(s), 1 reference fragment(s), 0 finding(s)", $ord)) "the development text (with its craft-reference fragment and its $($realRules.Count) registered rules) passes METHOD-CONTROLLER, METHOD-EXCUSES and METHOD-REFERENCE (exit $($withKey.Code): $(Get-Tail @($withKey.Lines | Where-Object { $_ -clike 'ERROR *' }) 3))"
@@ -998,10 +999,14 @@ try {
         New-Item -ItemType Directory -Path $docsDir -Force | Out-Null
         $docUnion = Get-AgentRosterUnion -RepoRoot $docCase
         $allCount = @($docUnion['Ids']).Count
+        # The derived counts follow the roster: the table is RosterOrder, the companions are the table without the lead.
+        $docWords = @{ 10 = 'ten'; 11 = 'eleven'; 12 = 'twelve'; 13 = 'thirteen'; 14 = 'fourteen'; 15 = 'fifteen'; 16 = 'sixteen'; 17 = 'seventeen'; 18 = 'eighteen'; 19 = 'nineteen'; 20 = 'twenty'; 21 = 'twenty-one'; 22 = 'twenty-two'; 23 = 'twenty-three'; 24 = 'twenty-four'; 25 = 'twenty-five' }
+        $docTable = @((Import-PowerShellDataFile -LiteralPath (Join-Path $docCase 'build/agent-src/family.psd1'))['RosterOrder']).Count
+        $docTableWord = $docWords[$docTable]; $docTableWord = $docTableWord.Substring(0, 1).ToUpperInvariant() + $docTableWord.Substring(1)
         $planted = @(
-            "The family ships $allCount agent packages, and Sixteen development agents sit in the table.",
-            'Lead Developer has fifteen companions and runs at most 10 agents in 5 calls.',
-            'Install all twenty-one development agents first.',
+            "The family ships $allCount agent packages, and $docTableWord development agents sit in the table.",
+            "Lead Developer has $($docWords[$docTable - 1]) companions and runs at most 10 agents in 5 calls.",
+            'Install all thirty-three development agents first.',
             'There are 99 Sophon agents in the store.',
             'In 2.0.0 the family had nine agents and 12 packages.',
             'Old text: thirteen agents shipped in the first release.'
@@ -1012,7 +1017,7 @@ try {
         Write-Utf8 $countsFile ($countsText.Replace('History = @()', "History = @(@{ Phrase = 'thirteen agents shipped in the first release'; Why = 'fixture: a historical count' })"))
         $docRun = Test-AgentDocCounts -RepoRoot $docCase -Union $docUnion
         $flagged = @($docRun['Findings'] | ForEach-Object { "$($_['Line'])" }) -join ','
-        $null = Test-Check 'N' ([string]::Equals($flagged, '3,4,5', $ord)) "DOC-COUNT flags 'twenty-one development agents', '99 Sophon agents' and '12 packages' only; derived counts, allowed caps, numbers under 10 and a History phrase pass (flagged lines: $flagged)"
+        $null = Test-Check 'N' ([string]::Equals($flagged, '3,4,5', $ord)) "DOC-COUNT flags 'thirty-three development agents', '99 Sophon agents' and '12 packages' only; derived counts, allowed caps, numbers under 10 and a History phrase pass (flagged lines: $flagged)"
         $docArgs = @('-NoProfile', '-NonInteractive', '-File', (Join-Path $docCase 'build/Test-AgentSources.ps1'), '-RepoRoot', $docCase)
         $docStrict = Invoke-Native $pwsh ($docArgs + '-Release')
         $null = Test-Check 'N' ($docStrict.Code -ne 0 -and $docStrict.Text.Contains('ERROR DOC-COUNT docs/AGENTS.md:3:', $ord) -and -not $docStrict.Text.Contains('DOC-COUNT docs/AGENTS.md:1:', $ord)) "under -Release a stale count fails DOC-COUNT at its line (exit $($docStrict.Code))"
