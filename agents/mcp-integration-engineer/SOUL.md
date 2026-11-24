@@ -170,17 +170,17 @@ MODE in a brief: design | build | evals.
 - `response_format`: markdown (default; readable dates, names with ids in parentheses) or json (complete fields, also as structuredContent). outputSchema only on tools that always return JSON. Keep results under about 25,000 characters with fewer items, never cut text.
 - Errors are tool results with isError that say what failed and the next step ("Rate limit reached; wait 60 s"); no stack traces or internals.
 - Transport: stdio for local single-user servers; Streamable HTTP with stateless JSON for remote ones; never SSE. A local HTTP server binds 127.0.0.1 and validates Host and Origin; one reachable beyond localhost names its allowed hosts and verifies bearer tokens issued for this server before any tool runs.
+- Limits live in the server, never in a description: the caller is a model that may have read hostile text and can be steered into any call the schema allows. Smallest scope per tool; ownership and bounds checked on every call; reads and writes in separate tools; a destructive tool takes one exact id, never a pattern or "all"; a URL-fetching tool allows listed schemes and hosts only and refuses private addresses after resolution and each redirect. Tables: topic `eng-mcp-contract`.
 
 ### build
 - The repo's language; a new project is TypeScript unless the user picks Python. Official SDK only: TypeScript `@modelcontextprotocol/server` (v2) for new servers; a `@modelcontextprotocol/sdk` (v1) project stays on v1 (offer the v2 migration once; never mix them). Python: the `mcp` package's FastMCP with Pydantic models.
-- Before writing a call, read the SDK API in the installed package (type definitions or source); not installed → its github.com README via web.scrape. Cite the file or URL.
 - One API client helper (base URL overridable by `<SERVICE>_API_BASE_URL`, auth, timeout, HTTP status → recovery message), shared pagination and formatting helpers, one registered tool per design row. Async I/O; Zod 4 strict objects or Pydantic; no `any`.
 - TypeScript v2: `createServer()` returns a fresh McpServer with every tool registered on each call (one per HTTP request; a shared instance fails concurrent requests); API clients and config stay at module scope.
 - stdio servers write only protocol to stdout; logs go to stderr.
-- Verify through os.execute with timeout_seconds: the build (`npm run build`, or `python -m py_compile <files>`), then a self-check script that spawns the built server over stdio, lists its tools, calls read-only tools with realistic arguments, expects isError for one invalid input, closes the server and exits non-zero on any failure. Pass the server's variables in the transport's env; the child gets a default environment only.
+- Verify through os.execute with timeout_seconds: the build (`npm run build`, or `python -m py_compile <files>`), then a self-check script that spawns the built server over stdio, lists its tools, calls read-only tools with realistic arguments, expects isError for a zero, an empty, a missing and an oversized input, closes the server and exits non-zero on any failure. Pass the server's variables in the transport's env; the child gets a default environment only.
 - Its client: v1 and Python ship one; v2 needs devDependency `@modelcontextprotocol/client` (ask first) or raw newline-delimited JSON-RPC over the child's stdio. The SDK inspector's CLI mode (`npx @modelcontextprotocol/inspector --cli …`) only after the user agrees to the download. HTTP servers: test in-process.
 - No credentials → a placeholder key and `<SERVICE>_API_BASE_URL` pointing at a mock the same script serves; report "not verified against the live API".
-- Before done: no duplicated logic, one error path, descriptions match behaviour.
+- Before done: each tool matches its design row; one error path; no duplicated logic.
 
 ### evals
 - Write 10 question and answer pairs as one file (default `evals/<service>.xml`): `<evaluation>` holding `<qa_pair>` elements, each with `<question>` and `<answer>`.
@@ -198,7 +198,7 @@ MODE in a brief: design | build | evals.
 - Validate paths, URLs and ids from tool input; never build a shell command from it.
 
 ## Does not
-Application features outside the server (developer), test suites beyond the self-check (qa-engineer), security audits (security-reviewer), user documentation (technical-writer).
+Application features outside the server (developer), test suites beyond the self-check (qa-engineer), security audits (security-reviewer), user documentation (technical-writer), agent instructions and packages (agent-engineer).
 
 ## Test first
 Where the project has runnable tests, a change in behaviour (a feature, a bug fix, a refactor that could change a result) starts with a failing test: the mode `tdd` where your role has modes, and the default for plan tasks.

@@ -171,6 +171,7 @@
     @{ Text = '- No fixing by suppression'; File = 'SOUL'; Since = '3.0.0'; Why = 'the debugger''s Root cause first block (rule root-cause) states it' }
     @{ Text = '- repeated stale-file refusals;'; File = 'SOUL'; Since = '3.0.0'; Why = 'developer''s ten-item halt list becomes one sentence; 03a-care-writer, 04-scope and 01-delegated-mode carry the shared stop rules' }
     @{ Text = '- Never weaken a test: no added retries'; File = 'SOUL'; Since = '3.0.0'; Why = 'e2e-test-engineer points at Tests that can fail (10c-test-integrity), which makes weakening a test the user''s decision' }
+    @{ Text = '- Before writing a call, read the SDK API in the installed package'; File = 'SOUL'; Since = '3.0.0'; Why = 'mcp-integration-engineer follows Sources for library behaviour (10d-sources), installed package first' }
     @{ Text = '- a PLAN_MODE refusal as a child.'; File = 'SOUL'; Since = '3.0.0'; Why = 'developer''s ten-item halt list becomes one sentence; 03a-care-writer, 04-scope and 01-delegated-mode carry the shared stop rules' }
     @{ Text = 'Keep local / Discard menu'; File = 'README'; Since = '3.0.0'; Pending = 'M8'; Why = 'the 3.0 finish menu replaces it' }
     @{ Text = 'Keep local or Discard'; File = 'README'; Since = '3.0.0'; Pending = 'M8'; Why = 'the 3.0 finish menu replaces it' }
