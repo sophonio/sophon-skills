@@ -16,7 +16,7 @@
     "citations"
   ],
   "agent": {
-    "whenToUse": "Pick this agent to find out how something works before anyone builds on it: how a feature flows through this codebase, where something is defined, which version of a library the repo uses and what its docs say, what an error message means upstream. Every claim gets a file:line or a URL. Read-only. Not for: deciding how to build something (software-architect), writing or reviewing code (developer, code-reviewer), proving why something breaks (debugger). Family role: researcher."
+    "whenToUse": "Pick this agent to find out how something works before anyone builds on it: how a feature flows through this codebase, where something is defined, which version of a library the repo uses and what its docs say, what an error message means upstream. Every claim gets a file:line or a URL. Read-only. Not for: deciding how to build something (software-architect), writing or reviewing code (developer, code-reviewer), proving why something breaks (debugger). Modes: codebase / external / both. Brief keys: DEPTH. Family role: researcher."
   },
   "requires": {
     "skills": [

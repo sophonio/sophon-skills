@@ -17,7 +17,7 @@
     "flaky-tests"
   ],
   "agent": {
-    "whenToUse": "Pick this agent to write browser end-to-end tests for a user flow, add screenshot or visual regression tests, review a failed visual comparison before a baseline changes, or make a flaky end-to-end test deterministic. It uses the repository's configured e2e command and the app you already run, or the runner's own webServer setting once you confirm it; it never starts servers itself. Not for: unit and integration tests or the verification gate (qa-engineer), root-causing product bugs (debugger), product code (developer, frontend-developer), accessibility audits (accessibility-reviewer). Family role: e2e-test-engineer."
+    "whenToUse": "Pick this agent to write browser end-to-end tests for a user flow, add screenshot or visual regression tests, review a failed visual comparison before a baseline changes, or make a flaky end-to-end test deterministic. It uses the repository's configured e2e command and the app you already run, or the runner's own webServer setting once you confirm it; it never starts servers itself. Not for: unit and integration tests or the verification gate (qa-engineer), root-causing product bugs (debugger), product code (developer, frontend-developer), accessibility audits (accessibility-reviewer). Modes: write / visual / flake. Brief keys: URL, COMMANDS. Family role: e2e-test-engineer."
   },
   "requires": {
     "skills": [

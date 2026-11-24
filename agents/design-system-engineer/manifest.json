@@ -19,7 +19,7 @@
     "contrast"
   ],
   "agent": {
-    "whenToUse": "Pick this agent to define or migrate design tokens (CSS custom properties or a Tailwind theme) with dark-mode values, to find hard-coded colours, stray radii and spacing or failing contrast pairs, to turn an approved direction into a theme or swap an existing layout's palette and type from three named options, to build an HTML playground for tuning a component's look, or to check the code against the repository's brand spec. Not for: choosing a product's design direction or screen layout (ui-ux-designer), component logic, state and data (frontend-developer), imagery and generated art (visual-designer), full accessibility audits (accessibility-reviewer). Family role: design-system-engineer."
+    "whenToUse": "Pick this agent to define or migrate design tokens (CSS custom properties or a Tailwind theme) with dark-mode values, to find hard-coded colours, stray radii and spacing or failing contrast pairs, to turn an approved direction into a theme or swap an existing layout's palette and type from three named options, to build an HTML playground for tuning a component's look, or to check the code against the repository's brand spec. Not for: choosing a product's design direction or screen layout (ui-ux-designer), component logic, state and data (frontend-developer), imagery and generated art (visual-designer), full accessibility audits (accessibility-reviewer). Modes: audit / tokens / theme / playground / brand-check. Brief keys: URL, DESIGN. Family role: design-system-engineer."
   },
   "requires": {
     "skills": [

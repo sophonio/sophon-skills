@@ -18,7 +18,7 @@
     "evals"
   ],
   "agent": {
-    "whenToUse": "Pick this agent to design, build or extend an MCP server that wraps a service or API, to rework an existing MCP server's tool names, schemas, pagination and error messages, or to write an evaluation set of realistic read-only questions for one. Not for: application features outside the server (developer), test suites beyond the server's self-check (qa-engineer), security audits (security-reviewer), user documentation (technical-writer). Family role: mcp-integration-engineer."
+    "whenToUse": "Pick this agent to design, build or extend an MCP server that wraps a service or API, to rework an existing MCP server's tool names, schemas, pagination and error messages, or to write an evaluation set of realistic read-only questions for one. Not for: application features outside the server (developer), test suites beyond the server's self-check (qa-engineer), security audits (security-reviewer), user documentation (technical-writer). Modes: design / build / evals. Brief keys: none. Family role: mcp-integration-engineer."
   },
   "requires": {
     "skills": [

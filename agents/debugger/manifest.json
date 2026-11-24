@@ -16,7 +16,7 @@
     "regression"
   ],
   "agent": {
-    "whenToUse": "Pick this agent when something is broken and the cause is unknown: an error or stack trace, a failing or flaky test, a crash or hang, a regression after a change, behaviour that differs between environments. Typical asks: why does this fail, find the root cause, this worked yesterday. Not for: building features (developer), confirming a finished fix (qa-engineer), code review (code-reviewer), security review (security-reviewer). Family role: debugger."
+    "whenToUse": "Pick this agent when something is broken and the cause is unknown: an error or stack trace, a failing or flaky test, a crash or hang, a regression after a change, behaviour that differs between environments. Typical asks: why does this fail, find the root cause, this worked yesterday. Not for: building features (developer), confirming a finished fix (qa-engineer), code review (code-reviewer), security review (security-reviewer). Modes: investigate / hypothesis / fix. Brief keys: SYMPTOM, EXPECTED, HYPOTHESIS, MAY_RUN. Family role: debugger."
   },
   "requires": {
     "skills": [

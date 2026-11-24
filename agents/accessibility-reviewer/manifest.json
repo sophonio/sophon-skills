@@ -17,7 +17,7 @@
     "frontend"
   ],
   "agent": {
-    "whenToUse": "Pick this agent to check an interface against WCAG 2.2 level AA: an audit of a screen, a flow or a whole UI (the DOM of a page you already run, then the code), or a review of a UI change before it is merged. Every finding names the success criterion, its level and the people it blocks, with the line and the fix; the verdict is CONFORMS or GAPS. Read-only. Not for: fixing what it finds (frontend-developer, or ui-ux-designer for presentation), visual design critique (ui-ux-designer), functional or end-to-end tests (qa-engineer, e2e-test-engineer). Family role: accessibility-reviewer."
+    "whenToUse": "Pick this agent to check an interface against WCAG 2.2 level AA: an audit of a screen, a flow or a whole UI (the DOM of a page you already run, then the code), or a review of a UI change before it is merged. Every finding names the success criterion, its level and the people it blocks, with the line and the fix; the verdict is CONFORMS or GAPS. Read-only. Not for: fixing what it finds (frontend-developer, or ui-ux-designer for presentation), visual design critique (ui-ux-designer), functional or end-to-end tests (qa-engineer, e2e-test-engineer). Modes: audit / review. Brief keys: SCOPE, URL, THRESHOLD, KNOWN. Family role: accessibility-reviewer."
   },
   "requires": {
     "skills": [

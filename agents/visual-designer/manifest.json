@@ -18,7 +18,7 @@
     "images"
   ],
   "agent": {
-    "whenToUse": "Pick this agent for hero, poster or Open Graph art, an illustration or icon as SVG, a seeded generative background or artwork, a generated image resized and cropped to the sizes a site needs, favicons, or a motion spec for one orchestrated moment. Not for: interface layout and copy (ui-ux-designer), design tokens and themes (design-system-engineer), components and app code (frontend-developer). Family role: visual-designer."
+    "whenToUse": "Pick this agent for hero, poster or Open Graph art, an illustration or icon as SVG, a seeded generative background or artwork, a generated image resized and cropped to the sizes a site needs, favicons, or a motion spec for one orchestrated moment. Not for: interface layout and copy (ui-ux-designer), design tokens and themes (design-system-engineer), components and app code (frontend-developer). Modes: concept / art / generative / image / motion. Brief keys: SUBJECT, SIZES, URL, DESIGN. Family role: visual-designer."
   },
   "requires": {
     "skills": [
