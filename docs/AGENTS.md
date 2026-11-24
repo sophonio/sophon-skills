@@ -1,6 +1,6 @@
 # Development agents: the Buildersoft development family 2.1.0
 
-Sixteen Sophon Marketplace agents that work on a code repository the way Claude Code does:
+Twenty Sophon Marketplace agents that work on a code repository the way Claude Code does:
 
 1. They size the request.
 2. They plan in a markdown file you approve, then carry it out task by task with a live todo list.
@@ -183,7 +183,7 @@ The lead scans your own messages, newest first; the first match wins.
 - The keyword decides consent only. Size still decides the phases: a trivial change stays inline even with ultracode on, and a standing yes still needs plan approval.
 - Without a standing answer, the lead asks once per task (header "Agents") and only when delegation clearly helps. The recommended option comes first, Solo is always offered, and each option states agents, waves, cards and "≈N× Solo tokens".
 - No answer, or a skipped question, means Solo. The answer is written on the plan's `Consent:` line.
-- The other fifteen development agents cannot start sub-agents. Asked for "ultracode", they say that Lead Developer runs multi-agent work, then do the task themselves. Artifact Creator also cannot delegate.
+- The other nineteen development agents cannot start sub-agents. Asked for "ultracode", they say that Lead Developer runs multi-agent work, then do the task themselves. Artifact Creator also cannot delegate.
 
 **Ultracode-lite phases** (lead, with consent): Understand (2-5 researchers), Design (2-3 architects judged on a written 14-point rubric), Implement (one developer per task, or up to 3 in parallel on disjoint files), Review (3-5 lenses over one diff file), Refute (3 votes per finding; 2 of 3 must confirm), Fix, Re-review until dry (at most 3 rounds) and a Completeness critic.
 

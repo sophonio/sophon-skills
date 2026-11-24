@@ -83,7 +83,7 @@ todo.write) are not counted.
 
 ## L3 — Lead Developer: ultracode
 
-- **Setup:** the baseline, with all 15 companions installed with `--allow-delegation-from lead-developer`, and a remote.
+- **Setup:** the baseline, with all 19 companions installed with `--allow-delegation-from lead-developer`, and a remote.
 - **Prompt:** `ultracode: add input validation to the create-item handler with tests, and document the error responses.`
 - **Expect:**
   - No "Agents" question, because "ultracode" is a standing yes. Plan approval is still asked.

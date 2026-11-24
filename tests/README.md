@@ -83,8 +83,8 @@ otherwise.
 
 ## Agent package tests (`tests/agents/`)
 
-`Test-AgentPackages.ps1` checks the eighteen agent packages in `agents/` end to end: the development
-family's sixteen development agents (nine MIT, seven Apache-2.0) and the Apache-2.0 productivity
+`Test-AgentPackages.ps1` checks the twenty-two agent packages in `agents/` end to end: the development
+family's twenty development agents (thirteen MIT, seven Apache-2.0) and the Apache-2.0 productivity
 agent `artifact-creator`, and the video family's `video-producer`. It needs PowerShell 7; sections J and K also
 need Sophon CLI 2.2.x on PATH.
 

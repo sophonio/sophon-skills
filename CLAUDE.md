@@ -71,8 +71,8 @@ wrapping folder); excludes `__pycache__/`, `dist/`, `.DS_Store`, `Thumbs.db`, `*
 
 ## Agent packages (`agents/`)
 
-Eighteen `.sophon-agent` packages in two families, listed in the registry
-`build/agent-src/families.psd1`: **development** (sixteen development agents plus the Artifact
+Twenty-two `.sophon-agent` packages in two families, listed in the registry
+`build/agent-src/families.psd1`: **development** (twenty development agents plus the Artifact
 Creator productivity agent, `build/agent-src/family.psd1`, souls and fragments beside it) and
 **video** (`video-producer`, `build/agent-src/families/video/family.psd1`, its own `souls/` and
 `fragments/soul/`). Families

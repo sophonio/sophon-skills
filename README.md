@@ -13,14 +13,15 @@ into `.sophon-skill` artifacts, and the docs for publishing them.
 
 ## Agents
 
-The **Buildersoft development family 2.1.0**: sixteen `.sophon-agent` packages that work on a
+The **Buildersoft development family 2.1.0**: twenty `.sophon-agent` packages that work on a
 repository the way Claude Code does. They plan in a markdown file you approve, execute it task by
 task with a live todo list, verify with real commands, commit each verified task on a feature
 branch and offer a pull request. The nine original agents are licensed **MIT**; the seven
-frontend, design, testing, MCP and docs agents added in 2.1 are licensed **Apache-2.0**. Only Lead
+frontend, design, testing, MCP and docs agents added in 2.1 are licensed **Apache-2.0**; the four
+product, release and agent-engineering agents added in 3.0 are licensed **MIT**. Only Lead
 Developer starts sub-agents, and only with your consent.
 
-The seventeenth package, [Artifact Creator](agents/artifact-creator), is a standalone **Apache-2.0**
+The twenty-first package, [Artifact Creator](agents/artifact-creator), is a standalone **Apache-2.0**
 productivity agent for grounded reports, explainers, guides, diagrams and presentations across
 subjects. It does not delegate or build interactive applications. File creation depends on the
 available tools and permissions; live creation has not been verified for this package.
