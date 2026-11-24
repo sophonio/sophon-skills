@@ -60,6 +60,32 @@
     )
   }
   FragmentCaps = @{ '18-reference-topics' = 450 }
+  # Where the tested rules live (docs/plans/2026-11-23-agents-v3-design.md, "The Method registry"): it drives
+  # METHOD-CONTROLLER and METHOD-EXCUSES, the control arms (Compose-AgentSouls.ps1 -Omit <rule id>) and the
+  # pressure coverage of the scenario lint. Only lead-developer delegates; every other agent but artifact-creator
+  # carries the worker contract. An Anchor is a whole source line; the block it starts ends with the last row of
+  # the first excuse table after it. The fragment rules arrived in M5; the role-text rules (root-cause,
+  # premises-first, split-never-shrink, outward-gate, control-first) arrive in M6 with their text.
+  Method = @{
+    Controller = @{
+      Fragments = @()
+      Terms = @('\bagent\.delegate\b', '\bwaves?\b', '\bstand-ins?\b', '\bfan(?:s|ned|ning)? out\b', '\btasks\[')
+      Allow = @(
+        @{ Fragment = '03a-care-writer'; Term = '\bagent\.delegate\b'; Why = 'its card list names every gated tool' }
+      )
+    }
+    Worker = @{
+      Fragments = @('01-delegated-mode', '14-no-delegation')
+      Exempt = @('artifact-creator')
+    }
+    Rules = @(
+      @{ Id = 'test-first'; Fragment = '09b-test-first' }
+      @{ Id = 'receiving-review'; Fragment = '09c-receiving-review' }
+      @{ Id = 'test-integrity'; Fragment = '10c-test-integrity' }
+      @{ Id = 'run-evidence'; Fragment = '10a-run-evidence'; Anchor = '- Before you write "should work", "probably", "seems fine" or "done" with no output from this turn behind it, run the check.' }
+      @{ Id = 'discovery-gate'; Fragment = '07b-discovery'; Anchor = '6. Write what was agreed into the plan''s Context, Approach and Global constraints. Plan approval is the gate: nothing is built, scaffolded or installed before it, and agreement in chat covers only what you wrote down.' }
+    )
+  }
   Values = @{
     CommitTrailer = 'Co-Authored-By: Sophon <noreply@buildersoft.io>'
     PrFooter = '🤖 Generated with [Sophon](https://sophon.buildersoft.io)'

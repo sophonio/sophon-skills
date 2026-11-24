@@ -32,7 +32,8 @@
            family still failing LINT-SKILL and MAN-REQUIRES as before. Needs no Sophon CLI.
       M    the Method registry: tests/agents/fixtures/method/cases.psd1 (Invoke-AgentMethodFixtures) for METHOD-CONTROLLER,
            METHOD-EXCUSES and METHOD-REFERENCE, tests/agents/fixtures/skills/cases.psd1 (Invoke-AgentSkillUseFixtures)
-           for LINT-SKILL-FRAGMENT, LINT-SKILL-UNUSED and LINT-TOPIC, then a temporary copy whose development family gains a Method key;
+           for LINT-SKILL-FRAGMENT, LINT-SKILL-UNUSED and LINT-TOPIC, then the development family's own Method key (and a copy without its
+           exemption or its test-integrity rule);
            in-memory anchor cases (ANCHOR-MISSING, ANCHOR-GONE, data errors); a smoke run of Compare-AgentSouls.ps1;
            the scenario lint of the instruction tests on tests/agents/fixtures/evals/cases.psd1
            (Invoke-AgentEvalLintFixtures in tests/agents/evals/AgentEvals.psm1), the transcript scorer on two
@@ -740,9 +741,9 @@ try {
     }
 
     # ---- M: the Method registry --------------------------------------------------------------------------
-    # The fixtures exercise each check in memory; a temporary copy then gives the development family a Method
-    # key (the design's controller terms and worker contract) that the 2.1.0 text must pass, and fail once
-    # artifact-creator, which lacks the worker fragments, is no longer exempt.
+    # The fixtures exercise each check in memory; then the development family's own Method key must pass on the
+    # real sources, and fail in a copy once artifact-creator, which lacks the worker fragments, is no longer
+    # exempt, or once a registered fragment rule is dropped.
     Write-Host 'Running the method cases ...'
     try {
         Import-Module (Join-Path $RepoRoot 'build/AgentLint.psm1') -Force
@@ -762,40 +763,32 @@ try {
         if ($skillRun['Count'] -eq 0) { Add-Fail 'M' 'no cases in tests/agents/fixtures/skills/cases.psd1' }
         elseif (@($skillRun['Failures']).Count -eq 0) { Add-Pass 'M' "$($skillRun['Count']) skill-use fixture case(s) (LINT-SKILL-FRAGMENT, LINT-SKILL-UNUSED, LINT-TOPIC) behave as expected" }
 
+        # The development family carries the Method key since M5 (the design's controller terms, worker contract
+        # and the five fragment rules); the real sources must pass it, and a copy without the exemption must fail.
+        $realFamily = Import-PowerShellDataFile -LiteralPath (Join-Path $RepoRoot 'build/agent-src/family.psd1')
+        $realMethod = $realFamily['Method']
+        $realRules = @(if ($realMethod -is [hashtable]) { @($realMethod['Rules']) | ForEach-Object { [string]$_['Id'] } })
+        $wantRules = @('discovery-gate', 'test-first', 'receiving-review', 'test-integrity', 'run-evidence')
+        $null = Test-Check 'M' ($realMethod -is [hashtable] -and (@($realRules | Sort-Object) -join ',') -ceq (@($wantRules | Sort-Object) -join ',') -and (@($realMethod['Worker']['Exempt']) -join ',') -ceq 'artifact-creator') "the development family's Method key registers the five fragment rules ($($wantRules -join ', ')) and exempts artifact-creator only (got: $($realRules -join ', '))"
+        $methodArgsReal = @('-NoProfile', '-NonInteractive', '-File', (Join-Path $RepoRoot 'build/Test-AgentSources.ps1'), '-RepoRoot', $RepoRoot, '-Family', 'development')
+        $withKey = Invoke-Native $pwsh $methodArgsReal
+        $null = Test-Check 'M' ($withKey.Code -eq 0 -and $withKey.Text.Contains('5 registered rule(s), 1 reference fragment(s), 0 finding(s)', $ord)) "the development text (with its craft-reference fragment and the discovery-gate, test-first, receiving-review, test-integrity and run-evidence rules) passes METHOD-CONTROLLER, METHOD-EXCUSES and METHOD-REFERENCE (exit $($withKey.Code): $(Get-Tail @($withKey.Lines | Where-Object { $_ -clike 'ERROR *' }) 3))"
         $methodCase = Join-Path $tempRoot 'case-method'
         New-RepoCopy $methodCase
         $methodFamily = Join-Path $methodCase 'build/agent-src/family.psd1'
         $methodText = [IO.File]::ReadAllText($methodFamily)
-        $methodKey = @'
-  Method = @{
-    Controller = @{
-      Fragments = @()
-      Terms = @('\bagent\.delegate\b', '\bwaves?\b', '\bstand-ins?\b', '\bfan(?:s|ned|ning)? out\b', '\btasks\[')
-      Allow = @(
-        @{ Fragment = '03a-care-writer'; Term = '\bagent\.delegate\b'; Why = 'its card list names every gated tool' }
-      )
-    }
-    Worker = @{
-      Fragments = @('01-delegated-mode', '14-no-delegation')
-      Exempt = @('artifact-creator')
-    }
-    Rules = @(
-      @{ Id = 'discovery-gate'; Fragment = '07b-discovery'; Anchor = '6. Write what was agreed into the plan''s Context, Approach and Global constraints. Plan approval is the gate: nothing is built, scaffolded or installed before it, and agreement in chat covers only what you wrote down.' }
-      @{ Id = 'test-first'; Fragment = '09b-test-first' }
-      @{ Id = 'receiving-review'; Fragment = '09c-receiving-review' }
-      @{ Id = 'test-integrity'; Fragment = '10c-test-integrity' }
-      @{ Id = 'run-evidence'; Fragment = '10a-run-evidence'; Anchor = '- Before you write "should work", "probably", "seems fine" or "done" with no output from this turn behind it, run the check.' }
-    )
-  }
-'@.Replace("`r", '') + "`n"
-        if (-not $methodText.Contains("  Agents = @(`n")) { throw 'the family copy has no Agents line' }
-        Write-Utf8 $methodFamily ($methodText.Replace("  Agents = @(`n", $methodKey + "  Agents = @(`n"))
+        $exemptLine = "Exempt = @('artifact-creator')"
+        if (-not $methodText.Contains($exemptLine, $ord)) { throw "the family copy has no line $exemptLine" }
+        Write-Utf8 $methodFamily ($methodText.Replace($exemptLine, 'Exempt = @()'))
         $methodArgs = @('-NoProfile', '-NonInteractive', '-File', (Join-Path $methodCase 'build/Test-AgentSources.ps1'), '-RepoRoot', $methodCase, '-Family', 'development')
-        $withKey = Invoke-Native $pwsh $methodArgs
-        $null = Test-Check 'M' ($withKey.Code -eq 0 -and $withKey.Text.Contains('5 registered rule(s), 1 reference fragment(s), 0 finding(s)', $ord)) "the development text (with its craft-reference fragment and the discovery-gate, test-first, receiving-review, test-integrity and run-evidence rules) passes METHOD-CONTROLLER and METHOD-EXCUSES with the design's terms and worker contract (exit $($withKey.Code): $(Get-Tail @($withKey.Lines | Where-Object { $_ -clike 'ERROR *' }) 3))"
-        Write-Utf8 $methodFamily ($methodText.Replace("  Agents = @(`n", $methodKey.Replace("Exempt = @('artifact-creator')", 'Exempt = @()') + "  Agents = @(`n"))
         $noExempt = Invoke-Native $pwsh $methodArgs
         $null = Test-Check 'M' ($noExempt.Code -ne 0 -and $noExempt.Text.Contains("ERROR METHOD-CONTROLLER build/agent-src/family.psd1:", $ord) -and $noExempt.Text.Contains("worker 'artifact-creator' lacks the worker fragment 01-delegated-mode", $ord)) "without the exemption artifact-creator fails METHOD-CONTROLLER for its missing worker fragments (exit $($noExempt.Code))"
+        # A table nobody registered fails: drop the test-integrity rule in the copy.
+        $integrityRule = "@{ Id = 'test-integrity'; Fragment = '10c-test-integrity' }"
+        if (-not $methodText.Contains($integrityRule, $ord)) { throw "the family copy has no rule $integrityRule" }
+        Write-Utf8 $methodFamily ($methodText.Replace($integrityRule, ''))
+        $noRule = Invoke-Native $pwsh $methodArgs
+        $null = Test-Check 'M' ($noRule.Code -ne 0 -and $noRule.Text.Contains('ERROR METHOD-EXCUSES build/agent-src/fragments/soul/10c-test-integrity.md:', $ord)) "without its test-integrity rule the 10c excuse table fails METHOD-EXCUSES as unregistered (exit $($noRule.Code))"
     } catch {
         Add-Fail 'M' "the method cases failed to run: $($_.Exception.Message) (line $($_.InvocationInfo.ScriptLineNumber))"
     }
