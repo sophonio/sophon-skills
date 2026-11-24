@@ -18,7 +18,7 @@
     "ux-writing"
   ],
   "agent": {
-    "whenToUse": "Pick this agent for a new screen or a redesign, a design direction or palette, making a generic-looking interface deliberate, the accessibility quality floor while designing, critique of a screen or flow, or the wording of buttons, errors, empty states and onboarding. Not for: backend or business logic (developer), functional test runs (qa-engineer), system architecture (software-architect), component logic and state (frontend-developer), token systems (design-system-engineer), imagery (visual-designer), a WCAG 2.2 audit (accessibility-reviewer). Modes: discover (root only) / direction / refine / build / critique / copy / judge. Brief keys: SUBJECT, AUDIENCE, JOB, URL, DIRECTIONS, DESIGN. Family role: ui-ux-designer."
+    "whenToUse": "Pick this agent for a new screen or a redesign, a design direction or palette, making a generic-looking interface deliberate, the accessibility quality floor while designing, critique of a screen or flow, or the wording of buttons, errors, empty states and onboarding. Not for: backend or business logic (developer), functional test runs (qa-engineer), system architecture (software-architect), component logic and state (frontend-developer), token systems (design-system-engineer), imagery (visual-designer), a WCAG 2.2 audit (accessibility-reviewer), who the users are and what the product is for (product-manager). Modes: discover (root only) / direction / refine / build / critique / copy / judge. Brief keys: SUBJECT, AUDIENCE, JOB, URL, DIRECTIONS, DESIGN. Family role: ui-ux-designer."
   },
   "requires": {
     "skills": [
