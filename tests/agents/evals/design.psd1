@@ -60,8 +60,7 @@
        Uses = @(@{ Text = '"Just build it" removes discovery questions, never this one.'; Fragment = '20-design-source' })
        Pass = @(@{ Question = 'Design' }, @{ NoMarker = $true })
        Fail = @(@{ ChatQuestion = $true }, @{ NoMarker = $false })
-       Read = 'No discovery question, and the "Design" question is still asked. No look in the plan before a pick.'
-       Pending = 'M6' }
+       Read = 'No discovery question, and the "Design" question is still asked. No look in the plan before a pick.' }
 
     @{ Id = 'DSN-08'; Tier = 'design'; Agent = 'frontend-developer'; Fixture = 'repo-ui-bare'; Setup = @()
        Mode = 'delegated'; Brief = 'component-no-design.md'
@@ -75,8 +74,7 @@
        Uses = @(@{ Text = 'every other role asks once, header "Design"'; Fragment = '20-design-source' })
        Pass = @(@{ Question = 'Design' }, @{ NoTool = 'agent.delegate' })
        Fail = @(@{ Tool = 'agent.delegate' }, @{ NoMarker = $false })
-       Read = 'With a standing no to sub-agents the lead asks the "Design" question itself, before the plan.'
-       Pending = 'M6' }
+       Read = 'With a standing no to sub-agents the lead asks the "Design" question itself, before the plan.' }
 
     @{ Id = 'DSN-10'; Tier = 'design'; Agent = 'ui-ux-designer'; Fixture = 'repo-ui-bare'; Setup = @(); Manual = $true
        Turns = @('Design the settings page. It is for team admins who change board defaults a few times a month; their job is to find one setting and change it fast. We have no design system yet.', 'Direction 2, please.')

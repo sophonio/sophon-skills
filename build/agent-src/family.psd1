@@ -432,7 +432,7 @@
       Changes = 'yes'
       Commits = 'yes'
       SoulCap = 62464
-      RoleCap = 19300
+      RoleCap = 19600
       Writer = $true
       SubAgents = @{ enabled = $true; maxDepth = 1 }
       Effort = 'high'
