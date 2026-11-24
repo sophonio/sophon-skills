@@ -1,0 +1,461 @@
+{
+  "generatedBy": "build/craft-reference/generate.py",
+  "skillVersion": "1.0.0",
+  "corpus": "4494fbb7a9bd683813143fe2b6703d33e25b3283d0182b3fe9ac6e6f771f3292",
+  "corpusBytes": 15198,
+  "topics": [
+    {
+      "id": "design-sophon-default",
+      "bytes": 694,
+      "sha256": "a39636ec0af2b9210ebca8aace4a58a9c0ff186ff3627fb33fe7088979916a22",
+      "sections": [
+        "dark-roles",
+        "light-roles",
+        "status-colours",
+        "type",
+        "space-and-radius",
+        "elevation",
+        "motion-tokens",
+        "other-themes",
+        "fonts",
+        "banned-list"
+      ]
+    },
+    {
+      "id": "design-sophon-components",
+      "bytes": 780,
+      "sha256": "84039557c8a95df6775a489c3de55aed6aee244b023712c82d9d1bd8d9313d78",
+      "sections": [
+        "page-archetypes",
+        "density",
+        "layout-measures",
+        "shell-text-ladder",
+        "page-states",
+        "navigation",
+        "tables",
+        "forms",
+        "empty-states",
+        "command-surface",
+        "product-wording"
+      ]
+    },
+    {
+      "id": "design-schools",
+      "bytes": 521,
+      "sha256": "242761296cda1ce5869c6cfc76a622ea6a709743f253d5b2455f86b606c9815d",
+      "sections": [
+        "index",
+        "swiss",
+        "editorial",
+        "modern-tool",
+        "brutalist",
+        "warm-humanist",
+        "experimental"
+      ]
+    },
+    {
+      "id": "design-open-systems",
+      "bytes": 389,
+      "sha256": "7814193e6157aa054a5493cb7a2242ac6acd5b8e8176f498aa29c0df3a21a8e9",
+      "sections": [
+        "material-3",
+        "carbon",
+        "primer",
+        "fluent-2",
+        "radix"
+      ]
+    },
+    {
+      "id": "design-directions-round",
+      "bytes": 375,
+      "sha256": "f83e930030610c7a7205d3c5202645fcee9fa9ada99e05bf541d78cb20d4037a",
+      "sections": [
+        "option-anatomy",
+        "filled-example",
+        "safer-and-bolder",
+        "picker-layout"
+      ]
+    },
+    {
+      "id": "design-generated-defaults",
+      "bytes": 505,
+      "sha256": "40e9408131e7f0ec350dab027c6c21d6e25def9e382659e6ddef6ddb39199d4e",
+      "sections": [
+        "type",
+        "colour",
+        "layout",
+        "components",
+        "imagery",
+        "motion",
+        "copy"
+      ]
+    },
+    {
+      "id": "design-critique-rubric",
+      "bytes": 370,
+      "sha256": "f2453c19c14ee5a39c750d49123808c4169a5729760cc91ffa15638a480378d6",
+      "sections": [
+        "heuristics",
+        "personas",
+        "severity-anchors",
+        "scoring-sheet"
+      ]
+    },
+    {
+      "id": "design-refinement-verbs",
+      "bytes": 409,
+      "sha256": "362568098df42452f810a30de2426db2714e276885cb39a7848ec8c98208c0db",
+      "sections": [
+        "bolder",
+        "quieter",
+        "distill",
+        "polish",
+        "report-table"
+      ]
+    },
+    {
+      "id": "design-motion",
+      "bytes": 378,
+      "sha256": "577aa87c189776ae4aa4a359df9f841f34233b403d6bc943851d6a81aaf569c3",
+      "sections": [
+        "purpose",
+        "duration-and-easing",
+        "enter-and-exit",
+        "reduced-motion"
+      ]
+    },
+    {
+      "id": "design-md-template",
+      "bytes": 361,
+      "sha256": "b63a24db978ad3f0cc451cc63f32aa92c0cc264f121697831d7348144333af36",
+      "sections": [
+        "skeleton",
+        "token-block",
+        "dated-rules",
+        "ownership"
+      ]
+    },
+    {
+      "id": "design-frontend-floors",
+      "bytes": 271,
+      "sha256": "e9ca987fab1e71976cf201b38b4b5ba1b2b45c903b750b22ed738440d700d454",
+      "sections": [
+        "use-what-exists",
+        "the-interaction-floor"
+      ]
+    },
+    {
+      "id": "design-states-matrix",
+      "bytes": 319,
+      "sha256": "9b263782dec808ba48692c3f1bb057ae1faf57f03d4c2b6e2ec3afeb3440897f",
+      "sections": [
+        "control-states",
+        "page-states",
+        "break-data"
+      ]
+    },
+    {
+      "id": "design-variants",
+      "bytes": 297,
+      "sha256": "e633ed17f3ad41ac03a620f03a5ed5a0b3b60c5683ab56bc8fc41c7654111175",
+      "sections": [
+        "axes",
+        "comparison-table",
+        "switcher"
+      ]
+    },
+    {
+      "id": "design-a11y-preferences",
+      "bytes": 333,
+      "sha256": "1c47034fdf5c6ced37bbd6b78a4e6f576614f767ed55138c419dfa96c82a861e",
+      "sections": [
+        "reduced-motion",
+        "contrast-preference",
+        "forced-colours"
+      ]
+    },
+    {
+      "id": "design-token-guards",
+      "bytes": 371,
+      "sha256": "b20301986c784db14098d0581a1e78de5fbd1997ddf9750bef25d37517cde9a0",
+      "sections": [
+        "literal-guard",
+        "parity-guard",
+        "contrast-guard",
+        "allow-list"
+      ]
+    },
+    {
+      "id": "design-evaluate",
+      "bytes": 544,
+      "sha256": "835b8dcf71b0b8707c110bbaf39dab95acd09968641e8de51b1e8faeccfc055d",
+      "sections": [
+        "overflow",
+        "target-sizes",
+        "unnamed-controls",
+        "heading-order",
+        "focus-styles",
+        "contrast-pairs",
+        "census"
+      ]
+    },
+    {
+      "id": "product-brief",
+      "bytes": 312,
+      "sha256": "f56b20f755a152cd8da4b4b67201031ec3a360583f6b44a39756ddf9635e5090",
+      "sections": [
+        "brief-skeleton",
+        "product-md-skeleton",
+        "filled-example"
+      ]
+    },
+    {
+      "id": "product-prd",
+      "bytes": 352,
+      "sha256": "31e446df3c8ce4acfa099f5210e49b4b96127e9070cf6c8c951bd70aa114f027",
+      "sections": [
+        "sections",
+        "id-forms",
+        "counter-measures",
+        "unknowns"
+      ]
+    },
+    {
+      "id": "product-discovery",
+      "bytes": 309,
+      "sha256": "06b174c31a92739addcb422f57aec40d9fa26607244df589ad70c6abaaa5c12c",
+      "sections": [
+        "question-bank",
+        "premise-forms",
+        "evidence-labels"
+      ]
+    },
+    {
+      "id": "product-prioritisation",
+      "bytes": 355,
+      "sha256": "99fdf29054351c90be01dad319b4e2447bfafbbd03679ce8756f168d689b0713",
+      "sections": [
+        "risk-first",
+        "rice",
+        "opportunity",
+        "pre-mortem"
+      ]
+    },
+    {
+      "id": "product-tickets",
+      "bytes": 441,
+      "sha256": "703f8784e24ba4a7913cb3a97664e1bfe196812493d461a439e81edf24918a8d",
+      "sections": [
+        "requirements-file",
+        "story-file",
+        "status-words",
+        "id-chain",
+        "out-of-scope"
+      ]
+    },
+    {
+      "id": "product-slicing",
+      "bytes": 307,
+      "sha256": "985b24d0cafdc8430276c074547852cfc3eead5f9bee84a736602ed846971909",
+      "sections": [
+        "thin-paths",
+        "split-patterns",
+        "two-stories"
+      ]
+    },
+    {
+      "id": "product-acceptance",
+      "bytes": 263,
+      "sha256": "47b97064957694f1669d4a6da735ac0f3f9bf1efb706f07339b777402cd324e0",
+      "sections": [
+        "criteria-patterns",
+        "evidence-table"
+      ]
+    },
+    {
+      "id": "eng-review-checks",
+      "bytes": 177,
+      "sha256": "eef85868d5d24f7abb95d46c6f3afc1b4fed31495fb9a2a4a8567080f0c2a128",
+      "sections": [
+        "checks-by-class"
+      ]
+    },
+    {
+      "id": "eng-silent-failures",
+      "bytes": 198,
+      "sha256": "12a6d2897196390fb08c72d846916611ce63cde9b9528577d064cf479e9275fa",
+      "sections": [
+        "patterns-by-idiom"
+      ]
+    },
+    {
+      "id": "eng-test-quality",
+      "bytes": 329,
+      "sha256": "38c0dbf760e43e63b44f9d7a1b0f13fa7b319f55f74e531794dbc32a1500a586",
+      "sections": [
+        "tautology-and-vacuity",
+        "what-to-mock",
+        "boundary-values"
+      ]
+    },
+    {
+      "id": "eng-debugging-tactics",
+      "bytes": 321,
+      "sha256": "7a10445bb6a6d74ce1859f7538adc8c78b444d915f1e36634956c930608da9c0",
+      "sections": [
+        "reproduction-rungs",
+        "tactics-by-symptom",
+        "bisect"
+      ]
+    },
+    {
+      "id": "eng-security-checklist",
+      "bytes": 263,
+      "sha256": "8cf6559084733bb39a348699f0b5a8f57e16cd123b8a52c095644e9291f1f050",
+      "sections": [
+        "checklist-by-class",
+        "high-miss"
+      ]
+    },
+    {
+      "id": "eng-privacy-sweep",
+      "bytes": 247,
+      "sha256": "348649eb18df872c2699b4081fd6b3dba423002b5780520ab67af9b6d4964d3d",
+      "sections": [
+        "field-sheet",
+        "leak-points"
+      ]
+    },
+    {
+      "id": "eng-adr",
+      "bytes": 325,
+      "sha256": "8759c77a27e0768e33d3fbfaa60d31ae5fe0a45d2d77bab8e4c9d2134be1b842",
+      "sections": [
+        "three-part-gate",
+        "short-form",
+        "worked-records"
+      ]
+    },
+    {
+      "id": "eng-api-contract",
+      "bytes": 454,
+      "sha256": "21ff0638f1b1b049a3688d60a75232ac44e74a202d0f18e06cc2974f363ccb40",
+      "sections": [
+        "operations-and-shapes",
+        "errors",
+        "paging",
+        "idempotent-writes",
+        "auth",
+        "versioning"
+      ]
+    },
+    {
+      "id": "eng-e2e",
+      "bytes": 360,
+      "sha256": "1956c5fb8b7af71cdcca6a53a3f7d1a5d77c92e93a71b7413a26256b2bb25836",
+      "sections": [
+        "locators",
+        "waits",
+        "test-data",
+        "failure-causes"
+      ]
+    },
+    {
+      "id": "eng-mcp-contract",
+      "bytes": 313,
+      "sha256": "458014e0240754928bdfc1b7f32e81e4dad04b187af717380ca0dafdea29cb74",
+      "sections": [
+        "tool-contract",
+        "schemas-and-errors",
+        "evaluation-set"
+      ]
+    },
+    {
+      "id": "eng-perf-measure",
+      "bytes": 356,
+      "sha256": "b85897440dc203b9a3d50958e40fbf36c54832517d4a9054b11b3d8a3b4d185b",
+      "sections": [
+        "terms",
+        "baseline",
+        "noise-test",
+        "reporting"
+      ]
+    },
+    {
+      "id": "eng-sources-versions",
+      "bytes": 324,
+      "sha256": "964ad719faa7c9c42586050d2d8f56a063f93677a114c0895a277ae6c06454aa",
+      "sections": [
+        "version-in-use",
+        "source-ranking",
+        "changelogs"
+      ]
+    },
+    {
+      "id": "eng-docs-accuracy",
+      "bytes": 382,
+      "sha256": "c0aa757b341ae7fd1c9be590226a283a43280591998edb08d55981b7bc7f77bb",
+      "sections": [
+        "quoted-items",
+        "glossary",
+        "change-descriptions",
+        "skeletons"
+      ]
+    },
+    {
+      "id": "release-ship",
+      "bytes": 388,
+      "sha256": "a7977967299e83f2327d638bfa6783c4a8bcff8e6a9dc947218ca89c4384cea5",
+      "sections": [
+        "version-places",
+        "changelog-forms",
+        "semver-table",
+        "pre-ship-checks"
+      ]
+    },
+    {
+      "id": "release-deploy-rollback",
+      "bytes": 418,
+      "sha256": "2d88a69c9b52bd074afef05f05238dd064ebce07f127572f1e2a90552c2ffbd4",
+      "sections": [
+        "before",
+        "during",
+        "after",
+        "health-signals",
+        "rollback-options"
+      ]
+    },
+    {
+      "id": "agent-pressure-tests",
+      "bytes": 382,
+      "sha256": "28d787b421520bd20b50ef1a8a0e162badc8d5a6bb33b03a07a83026b85f5a95",
+      "sections": [
+        "scenario-format",
+        "pressure-kinds",
+        "run-tables",
+        "reading-results"
+      ]
+    },
+    {
+      "id": "agent-instruction-style",
+      "bytes": 327,
+      "sha256": "3e37630dbbc3c0a952d683190030780bc581065e0bcb587e3c019362bf822e05",
+      "sections": [
+        "instruction-forms",
+        "excuse-table-format",
+        "positive-recipes"
+      ]
+    },
+    {
+      "id": "agent-package-facts",
+      "bytes": 378,
+      "sha256": "dad526815dc5713b8d33e1645f82b434f6567a06d5234de780716f4f13b6dfe7",
+      "sections": [
+        "package-files",
+        "limits",
+        "tools-md-grammar",
+        "scanner-families"
+      ]
+    }
+  ]
+}
