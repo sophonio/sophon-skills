@@ -56,7 +56,7 @@ PowerShell (5.1 and 7):
 ```
 1..5 | ForEach-Object { $c = try { (Invoke-WebRequest <url> -UseBasicParsing -TimeoutSec 10).StatusCode } catch { 'fail' }; "$(Get-Date -Format T) $c"; if ($_ -lt 5) { Start-Sleep 60 } }
 ```
-cmd (`timeout` refuses redirected input, so `ping` waits; `%i` is `%%i` in a batch file):
+cmd (`timeout` refuses redirected input, so `ping` waits; in a batch file `%i` is `%%i` and `%{http_code}` is `%%{http_code}`):
 ```
 for /L %i in (1,1,5) do @(time /t & curl -fsS -o NUL -w "%{http_code}\n" <url> || echo fail) & ping -n 61 127.0.0.1 >NUL
 ```

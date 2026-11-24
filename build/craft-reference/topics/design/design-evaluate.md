@@ -44,7 +44,7 @@ An approximation of the accessible name.
 
 ```js
 const hs = [...document.querySelectorAll("h1,h2,h3,h4,h5,h6,[role=heading]")].map(h =>
-  ({ level: Number(h.getAttribute("aria-level") || h.tagName.slice(1)), text: h.textContent.trim().slice(0, 50) }));
+  ({ level: +(h.getAttribute("aria-level") || h.tagName[1]) || 2, text: h.textContent.trim().slice(0, 50) }));
 return { h1: hs.filter(h => h.level === 1).length, skips: hs.filter((h, i) => i && h.level > hs[i - 1].level + 1),
   main: document.querySelectorAll("main").length, nav: document.querySelectorAll("nav").length };
 ```
@@ -92,6 +92,7 @@ A translucent background counts as opaque here; recheck such pairs composited.
 ## Census
 
 ```js
+const PRIMARY = "rgb(79, 70, 229)"; // set it to the page's primary fill
 const count = {}, add = (k, v) => { (count[k] ||= {})[v] = (count[k][v] || 0) + 1; };
 for (const el of document.querySelectorAll("body *")) { const s = getComputedStyle(el);
   add("fontSize", s.fontSize); add("radius", s.borderRadius); add("shadow", s.boxShadow);
@@ -101,4 +102,4 @@ return { distinct: pick(v => Object.keys(v).length), once: pick(v => Object.keys
   primaryActions: [...document.querySelectorAll("button,a")].filter(b => getComputedStyle(b).backgroundColor === PRIMARY).length };
 ```
 
-Set `PRIMARY` to the computed primary fill, such as "rgb(79, 70, 229)". A value used once is usually off the scale.
+A value used once is usually off the scale.

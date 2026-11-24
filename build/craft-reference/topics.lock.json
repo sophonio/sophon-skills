@@ -1,8 +1,8 @@
 {
   "generatedBy": "build/craft-reference/generate.py",
   "skillVersion": "1.0.0",
-  "corpus": "5d36444a9ac7baa43b2a0ef9e89963b2cc43ab3d17e2e736567124df85d28ca7",
-  "corpusBytes": 175167,
+  "corpus": "7137f1389f2692e31c010b19fb3d7c0dbd54b317397be077bd4ce281f52f15bb",
+  "corpusBytes": 175281,
   "topics": [
     {
       "id": "design-sophon-default",
@@ -115,8 +115,8 @@
     },
     {
       "id": "design-motion",
-      "bytes": 4220,
-      "sha256": "0e399b012d47bb71af31663b5c31d453709d12400fbb2e5d84e68315e4d3e53d",
+      "bytes": 4301,
+      "sha256": "441a96e904d1f3580db50f914e989da6a0c38841a6504fd73b07a6b6ed23e035",
       "sections": [
         "purpose",
         "duration-and-easing",
@@ -187,8 +187,8 @@
     },
     {
       "id": "design-evaluate",
-      "bytes": 5107,
-      "sha256": "34d6be0ce8a29ec4e556eafa5d4b0a5386ad6a094a69ff94759201ee6b5588fa",
+      "bytes": 5102,
+      "sha256": "e52b14a0c092f44aa11ce09e2ad2bbc5baa5a9e38d7b7e90d5c074ac9af95197",
       "sections": [
         "overflow",
         "target-sizes",
@@ -425,8 +425,8 @@
     },
     {
       "id": "release-deploy-rollback",
-      "bytes": 3994,
-      "sha256": "432f09825535462584833807f15dbfc1228da017fa8211198fae4de6b5e49425",
+      "bytes": 4032,
+      "sha256": "5c4e41364a9f97f7427e823467fbfc14d9936027af2a905a0439831ca6002628",
       "sections": [
         "before",
         "do",

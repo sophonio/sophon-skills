@@ -14,14 +14,14 @@ Four questions, in order. A "no" at the first one ends it.
 1. How often is it seen? Used many times a day (a command palette, a list's keyboard selection, a tab switch an expert makes constantly): no animation. A few times a day: short and subtle. Rarely (onboarding, a first load, a success moment): it may be expressive.
 2. What does it explain? A good answer names a change: where a panel came from, that an item was added, removed or moved, that something is loading, that an action took effect. "It looks nice" is not an answer.
 3. Which easing fits the kind of change? See the table below.
-4. How long? As short as still reads; interface motion stays under 300 ms.
+4. How long? As short as still reads; interface motion stays at about 300 ms or less; large surfaces such as drawers and dialogs up to about 320 to 400 ms.
 
 | Purpose | Example | Keep it |
 |---|---|---|
 | Feedback | a button press, a toggle | 100-160 ms, a small scale or colour change |
 | Spatial origin | a menu or popover opening from its trigger | 150-250 ms, scaling from the trigger's side |
 | Change of content | an item added, removed, reordered | 200-300 ms, opacity plus a short move |
-| Continuity | a drawer, a sheet, a route change | 250-300 ms, a slide from the edge it lives at |
+| Continuity | a drawer, a sheet, a route change | 250-400 ms, a slide from the edge it lives at |
 | Waiting | loading, progress | a loop only while waiting; never decoration |
 
 ## Duration and easing

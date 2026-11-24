@@ -49,14 +49,14 @@ Generated from `build/craft-reference/topics.index.json` by `build/craft-referen
 | `design-generated-defaults` | design | Generated-looking defaults: the dated catalogue | 7 | 8111 of 11264 | adapted |
 | `design-critique-rubric` | design | Critique rubric: heuristics, personas, severities | 4 | 5982 of 7168 | adapted |
 | `design-refinement-verbs` | design | Refinement verbs: bolder, quieter, distill, polish | 5 | 3836 of 5120 | adapted |
-| `design-motion` | design | Motion: purpose, durations, easing, reduced motion | 4 | 4220 of 5120 | adapted |
+| `design-motion` | design | Motion: purpose, durations, easing, reduced motion | 4 | 4301 of 5120 | adapted |
 | `design-md-template` | design | DESIGN.md: skeleton, token block and dated rules | 4 | 5102 of 5120 | adapted |
 | `design-frontend-floors` | design | Frontend floors: use what exists, the interaction floor | 2 | 4628 of 5120 | adapted |
 | `design-states-matrix` | design | States: nine control states, five page states, break data | 3 | 4619 of 5120 | original |
 | `design-variants` | design | Variants: axes, comparison table, switcher | 3 | 1456 of 2048 | adapted |
 | `design-a11y-preferences` | design | Preference checks: reduced motion, contrast, forced colours | 3 | 3624 of 4096 | original |
 | `design-token-guards` | design | Token guards: literal, parity and contrast tests | 4 | 4013 of 4096 | original |
-| `design-evaluate` | design | Measuring a page without sight: evaluate recipes | 7 | 5107 of 5120 | original |
+| `design-evaluate` | design | Measuring a page without sight: evaluate recipes | 7 | 5102 of 5120 | original |
 | `product-brief` | product | Product brief and PRODUCT.md skeletons | 3 | 3029 of 4096 | adapted |
 | `product-prd` | product | Lean PRD: sections, id forms, examples | 4 | 4094 of 5120 | adapted |
 | `product-discovery` | product | Discovery question bank and premise forms | 3 | 2979 of 3072 | adapted |
@@ -78,7 +78,7 @@ Generated from `build/craft-reference/topics.index.json` by `build/craft-referen
 | `eng-sources-versions` | engineering | Sources and versions: where the version lives, by ecosystem | 3 | 1955 of 2048 | adapted |
 | `eng-docs-accuracy` | engineering | Documentation accuracy: drift checks, glossary, change notes | 4 | 3063 of 3072 | adapted |
 | `release-ship` | release | Shipping: version places, changelog forms, pre-ship checks | 4 | 3515 of 4096 | original |
-| `release-deploy-rollback` | release | Deploy and rollback: checklists and health signals | 7 | 3994 of 5120 | adapted |
+| `release-deploy-rollback` | release | Deploy and rollback: checklists and health signals | 7 | 4032 of 5120 | adapted |
 | `agent-pressure-tests` | agent | Pressure tests: scenario format, pressures, run tables | 4 | 4127 of 5120 | adapted |
 | `agent-instruction-style` | agent | Instruction forms: which form fits which failure | 4 | 3498 of 4096 | adapted |
 | `agent-package-facts` | agent | Sophon package facts: files, limits, scanner families | 4 | 2980 of 3072 | original |

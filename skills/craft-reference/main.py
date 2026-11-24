@@ -18,7 +18,7 @@ import sys
 # Every document line is one physical line that starts with a quote (the import scan reads every line).
 SKILL_NAME = "craft-reference"
 SKILL_VERSION = "1.0.0"
-CORPUS_SHA256 = "5d36444a9ac7baa43b2a0ef9e89963b2cc43ab3d17e2e736567124df85d28ca7"
+CORPUS_SHA256 = "7137f1389f2692e31c010b19fb3d7c0dbd54b317397be077bd4ce281f52f15bb"
 INDEX = [
 {"id": "design-sophon-default", "family": "design", "title": "Sophon default: full token tables", "bytes": 10061, "summary": "Sophon product look (2026-11): dark and light roles, status, type, space, radius, depth, motion, themes, fonts, Banned.", "sections": ["dark-roles", "light-roles", "status-colours", "type", "space-and-radius", "elevation", "motion-tokens", "other-themes", "fonts", "banned-list"], "origin": "original", "reviewed": "2026-11", "sources": "Sources: original text by Buildersoft LLC."},
 {"id": "design-sophon-components", "family": "design", "title": "Sophon default: archetypes, layout and components", "bytes": 7302, "summary": "Sophon page archetypes with wireframes, density, layout measures, text ladder, page states, components and wording.", "sections": ["page-archetypes", "density", "layout-measures", "shell-text-ladder", "page-states", "navigation", "tables", "forms", "empty-states", "command-surface", "product-wording"], "origin": "original", "reviewed": "2026-11", "sources": "Sources: original text by Buildersoft LLC."},
@@ -28,14 +28,14 @@ INDEX = [
 {"id": "design-generated-defaults", "family": "design", "title": "Generated-looking defaults: the dated catalogue", "bytes": 8111, "summary": "Dated catalogue (2026-11) of defaults that read as generated: why, when each is fine, and its repair.", "sections": ["type", "colour", "layout", "components", "imagery", "motion", "copy"], "origin": "adapted", "reviewed": "2026-11", "sources": "Sources: Anthropic skills (Apache-2.0); impeccable (Apache-2.0); taste-skill (MIT); web-design-engineer (MIT); baseline-ui (MIT); Vercel web-interface-guidelines (MIT)."},
 {"id": "design-critique-rubric", "family": "design", "title": "Critique rubric: heuristics, personas, severities", "bytes": 5982, "summary": "Ten usability heuristics with 0-4 anchors, persona sketches, P0-P3 severity anchors and a scoring sheet.", "sections": ["heuristics", "personas", "severity-anchors", "scoring-sheet"], "origin": "adapted", "reviewed": "2026-11", "sources": "Sources: impeccable (Apache-2.0); heuristic names after Jakob Nielsen."},
 {"id": "design-refinement-verbs", "family": "design", "title": "Refinement verbs: bolder, quieter, distill, polish", "bytes": 3836, "summary": "Bolder, quieter, distill and polish: what each changes and keeps, typical moves, before and after, the report table.", "sections": ["bolder", "quieter", "distill", "polish", "report-table"], "origin": "adapted", "reviewed": "2026-11", "sources": "Sources: impeccable (Apache-2.0)."},
-{"id": "design-motion", "family": "design", "title": "Motion: purpose, durations, easing, reduced motion", "bytes": 4220, "summary": "Motion decision steps: frequency, purpose, easing, duration; enter and exit patterns; reduced-motion equivalents.", "sections": ["purpose", "duration-and-easing", "enter-and-exit", "reduced-motion"], "origin": "adapted", "reviewed": "2026-11", "sources": "Sources: emilkowalski/skills (MIT); Vercel web-interface-guidelines (MIT)."},
+{"id": "design-motion", "family": "design", "title": "Motion: purpose, durations, easing, reduced motion", "bytes": 4301, "summary": "Motion decision steps: frequency, purpose, easing, duration; enter and exit patterns; reduced-motion equivalents.", "sections": ["purpose", "duration-and-easing", "enter-and-exit", "reduced-motion"], "origin": "adapted", "reviewed": "2026-11", "sources": "Sources: emilkowalski/skills (MIT); Vercel web-interface-guidelines (MIT)."},
 {"id": "design-md-template", "family": "design", "title": "DESIGN.md: skeleton, token block and dated rules", "bytes": 5102, "summary": "DESIGN.md skeleton in the fixed section order, the YAML token block and its slots, the dated-rule line, ownership.", "sections": ["skeleton", "token-block", "dated-rules", "ownership"], "origin": "adapted", "reviewed": "2026-11", "sources": "Sources: design.md (Apache-2.0); interface-design (MIT)."},
 {"id": "design-frontend-floors", "family": "design", "title": "Frontend floors: use what exists, the interaction floor", "bytes": 4628, "summary": "The use-what-exists ladder with examples and component contracts, and the interaction floor as a checklist.", "sections": ["use-what-exists", "the-interaction-floor"], "origin": "adapted", "reviewed": "2026-11", "sources": "Sources: Vercel web-interface-guidelines (MIT); baseline-ui (MIT); Anthropic skills (Apache-2.0)."},
 {"id": "design-states-matrix", "family": "design", "title": "States: nine control states, five page states, break data", "bytes": 4619, "summary": "Nine control states by component kind with their attributes, five page states, and the break data set.", "sections": ["control-states", "page-states", "break-data"], "origin": "original", "reviewed": "2026-11", "sources": "Sources: original text by Buildersoft LLC."},
 {"id": "design-variants", "family": "design", "title": "Variants: axes, comparison table, switcher", "bytes": 1456, "summary": "Variant axes with examples, the comparison table, and a one-at-a-time switcher in one route or file.", "sections": ["axes", "comparison-table", "switcher"], "origin": "adapted", "reviewed": "2026-11", "sources": "Sources: emilkowalski/skills (MIT)."},
 {"id": "design-a11y-preferences", "family": "design", "title": "Preference checks: reduced motion, contrast, forced colours", "bytes": 3624, "summary": "What to check in code for reduced motion, contrast preference and forced colours, with passing and failing examples.", "sections": ["reduced-motion", "contrast-preference", "forced-colours"], "origin": "original", "reviewed": "2026-11", "sources": "Sources: original text by Buildersoft LLC."},
 {"id": "design-token-guards", "family": "design", "title": "Token guards: literal, parity and contrast tests", "bytes": 4013, "summary": "Literal, parity and contrast guard tests in outline for common runners, and the allow-list format.", "sections": ["literal-guard", "parity-guard", "contrast-guard", "allow-list"], "origin": "original", "reviewed": "2026-11", "sources": "Sources: original text by Buildersoft LLC."},
-{"id": "design-evaluate", "family": "design", "title": "Measuring a page without sight: evaluate recipes", "bytes": 5107, "summary": "Page-evaluation snippets: overflow, targets, names, headings, focus, contrast pairs with the formula, a style census.", "sections": ["overflow", "target-sizes", "unnamed-controls", "heading-order", "focus-styles", "contrast-pairs", "census"], "origin": "original", "reviewed": "2026-11", "sources": "Sources: original text by Buildersoft LLC."},
+{"id": "design-evaluate", "family": "design", "title": "Measuring a page without sight: evaluate recipes", "bytes": 5102, "summary": "Page-evaluation snippets: overflow, targets, names, headings, focus, contrast pairs with the formula, a style census.", "sections": ["overflow", "target-sizes", "unnamed-controls", "heading-order", "focus-styles", "contrast-pairs", "census"], "origin": "original", "reviewed": "2026-11", "sources": "Sources: original text by Buildersoft LLC."},
 {"id": "product-brief", "family": "product", "title": "Product brief and PRODUCT.md skeletons", "bytes": 3029, "summary": "The one-page brief skeleton, the PRODUCT.md skeleton with what each of its nine headings holds, and a filled brief.", "sections": ["brief-skeleton", "product-md-skeleton", "filled-example"], "origin": "adapted", "reviewed": "2026-11", "sources": "Sources: pm-skills (MIT)."},
 {"id": "product-prd", "family": "product", "title": "Lean PRD: sections, id forms, examples", "bytes": 4094, "summary": "Lean PRD sections and what each holds, id forms with good and weak lines, counter-measure pairs, the unknown form.", "sections": ["sections", "id-forms", "counter-measures", "unknowns"], "origin": "adapted", "reviewed": "2026-11", "sources": "Sources: bmad-code-org/BMAD-METHOD (MIT); spec-kit (MIT)."},
 {"id": "product-discovery", "family": "product", "title": "Discovery question bank and premise forms", "bytes": 2979, "summary": "A question bank by kind of product, an ambiguity sweep, premise forms with examples and evidence labels.", "sections": ["question-bank", "premise-forms", "evidence-labels"], "origin": "adapted", "reviewed": "2026-11", "sources": "Sources: gstack (MIT); spec-kit (MIT)."},
@@ -57,7 +57,7 @@ INDEX = [
 {"id": "eng-sources-versions", "family": "engineering", "title": "Sources and versions: where the version lives, by ecosystem", "bytes": 1955, "summary": "Where the declared and resolved version lives per ecosystem, a source ranking, and where changelogs are kept.", "sections": ["version-in-use", "source-ranking", "changelogs"], "origin": "adapted", "reviewed": "2026-11", "sources": "Sources: addyosmani/agent-skills (MIT)."},
 {"id": "eng-docs-accuracy", "family": "engineering", "title": "Documentation accuracy: drift checks, glossary, change notes", "bytes": 3063, "summary": "What to check per kind of quoted item, glossary rules, change-description forms with examples, skeletons by doc type.", "sections": ["quoted-items", "glossary", "change-descriptions", "skeletons"], "origin": "adapted", "reviewed": "2026-11", "sources": "Sources: mattpocock/skills (MIT); humanizer (MIT)."},
 {"id": "release-ship", "family": "release", "title": "Shipping: version places, changelog forms, pre-ship checks", "bytes": 3515, "summary": "Where a version number lives by ecosystem, changelog forms, a SemVer decision table, pre-ship checks.", "sections": ["version-places", "changelog-forms", "semver-table", "pre-ship-checks"], "origin": "original", "reviewed": "2026-11", "sources": "Sources: original text by Buildersoft LLC."},
-{"id": "release-deploy-rollback", "family": "release", "title": "Deploy and rollback: checklists and health signals", "bytes": 3994, "summary": "Before, Do and After deploy items, health signals, watch loop forms, rollback options with their costs.", "sections": ["before", "do", "after", "health-signals", "watch-loop-forms", "rollback-options", "keeping-the-lesson"], "origin": "adapted", "reviewed": "2026-11", "sources": "Sources: gstack (MIT); compound-engineering-plugin (MIT)."},
+{"id": "release-deploy-rollback", "family": "release", "title": "Deploy and rollback: checklists and health signals", "bytes": 4032, "summary": "Before, Do and After deploy items, health signals, watch loop forms, rollback options with their costs.", "sections": ["before", "do", "after", "health-signals", "watch-loop-forms", "rollback-options", "keeping-the-lesson"], "origin": "adapted", "reviewed": "2026-11", "sources": "Sources: gstack (MIT); compound-engineering-plugin (MIT)."},
 {"id": "agent-pressure-tests", "family": "agent", "title": "Pressure tests: scenario format, pressures, run tables", "bytes": 4127, "summary": "The scenario file skeleton, seven pressure kinds with example wording, the run table, and how to read the arms.", "sections": ["format", "pressures", "runs", "reading"], "origin": "adapted", "reviewed": "2026-11", "sources": "Sources: superpowers (MIT)."},
 {"id": "agent-instruction-style", "family": "agent", "title": "Instruction forms: which form fits which failure", "bytes": 3498, "summary": "Instruction forms by observed failure, the Excuse and Reality row format, positive recipes, wording rules.", "sections": ["forms", "excuse-table", "recipes", "wording"], "origin": "adapted", "reviewed": "2026-11", "sources": "Sources: superpowers (MIT)."},
 {"id": "agent-package-facts", "family": "agent", "title": "Sophon package facts: files, limits, scanner families", "bytes": 2980, "summary": "The seven package files and what reaches the model, size and manifest limits, the TOOLS.md grammar, scanner kinds.", "sections": ["files", "limits", "tools-md", "scanners"], "origin": "original", "reviewed": "2026-11", "sources": "Sources: original text by Buildersoft LLC."},
@@ -1000,14 +1000,14 @@ DOCS = {
 "1. How often is it seen? Used many times a day (a command palette, a list's keyboard selection, a tab switch an expert makes constantly): no animation. A few times a day: short and subtle. Rarely (onboarding, a first load, a success moment): it may be expressive.\n"
 "2. What does it explain? A good answer names a change: where a panel came from, that an item was added, removed or moved, that something is loading, that an action took effect. \"It looks nice\" is not an answer.\n"
 "3. Which easing fits the kind of change? See the table below.\n"
-"4. How long? As short as still reads; interface motion stays under 300 ms.\n"
+"4. How long? As short as still reads; interface motion stays at about 300 ms or less; large surfaces such as drawers and dialogs up to about 320 to 400 ms.\n"
 "\n"
 "| Purpose | Example | Keep it |\n"
 "|---|---|---|\n"
 "| Feedback | a button press, a toggle | 100-160 ms, a small scale or colour change |\n"
 "| Spatial origin | a menu or popover opening from its trigger | 150-250 ms, scaling from the trigger's side |\n"
 "| Change of content | an item added, removed, reordered | 200-300 ms, opacity plus a short move |\n"
-"| Continuity | a drawer, a sheet, a route change | 250-300 ms, a slide from the edge it lives at |\n"
+"| Continuity | a drawer, a sheet, a route change | 250-400 ms, a slide from the edge it lives at |\n"
 "| Waiting | loading, progress | a loop only while waiting; never decoration |\n"
 "\n"
 )),
@@ -1640,7 +1640,7 @@ DOCS = {
 "\n"
 "```js\n"
 "const hs = [...document.querySelectorAll(\"h1,h2,h3,h4,h5,h6,[role=heading]\")].map(h =>\n"
-"  ({ level: Number(h.getAttribute(\"aria-level\") || h.tagName.slice(1)), text: h.textContent.trim().slice(0, 50) }));\n"
+"  ({ level: +(h.getAttribute(\"aria-level\") || h.tagName[1]) || 2, text: h.textContent.trim().slice(0, 50) }));\n"
 "return { h1: hs.filter(h => h.level === 1).length, skips: hs.filter((h, i) => i && h.level > hs[i - 1].level + 1),\n"
 "  main: document.querySelectorAll(\"main\").length, nav: document.querySelectorAll(\"nav\").length };\n"
 "```\n"
@@ -1694,6 +1694,7 @@ DOCS = {
 "## Census\n"
 "\n"
 "```js\n"
+"const PRIMARY = \"rgb(79, 70, 229)\"; // set it to the page's primary fill\n"
 "const count = {}, add = (k, v) => { (count[k] ||= {})[v] = (count[k][v] || 0) + 1; };\n"
 "for (const el of document.querySelectorAll(\"body *\")) { const s = getComputedStyle(el);\n"
 "  add(\"fontSize\", s.fontSize); add(\"radius\", s.borderRadius); add(\"shadow\", s.boxShadow);\n"
@@ -1703,7 +1704,7 @@ DOCS = {
 "  primaryActions: [...document.querySelectorAll(\"button,a\")].filter(b => getComputedStyle(b).backgroundColor === PRIMARY).length };\n"
 "```\n"
 "\n"
-"Set `PRIMARY` to the computed primary fill, such as \"rgb(79, 70, 229)\". A value used once is usually off the scale.\n"
+"A value used once is usually off the scale.\n"
 )),
 ],
 "product-brief": [
@@ -3127,7 +3128,7 @@ DOCS = {
 "```\n"
 "1..5 | ForEach-Object { $c = try { (Invoke-WebRequest <url> -UseBasicParsing -TimeoutSec 10).StatusCode } catch { 'fail' }; \"$(Get-Date -Format T) $c\"; if ($_ -lt 5) { Start-Sleep 60 } }\n"
 "```\n"
-"cmd (`timeout` refuses redirected input, so `ping` waits; `%i` is `%%i` in a batch file):\n"
+"cmd (`timeout` refuses redirected input, so `ping` waits; in a batch file `%i` is `%%i` and `%{http_code}` is `%%{http_code}`):\n"
 "```\n"
 "for /L %i in (1,1,5) do @(time /t & curl -fsS -o NUL -w \"%{http_code}\\n\" <url> || echo fail) & ping -n 61 127.0.0.1 >NUL\n"
 "```\n"
