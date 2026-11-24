@@ -76,6 +76,9 @@
     @{ Text = 'BUDGET'; In = 'all'; Except = @('artifact-creator') }
     @{ Text = 'Task:'; In = 'all'; Except = @('artifact-creator') }
     @{ Text = 'Additional instructions:'; In = 'all'; Except = @('artifact-creator') }
+    @{ Text = 'CHANGE names the change to read'; In = 'all'; Except = @('artifact-creator') }
+    @{ Text = 'CHANGE "working tree"'; In = 'all'; Except = @('artifact-creator') }
+    @{ Text = 'DESIGN (the design source for UI work)'; In = 'all'; Except = @('artifact-creator') }
     # Consent words and question labels
     @{ Text = '(Recommended)'; In = 'all'; Except = @('artifact-creator') }
     @{ Text = 'Push + open PR (Recommended)'; In = 'writers' }
@@ -102,6 +105,22 @@
     @{ Text = '### Task 1: <imperative title>'; In = @('debugger', 'design-system-engineer', 'developer', 'e2e-test-engineer', 'frontend-developer', 'lead-developer', 'mcp-integration-engineer', 'qa-engineer', 'software-architect', 'technical-writer', 'ui-ux-designer', 'visual-designer') }
     @{ Text = '## Risks'; In = @('debugger', 'design-system-engineer', 'developer', 'e2e-test-engineer', 'frontend-developer', 'lead-developer', 'mcp-integration-engineer', 'qa-engineer', 'software-architect', 'technical-writer', 'ui-ux-designer', 'visual-designer') }
     @{ Text = '## Progress'; In = @('debugger', 'design-system-engineer', 'developer', 'e2e-test-engineer', 'frontend-developer', 'lead-developer', 'mcp-integration-engineer', 'qa-engineer', 'software-architect', 'technical-writer', 'ui-ux-designer', 'visual-designer') }
+    # 3.0 plan header lines, sections, task lines and the plan word (08a-plan-format)
+    @{ Text = 'Spec:'; In = @('debugger', 'design-system-engineer', 'developer', 'e2e-test-engineer', 'frontend-developer', 'lead-developer', 'mcp-integration-engineer', 'qa-engineer', 'software-architect', 'technical-writer', 'ui-ux-designer', 'visual-designer') }
+    @{ Text = 'Discovery:'; In = @('debugger', 'design-system-engineer', 'developer', 'e2e-test-engineer', 'frontend-developer', 'lead-developer', 'mcp-integration-engineer', 'qa-engineer', 'software-architect', 'technical-writer', 'ui-ux-designer', 'visual-designer') }
+    @{ Text = 'Voice:'; In = @('debugger', 'design-system-engineer', 'developer', 'e2e-test-engineer', 'frontend-developer', 'lead-developer', 'mcp-integration-engineer', 'qa-engineer', 'software-architect', 'technical-writer', 'ui-ux-designer', 'visual-designer') }
+    @{ Text = '## Global constraints'; In = @('debugger', 'design-system-engineer', 'developer', 'e2e-test-engineer', 'frontend-developer', 'lead-developer', 'mcp-integration-engineer', 'qa-engineer', 'software-architect', 'technical-writer', 'ui-ux-designer', 'visual-designer') }
+    @{ Text = '## Review focus'; In = @('debugger', 'design-system-engineer', 'developer', 'e2e-test-engineer', 'frontend-developer', 'lead-developer', 'mcp-integration-engineer', 'qa-engineer', 'software-architect', 'technical-writer', 'ui-ux-designer', 'visual-designer') }
+    @{ Text = 'Covers:'; In = @('debugger', 'design-system-engineer', 'developer', 'e2e-test-engineer', 'frontend-developer', 'lead-developer', 'mcp-integration-engineer', 'qa-engineer', 'software-architect', 'technical-writer', 'ui-ux-designer', 'visual-designer') }
+    @{ Text = 'Interfaces:'; In = @('debugger', 'design-system-engineer', 'developer', 'e2e-test-engineer', 'frontend-developer', 'lead-developer', 'mcp-integration-engineer', 'qa-engineer', 'software-architect', 'technical-writer', 'ui-ux-designer', 'visual-designer') }
+    @{ Text = 'parked'; In = @('debugger', 'design-system-engineer', 'developer', 'e2e-test-engineer', 'frontend-developer', 'lead-developer', 'mcp-integration-engineer', 'qa-engineer', 'software-architect', 'technical-writer', 'ui-ux-designer', 'visual-designer') }
+    # Discovery, the design note, the finish menu and voice (07b, 07c, 12b, 16)
+    @{ Text = 'just build it'; In = @('design-system-engineer', 'developer', 'frontend-developer', 'lead-developer', 'software-architect', 'ui-ux-designer', 'visual-designer') }
+    @{ Text = 'Design note'; In = @('lead-developer', 'software-architect') }
+    @{ Text = 'Merge into'; In = 'writers' }
+    @{ Text = 'Discard is never on the menu.'; In = 'writers' }
+    @{ Text = 'terse'; In = 'all'; Except = @('artifact-creator') }
+    @{ Text = 'caveman'; In = 'all'; Except = @('artifact-creator') }
     # Mode words of every role
     @{ Text = 'MODE is audit | review; at root, review when the request names a change, otherwise audit.'; In = @('accessibility-reviewer') }
     @{ Text = 'MODE is review | refute | re-review | completeness; at root, review unless asked otherwise.'; In = @('code-reviewer') }
@@ -122,7 +141,9 @@
   )
   Removed = @()
   Gone = @(
-    @{ Text = '<m> deferred'; File = 'SOUL'; Since = '3.0.0'; Pending = 'M5'; Why = 'deferred is no longer a plan word in 3.0' }
+    @{ Text = '<m> deferred'; File = 'SOUL'; Since = '3.0.0'; Why = 'deferred is no longer a plan word in 3.0' }
+    @{ Text = '- "Discard": "'; File = 'SOUL'; Since = '3.0.0'; Why = 'Discard is no longer a finish-menu label; it runs only when the user asks for it' }
+    @{ Text = 'Ask everything at once'; File = 'SOUL'; Since = '3.0.0'; Why = 'the 3.0 question discipline asks only what is open, one open question per message' }
     @{ Text = 'Keep local / Discard menu'; File = 'README'; Since = '3.0.0'; Pending = 'M8'; Why = 'the 3.0 finish menu replaces it' }
     @{ Text = 'Keep local or Discard'; File = 'README'; Since = '3.0.0'; Pending = 'M8'; Why = 'the 3.0 finish menu replaces it' }
     @{ Text = '10 agents in 5 calls'; File = 'README'; Since = '3.0.0'; Pending = 'M8'; Why = 'the 3.0 lead caps replace it' }

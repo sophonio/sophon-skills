@@ -483,10 +483,10 @@ try {
         $strict = Invoke-Native $pwsh ($reviewerArgs + '-Release')
         $null = Test-Check 'E' ($daily.Code -eq 0 -and $strict.Code -ne 0 -and $strict.Text.Contains("agent 'code-reviewer' has no RoleCap", $ord) -and
             -not $strict.Text.Contains("agent 'developer' has no RoleCap", $ord)) "a RoleCap within its limit passes; under -Release an agent without one fails once the family sets any (exit $($daily.Code), $($strict.Code))"
-        # FragmentCaps: a lower limit for one fragment (04-scope is 674 B), a key without a fragment, a bad value.
+        # FragmentCaps: a lower limit for one fragment (04-scope is 728 B), a key without a fragment, a bad value.
         if (-not $budgetText.Contains("  Agents = @(`n")) { throw 'the family copy has no Agents line' }
         $capArgs = @('-NoProfile', '-NonInteractive', '-File', (Join-Path $budgetCase 'build/Test-AgentSources.ps1'), '-RepoRoot', $budgetCase, '-Family', 'development', '-Agents', 'developer')
-        $capRuns = @(foreach ($caps in "@{ '04-scope' = 100 }", "@{ '04-scope' = 700 }", "@{ '99-nothing' = 450 }", "@{ '04-scope' = 5000 }") {
+        $capRuns = @(foreach ($caps in "@{ '04-scope' = 100 }", "@{ '04-scope' = 800 }", "@{ '99-nothing' = 450 }", "@{ '04-scope' = 5000 }") {
                 # The family's own FragmentCaps line (if any) is replaced, so the copy holds the key once.
                 $capBase = [regex]::Replace($budgetText, '(?m)^  FragmentCaps = .*
 ', '')
@@ -779,13 +779,16 @@ try {
       Fragments = @('01-delegated-mode', '14-no-delegation')
       Exempt = @('artifact-creator')
     }
+    Rules = @(
+      @{ Id = 'discovery-gate'; Fragment = '07b-discovery'; Anchor = '6. Write what was agreed into the plan''s Context, Approach and Global constraints. Plan approval is the gate: nothing is built, scaffolded or installed before it, and agreement in chat covers only what you wrote down.' }
+    )
   }
 '@.Replace("`r", '') + "`n"
         if (-not $methodText.Contains("  Agents = @(`n")) { throw 'the family copy has no Agents line' }
         Write-Utf8 $methodFamily ($methodText.Replace("  Agents = @(`n", $methodKey + "  Agents = @(`n"))
         $methodArgs = @('-NoProfile', '-NonInteractive', '-File', (Join-Path $methodCase 'build/Test-AgentSources.ps1'), '-RepoRoot', $methodCase, '-Family', 'development')
         $withKey = Invoke-Native $pwsh $methodArgs
-        $null = Test-Check 'M' ($withKey.Code -eq 0 -and $withKey.Text.Contains('0 registered rule(s), 1 reference fragment(s), 0 finding(s)', $ord)) "the development text (with its craft-reference fragment) passes METHOD-CONTROLLER with the design's terms and worker contract (exit $($withKey.Code): $(Get-Tail @($withKey.Lines | Where-Object { $_ -clike 'ERROR *' }) 3))"
+        $null = Test-Check 'M' ($withKey.Code -eq 0 -and $withKey.Text.Contains('1 registered rule(s), 1 reference fragment(s), 0 finding(s)', $ord)) "the development text (with its craft-reference fragment and the discovery-gate rule) passes METHOD-CONTROLLER and METHOD-EXCUSES with the design's terms and worker contract (exit $($withKey.Code): $(Get-Tail @($withKey.Lines | Where-Object { $_ -clike 'ERROR *' }) 3))"
         Write-Utf8 $methodFamily ($methodText.Replace("  Agents = @(`n", $methodKey.Replace("Exempt = @('artifact-creator')", 'Exempt = @()') + "  Agents = @(`n"))
         $noExempt = Invoke-Native $pwsh $methodArgs
         $null = Test-Check 'M' ($noExempt.Code -ne 0 -and $noExempt.Text.Contains("ERROR METHOD-CONTROLLER build/agent-src/family.psd1:", $ord) -and $noExempt.Text.Contains("worker 'artifact-creator' lacks the worker fragment 01-delegated-mode", $ord)) "without the exemption artifact-creator fails METHOD-CONTROLLER for its missing worker fragments (exit $($noExempt.Code))"

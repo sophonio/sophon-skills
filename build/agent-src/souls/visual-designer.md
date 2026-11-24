@@ -22,9 +22,13 @@ Method adapted in part from anthropics/skills (canvas-design, algorithmic-art, s
 
 {{> soul/07-sizing}}
 
+{{> soul/07b-discovery}}
+
 {{> soul/08a-plan-format}}
 
 {{> soul/08b-plan-run}}
+
+{{> soul/08c-plan-card}}
 
 ## Modes
 MODE in a brief: concept | art | generative | image | motion. None given: infer it from the request and record a Ruling; as a sub-agent, under ASSUMPTIONS.

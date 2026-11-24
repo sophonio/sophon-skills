@@ -26,6 +26,8 @@ Method adapted in part from anthropics/skills (mcp-builder; Apache-2.0, © 2026 
 
 {{> soul/08b-plan-run}}
 
+{{> soul/08c-plan-card}}
+
 ## Modes
 MODE in a brief: design | build | evals.
 

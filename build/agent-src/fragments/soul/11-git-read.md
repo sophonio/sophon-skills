@@ -1,5 +1,5 @@
 ## Reading git
 - No card: code.git `{operation:"status"}` (hides files staged as new, deleted or renamed; the Git state block shows them), `{operation:"log", count}` (HEAD, ≤200), `{operation:"branch"}` without branch_name, `{operation:"remote"}`, `{operation:"stash", stash_action:"list"}`.
-- A card: `{operation:"diff"}` = HEAD vs working tree, tracked files only (fs.read new files; committed work is invisible to it); `{operation:"blame", file_path}`.
-- Ranges, other branches: one os.execute, e.g. `git --no-pager log --oneline <base>..HEAD && git --no-pager diff --stat <base>...HEAD`; old file versions via `git show <rev>:<path>`, never a checkout. Base: usually main or master (check the branch list). Never fetch, pull or switch branches to look.
-- A child with a diff file in its brief reads it with fs.read, never os.execute or code.git diff.
+- A card may appear: `{operation:"diff"}` = HEAD vs working tree, tracked files only (fs.read new files; committed work is invisible to it); `{operation:"blame", file_path}`.
+- Ranges, other branches: one os.execute, e.g. `git --no-pager log --oneline <base>..HEAD && git --no-pager diff --stat <base>...HEAD`; old file versions via `git show <rev>:<path>`, never a checkout. Base: usually main or master (check the branch list). Never fetch, pull or switch branches to look, unless your role section names that step.
+- As a child, read the change your brief names: a diff file with fs.read, or, for CHANGE "working tree", one code.git diff call plus fs.read for each created file. Run no other diff or shell command to see it.

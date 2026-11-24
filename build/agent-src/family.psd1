@@ -117,7 +117,7 @@
       SubAgents = @{ enabled = $false; maxDepth = 0 }
       Effort = 'default'
       Skills = @()
-      Fragments = @('13-data-hygiene')
+      Fragments = @('13-data-hygiene', '17-prose-check')
       Credits = @()
     }
     @{
@@ -169,6 +169,7 @@
         '07-sizing',
         '08a-plan-format',
         '08b-plan-run',
+        '08c-plan-card',
         '10a-run-evidence',
         '11-git-read',
         '12a-git-commit',
@@ -200,8 +201,11 @@
         '05-asking',
         '06-todo',
         '07-sizing',
+        '07b-discovery',
         '08a-plan-format',
         '08b-plan-run',
+        '08c-plan-card',
+        '08d-save-document',
         '10a-run-evidence',
         '11-git-read',
         '12a-git-commit',
@@ -232,8 +236,10 @@
         '05-asking',
         '06-todo',
         '07-sizing',
+        '07b-discovery',
         '08a-plan-format',
         '08b-plan-run',
+        '08c-plan-card',
         '10a-run-evidence',
         '11-git-read',
         '12a-git-commit',
@@ -267,6 +273,7 @@
         '07-sizing',
         '08a-plan-format',
         '08b-plan-run',
+        '08c-plan-card',
         '10a-run-evidence',
         '11-git-read',
         '12a-git-commit',
@@ -298,8 +305,10 @@
         '05-asking',
         '06-todo',
         '07-sizing',
+        '07b-discovery',
         '08a-plan-format',
         '08b-plan-run',
+        '08c-plan-card',
         '10a-run-evidence',
         '11-git-read',
         '12a-git-commit',
@@ -330,8 +339,12 @@
         '05-asking',
         '06-todo',
         '07-sizing',
+        '07b-discovery',
+        '07c-design-note',
         '08a-plan-format',
         '08b-plan-run',
+        '08c-plan-card',
+        '08d-save-document',
         '09-quality-inline',
         '10a-run-evidence',
         '11-git-read',
@@ -366,6 +379,7 @@
         '07-sizing',
         '08a-plan-format',
         '08b-plan-run',
+        '08c-plan-card',
         '10a-run-evidence',
         '11-git-read',
         '12a-git-commit',
@@ -398,6 +412,7 @@
         '07-sizing',
         '08a-plan-format',
         '08b-plan-run',
+        '08c-plan-card',
         '10a-run-evidence',
         '11-git-read',
         '12a-git-commit',
@@ -484,14 +499,18 @@
         '04-scope',
         '05-asking',
         '06-todo',
+        '07b-discovery',
+        '07c-design-note',
         '08a-plan-format',
+        '08d-save-document',
         '10b-cite-evidence',
         '11-git-read',
         '13-data-hygiene',
         '18-reference-topics',
         '14-no-delegation',
         '15a-status-block',
-        '16-reporting'
+        '16-reporting',
+        '17-prose-check'
       )
       Credits = @('superpowers', 'anthropic')
     }
@@ -516,6 +535,7 @@
         '07-sizing',
         '08a-plan-format',
         '08b-plan-run',
+        '08c-plan-card',
         '10a-run-evidence',
         '11-git-read',
         '12a-git-commit',
@@ -524,7 +544,8 @@
         '18-reference-topics',
         '14-no-delegation',
         '15a-status-block',
-        '16-reporting'
+        '16-reporting',
+        '17-prose-check'
       )
       Credits = @('superpowers', 'anthropic')
     }
@@ -546,8 +567,11 @@
         '05-asking',
         '06-todo',
         '07-sizing',
+        '07b-discovery',
         '08a-plan-format',
         '08b-plan-run',
+        '08c-plan-card',
+        '08d-save-document',
         '10a-run-evidence',
         '11-git-read',
         '12a-git-commit',
@@ -579,8 +603,10 @@
         '05-asking',
         '06-todo',
         '07-sizing',
+        '07b-discovery',
         '08a-plan-format',
         '08b-plan-run',
+        '08c-plan-card',
         '10a-run-evidence',
         '11-git-read',
         '12a-git-commit',

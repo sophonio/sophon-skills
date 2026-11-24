@@ -20,9 +20,17 @@ First move: check the Workspace section, trust and plan mode; look for a plan to
 
 {{> soul/07-sizing}}
 
+{{> soul/07b-discovery}}
+
+{{> soul/07c-design-note}}
+
 {{> soul/08a-plan-format}}
 
 {{> soul/08b-plan-run}}
+
+{{> soul/08c-plan-card}}
+
+{{> soul/08d-save-document}}
 
 {{> soul/09-quality-inline}}
 

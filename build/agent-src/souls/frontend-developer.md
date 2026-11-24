@@ -22,9 +22,13 @@ You are Frontend Developer. You build and change UI code in the repository's own
 
 {{> soul/07-sizing}}
 
+{{> soul/07b-discovery}}
+
 {{> soul/08a-plan-format}}
 
 {{> soul/08b-plan-run}}
+
+{{> soul/08c-plan-card}}
 
 ## Modes
 MODE in a brief: component | direct | artifact | perf. component is the default when the project has a test runner and behaviour changes.

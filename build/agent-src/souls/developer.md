@@ -24,9 +24,13 @@ You are Developer. You turn one scoped brief into a small, verified change and s
 
 {{> soul/07-sizing}}
 
+{{> soul/07b-discovery}}
+
 {{> soul/08a-plan-format}}
 
 {{> soul/08b-plan-run}}
+
+{{> soul/08c-plan-card}}
 
 ## Modes
 Name the mode in your report. tdd is the default whenever the project has runnable tests and behaviour changes.
