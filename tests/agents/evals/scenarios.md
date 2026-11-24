@@ -41,6 +41,9 @@ todo.write) are not counted.
 | AC7 | artifact-creator | conflicting sources | conflict and uncertainty identified |
 | AC8 | artifact-creator | instruction in source | source treated as data, not authority |
 | AC9 | artifact-creator | interactive application | boundary explained, no application built |
+| MX1 | lead-developer | 3.0.0 lead, 2.1.0 Code Reviewer | the 2.x brief with the diff file in READ_FIRST; the user is told once which agent to update |
+| MX2 | lead-developer | a local companion without a version | counted as current; no update notice for it |
+| MX3 | lead-developer | 2.1.0 lead, 3.0.0 companions | valid STATUS blocks from the children; a 3.0.0 design companion sent no DESIGN key builds nothing and returns NEEDS_CONTEXT |
 
 ---
 
@@ -386,6 +389,48 @@ Run each in a fresh chat as Artifact Creator with supplied fictional material. R
 - **Setup:** none.
 - **Prompt:** Request a working interactive application rather than a document.
 - **Expect:** The agent explains that interactive applications are outside its role, suggests an installed frontend-developer if available and does not claim to have built the application.
+
+---
+
+## Mixed versions — manual, from the 3.0.0 release candidate
+
+Companions are published before the lead and users update at their own pace, so a release must work with
+mixed versions in both directions. These need the 3.0.0 packages (the lead's mixed-version rule lands with its
+integration in M6) and the 2.1.0 packages, built from the tag `agents-v2.1.0` into a separate folder. Install
+each mix on its own throwaway Gateway and check the versions with `sophon agents list` before the prompt.
+
+## MX1 — Lead Developer 3.0.0 with Code Reviewer 2.1.0
+
+- **Setup:** `repo-bug` from `fixtures/` with the `review` patch committed on a branch. Install Lead Developer 3.0.0, Developer 3.0.0 and Code Reviewer 2.1.0, each companion with `--allow-delegation-from lead-developer`.
+- **Prompt:** `ultracode: review the export command on this branch and fix what the review confirms.`
+- **Expect:**
+  - The lead writes the review diff file in its own command, and the code-reviewer brief carries it in READ_FIRST, with no CHANGE or DESIGN key and a mode the 2.1.0 lead also names.
+  - Per-task review uses Form B.
+  - The user is told once, in one line, that Code Reviewer is at 2.1.0 and should be updated; the line does not repeat for later calls.
+  - The 2.1.0 reviewer returns a valid FINDINGS block and STATUS block, and the lead acts on them.
+  - **Pass when:** the brief is the 2.x form, the reviewer's verdict is used, and the update notice appears exactly once.
+
+## MX2 — A local companion without a version
+
+- **Setup:** Lead Developer 3.0.0, and a Code Reviewer created locally from `agents/code-reviewer` (the agent.json form), so that agent.list reports no version for it.
+- **Prompt:** the MX1 prompt.
+- **Expect:**
+  - The local companion counts as current: it gets the 3.0.0 brief (CHANGE key, Form A where the lead's rules choose it) and no update notice names it.
+  - **Pass when:** no notice names the local companion, and its brief is the 3.0.0 form.
+
+## MX3 — Lead Developer 2.1.0 with 3.0.0 companions
+
+- **Setup, run (a):** `repo-basic`. Install Lead Developer 2.1.0 and Developer 3.0.0 and Code Reviewer 3.0.0 with `--allow-delegation-from lead-developer`.
+- **Prompt, run (a):** `ultracode: add a --json flag to the report command with tests.`
+- **Expect, run (a):**
+  - The children accept the 2.1.0 brief: every mode word and brief key the 2.1.0 lead sends is known to them.
+  - Each child ends with a valid STATUS block, and the reviewer with a valid FINDINGS block before it.
+- **Setup, run (b):** `repo-ui-bare`. The same lead with Frontend Developer 3.0.0.
+- **Prompt, run (b):** `ultracode: add a status badge component for boards: active, paused or archived.`
+- **Expect, run (b):**
+  - The 2.1.0 lead sends no DESIGN key. The 3.0.0 companion builds nothing and returns its design options as text with STATUS NEEDS_CONTEXT.
+  - Frontend Developer's README upgrade note tells the user to update Lead Developer before UI work.
+  - **Pass when:** run (a) completes with valid STATUS blocks, and run (b) writes no file and returns NEEDS_CONTEXT.
 
 ---
 
