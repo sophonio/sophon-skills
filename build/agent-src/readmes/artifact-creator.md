@@ -26,6 +26,8 @@ For substantial research, bring findings from a coordinator or researcher. This 
 
 TOOLS.md pins canvas.render, document.read, document.retrieve, document.search, document.upload, office.powerpoint, office.word and pdf in the coding profile, and the same set except document.search in the chat profile, where document.search is already a core tool. The agent checks available schemas and permissions before use. These pins do not guarantee successful file creation or downloads.
 
-## License
+## Credits and license
+
+Ideas re-expressed in our own words come from obra/superpowers (MIT, © 2025 Jesse Vincent) and blader/humanizer (MIT, © 2025 Siqi Chen).
 
 Licensed under the Apache-2.0 License; see LICENSE.

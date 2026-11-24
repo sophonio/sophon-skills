@@ -419,6 +419,7 @@ family):
 | `Id` | must equal the registry id | `video` |
 | `RequiredTag`, `Category` | MAN-TAGS and MAN-META check them in every manifest | `video`, `ai` |
 | `CreditsSentence` | the sentence every README of an agent with Credits must carry, followed by its license sentence; absent means no check (an agent without Credits needs only its license sentence) | none |
+| `CreditsSentenceKeys` | the Credits keys `CreditsSentence` speaks for: only an agent carrying one of them must carry the sentence, and any other agent with Credits needs its credits and license sentence; absent means every key (development: `anthropic`, so artifact-creator, with `superpowers` and `humanizer`, has no fixed sentence) | none |
 | `ReadmeCaps` | `@{Lead; Other}` README byte caps | 12,288 and 12,288 |
 | `SkillPolicy` | `Skills` (name and `MinVersion`) and `ExtraRequiredTools` | `ffmpeg-video` 1.0.0; document.upload, media.image, media.video, music.generate, video.generate |
 | `AllowRestrictedMentions` | restricted tools the text may name (never pin) | `message.send` |
@@ -468,7 +469,7 @@ packages byte-identical: compare `dist/agents/SHA256SUMS` before and after, and
 
 ## 15. Credits
 
-Workflow patterns adapted, not copied, from obra/superpowers (MIT, © 2025 Jesse Vincent) and Anthropic's Claude Code plugins (feature-dev, pr-review-toolkit, code-review, security-review, frontend-design; Apache-2.0). The development package READMEs carry this line and their license note; Artifact Creator has no upstream workflow credits and carries its own license note.
+Workflow patterns adapted, not copied, from obra/superpowers (MIT, © 2025 Jesse Vincent) and Anthropic's Claude Code plugins (feature-dev, pr-review-toolkit, code-review, security-review, frontend-design; Apache-2.0). The development package READMEs carry this line and their license note; Artifact Creator uses nothing from Anthropic's plugins, so it carries its own credits (obra/superpowers and blader/humanizer) and license note instead (`CreditsSentenceKeys`).
 
 - The software-architect README also credits backend-design and system-design-skills (both MIT, third party), and the debugger README credits backend-design.
 - The security-reviewer exclusion list follows ideas from anthropics/claude-code-security-review in original wording. Its README will credit that project once its license is confirmed, which is an owner item before publishing.

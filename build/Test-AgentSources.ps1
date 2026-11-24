@@ -808,8 +808,10 @@ Enter-Section 'I' 'Credits'
 # =============================================================================================================
 
 # CreditsSentence: the family's verbatim README sentence (absent or empty: no sentence check).
-# An agent with no Credits needs only its license sentence.
+# An agent with no Credits needs only its license sentence. CreditsSentenceKeys (absent: every key) names the Credits
+# keys the sentence speaks for: an agent with Credits but none of those keys needs its credits and license sentence only.
 $creditSentence = [string](Get-AgentField $fam 'CreditsSentence' '')
+$sentenceKeys = Get-AgentField $fam 'CreditsSentenceKeys'
 $credits = Get-AgentField $fam 'Credits' @{}
 foreach ($id in $selected) {
     $license = [string](Get-AgentField $agentById[$id] 'License' (Get-AgentField $fam 'License' 'MIT'))
@@ -823,7 +825,8 @@ foreach ($id in $selected) {
         if ($null -eq $credit) { Add-SourceError 'CREDITS-KEY' $familyRel 1 "agent '$id' lists credit '$key', which Credits does not define"; continue }
         if (-not $readme.Contains([string]$credit, $ord)) { Add-SourceError 'CREDITS-MISSING' $rel 0 "missing the credit '$credit'" }
     }
-    if ($agentCredits.Count -eq 0) {
+    $needsSentence = $null -eq $sentenceKeys -or @($agentCredits | Where-Object { @($sentenceKeys) -ccontains [string]$_ }).Count -gt 0
+    if ($agentCredits.Count -eq 0 -or ($creditSentence -and -not $needsSentence)) {
         if ($readme.IndexOf($licenseSentence, $ord) -lt 0) { Add-SourceError 'CREDITS-SENTENCE' $rel 0 "missing the license sentence '$licenseSentence'" }
     }
     elseif ($creditSentence) {

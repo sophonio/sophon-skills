@@ -22,6 +22,8 @@
       RequiredTag              tag every manifest must carry (default 'development')
       Category                 manifest category (default 'development')
       CreditsSentence          verbatim sentence every README must carry (absent or '' = no sentence check)
+      CreditsSentenceKeys      the Credits keys CreditsSentence speaks for: only an agent carrying one of them must
+                               carry the sentence (absent = every agent with Credits)
       ReadmeCaps               @{ Lead = <bytes>; Other = <bytes> } (default 24576 / 12288)
       SkillPolicy              @{ Skills = @(@{ Name; MinVersion }); ExtraRequiredTools = @('<tool>') }:
                                the marketplace skills the agents require (requires.skills) and the built-in
@@ -926,6 +928,18 @@ function Test-AgentFamilyOptionalKeys {
         $sentence = $Family['CreditsSentence']
         if ($sentence -isnot [string] -or $sentence.Contains("`n") -or $sentence.Contains("`r")) {
             $errors.Add((New-AgentComposeError $p (& $at 'CreditsSentence') 'CreditsSentence must be a single-line string (empty for no sentence check)'))
+        }
+    }
+    if ($Family.ContainsKey('CreditsSentenceKeys')) {
+        $familyCredits = $Family['Credits']
+        $sentenceKeys = @(Get-AgentItems $Family['CreditsSentenceKeys'])
+        if ($sentenceKeys.Count -eq 0) {
+            $errors.Add((New-AgentComposeError $p (& $at 'CreditsSentenceKeys') 'CreditsSentenceKeys must list at least one Credits key (omit it for every key)'))
+        }
+        foreach ($key in $sentenceKeys) {
+            if ($key -isnot [string] -or $familyCredits -isnot [hashtable] -or -not $familyCredits.ContainsKey($key)) {
+                $errors.Add((New-AgentComposeError $p (& $at 'CreditsSentenceKeys') "CreditsSentenceKeys: '$key' is not a key of the family Credits"))
+            }
         }
     }
     if ($Family.ContainsKey('ReadmeCaps')) {

@@ -405,7 +405,9 @@ try {
         Add-Fail 'A' "license override cases failed to run: $($_.Exception.Message)"
     }
 
-    # Empty Credits: only the license sentence is enforced; non-empty Credits stay strict.
+    # The fixed credits sentence applies per key (CreditsSentenceKeys): artifact-creator carries superpowers and
+    # humanizer but not anthropic, so only its credits and its license sentence are enforced; an agent with anthropic
+    # stays strict.
     try {
         $creditsCase = Join-Path $tempRoot 'case-credits'
         New-RepoCopy $creditsCase
@@ -415,23 +417,39 @@ try {
 
         $creditArgs = @('-NoProfile', '-NonInteractive', '-File', $creditsSourceScript, '-RepoRoot', $creditsCase, '-Agents', 'artifact-creator')
         $result = Invoke-Native $pwsh $creditArgs
-        $null = Test-Check 'I' ($result.Code -eq 0) "empty Credits with the Apache license sentence passes without an upstream credit sentence$(if ($result.Code -ne 0) { ': ' + (Get-Tail $result.Lines 12) })"
+        $null = Test-Check 'I' ($result.Code -eq 0) "Credits without a sentence key and the Apache license sentence pass without the upstream credit sentence$(if ($result.Code -ne 0) { ': ' + (Get-Tail $result.Lines 12) })"
 
         $acReadme = Join-Path $creditsCase 'agents/artifact-creator/README.md'
         $acText = [IO.File]::ReadAllText($acReadme)
-        $null = Test-Check 'I' ($acText.Contains($apacheSentence, $ord) -and -not $acText.Contains($upstreamSentence, $ord)) 'artifact-creator README has the Apache sentence and no upstream credit sentence'
+        $null = Test-Check 'I' ($acText.Contains($apacheSentence, $ord) -and $acText.Contains('blader/humanizer', $ord) -and -not $acText.Contains($upstreamSentence, $ord)) 'artifact-creator README has the Apache sentence, its credits and no upstream credit sentence'
 
         Edit-AgentReadme $creditsCase 'artifact-creator' $apacheSentence 'Licensed under the MIT License; see LICENSE.'
         $result = Invoke-Native $pwsh $creditArgs
-        $null = Test-Check 'I' ($result.Code -ne 0 -and $result.Text.Contains('ERROR CREDITS-SENTENCE agents/artifact-creator/README.md:', $ord) -and -not $result.Text.Contains('verbatim credits sentence', $ord)) 'empty Credits with a wrong license sentence fails on the license sentence only'
+        $null = Test-Check 'I' ($result.Code -ne 0 -and $result.Text.Contains('ERROR CREDITS-SENTENCE agents/artifact-creator/README.md:', $ord) -and -not $result.Text.Contains('verbatim credits sentence', $ord)) 'Credits without a sentence key and a wrong license sentence fail on the license sentence only'
 
         Edit-AgentReadme $creditsCase 'artifact-creator' 'Licensed under the MIT License; see LICENSE.' ''
         $result = Invoke-Native $pwsh $creditArgs
-        $null = Test-Check 'I' ($result.Code -ne 0 -and $result.Text.Contains('ERROR CREDITS-SENTENCE agents/artifact-creator/README.md:', $ord)) 'empty Credits with no license sentence fails'
+        $null = Test-Check 'I' ($result.Code -ne 0 -and $result.Text.Contains('ERROR CREDITS-SENTENCE agents/artifact-creator/README.md:', $ord)) 'Credits without a sentence key and no license sentence fail'
 
         Write-Utf8 $acReadme $acText
         $acSource = Join-Path $creditsCase 'build/agent-src/readmes/artifact-creator.md'
         if (Test-Path -LiteralPath $acSource -PathType Leaf) { Write-Utf8 $acSource $acText }
+        Edit-AgentReadme $creditsCase 'artifact-creator' 'blader/humanizer' 'blader/humaniser'
+        $result = Invoke-Native $pwsh $creditArgs
+        $null = Test-Check 'I' ($result.Code -ne 0 -and $result.Text.Contains('ERROR CREDITS-MISSING agents/artifact-creator/README.md:', $ord)) 'a credit of an agent without a sentence key is still required'
+        Edit-AgentReadme $creditsCase 'artifact-creator' 'blader/humaniser' 'blader/humanizer'
+
+        $creditsFamily = Join-Path $creditsCase 'build/agent-src/family.psd1'
+        $familyText = [IO.File]::ReadAllText($creditsFamily)
+        $acCredits = "Credits = @('superpowers', 'humanizer')"
+        $null = Test-Check 'I' ($familyText.Contains($acCredits, $ord) -and $familyText.Contains("CreditsSentenceKeys = @('anthropic')", $ord)) 'the family names anthropic as the sentence key and artifact-creator carries superpowers and humanizer'
+        Write-Utf8 $creditsFamily $familyText.Replace($acCredits, "Credits = @('superpowers', 'humanizer', 'anthropic')")
+        $result = Invoke-Native $pwsh $creditArgs
+        $null = Test-Check 'I' ($result.Code -ne 0 -and $result.Text.Contains('ERROR CREDITS-SENTENCE agents/artifact-creator/README.md:', $ord) -and $result.Text.Contains('verbatim credits sentence', $ord)) 'adding a sentence key to an agent requires the upstream credit sentence'
+        Write-Utf8 $creditsFamily $familyText.Replace("CreditsSentenceKeys = @('anthropic')", "CreditsSentenceKeys = @('anthropicPlugins')")
+        $result = Invoke-Native $pwsh $creditArgs
+        $null = Test-Check 'I' ($result.Code -ne 0 -and $result.Text.Contains("CreditsSentenceKeys: 'anthropicPlugins' is not a key of the family Credits", $ord)) 'a CreditsSentenceKeys entry that is not a Credits key fails'
+        Write-Utf8 $creditsFamily $familyText
         $crReadme = Join-Path $creditsCase 'agents/code-reviewer/README.md'
         $crText = [IO.File]::ReadAllText($crReadme)
         $crStart = $crText.IndexOf($upstreamSentence, $ord)

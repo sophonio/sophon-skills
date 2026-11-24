@@ -19,7 +19,7 @@
 # License: the family default (MIT, the root LICENSE). An agent may set License = 'Apache-2.0' (LICENSE copies
 # build/licenses/Apache-2.0.txt); the frontend and design agents added in 2.1 are Apache-2.0 because they adapt
 # Apache-2.0 upstream text.
-# Id, RequiredTag, Category, CreditsSentence and ReadmeCaps are the family keys build/Test-AgentSources.ps1 reads
+# Id, RequiredTag, Category, CreditsSentence, CreditsSentenceKeys and ReadmeCaps are the family keys build/Test-AgentSources.ps1 reads
 # (build/agent-src/families.psd1 lists every family; build/AgentFamily.psm1 documents the optional keys).
 @{
   Id = 'development'
@@ -57,6 +57,8 @@
     'agent-engineer'
   )
   CreditsSentence = 'Workflow patterns adapted, not copied, from obra/superpowers (MIT, © 2025 Jesse Vincent) and Anthropic''s Claude Code plugins (feature-dev, pr-review-toolkit, code-review, security-review, frontend-design; Apache-2.0).'
+  # The sentence speaks for Anthropic's plugins: only an agent carrying that key needs it (artifact-creator does not).
+  CreditsSentenceKeys = @('anthropic')
   ReadmeCaps = @{ Lead = 24576; Other = 12288 }
   # The optional Marketplace skill craft-reference (skills/craft-reference): every agent but artifact-creator
   # (Skills = @()) uses it, requires it in requires.skills, pins craft.read and includes the reference fragment;
@@ -219,7 +221,7 @@
       Effort = 'default'
       Skills = @()
       Fragments = @('13-data-hygiene', '17-prose-check')
-      Credits = @()
+      Credits = @('superpowers', 'humanizer')
     }
     @{
       Id = 'code-reviewer'
