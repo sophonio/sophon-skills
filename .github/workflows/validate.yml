@@ -8,7 +8,8 @@ name: validate
 # Also checks the agents' sources (agents/, build/agent-src/), every family in
 # build/agent-src/families.psd1: SOUL drift, tool-name lint, scanner preflight, budgets, manifests and
 # TOOLS.md. The Sophon CLI checks (sophon dev validate and the package build) are not run here;
-# maintainers run them locally before publishing. ffmpeg-video's own jobs are in ffmpeg-video.yml.
+# maintainers run them locally before publishing. The last step lints the instruction-test scenarios
+# (tests/agents/evals/Invoke-AgentEvals.ps1 -ValidateOnly), which needs no CLI and no Gateway. ffmpeg-video's own jobs are in ffmpeg-video.yml.
 
 on:
   push:
@@ -69,3 +70,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           pwsh -NoProfile -File build/Test-AgentSources.ps1
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Lint the instruction-test scenarios (Invoke-AgentEvals.ps1 -ValidateOnly)
+        if: ${{ !cancelled() }}
+        shell: pwsh
+        run: pwsh -NoProfile -File tests/agents/evals/Invoke-AgentEvals.ps1 -ValidateOnly

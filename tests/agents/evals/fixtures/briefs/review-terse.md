@@ -10,5 +10,5 @@ WRITE_SCOPE: none
 RULED_OUT: none
 CONSTRAINTS: "terse"
 ACCEPTANCE: the findings, each with path:line and a concrete trigger
-BUDGET: about 15 tool calls; with 3 left, stop and report
+BUDGET: about 15 tool calls
 END WITH: the FINDINGS block, then the STATUS block; at most 150 words before it.

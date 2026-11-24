@@ -34,7 +34,10 @@
            METHOD-EXCUSES and METHOD-REFERENCE, then a temporary copy whose development family gains a Method key;
            in-memory anchor cases (ANCHOR-MISSING, ANCHOR-GONE, data errors); a smoke run of Compare-AgentSouls.ps1;
            the scenario lint of the instruction tests on tests/agents/fixtures/evals/cases.psd1
-           (Invoke-AgentEvalLintFixtures in tests/agents/evals/AgentEvals.psm1).
+           (Invoke-AgentEvalLintFixtures in tests/agents/evals/AgentEvals.psm1), the transcript scorer on two
+           stream-json fixtures, tests/agents/evals/Invoke-AgentEvals.ps1 -ValidateOnly on the real scenario files
+           (and -Release failing while a row is Pending), every eval fixture and patch as a git workspace, and
+           -Prepare on two scenarios.
       N    documents: DOC-COUNT from the repository pass of Test-AgentSources, plus a temporary copy with planted counts:
            number words and digits, qualifiers, a History phrase, and -Release turning the warning into an error.
 
@@ -786,8 +789,54 @@ try {
         foreach ($failure in @($evalRun['Failures'])) { Add-Fail 'M' "fixture evals/$($failure['Name']): expected $($failure['Expect']), got '$($failure['Got'])'" }
         if ($evalRun['Count'] -eq 0) { Add-Fail 'M' 'no cases in tests/agents/fixtures/evals/cases.psd1' }
         elseif (@($evalRun['Failures']).Count -eq 0) { Add-Pass 'M' "$($evalRun['Count']) scenario lint fixture case(s) behave as expected" }
+
+        # The scorer on two hand-written stream-json transcripts (the CLI 2.2.2 event shape) against ACC-05.
+        $acc05 = @((Import-PowerShellDataFile -LiteralPath (Join-Path $RepoRoot 'tests/agents/evals/acceptance.psd1'))['Scenarios'] | Where-Object { $_['Id'] -ceq 'ACC-05' }) | Select-Object -First 1
+        $scoreOf = { param([string]$Name) Get-AgentEvalScore -Scenario $acc05 -Moves (Read-AgentEvalTranscript -Lines ([IO.File]::ReadAllLines((Join-Path $RepoRoot "tests/agents/fixtures/evals/$Name.ndjson")))) }
+        $good = & $scoreOf 'transcript-test-first'
+        $bad = & $scoreOf 'transcript-source-first'
+        $null = Test-Check 'M' ($null -ne $acc05 -and $good['Passed'] -and -not $bad['Passed'] -and ($bad['Tripped'] -join ',') -ceq 'FirstWrite=reportkit/**') "the scorer passes ACC-05 on a test-first transcript and fails it on a source-first one, ignoring a child's call (tripped: $($bad['Tripped'] -join ','))"
     } catch {
         Add-Fail 'M' "the scenario lint cases failed to run: $($_.Exception.Message) (line $($_.InvocationInfo.ScriptLineNumber))"
+    }
+
+    # The scenario lint on the real data, with and without -Release, and the fixtures as workspaces.
+    $evalScript = Join-Path $RepoRoot 'tests/agents/evals/Invoke-AgentEvals.ps1'
+    if (-not (Test-Path -LiteralPath $evalScript -PathType Leaf)) {
+        Add-Fail 'M' 'tests/agents/evals/Invoke-AgentEvals.ps1 is missing'
+    } else {
+        $evalDaily = Invoke-Native $pwsh @('-NoProfile', '-NonInteractive', '-File', $evalScript, '-RepoRoot', $RepoRoot, '-ValidateOnly')
+        $null = Test-Check 'M' ($evalDaily.Code -eq 0 -and $evalDaily.Text.Contains('Invoke-AgentEvals: PASS', $ord)) "Invoke-AgentEvals.ps1 -ValidateOnly passes on the scenario files (exit $($evalDaily.Code): $(Get-Tail $evalDaily.Lines 2))"
+        $evalStrict = Invoke-Native $pwsh @('-NoProfile', '-NonInteractive', '-File', $evalScript, '-RepoRoot', $RepoRoot, '-ValidateOnly', '-Release')
+        if ($evalDaily.Text.Contains('  pending: ', $ord)) {
+            $null = Test-Check 'M' ($evalStrict.Code -ne 0 -and $evalStrict.Text.Contains('ERROR EVAL-PENDING ', $ord)) "with -Release a remaining Pending row fails EVAL-PENDING (exit $($evalStrict.Code))"
+        } else {
+            $null = Test-Check 'M' ($evalStrict.Code -eq 0) "with no Pending row left, -Release passes too (exit $($evalStrict.Code))"
+        }
+        $gitForEvals = Get-Command 'git' -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($null -eq $gitForEvals) {
+            Add-Note 'M' 'eval fixture workspaces skipped: git is not on PATH'
+        } else {
+            try {
+                $evalInfo = Get-AgentEvalFixtureInfo -EvalRoot (Join-Path $RepoRoot 'tests/agents/evals')
+                $applied = 0
+                foreach ($fixtureName in @($evalInfo['Fixtures'].Keys | Sort-Object)) {
+                    $null = New-AgentEvalWorkspace -Fixtures $evalInfo['Fixtures'] -Name $fixtureName -Destination (Join-Path $tempRoot "evals/$fixtureName")
+                    $applied++
+                    foreach ($patchName in @($evalInfo['Fixtures'][$fixtureName]['Patches'].Keys | Sort-Object)) {
+                        $null = New-AgentEvalWorkspace -Fixtures $evalInfo['Fixtures'] -Name $fixtureName -Destination (Join-Path $tempRoot "evals/$fixtureName-$patchName") -Setup @($patchName)
+                        $applied++
+                    }
+                }
+                Add-Pass 'M' "every eval fixture becomes a git workspace, alone and with each of its patches ($applied workspace(s))"
+            } catch {
+                Add-Fail 'M' "an eval fixture workspace failed: $($_.Exception.Message)"
+            }
+            $prepOut = Join-Path $tempRoot 'evals-prepare'
+            $prep = Invoke-Native $pwsh @('-NoProfile', '-NonInteractive', '-File', $evalScript, '-RepoRoot', $RepoRoot, '-Prepare', '-Scenario', 'ACC-05,PRS-TF2', '-OutDir', $prepOut)
+            $fixed = Join-Path $prepOut 'PRS-TF2/workspace/src/lib/format.js'
+            $null = Test-Check 'M' ($prep.Code -eq 0 -and (Test-Path -LiteralPath (Join-Path $prepOut 'ACC-05/workspace/.git')) -and (Test-Path -LiteralPath $fixed) -and [IO.File]::ReadAllText($fixed).Contains('Number.isFinite', $ord) -and (Test-Path -LiteralPath (Join-Path $prepOut 'ACC-05/turn-1.md'))) "Invoke-AgentEvals.ps1 -Prepare writes the workspaces with their setup and the turns, and installs nothing (exit $($prep.Code): $(Get-Tail $prep.Lines 1))"
+        }
     }
 
     # ---- M: anchors ---------------------------------------------------------------------------------------

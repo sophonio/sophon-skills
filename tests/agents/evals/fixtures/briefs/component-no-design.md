@@ -10,5 +10,5 @@ WRITE_SCOPE: src/components/PlanBadge.js, src/components/Card.js, test/plan-badg
 RULED_OUT: none
 CONSTRAINTS: "Unit tests: `npm test` (node --test, no install needed)"
 ACCEPTANCE: npm test → all tests pass
-BUDGET: about 25 tool calls; with 3 left, stop and report
+BUDGET: about 25 tool calls
 END WITH: the STATUS block; at most 200 words before it.

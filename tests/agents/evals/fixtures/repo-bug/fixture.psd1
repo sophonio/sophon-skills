@@ -1,6 +1,7 @@
 # repo-bug: a small Python time-entry project (timesheet) with passing tests. Planted on purpose: weekly totals
 # move an entry that starts late on Sunday into the next week (timeutil.entry_day books the day the work ended),
-# two calls away from report.weekly_totals; data/entries.csv holds such an entry (e4).
+# two calls away from report.weekly_totals; data/entries.csv holds such an entry (e4). data/entries-latest.csv
+# has a row with no minutes, on which the weekly command crashes.
 @{
   Description = 'Python weekly totals and a JSON API over time entries; the totals are wrong near midnight'
   Test = 'python -B -m unittest discover -s tests'

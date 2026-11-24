@@ -623,7 +623,9 @@ function Test-AgentEvalData {
 
         if ($pending -and $deferred.Count -eq 0 -and -not $Release -and $pending -cmatch $script:PendingRegex) {
             $method = $Context['Methods'][$family]
-            if ($tier -ne 'pressure' -or $null -ne $method) {
+            # A SameRunAs row is scored from another run, so it stays pending while that run does.
+            $runPending = $sameRun -and $byId.ContainsKey($sameRun) -and $byId[$sameRun]['Row'].ContainsKey('Pending')
+            if (($tier -ne 'pressure' -or $null -ne $method) -and -not $runPending) {
                 $findings.Add((New-EvalFinding 'note' 'EVAL-PENDING' $path $line "$id Pending $pending can be deleted: its agent, rule and Uses texts are all present"))
             }
         }
@@ -836,19 +838,19 @@ function Read-AgentEvalTranscript {
                 if ($callId -and $seenCall.ContainsKey($callId)) { continue }
                 if ($callId) { $seenCall[$callId] = $true }
                 if ($event['parentSessionId']) { continue }   # a child's call: not this agent's first move
-                $args = @{}
+                $callArgs = @{}
                 $preview = [string]$event['argsPreview']
-                if ($preview) { try { $args = $preview | ConvertFrom-Json -AsHashtable -ErrorAction Stop } catch { $args = @{ raw = $preview } } }
-                $first = if ($args.ContainsKey('questions') -and @($args['questions']).Count -gt 0) { @($args['questions'])[0] } else { $null }
+                if ($preview) { try { $callArgs = $preview | ConvertFrom-Json -AsHashtable -ErrorAction Stop } catch { $callArgs = @{ raw = $preview } } }
+                $first = if ($callArgs.ContainsKey('questions') -and @($callArgs['questions']).Count -gt 0) { @($callArgs['questions'])[0] } else { $null }
                 $calls.Add(@{
                         Tool    = [string]$event['toolName']
-                        Args    = $args
-                        Path    = [string]$(if ($args.ContainsKey('path')) { $args['path'] } elseif ($args.ContainsKey('file_path')) { $args['file_path'] } else { '' })
-                        Command = [string]$(if ($args.ContainsKey('command')) { $args['command'] } else { '' })
+                        Args    = $callArgs
+                        Path    = [string]$(if ($callArgs.ContainsKey('path')) { $callArgs['path'] } elseif ($callArgs.ContainsKey('file_path')) { $callArgs['file_path'] } else { '' })
+                        Command = [string]$(if ($callArgs.ContainsKey('command')) { $callArgs['command'] } else { '' })
                         Header  = [string]$(if ($null -ne $first -and $first -is [hashtable] -and $first.ContainsKey('header')) { $first['header'] } else { '' })
-                        Headers = [string[]]@(foreach ($q in @($args['questions'])) { if ($q -is [hashtable]) { [string]$q['header'] } })
+                        Headers = [string[]]@(foreach ($q in @($callArgs['questions'])) { if ($q -is [hashtable]) { [string]$q['header'] } })
                         Options = [string[]]@(if ($null -ne $first -and $first -is [hashtable]) { foreach ($o in @($first['options'])) { if ($o -is [hashtable]) { [string]$o['label'] } } })
-                        Content = [string]$(if ($args.ContainsKey('content')) { $args['content'] } elseif ($args.ContainsKey('new_string')) { $args['new_string'] } elseif ($args.ContainsKey('raw')) { $args['raw'] } else { '' })
+                        Content = [string]$(if ($callArgs.ContainsKey('content')) { $callArgs['content'] } elseif ($callArgs.ContainsKey('new_string')) { $callArgs['new_string'] } elseif ($callArgs.ContainsKey('raw')) { $callArgs['raw'] } else { '' })
                     })
             }
             'approval.requested' { $approvals++ }
