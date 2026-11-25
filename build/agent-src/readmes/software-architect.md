@@ -99,4 +99,4 @@ Ideas re-expressed in our own words also come from JuliusBrussee/caveman (Apache
 
 Design patterns also draw on sheitabrk/backend-design (MIT, © sheitabrk and contributors) and proyecto26/system-design-skills (MIT, © 2026 Proyecto 26), adapted in original wording.
 
-Workflow patterns adapted, not copied, from obra/superpowers (MIT, © 2025 Jesse Vincent) and Anthropic's Claude Code plugins (feature-dev, pr-review-toolkit, code-review, security-review, frontend-design; Apache-2.0). Licensed under the MIT License; see LICENSE.
+Workflow patterns adapted, not copied, from obra/superpowers (MIT, © 2025 Jesse Vincent) and Anthropic's Claude Code plugins (feature-dev, pr-review-toolkit, code-review, frontend-design; Apache-2.0). Licensed under the MIT License; see LICENSE.

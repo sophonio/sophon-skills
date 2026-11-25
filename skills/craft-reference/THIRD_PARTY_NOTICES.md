@@ -16,7 +16,7 @@ Ideas and structure re-expressed in new words for Sophon by Buildersoft LLC; no 
 
 ## anthropic
 
-- Credit: Anthropic's Claude Code plugins (feature-dev, pr-review-toolkit, code-review, security-review, frontend-design; Apache-2.0)
+- Credit: Anthropic's Claude Code plugins (feature-dev, pr-review-toolkit, code-review, frontend-design; Apache-2.0)
 - Source: https://github.com/anthropics/claude-plugins-official at commit d0d514288960e7a78e1a76e4a3ec694416458726
 - Topics: `eng-review-checks`, `eng-silent-failures`, `eng-adr`
 

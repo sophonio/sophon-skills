@@ -129,6 +129,6 @@ This agent can read longer tables, checklists and templates from the optional `c
 
 Ideas re-expressed in our own words also come from JuliusBrussee/caveman (Apache-2.0, © 2026 Julius Brussee); pbakaus/impeccable (Apache-2.0, © 2025 Paul Bakaus); google-labs-code/design.md (Apache-2.0); Dammyjay93/interface-design (MIT, © 2026 Damola Akinleye); emilkowalski/skills (MIT, © 2026 Emil Kowalski); web-design-engineer from ConardLi/garden-skills (MIT, © 2026); Leonxlnx/taste-skill (MIT, © 2026 Leonxlnx); and the names of Jakob Nielsen's ten usability heuristics (cited by name only). Material, Carbon, Primer, Fluent and Radix are their owners' marks, named only to identify public design systems. This agent stays MIT.
 
-Workflow patterns adapted, not copied, from obra/superpowers (MIT, © 2025 Jesse Vincent) and Anthropic's Claude Code plugins (feature-dev, pr-review-toolkit, code-review, security-review, frontend-design; Apache-2.0).
+Workflow patterns adapted, not copied, from obra/superpowers (MIT, © 2025 Jesse Vincent) and Anthropic's Claude Code plugins (feature-dev, pr-review-toolkit, code-review, frontend-design; Apache-2.0).
 
 Licensed under the MIT License; see LICENSE.

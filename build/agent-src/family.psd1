@@ -56,7 +56,7 @@
     'release-engineer',
     'agent-engineer'
   )
-  CreditsSentence = 'Workflow patterns adapted, not copied, from obra/superpowers (MIT, © 2025 Jesse Vincent) and Anthropic''s Claude Code plugins (feature-dev, pr-review-toolkit, code-review, security-review, frontend-design; Apache-2.0).'
+  CreditsSentence = 'Workflow patterns adapted, not copied, from obra/superpowers (MIT, © 2025 Jesse Vincent) and Anthropic''s Claude Code plugins (feature-dev, pr-review-toolkit, code-review, frontend-design; Apache-2.0).'
   # The sentence speaks for Anthropic's plugins: only an agent carrying that key needs it (artifact-creator does not).
   CreditsSentenceKeys = @('anthropic')
   ReadmeCaps = @{ Lead = 24576; Other = 12288 }
@@ -112,7 +112,7 @@
   )
   Credits = @{
     superpowers = 'obra/superpowers (MIT, © 2025 Jesse Vincent)'
-    anthropic = 'Anthropic''s Claude Code plugins (feature-dev, pr-review-toolkit, code-review, security-review, frontend-design; Apache-2.0)'
+    anthropic = 'Anthropic''s Claude Code plugins (feature-dev, pr-review-toolkit, code-review, frontend-design; Apache-2.0)'
     anthropicSkills = 'Portions adapted from Anthropic''s agent skills, anthropics/skills (Apache-2.0, © 2026 Anthropic, PBC), changed by Buildersoft LLC: rewritten for Sophon tools, with scripts and branding removed'
     caveman = 'JuliusBrussee/caveman (Apache-2.0, © 2026 Julius Brussee)'
     humanizer = 'blader/humanizer (MIT, © 2025 Siqi Chen)'

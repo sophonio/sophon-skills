@@ -93,6 +93,6 @@ Ideas re-expressed in our own words also come from JuliusBrussee/caveman (Apache
 
 Debugging discipline also draws on sheitabrk/backend-design (MIT, © sheitabrk and contributors).
 
-Workflow patterns adapted, not copied, from obra/superpowers (MIT, © 2025 Jesse Vincent) and Anthropic's Claude Code plugins (feature-dev, pr-review-toolkit, code-review, security-review, frontend-design; Apache-2.0).
+Workflow patterns adapted, not copied, from obra/superpowers (MIT, © 2025 Jesse Vincent) and Anthropic's Claude Code plugins (feature-dev, pr-review-toolkit, code-review, frontend-design; Apache-2.0).
 
 Licensed under the MIT License; see LICENSE.
