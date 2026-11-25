@@ -13,31 +13,38 @@ into `.sophon-skill` artifacts, and the docs for publishing them.
 
 ## Agents
 
-The **Buildersoft development family 2.1.0**: twenty `.sophon-agent` packages that work on a
-repository the way Claude Code does. They plan in a markdown file you approve, execute it task by
-task with a live todo list, verify with real commands, commit each verified task on a feature
-branch and offer a pull request. The nine original agents are licensed **MIT**; the seven
-frontend, design, testing, MCP and docs agents added in 2.1 are licensed **Apache-2.0**; the four
-product, release and agent-engineering agents added in 3.0 are licensed **MIT**. Only Lead
-Developer starts sub-agents, and only with your consent.
+The **Buildersoft development family 3.0.0**: twenty `.sophon-agent` packages that work on a
+repository the way Claude Code does. They find out what you want before they plan, plan in a
+markdown file you approve, execute it task by task with a live todo list, write the failing test
+first, verify with real commands, commit each verified task on a feature branch and offer a pull
+request or a local merge. Only Lead Developer starts sub-agents, and only with your consent.
+
+The licences are unchanged by 3.0.0: the nine original agents and the four product, release and
+agent-engineering agents added in 3.0 are licensed **MIT**; the seven frontend, design, testing,
+MCP and docs agents added in 2.1 are licensed **Apache-2.0**.
 
 The twenty-first package, [Artifact Creator](agents/artifact-creator), is a standalone **Apache-2.0**
 productivity agent for grounded reports, explainers, guides, diagrams and presentations across
 subjects. It does not delegate or build interactive applications. File creation depends on the
 available tools and permissions; live creation has not been verified for this package.
-All seventeen are authored by **Buildersoft LLC** and require **Sophon 2.2.0+**.
+All twenty-one are authored by **Buildersoft LLC**, are at version 3.0.0 and require **Sophon 2.2.0+**.
+
+Every development agent except Artifact Creator lists the optional
+[`craft-reference`](skills/craft-reference) skill (Apache-2.0), which returns long tables,
+checklists and templates one topic at a time. The skill holds reference data only; every agent
+works without it.
 
 | Agent | Role | Delegates | Read-only |
 |-------|------|-----------|-----------|
-| [Lead Developer](agents/lead-developer) | Sizes, plans, builds (alone or with consented sub-agents), verifies, commits, offers a PR | yes | no |
+| [Lead Developer](agents/lead-developer) | Discovers, sizes, plans, builds (alone or with consented sub-agents), verifies, commits, offers a PR or a local merge | yes | no |
 | [Developer](agents/developer) | One scoped change, test first, verified | no | no |
 | [Researcher](agents/researcher) | Codebase and web facts, every claim cited | no | yes |
-| [Software Architect](agents/software-architect) | One decisive blueprint, ADRs, plans the lead can run | no | yes (saves only its plan or ADR) |
-| [Code Reviewer](agents/code-reviewer) | Defects it can show: line, failing case, fix | no | yes |
+| [Software Architect](agents/software-architect) | Two sketches you choose from, one decisive blueprint, ADRs, design notes, plans the lead can run | no | yes (saves only its plan, ADR or design note) |
+| [Code Reviewer](agents/code-reviewer) | Defects it can show: line, failing case, fix; per task or per branch | no | yes |
 | [QA Engineer](agents/qa-engineer) | PASS / FAIL gates with fresh evidence, red/green proofs, tests | no | no |
-| [Debugger](agents/debugger) | Reproduce, one hypothesis at a time, proven root cause | no | no |
+| [Debugger](agents/debugger) | Reproduce, root cause first, one hypothesis at a time, then a fix when asked | no | no |
 | [Security Reviewer](agents/security-reviewer) | Exploitable vulnerabilities a change introduces | no | yes |
-| [UI/UX Designer](agents/ui-ux-designer) | Design direction, presentation-layer build, critique, interface copy | no | no |
+| [UI/UX Designer](agents/ui-ux-designer) | Design directions you pick from, presentation-layer build, critique, interface copy | no | no |
 | [Frontend Developer](agents/frontend-developer) | UI implementation: components, direct edits, artifacts, performance | no | no |
 | [Design System Engineer](agents/design-system-engineer) | Design-system audits, tokens, themes, playgrounds, brand checks | no | no |
 | [Visual Designer](agents/visual-designer) | Concepts, art, generative pieces, images (image generation only if you opt in), motion | no | no |
@@ -45,27 +52,31 @@ All seventeen are authored by **Buildersoft LLC** and require **Sophon 2.2.0+**.
 | [Accessibility Reviewer](agents/accessibility-reviewer) | WCAG 2.2 AA audits and reviews, verdict CONFORMS or GAPS | no | yes |
 | [MCP Integration Engineer](agents/mcp-integration-engineer) | MCP servers: design, build, evals | no | no |
 | [Technical Writer](agents/technical-writer) | Documentation drafted with you, edited or reader-tested; every command checked | no | no |
+| [Product Manager](agents/product-manager) | Whether to build something and for whom: discovery, briefs, PRDs, priorities, pre-mortems | no | yes (saves only its product documents) |
+| [Product Owner](agents/product-owner) | Requirements with permanent ids, thin stories, acceptance from evidence | no | yes (saves only its requirements and stories) |
+| [Release Engineer](agents/release-engineer) | Release checks, ship, deploy, watch, upgrade and rollback; every outward step asked first | no | no |
+| [Agent Engineer](agents/agent-engineer) | Sophon agent and skill instructions: design, rules tested against a failing control, review, diagnosis | no | no |
 
 Each `agents/<id>/SOUL.md`, and each development agent's `README.md`, is generated from
-`build/agent-src/`; never edit them by hand. Compose,
-check and build with Sophon CLI 2.2.x on PATH:
-
-Each package's `LICENSE` matches its canonical source byte for byte: the root `LICENSE` for MIT,
-or `build/licenses/Apache-2.0.txt` for Apache-2.0.
+`build/agent-src/`; never edit them by hand. Each package's `LICENSE` matches its canonical source
+byte for byte: the root `LICENSE` for MIT, or `build/licenses/Apache-2.0.txt` for Apache-2.0.
+Compose, check and build with Sophon CLI 2.2.x on PATH:
 
 ```powershell
-pwsh -NoProfile -File build/Compose-AgentSouls.ps1                # regenerate agents/*/SOUL.md
-pwsh -NoProfile -File build/Test-AgentSources.ps1                 # lint, preflight, budgets, manifests (no CLI)
+pwsh -NoProfile -File build/Compose-AgentSouls.ps1                # regenerate agents/*/SOUL.md and the development READMEs
+pwsh -NoProfile -File build/Test-AgentSources.ps1                 # sections A-I, M and N: lint, preflight, budgets, manifests, documents (no CLI)
 pwsh -NoProfile -File build/Build-AgentPackages.ps1 -ValidateOnly # adds sophon dev validate: 0 errors, 0 warnings
 pwsh -NoProfile -File build/Build-AgentPackages.ps1               # dist/agents/<id>-<version>.sophon-agent + SHA256SUMS
-pwsh -NoProfile -File tests/agents/Test-AgentPackages.ps1         # sections A-L
+pwsh -NoProfile -File tests/agents/Test-AgentPackages.ps1         # sections A-N
+pwsh -NoProfile -File tests/agents/evals/Invoke-AgentEvals.ps1 -ValidateOnly # the instruction-test scenario lint
+python -B build/craft-reference/generate.py --check               # the craft-reference skill matches its sources
 ```
 
 Upload artifacts are in **`dist/agents/`**, with a `SHA256SUMS` index. Nothing is uploaded by
-these commands: agents are published manually, one file at a time, in the Marketplace wizard. See
-[docs/AGENTS.md](docs/AGENTS.md) for install order, the settings a package cannot carry, the
-approval cards to expect and the maintainer runbook. The skill build/publish scripts remain
-skill-only.
+these commands: agents are published manually, one file at a time, in the Marketplace wizard,
+after the `craft-reference` skill they require is approved. See [docs/AGENTS.md](docs/AGENTS.md)
+for install order, the settings a package cannot carry, the approval cards to expect and the
+maintainer runbook. The skill build/publish scripts remain skill-only.
 
 ## Video agent
 
@@ -95,6 +106,7 @@ them. See [docs/AGENTS.md](docs/AGENTS.md) section 14.
 | [`package-registry`](skills/package-registry) | development | Look up npm & PyPI package metadata and versions (keyless) |
 | [`code-search`](skills/code-search) | development | Search GitHub code, repositories, and commits |
 | [`github-projects`](skills/github-projects) | development | Manage GitHub Projects v2 boards and items (GraphQL) |
+| [`craft-reference`](skills/craft-reference) | development | Reference topics (tables, checklists, templates) for the Buildersoft development agents; read-only |
 
 **Observability & incident**
 
@@ -227,11 +239,12 @@ build/                Build-MarketplacePackages.ps1, Publish-MarketplacePackages
                       Compose-AgentSouls.ps1, Test-AgentSources.ps1, Build-AgentPackages.ps1 (agents)
 build/catalog/        Data for the skill checks: sandbox stdlib list, marketplace rules
 build/ffmpeg-video/   Vendoring and generation for ffmpeg-video: Sync-FfmpegSkill.ps1, generate.py, policy.json
+build/craft-reference/ Topic sources and generator of the craft-reference skill: generate.py, Test-CraftSources.ps1
 build/agent-src/      Agent sources: families.psd1 (registry), family.psd1 (development), souls/, fragments/,
                       families/video/, tool catalogue
 tests/skills/         Offline skill tests (run_all.py), the Sophon sandbox simulator, ffmpeg-video tests
 tests/build/          Skill build-check tests (Test-SkillLint.ps1) and fixture skills
-tests/agents/         Agent package tests (Test-AgentPackages.ps1), fixtures, manual eval scenarios
+tests/agents/         Agent package tests (Test-AgentPackages.ps1), fixtures, instruction tests (evals/)
 docs/PUBLISHING.md    How to build, validate, and publish to the Marketplace
 docs/AGENTS.md        The agents: install, settings, cards, families, maintainer runbook
 docs/VENDORING.md     Policy for third-party code vendored into a skill
@@ -271,13 +284,16 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the full contract and PR checklist,
 
 Licensed under the MIT License. © 2026 Buildersoft LLC. Each skill also carries its own LICENSE.
 
-The development agents each carry their own LICENSE too: the nine original agents are MIT, and the
-seven added in 2.1 and Artifact Creator are licensed under the Apache License, Version 2.0.
+The agents each carry their own LICENSE too: the nine original development agents and the four
+added in 3.0 are MIT, and the seven added in 2.1 and Artifact Creator are licensed under the Apache
+License, Version 2.0. The `craft-reference` skill is Apache-2.0, with its third-party notices beside
+it.
 
 The development agents' workflow patterns are adapted, not copied, from obra/superpowers (MIT,
 © 2025 Jesse Vincent) and Anthropic's Claude Code plugins (Apache-2.0). Portions of the agents
 added in 2.1 are adapted from Anthropic's agent skills, anthropics/skills (Apache-2.0, © 2026
-Anthropic, PBC), and changed by Buildersoft LLC.
+Anthropic, PBC), and changed by Buildersoft LLC. Every agent's README lists one credit line for
+each upstream project its text draws on.
 
 `skills/ffmpeg-video/vendor/ffmpeg-skill/` is ffmpeg-skill by kajisho5 (MIT, © 2026 kajisho5),
 shipped unchanged; see `skills/ffmpeg-video/THIRD_PARTY_NOTICES.md`. FFmpeg is a trademark of

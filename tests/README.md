@@ -84,35 +84,41 @@ otherwise.
 ## Agent package tests (`tests/agents/`)
 
 `Test-AgentPackages.ps1` checks the twenty-two agent packages in `agents/` end to end: the development
-family's twenty development agents (thirteen MIT, seven Apache-2.0) and the Apache-2.0 productivity
-agent `artifact-creator`, and the video family's `video-producer`. It needs PowerShell 7; sections J and K also
-need Sophon CLI 2.2.x on PATH.
+family 3.0.0, with its twenty development agents (thirteen MIT, seven Apache-2.0) and the Apache-2.0
+productivity agent `artifact-creator`, and the video family's `video-producer`. It needs PowerShell 7 and
+git; sections J and K also need Sophon CLI 2.2.x on PATH.
 
 ```powershell
-# sections A-L (about 1-2 minutes: it builds the packages several times into a temp folder)
+# sections A-N (several minutes: it builds the packages several times into a temp folder)
 pwsh -NoProfile -File tests/agents/Test-AgentPackages.ps1
 
-# sections A-I and L, no Sophon CLI; prints "CLI CHECKS NOT RUN (-SourceOnly)" in red
+# sections A-I, L, M and N, no Sophon CLI; prints "CLI CHECKS NOT RUN (-SourceOnly)" in red
 pwsh -NoProfile -File tests/agents/Test-AgentPackages.ps1 -SourceOnly
 
-# the A-I source checks on their own (what CI runs, with Compose-AgentSouls.ps1 -Check)
+# the source checks on their own (what CI runs, with Compose-AgentSouls.ps1 -Check): A-I and M per family, N once
 pwsh -NoProfile -File build/Test-AgentSources.ps1
+pwsh -NoProfile -File build/Test-AgentSources.ps1 -Release   # the release gate: headroom, RoleCap, anchors Pending, DOC-COUNT
+
+# the instruction-test scenario lint (CI runs it too)
+pwsh -NoProfile -File tests/agents/evals/Invoke-AgentEvals.ps1 -ValidateOnly
 ```
 
 | Section | What it checks |
 |---|---|
 | A | roster and layout: `agents/` folders equal the roster union of all families, 5 files each, strict UTF-8, LF, size limits, LICENSE equals the agent's canonical license (root `LICENSE` for MIT, `build/licenses/Apache-2.0.txt` for Apache-2.0); per-agent License/Category/RequiredTags schema cases |
-| B | composer: `-Check` on the real tree, every composer fixture against its EXPECT, two byte-identical `-OutDir` composes |
-| C | tool-name lint on the packages, plus the lint fixtures |
-| D | scanner preflight (P1-P6) on the packages, plus the scan fixtures; fragment rules (at most 4,096 B, one `## ` heading on line 1), plus a planted-heading case |
-| E | byte budgets (SOUL cap, TOOLS.md 2,048 B, README 12 KiB, lead 24 KiB) and the headroom table |
-| F | manifests against the family contract, plus the manifest fixtures |
+| B | composer: `-Check` on the real tree (SOULs and the development READMEs), every composer fixture against its EXPECT, two byte-identical `-OutDir` composes |
+| C | tool-name lint on the packages, plus the lint fixtures; `LINT-SKILL-FRAGMENT` and `LINT-SKILL-UNUSED` |
+| D | scanner preflight (P1-P6) on the packages, plus the scan fixtures; fragment rules (at most 4,096 B or its `FragmentCaps` limit, one `## ` heading on line 1), plus a planted-heading case |
+| E | byte budgets (SOUL cap per tier, role text against `RoleCap`, TOOLS.md 2,048 B, README 12 KiB, lead 24 KiB) and the headroom table; the 5% and 8% boundaries and `-Release` on a copy with a lowered cap |
+| F | manifests against the family contract, plus the manifest fixtures; `MAN-SKILL-VERSION` |
 | G | TOOLS.md grammar, the runtime-parser port and pin rules, plus the toolsmd fixtures |
 | H | attribution: exact commit trailer and PR footer bytes in every committing agent, none in the read-only ones |
-| I | README credits |
+| I | README credits: every Credits key's string, the family sentence where `CreditsSentenceKeys` asks for it, the license sentence |
 | J | `sophon --version` matches each family's `SophonCli`; `sophon dev validate --json` per agent: ok, projectType agent, no errors, no warnings |
-| K | `build/Build-AgentPackages.ps1` into a temp folder: a decoy package removed; 18 `<id>-<version>.sophon-agent` (each version from its manifest); SHA256SUMS (18 lines, ordinal file-name order, LF, hashes recomputed); zip entries `manifest.json` first then ordinal, equal to the sources byte for byte, stamped 1980-01-01 00:00:00; identical repeat build; a subset build; failure cases (unknown agent, roster mismatch, name mismatch, SOUL drift, a lint error) |
-| L | families: a temporary copy with the fixture family `tests/agents/fixtures/families/media/` installed composes, lints and checks on its own (`-Family`); the roster union, and an id in two families fails; the legacy single family without a registry; `SkillPolicy` allows exactly its skill's tools (and the development family none: `LINT-SKILL`, `TOOLS-PIN-UNKNOWN`); `message.send` named only where `AllowRestrictedMentions` allows it and never pinned; `requires.skills` and `requires.tools` variants against `MAN-REQUIRES`; a skill below `MinVersion` fails `MAN-SKILL-VERSION` |
+| K | `build/Build-AgentPackages.ps1` into a temp folder: a decoy package removed; 22 `<id>-<version>.sophon-agent` (each version from its manifest); SHA256SUMS (22 lines, ordinal file-name order, LF, hashes recomputed); zip entries `manifest.json` first then ordinal, equal to the sources byte for byte, stamped 1980-01-01 00:00:00; identical repeat build; a subset build; failure cases (unknown agent, roster mismatch, name mismatch, SOUL drift, a lint error) |
+| L | families: a temporary copy with the fixture family `tests/agents/fixtures/families/media/` installed composes, lints and checks on its own (`-Family`); the roster union, and an id in two families fails; the legacy single family without a registry; `SkillPolicy` and the per-agent `Skills` key (absent, all, none, schema); `message.send` named only where `AllowRestrictedMentions` allows it and never pinned; `requires.skills` and `requires.tools` variants against `MAN-REQUIRES`; a skill below `MinVersion` fails `MAN-SKILL-VERSION` |
+| M | the Method registry and the instruction tests: the method fixtures (`METHOD-CONTROLLER`, `METHOD-EXCUSES`, `METHOD-REFERENCE`), the skill-use fixtures (`LINT-SKILL-FRAGMENT`, `LINT-SKILL-UNUSED`, `LINT-TOPIC`), the development family's own `Method` key; anchor cases (`ANCHOR-MISSING`, `ANCHOR-GONE`); a smoke run of `Compare-AgentSouls.ps1`; the scenario lint's own cases, the transcript scorer, the runner's exec line, package choice, SOUL hash and run-error rule, `Invoke-AgentEvals.ps1 -ValidateOnly` on the real scenario files (and `-Release` failing while a row is `Pending`), every eval fixture and patch as a git workspace, and `-Prepare` on two scenarios |
+| N | documents: `DOC-COUNT` from the repository pass of `Test-AgentSources.ps1`, plus a temporary copy with planted counts (number words and digits, qualifiers, a History phrase, and `-Release` turning the warning into an error) |
 
 Each section prints PASS, FAIL or SKIP, and the script exits 1 on any failure. Temporary folders
 live under the system temp folder and are removed at the end; nothing in the repository is written.
@@ -123,16 +129,28 @@ live under the system temp folder and are removed at the end; nothing in the rep
   `media-kit` skill) that section L installs into a temporary copy; it is not in the real registry.
 - `compose/<case>/` is a miniature repository (`build/agent-src/` and, where a SOUL composes
   cleanly, `agents/<id>/SOUL.md`) plus an `EXPECT` file. `OK` means `Compose-AgentSouls.ps1
-  -RepoRoot <case> -Check` must exit 0; any other text must appear in its output, with exit 1.
+  -RepoRoot <case> -Check` must exit 0; any other text must appear in its output, with exit 1. An
+  optional `ARGS` file passes other arguments (the `omit-*` cases of `-Omit`). The `readme-*` cases
+  cover README composition: the roster block, credits, drift and hand-written token figures.
   The `trailing-whitespace` case keeps two trailing spaces on purpose: do not let an editor strip them.
 - `lint/`, `scan/`, `toolsmd/` and `manifest/` each hold a `cases.psd1` run by
   `Invoke-AgentLintFixtures` in `build/AgentLint.psm1`. A case has a `Name`, `Expect` (`pass` or
   `fail`), the expected `Rule` id for a failure, and its text. `{U+XXXX}` and `{REPEAT:<text>:<n>}`
   expand at run time, so no hidden character, long blob or secret-shaped string is committed.
   Manifest cases are `Replace` pairs applied to a valid `Base` manifest.
+- `method/cases.psd1` and `skills/cases.psd1` hold the Method-registry and skill-use cases of section M.
+- `anchors/development.psd1` lists the strings the composed SOULs and READMEs must carry, the 2.x
+  wording that must be gone, and the anchors removed on purpose.
+- `baseline/SHA256SUMS-2.1.0` holds the package hashes of the 2.1.0 baseline; video-producer must still
+  match it.
+- `evals/` holds the scenario lint's own cases and two recorded stream-json transcripts for the scorer.
 
-**Manual evals** (`tests/agents/evals/`): smoke scenarios the owner runs in an interactive, bound
-and trusted Sophon CLI before publishing. See [`evals/README.md`](agents/evals/README.md) and
-[`evals/scenarios.md`](agents/evals/scenarios.md). The video family's ten scenarios (V1-V10) are in
-[`evals/video-producer.md`](agents/evals/video-producer.md); they need FFmpeg and the process
-sandbox.
+**Instruction tests** (`tests/agents/evals/`): the scenarios that show whether the agent text changes what
+an agent does, in four automated tiers (acceptance, pressure, design and voice) and the smoke scenarios
+the owner runs by hand in an interactive, bound and trusted Sophon CLI before publishing. Their own
+fixture projects are in `evals/fixtures/` (`repo-basic`, `repo-bug`, `repo-ui-bare`, `repo-ui-system`,
+`repo-agent`) with the delegated briefs in `evals/fixtures/briefs/`. The lint runs offline; a sweep runs
+on a throwaway Gateway only, by hand or with the headless runner. See
+[`evals/README.md`](agents/evals/README.md) and [`evals/scenarios.md`](agents/evals/scenarios.md). The
+video family's ten scenarios (V1-V10) are in [`evals/video-producer.md`](agents/evals/video-producer.md);
+they need FFmpeg and the process sandbox.

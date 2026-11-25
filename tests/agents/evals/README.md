@@ -6,6 +6,11 @@ never in a package. The design is in
 [`docs/plans/2026-11-23-agents-v3-design.md`](../../../docs/plans/2026-11-23-agents-v3-design.md), section
 "Instruction tests".
 
+Today the files hold 32 acceptance, 14 pressure, 13 design and 8 voice scenarios, and the pressure tier
+covers all ten registered rules of the development family (`Invoke-AgentEvals.ps1 -ValidateOnly` prints
+the counts). Every scenario must pass with the reference skill absent; only the rows marked
+`Skill = 'installed'` need it.
+
 ## 1. Tiers and files
 
 | Tier | File | What it checks | Ids |
@@ -87,6 +92,12 @@ runs and the control arm fails at least 3 of 5.
 
 A release sweep is the pressure tier in both arms five times, the four lead acceptance prompts three times and
 the other acceptance prompts once, and the automated design and voice scenarios three times.
+
+**When the ship rule applies.** The owner decided on 2026-11-24 (decision 9 of the design) that the ship
+rule, for every registered rule in a fragment or in role text, and the per-track evals of milestone M6 are
+applied once, in the M9 release sweep on a throwaway Gateway. Until then a milestone closes on the static
+checks and this lint. The sweep records its model, budget and results in `results/3.0.0.md`, and a rule
+that misses the ship rule there is reworded or goes to the owner as described above.
 
 ## 2. The scenario lint
 
@@ -181,7 +192,9 @@ Start a new chat for every scenario, so switch and consent words do not carry ov
 workspace for each.
 
 The minimum by hand per release is one control and one treatment chat per pressure scenario, each acceptance
-prompt once, the design and voice scenarios once, and the smoke scenarios in `scenarios.md`.
+prompt once, the design and voice scenarios once, and the smoke scenarios in `scenarios.md`, with the
+mixed-version scenarios MX1 to MX3 and the card count for one reviewed task (files edited + 4, plus any
+card agent.delegate or the reviewer's diff raises).
 
 **Smoke scenarios** (`scenarios.md`) need a small repository with a remote; the fixtures serve. Answer **Keep
 local** at the git menu unless a scenario says otherwise, and return the repository to its baseline between
@@ -260,7 +273,8 @@ agent.delegate calls, the excuse in the agent's own words when it broke a rule, 
 you. Record the model, the CLI version and the SOUL hash with every result, and run the sweep again when the
 default model changes.
 
-Per release, `results/<version>.md` holds the summary tables:
+Per release, `results/<version>.md` holds the summary tables (`results/2.1.0.md` is the baseline the 3.0
+rules are measured against):
 
 | Id | Arm | Passed | Runs | First moves | Notes |
 |---|---|---|---|---|---|
