@@ -26,6 +26,15 @@
                    the default data folder, requires the Gateway URL and refuses the gatewayUrl of cli.json and
                    the ports 8080 and 8470, sets SOPHON_GATEWAY_URL for every child call, one repetition by
                    default, stops before starting when the planned runs exceed -MaxRuns.
+    -Cleanup       With -AllowTestGateway only: deletes every install and session recorded in the eval-installs.txt
+                   files under -OutDir (ids of the -eval shape only) through the Gateway's own API, then lists the
+                   agents and reads each session back to confirm they are gone. Exit 1 when anything is left.
+.PARAMETER AllowTestGateway
+    The explicit opt-in for the installed test Gateway (decided 2026-11-25, owner decision 12 of the design). With
+    -Run or -Cleanup it accepts only http://127.0.0.1:8470 (or localhost), also when cli.json names it, and refuses
+    every other URL; prints one line naming that Gateway; installs every arm as <agent>-eval or
+    <agent>-eval-ctl-<rule>; and records each install and session in <OutDir>/eval-installs.txt for -Cleanup.
+    The other guards (CI, -DataDir and the default data folder, -MaxRuns) stay. Without it nothing changes.
 .PARAMETER Scenario
     Scenario ids to select (wildcards allowed). Default: all, or all of -Tier.
 .EXAMPLE
@@ -38,14 +47,16 @@ param(
     [Parameter(ParameterSetName = 'Validate')][switch]$ValidateOnly,
     [Parameter(ParameterSetName = 'Prepare', Mandatory)][switch]$Prepare,
     [Parameter(ParameterSetName = 'Run', Mandatory)][switch]$Run,
+    [Parameter(ParameterSetName = 'Cleanup', Mandatory)][switch]$Cleanup,
+    [Parameter(ParameterSetName = 'Run')][Parameter(ParameterSetName = 'Cleanup', Mandatory)][switch]$AllowTestGateway,
     [Alias('StrictHeadroom')][switch]$Release,
     [string]$RepoRoot = (Join-Path $PSScriptRoot '../../..'),
     [string]$EvalRoot = $PSScriptRoot,
     [string[]]$Scenario = @(),
     [ValidateSet('acceptance', 'pressure', 'design', 'voice')][string[]]$Tier = @(),
-    [Parameter(ParameterSetName = 'Prepare')][Parameter(ParameterSetName = 'Run')][string]$OutDir = '',
+    [Parameter(ParameterSetName = 'Prepare')][Parameter(ParameterSetName = 'Run')][Parameter(ParameterSetName = 'Cleanup', Mandatory)][string]$OutDir = '',
     [Parameter(ParameterSetName = 'Run', Mandatory)][string]$DataDir,
-    [Parameter(ParameterSetName = 'Run')][string]$GatewayUrl = '',
+    [Parameter(ParameterSetName = 'Run')][Parameter(ParameterSetName = 'Cleanup')][string]$GatewayUrl = '',
     [Parameter(ParameterSetName = 'Run')][ValidateRange(1, 10)][int]$Repeat = 1,
     [Parameter(ParameterSetName = 'Run')][ValidateRange(1, 1000)][int]$MaxRuns = 30,
     [Parameter(ParameterSetName = 'Run')][ValidateRange(30, 1800)][int]$TimeoutSeconds = 300,
@@ -60,6 +71,64 @@ $EvalRoot = [IO.Path]::GetFullPath($ExecutionContext.SessionState.Path.GetUnreso
 # -Scenario 'ACC-05,PRS-TF2' arrives as one string under pwsh -File.
 $Scenario = [string[]]@($Scenario | ForEach-Object { "$_".Split(',') } | ForEach-Object { $_.Trim() } | Where-Object { $_ })
 Import-Module (Join-Path $PSScriptRoot 'AgentEvals.psm1') -Force
+
+# ---- Cleanup (-AllowTestGateway only; before the lint, so a lint error never blocks it) ---------------------------
+# 'sophon agents delete' and 'sophon sessions delete' ask y/n and have no --yes, so the runner calls the same Gateway
+# routes they call (DELETE /api/agents/{id}, DELETE /api/sessions/{id}). A Personal-tier Gateway serves a loopback
+# request with no forwarding header without a login, so no token is read or sent; -NoProxy keeps it direct.
+if ($PSCmdlet.ParameterSetName -eq 'Cleanup') {
+    if ($env:CI -or $env:GITHUB_ACTIONS) { Write-Host 'Invoke-AgentEvals: -Cleanup refuses to run under CI' -ForegroundColor Red; exit 1 }
+    if (-not $GatewayUrl) { $GatewayUrl = [string]$env:SOPHON_GATEWAY_URL }
+    $gatewayProblem = Test-AgentEvalGatewayUrl -Url $GatewayUrl -AllowTestGateway
+    if ($gatewayProblem) { Write-Host "Invoke-AgentEvals: -Cleanup: $gatewayProblem" -ForegroundColor Red; exit 1 }
+    $OutDir = [IO.Path]::GetFullPath($OutDir)
+    if (-not (Test-Path -LiteralPath $OutDir -PathType Container)) { Write-Host "Invoke-AgentEvals: -Cleanup: no folder $OutDir" -ForegroundColor Red; exit 1 }
+    $base = $GatewayUrl.TrimEnd('/')
+    Write-Host "Invoke-AgentEvals: -AllowTestGateway: cleaning up on the test Gateway at $base (ids of the -eval shape only)" -ForegroundColor Yellow
+    $ledger = Get-AgentEvalLedger -Root $OutDir
+    Write-Host "  ledger: $(@($ledger['Files']).Count) eval-installs.txt file(s), $(@($ledger['Agents']).Count) agent(s), $(@($ledger['Sessions']).Count) session(s)"
+    foreach ($id in @($ledger['Refused'])) { Write-Host "  refused: $id is not an -eval id; not deleted" -ForegroundColor Yellow }
+    $call = {
+        param([string]$Method, [string]$Path)
+        try {
+            $r = Invoke-WebRequest -Method $Method -Uri "$base$Path" -NoProxy -SkipHttpErrorCheck -TimeoutSec 60 -UseBasicParsing
+            return @{ Code = [int]$r.StatusCode; Body = [string]$r.Content }
+        } catch { return @{ Code = 0; Body = $_.Exception.Message } }
+    }
+    $problems = 0
+    foreach ($s in @($ledger['Sessions'])) {
+        $r = & $call 'DELETE' "/api/sessions/$([Uri]::EscapeDataString($s))"
+        $what = if ($r['Code'] -ge 200 -and $r['Code'] -lt 300) { 'deleted' } elseif ($r['Code'] -eq 404) { 'already gone' } else { $problems++; "NOT deleted (HTTP $($r['Code']))" }
+        Write-Host "  session $s`: $what"
+    }
+    foreach ($id in @($ledger['Agents'])) {
+        $r = & $call 'DELETE' "/api/agents/$([Uri]::EscapeDataString($id))"
+        $what = if ($r['Code'] -ge 200 -and $r['Code'] -lt 300) { 'deleted' } elseif ($r['Code'] -eq 404) { 'already gone' } else { $problems++; "NOT deleted (HTTP $($r['Code']))" }
+        Write-Host "  agent $id`: $what"
+    }
+    # The check: the agent listing has none of the recorded ids, and each recorded session reads back as 404.
+    $list = & $call 'GET' '/api/agents'
+    $present = $null
+    if ($list['Code'] -ne 200) { $problems++; Write-Host "  could not list the agents (HTTP $($list['Code']))" -ForegroundColor Red }
+    else {
+        try { $present = @(@($list['Body'] | ConvertFrom-Json) | ForEach-Object { if ($_ -and $_.PSObject.Properties['id']) { [string]$_.id } }) } catch { $present = $null }
+    }
+    if ($list['Code'] -eq 200 -and $null -eq $present) { $problems++; Write-Host '  could not read the agent listing' -ForegroundColor Red }
+    elseif ($null -ne $present) {
+        $left = @($present | Where-Object { $_ -cin @($ledger['Agents']) })
+        foreach ($id in $left) { $problems++; Write-Host "  still installed: $id" -ForegroundColor Red }
+        $other = @($present | Where-Object { (Test-AgentEvalInstallId -Id $_) -and $_ -cnotin @($ledger['Agents']) })
+        foreach ($id in $other) { Write-Host "  note: $id has the -eval shape but is not in this ledger; not deleted" -ForegroundColor Yellow }
+        Write-Host "  listing: $($present.Count) agent(s), $($left.Count) recorded eval install(s) left"
+    }
+    foreach ($s in @($ledger['Sessions'])) {
+        $r = & $call 'GET' "/api/sessions/$([Uri]::EscapeDataString($s))"
+        if ($r['Code'] -ne 404) { $problems++; Write-Host "  session $s still reads back (HTTP $($r['Code']))" -ForegroundColor Red }
+    }
+    if ($problems) { Write-Host "Invoke-AgentEvals: -Cleanup left $problems problem(s)" -ForegroundColor Red; exit 1 }
+    Write-Host "Invoke-AgentEvals: -Cleanup removed every recorded eval install and session ($(@($ledger['Agents']).Count) agent(s), $(@($ledger['Sessions']).Count) session(s))" -ForegroundColor Green
+    exit 0
+}
 
 # ---- Lint (every mode starts with it) -------------------------------------------------------------------------
 $data = Import-AgentEvalData -EvalRoot $EvalRoot -RepoRoot $RepoRoot
@@ -135,7 +204,7 @@ function Get-EvalArms([hashtable]$Row) {
 
 function Get-EvalControlId([hashtable]$Row) {
     # One control agent per agent and rule: each control omits a different rule, so they never share an install.
-    return "$($Row['Agent'])-ctl-$($Row['Rule'])"
+    return Get-AgentEvalInstallId -AgentId ([string]$Row['Agent']) -Arm 'control' -Rule ([string]$Row['Rule']) -TestGateway:$AllowTestGateway
 }
 
 function New-EvalControlPackage([hashtable]$Row, [string]$Into) {
@@ -219,9 +288,13 @@ if ($DataDir.TrimEnd('\', '/') -ieq $defaultData.TrimEnd('\', '/') -or ($env:SOP
 # throwaway Gateway started with SOPHON_DATA_DIR set to -DataDir, and passes it to every child call.
 if (-not $GatewayUrl) { $GatewayUrl = [string]$env:SOPHON_GATEWAY_URL }
 $cliJson = Join-Path ([Environment]::GetFolderPath('UserProfile')) '.sophon/config/cli.json'
-$gatewayProblem = Test-AgentEvalGatewayUrl -Url $GatewayUrl -CliConfigPath $cliJson
+$gatewayProblem = Test-AgentEvalGatewayUrl -Url $GatewayUrl -CliConfigPath $cliJson -AllowTestGateway:$AllowTestGateway
+if ($gatewayProblem -and $AllowTestGateway) { Write-Host "Invoke-AgentEvals: -Run: $gatewayProblem" -ForegroundColor Red; exit 1 }
 if ($gatewayProblem) {
     Write-Host "Invoke-AgentEvals: -Run needs a throwaway Gateway started with SOPHON_DATA_DIR=$DataDir; $gatewayProblem" -ForegroundColor Red; exit 1
+}
+if ($AllowTestGateway) {
+    Write-Host "Invoke-AgentEvals: -AllowTestGateway: using the test Gateway at $($GatewayUrl.TrimEnd('/')); every arm installs as <agent>-eval or <agent>-eval-ctl-<rule>" -ForegroundColor Yellow
 }
 $sophon = Get-Command 'sophon' -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
 if ($null -eq $sophon) { Write-Host "Invoke-AgentEvals: 'sophon' is not on PATH" -ForegroundColor Red; exit 1 }
@@ -240,6 +313,7 @@ $env:SOPHON_DATA_DIR = $DataDir
 $env:SOPHON_GATEWAY_URL = $GatewayUrl
 $cliVersion = (@(& $sophon.Source --version 2>&1) | Select-Object -First 1)
 $installed = @{}
+$ledgerFile = Join-Path $OutDir 'eval-installs.txt'   # -AllowTestGateway only: what -Cleanup removes
 $sessions = [System.Collections.Generic.List[string]]::new()
 $rows = [System.Collections.Generic.List[object]]::new()
 foreach ($item in $plan) {
@@ -248,9 +322,14 @@ foreach ($item in $plan) {
     $runDir = Join-Path $OutDir "$($row['Id'])/$arm-$($item['Rep'])"
     New-Item -ItemType Directory -Path $runDir -Force | Out-Null
     # The treatment keeps the agent's own id, so a lead's delegate calls still name its companions; --id makes
-    # the install replace an agent of that id instead of landing under the next free one.
-    $installId = if ($arm -eq 'control') { Get-EvalControlId $row } else { $agentId }
+    # the install replace an agent of that id instead of landing under the next free one. With -AllowTestGateway
+    # every id ends in -eval, so nothing on the shared Gateway is replaced (a lead's delegate calls then name the
+    # companions' own ids, which this run did not install).
+    $installId = if ($arm -eq 'control') { Get-EvalControlId $row } else { Get-AgentEvalInstallId -AgentId $agentId -Arm 'treatment' -TestGateway:$AllowTestGateway }
+    if ($AllowTestGateway -and -not (Test-AgentEvalInstallId -Id $installId)) { throw "-AllowTestGateway: refusing to install '$installId', which is not an -eval id" }
     if (-not $installed.ContainsKey($installId)) {
+        # Recorded before the install, so -Cleanup also removes an install that failed halfway.
+        if ($AllowTestGateway) { [IO.File]::AppendAllLines($ledgerFile, [string[]]@("agent`t$installId")) }
         $pkg = if ($arm -eq 'control') { (New-EvalControlPackage $row (Join-Path $OutDir "$($row['Id'])/control-build"))['Package'] } else { Get-EvalPackage $agentId }
         $out = @(& $sophon.Source agents install --file $pkg --id $installId --yes 2>&1 | ForEach-Object { "$_" })
         if ($LASTEXITCODE -ne 0) { throw "sophon agents install failed for ${installId} (exit $LASTEXITCODE): $($out -join ' / ')" }
@@ -275,7 +354,10 @@ foreach ($item in $plan) {
         [IO.File]::WriteAllLines((Join-Path $runDir "turn-$n.ndjson"), [string[]]$turnLines)
         foreach ($l in $turnLines) {
             if ($l -match '"type":"session\.started"') {
-                try { $s = [string](($l | ConvertFrom-Json).sessionId); if ($s -and -not $session) { $session = $s }; if ($s -and -not $sessions.Contains($s)) { $sessions.Add($s) } } catch { }
+                try {
+                    $s = [string](($l | ConvertFrom-Json).sessionId); if ($s -and -not $session) { $session = $s }
+                    if ($s -and -not $sessions.Contains($s)) { $sessions.Add($s); if ($AllowTestGateway) { [IO.File]::AppendAllLines($ledgerFile, [string[]]@("session`t$s")) } }
+                } catch { }
             }
         }
         $lines.Clear(); foreach ($l in $turnLines) { $lines.Add($l) }   # only the last turn is scored
@@ -328,7 +410,17 @@ foreach ($r in $rows) {
     elseif (($r.Arm -eq 'treatment' -and -not $r.Passed) -or ($r.Arm -eq 'control' -and $r.Passed)) { $summaryLines.Add("- $($r.Id) $($r.Arm) #$($r.Rep): $($r.Dir) (missed: $($r.Missed); tripped: $($r.Tripped))") }
 }
 $summaryLines.Add('')
-$summaryLines.Add("Cleanup: $archived of $($sessions.Count) session(s) archived. Deleting needs a console (each command asks y/n), or stop the throwaway Gateway and remove its data folder:")
+if ($AllowTestGateway) {
+    $summaryLines.Add("Cleanup: $archived of $($sessions.Count) session(s) archived. On the test Gateway, delete every install and session of this run with:")
+    $summaryLines.Add('')
+    $summaryLines.Add('```')
+    $summaryLines.Add("pwsh -NoProfile -File tests/agents/evals/Invoke-AgentEvals.ps1 -Cleanup -AllowTestGateway -GatewayUrl $($GatewayUrl.TrimEnd('/')) -OutDir `"$OutDir`"")
+    $summaryLines.Add('```')
+    $summaryLines.Add('')
+    $summaryLines.Add('Or by hand in a console (each command asks y/n):')
+} else {
+    $summaryLines.Add("Cleanup: $archived of $($sessions.Count) session(s) archived. Deleting needs a console (each command asks y/n), or stop the throwaway Gateway and remove its data folder:")
+}
 $summaryLines.Add('')
 $summaryLines.Add('```')
 foreach ($id in @($installed.Keys | Sort-Object)) { $summaryLines.Add("sophon agents delete $id") }

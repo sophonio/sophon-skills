@@ -947,6 +947,41 @@ try {
         }
         $refused = @($gw.Keys | Where-Object { $_ -ne 'throwaway' -and $gw[$_] })
         $null = Test-Check 'M' ($refused.Count -eq 5 -and -not $gw['throwaway'] -and $gw['configured'].Contains('gatewayUrl', $ord)) "the -Run Gateway guard refuses no URL, a relative URL, ports 8080 and 8470 and the cli.json Gateway, and accepts another local port (refused: $($refused -join ', '); throwaway: '$($gw['throwaway'])')"
+
+        # -AllowTestGateway: the explicit opt-in for the installed test Gateway on loopback port 8470 and nothing
+        # else, even when cli.json names it; every install id then ends in -eval.
+        $cliJson8470 = Join-Path $tempRoot 'evals-cli-8470.json'
+        [IO.File]::WriteAllText($cliJson8470, '{ "gatewayUrl": "http://localhost:8470" }', [Text.UTF8Encoding]::new($false))
+        $tg = [ordered]@{
+            loopback = Test-AgentEvalGatewayUrl -Url 'http://127.0.0.1:8470/' -CliConfigPath $cliJson8470 -AllowTestGateway
+            localhost = Test-AgentEvalGatewayUrl -Url 'http://localhost:8470' -CliConfigPath $cliJson8470 -AllowTestGateway
+            port8080 = Test-AgentEvalGatewayUrl -Url 'http://localhost:8080' -CliConfigPath $cliJson8470 -AllowTestGateway
+            otherPort = Test-AgentEvalGatewayUrl -Url 'http://localhost:9200' -CliConfigPath $cliJson8470 -AllowTestGateway
+            remote = Test-AgentEvalGatewayUrl -Url 'http://192.168.1.5:8470' -CliConfigPath $cliJson8470 -AllowTestGateway
+            https = Test-AgentEvalGatewayUrl -Url 'https://127.0.0.1:8470' -CliConfigPath $cliJson8470 -AllowTestGateway
+            empty = Test-AgentEvalGatewayUrl -Url '' -CliConfigPath $cliJson8470 -AllowTestGateway
+            withoutSwitch = Test-AgentEvalGatewayUrl -Url 'http://127.0.0.1:8470/' -CliConfigPath $cliJson8470
+        }
+        $tgAccepted = @($tg.Keys | Where-Object { -not $tg[$_] })
+        $null = Test-Check 'M' (($tgAccepted -join ',') -ceq 'loopback,localhost' -and $tg['withoutSwitch'].Contains('8470', $ord)) "-AllowTestGateway accepts only http on loopback port 8470 (also when cli.json names it), refuses 8080, other ports, other hosts, https and no URL, and without the switch 8470 stays refused (accepted: $($tgAccepted -join ', '))"
+        $ids = [ordered]@{
+            treatment = Get-AgentEvalInstallId -AgentId 'developer' -Arm 'treatment' -Rule 'test-first'
+            control = Get-AgentEvalInstallId -AgentId 'developer' -Arm 'control' -Rule 'test-first'
+            evalTreatment = Get-AgentEvalInstallId -AgentId 'developer' -Arm 'treatment' -Rule 'test-first' -TestGateway
+            evalControl = Get-AgentEvalInstallId -AgentId 'developer' -Arm 'control' -Rule 'test-first' -TestGateway
+        }
+        $idsWant = [ordered]@{ treatment = 'developer'; control = 'developer-ctl-test-first'; evalTreatment = 'developer-eval'; evalControl = 'developer-eval-ctl-test-first' }
+        $idsWrong = @($idsWant.Keys | Where-Object { $ids[$_] -cne $idsWant[$_] })
+        $null = Test-Check 'M' ($idsWrong.Count -eq 0) "the install ids keep the agent's own id without the opt-in and end in -eval (controls -eval-ctl-<rule>) with it (wrong: $(@($idsWrong | ForEach-Object { "$_=$($ids[$_])" }) -join ', '))"
+        $evalIds = [ordered]@{ 'developer-eval' = $true; 'developer-eval-ctl-test-first' = $true; 'lead-developer-eval' = $true; 'developer' = $false; 'developer-spike' = $false; 'developer-ctl-test-first' = $false; 'evaluator' = $false; 'x-eval-ctl-' = $false; 'Qa-Engineer-eval' = $false }
+        $evalIdsWrong = @($evalIds.Keys | Where-Object { (Test-AgentEvalInstallId -Id $_) -ne $evalIds[$_] })
+        $null = Test-Check 'M' ($evalIdsWrong.Count -eq 0) "-Cleanup removes only ids of the -eval shape (wrong: $($evalIdsWrong -join ', '))"
+        $ledgerRoot = Join-Path $tempRoot 'evals-ledger'
+        New-Item -ItemType Directory -Path (Join-Path $ledgerRoot 'b') -Force | Out-Null
+        [IO.File]::WriteAllLines((Join-Path $ledgerRoot 'eval-installs.txt'), [string[]]@("agent`tdeveloper-eval", "session`ts-1", "agent`tdeveloper-eval-ctl-test-first"))
+        [IO.File]::WriteAllLines((Join-Path $ledgerRoot 'b/eval-installs.txt'), [string[]]@("agent`tdeveloper-eval", "agent`tdeveloper", "session`ts-2", 'junk line'))
+        $ledger = Get-AgentEvalLedger -Root $ledgerRoot
+        $null = Test-Check 'M' (((@($ledger['Agents']) | Sort-Object) -join ',') -ceq 'developer-eval,developer-eval-ctl-test-first' -and ((@($ledger['Sessions']) | Sort-Object) -join ',') -ceq 's-1,s-2' -and (@($ledger['Refused']) -join ',') -ceq 'developer') "-Cleanup reads every eval-installs.txt under the folder, keeps each id once and refuses an install id that is not of the -eval shape (agents $(@($ledger['Agents']) -join ','); sessions $(@($ledger['Sessions']) -join ','); refused $(@($ledger['Refused']) -join ','))"
     } catch {
         Add-Fail 'M' "the scenario lint cases failed to run: $($_.Exception.Message) (line $($_.InvocationInfo.ScriptLineNumber))"
     }

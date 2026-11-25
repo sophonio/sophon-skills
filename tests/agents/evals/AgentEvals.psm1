@@ -1045,9 +1045,14 @@ function Test-AgentEvalGatewayUrl {
         needs an explicit URL, and refuses one that is not an absolute http(s) URL, one on the product ports 8080
         or 8470, and the gatewayUrl of cli.json (-CliConfigPath; a missing or unreadable file only skips that
         comparison). localhost, 127.0.0.1 and ::1 count as one host.
+
+        -AllowTestGateway is the explicit opt-in for the installed test Gateway: it accepts only an http URL on
+        loopback port 8470 (also when cli.json names it, as it does on a machine whose CLI points at that Gateway)
+        and refuses every other URL, so 8080, any other port and any other host stay refused. Without the switch
+        the decision is the one above, unchanged.
     #>
     [CmdletBinding()]
-    param([AllowEmptyString()][string]$Url, [string]$CliConfigPath = '')
+    param([AllowEmptyString()][string]$Url, [string]$CliConfigPath = '', [switch]$AllowTestGateway)
     $key = {
         param([string]$Text)
         $u = $null
@@ -1059,6 +1064,10 @@ function Test-AgentEvalGatewayUrl {
     if (-not $Url -or -not $Url.Trim()) { return 'name the throwaway Gateway with -GatewayUrl or SOPHON_GATEWAY_URL' }
     $target = & $key $Url
     if ($null -eq $target) { return "'$Url' is not an absolute http or https URL" }
+    if ($AllowTestGateway) {
+        if ($target['Key'] -ceq 'http://loopback:8470') { return '' }
+        return "-AllowTestGateway allows only the test Gateway at http://127.0.0.1:8470 (or localhost), not '$Url'"
+    }
     if ($target['Port'] -in 8080, 8470) { return "'$Url' uses port $($target['Port']), the port of a normal Gateway; start the throwaway Gateway on another port" }
     if ($CliConfigPath -and (Test-Path -LiteralPath $CliConfigPath -PathType Leaf)) {
         $configured = ''
@@ -1071,10 +1080,65 @@ function Test-AgentEvalGatewayUrl {
     return ''
 }
 
+function Get-AgentEvalInstallId {
+    <#
+    .SYNOPSIS
+        The id an arm is installed under: <agent> and <agent>-ctl-<rule>, or with -TestGateway <agent>-eval and
+        <agent>-eval-ctl-<rule>, so nothing the runner installs on a shared Gateway can replace a real agent.
+    #>
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][string]$AgentId, [Parameter(Mandatory)][ValidateSet('treatment', 'control')][string]$Arm, [AllowEmptyString()][string]$Rule = '', [switch]$TestGateway)
+    $base = if ($TestGateway) { "$AgentId-eval" } else { $AgentId }
+    if ($Arm -eq 'control') { return "$base-ctl-$Rule" }
+    return $base
+}
+
+function Test-AgentEvalInstallId {
+    <#
+    .SYNOPSIS
+        True when an id has the shape Get-AgentEvalInstallId -TestGateway gives (<agent>-eval or
+        <agent>-eval-ctl-<rule>, lower case): the only ids -Cleanup deletes.
+    #>
+    [CmdletBinding()]
+    param([AllowEmptyString()][string]$Id)
+    return $Id -cmatch '^[a-z0-9][a-z0-9-]*-eval(-ctl-[a-z0-9][a-z0-9-]*)?$'
+}
+
+function Get-AgentEvalLedger {
+    <#
+    .SYNOPSIS
+        The installs and sessions recorded in every eval-installs.txt under -Root (lines "agent<TAB>id" and
+        "session<TAB>id"), each id once, in the order first seen. An agent id not of the -eval shape goes to
+        Refused, never to Agents; other lines are ignored.
+    #>
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][string]$Root)
+    $agents = [System.Collections.Generic.List[string]]::new()
+    $sessions = [System.Collections.Generic.List[string]]::new()
+    $refused = [System.Collections.Generic.List[string]]::new()
+    $files = @(Get-ChildItem -LiteralPath $Root -Filter 'eval-installs.txt' -File -Recurse -ErrorAction SilentlyContinue | Sort-Object FullName)
+    foreach ($file in $files) {
+        foreach ($line in [IO.File]::ReadAllLines($file.FullName)) {
+            $parts = $line.Split("`t")
+            if ($parts.Count -ne 2 -or -not $parts[1].Trim()) { continue }
+            $id = $parts[1].Trim()
+            switch -CaseSensitive ($parts[0]) {
+                'agent' {
+                    if (-not (Test-AgentEvalInstallId -Id $id)) { if (-not $refused.Contains($id)) { $refused.Add($id) } }
+                    elseif (-not $agents.Contains($id)) { $agents.Add($id) }
+                }
+                'session' { if (-not $sessions.Contains($id)) { $sessions.Add($id) } }
+            }
+        }
+    }
+    return @{ Agents = $agents.ToArray(); Sessions = $sessions.ToArray(); Refused = $refused.ToArray(); Files = @($files | ForEach-Object FullName) }
+}
+
 Export-ModuleMember -Function @(
     'Get-AgentEvalSmokeIds', 'Import-AgentEvalData', 'Get-AgentEvalFixtureInfo', 'Get-AgentEvalContext',
     'Find-EvalLeak', 'Test-AgentEvalData', 'Format-AgentEvalFinding', 'New-AgentEvalTestContext',
     'Invoke-AgentEvalLintFixtures', 'New-AgentEvalWorkspace', 'Read-AgentEvalTranscript', 'Test-AgentEvalEvent',
     'Get-AgentEvalScore', 'Test-EvalGlob', 'Test-AgentEvalGatewayUrl', 'Get-AgentEvalExecArgs', 'Get-AgentEvalPackage',
-    'Get-AgentEvalPackageSoulHash', 'Get-AgentEvalRunStatus'
+    'Get-AgentEvalPackageSoulHash', 'Get-AgentEvalRunStatus', 'Get-AgentEvalInstallId', 'Test-AgentEvalInstallId',
+    'Get-AgentEvalLedger'
 )

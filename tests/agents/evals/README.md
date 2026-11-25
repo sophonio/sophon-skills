@@ -123,7 +123,8 @@ and one `NOTE` or `ERROR` line per finding. It checks:
 `tests/agents/Test-AgentPackages.ps1` (section M) runs the lint's own cases
 (`tests/agents/fixtures/evals/cases.psd1`), the scorer on two recorded transcripts and on in-memory ones (the
 PRS-EV1 and PRS-EV2 events, a cut `argsPreview`), the runner's exec line, package choice, SOUL hash and run-error
-rule, the `-Run` Gateway guard, the lint on these files, every fixture and patch as a git workspace, and
+rule, the `-Run` Gateway guard and its `-AllowTestGateway` opt-in (the URL decision, the `-eval` install ids and
+the `-Cleanup` ledger), the lint on these files, every fixture and patch as a git workspace, and
 `-Prepare` on two scenarios.
 
 ## 3. Running by hand
@@ -252,7 +253,8 @@ error, a failed treatment, a passed control) for a person to read.
 `sophon agents delete` and `sophon sessions delete` always ask y/n and have no `--yes`, so a script without a
 console cannot run them: the runner writes them at the end of `summary.md` for a person to run in a console.
 The spike deleted them by typing `y` through a pseudo-console. Stopping the throwaway Gateway and removing its
-data folder removes everything at once.
+data folder removes everything at once. On the test Gateway, `-Cleanup` deletes them (see `-AllowTestGateway`
+below).
 
 Guards: it refuses to run when `CI` or `GITHUB_ACTIONS` is set, requires `-DataDir` and refuses the default
 data folder, requires `-GatewayUrl` (or `SOPHON_GATEWAY_URL`) and refuses the `gatewayUrl` of
@@ -265,6 +267,33 @@ treatment arm only.
 Start the throwaway Gateway yourself before `-Run`, with `SOPHON_DATA_DIR` pointing at the folder you pass as
 `-DataDir`: the runner checks the URL, not which data folder that Gateway uses. The CLI still records its
 session list in `~/.sophon/config/cli-sessions.json`, keyed by the Gateway URL.
+
+**The test Gateway: `-AllowTestGateway`.** Owner decision 12 of the design (2026-11-25) lets the runner use the
+installed test Gateway on port 8470 through this explicit opt-in, and through nothing else. Without the switch
+every guard above stays exactly as it is. With it:
+
+- the URL must be `http://127.0.0.1:8470` (or `localhost`, `[::1]`), also when cli.json names it; every other
+  URL is refused, including port 8080, any other port and any other host;
+- the runner prints one line naming the Gateway it will use;
+- every arm installs under an id ending in `-eval`: the treatment as `<agent>-eval`, a control as
+  `<agent>-eval-ctl-<rule>`, so nothing the run installs replaces one of your agents. A lead's delegate calls
+  still name its companions by their own ids, which the run did not install, so a scenario that scores a
+  delegated child needs the throwaway Gateway;
+- each install (recorded before it starts) and each session goes into `<OutDir>/eval-installs.txt`;
+- the other guards stay: not under CI, `-DataDir` required (a throwaway folder, never `~/.sophon`), `-MaxRuns`.
+
+`-Cleanup -AllowTestGateway -OutDir <folder>` reads every `eval-installs.txt` under the folder, deletes each
+recorded session and each recorded install of the `-eval` shape (an id of any other shape is refused and
+reported) with the Gateway routes `sophon sessions delete` and `sophon agents delete` call, then lists the
+agents and reads each session back, and exits 1 when anything recorded is left. It runs before the lint, so a
+lint error never blocks it. A Personal-tier Gateway serves a loopback request without a login, so no token is
+read or sent.
+
+```powershell
+$gw = @('-AllowTestGateway', '-GatewayUrl', 'http://127.0.0.1:8470', '-DataDir', '<scratch>/sophon-data')
+pwsh -NoProfile -File tests/agents/evals/Invoke-AgentEvals.ps1 -Run @gw -Scenario PRS-TF1 -Repeat 3 -MaxRuns 6 -OutDir <scratch>/ws/prs-tf1
+pwsh -NoProfile -File tests/agents/evals/Invoke-AgentEvals.ps1 -Cleanup -AllowTestGateway -GatewayUrl http://127.0.0.1:8470 -OutDir <scratch>/ws
+```
 
 ## 5. What to record
 

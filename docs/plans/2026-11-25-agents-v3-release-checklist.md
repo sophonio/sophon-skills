@@ -43,7 +43,9 @@ result here: free / owned / taken.
 ## 2. The eval sweep (owner decision 9)
 
 The ship rule, deferred to this sweep, is applied here once: the control and treatment arms 5 times each for
-every registered `Method` rule, and the per-track scenarios of milestone M6.
+every registered `Method` rule, and the per-track scenarios of milestone M6. Owner decision 12 (2026-11-25)
+caps the sweep at $25: on the test Gateway (option B) the pressure scenarios run 3 times per arm, and the
+acceptance, design and voice tracks move to the owner's manual smoke run.
 
 **The run list** was prepared on 2026-11-25 with
 `pwsh -NoProfile -File tests/agents/evals/Invoke-AgentEvals.ps1 -Prepare -OutDir <scratch>/sweep/prepared`
@@ -117,23 +119,35 @@ calls, and lists the flagged transcripts, which you read. Cleanup: stop the Gate
 
 ### Option B: the test Gateway (port 8470), with an explicit runner opt-in
 
-The runner refuses port 8470 and the default data folder by design, and M9 did not change that guard. To use
-the test Gateway, first add an explicit opt-in to `Invoke-AgentEvals.ps1` in a reviewed commit of its own (for
-example a switch `-AllowTestGateway` that skips only the port, cli.json and data-folder refusals and prints a
-warning), with a test in `tests/agents/Test-AgentPackages.ps1` section M. Then:
+Owner decision 12 (2026-11-25) added the opt-in: `Invoke-AgentEvals.ps1 -Run -AllowTestGateway` accepts only
+`http://127.0.0.1:8470` (or localhost), also when cli.json names it, and refuses every other URL; without the
+switch the guard is unchanged. It prints one line naming the Gateway, installs every arm as `<agent>-eval`
+(controls `<agent>-eval-ctl-<rule>`), records each install and session in `<OutDir>/eval-installs.txt`, and
+`-Cleanup -AllowTestGateway` deletes what is recorded there and checks that nothing is left. The CI guard,
+`-DataDir` (a throwaway folder, never `~/.sophon`) and `-MaxRuns` stay. The test is in
+`tests/agents/Test-AgentPackages.ps1` section M; the details are in `tests/agents/evals/README.md` section 4.
+
+The same decision caps the sweep at **$25**: the pressure scenarios run **3 times per arm** instead of 5,
+highest-risk rules first, and the acceptance, design and voice tracks move to the owner's manual smoke run.
+Read each batch's cost from the result lines (`usage.costUsd`) and stop before the cumulative cost would pass
+the cap.
 
 ```powershell
-$env:SOPHON_GATEWAY_URL = 'http://localhost:8470'
-sophon config get gatewayUrl                        # confirm the target before every state change
+$scratch = "$env:TEMP\agents-v3-sweep"                 # every OutDir and workspace under it
 pwsh -NoProfile -File build/Build-AgentPackages.ps1 -Release
-$gw = @('-DataDir', "$env:USERPROFILE\.sophon", '-GatewayUrl', 'http://localhost:8470', '-AllowTestGateway')
-# then the five -Run lines of option A with @gw
+$gw = @('-AllowTestGateway', '-GatewayUrl', 'http://127.0.0.1:8470', '-DataDir', "$scratch\sophon-data")
+# One batch per rule, in the owner's risk order; a scenario with two arms and -Repeat 3 is 6 runs.
+pwsh -NoProfile -File tests/agents/evals/Invoke-AgentEvals.ps1 -Run @gw -Scenario 'PRS-TF1,PRS-TF2' -Repeat 3 -MaxRuns 12 -OutDir "$scratch\ws\test-first"
+# ... the next rule's scenarios the same way, while the cumulative cost stays under the cap
+pwsh -NoProfile -File tests/agents/evals/Invoke-AgentEvals.ps1 -Cleanup -AllowTestGateway -GatewayUrl http://127.0.0.1:8470 -OutDir "$scratch\ws"
 ```
 
-The cost: the sweep installs about 36 agents (control arms as `<id>-ctl-<rule>`) and creates about 250
-sessions on your normal Gateway. The runner archives the sessions; the delete lines at the end of each
-`summary.md` must be run by hand in a console (they ask y/n), and an audit afterwards confirms that no agent,
-session, run or pending approval is left, as after the spikes.
+The cost on the shared Gateway: one install per agent and arm (`-eval` ids only) and one session per run.
+`-Cleanup` removes them through the Gateway's own routes (a Personal-tier Gateway needs no login from
+loopback); afterwards an audit (`sophon agents list`, `sophon sessions list`) confirms that no `-eval` agent,
+eval session, run or pending approval is left, as after the spikes. A lead's delegate calls name its
+companions' own ids, which the run did not install, so the scenarios that score a delegated child stay on
+option A or the manual smoke run.
 
 ### The 2.1.0 rows that ran on Haiku, and G6
 
