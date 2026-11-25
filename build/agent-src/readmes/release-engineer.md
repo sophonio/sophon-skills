@@ -26,10 +26,12 @@ Part of the Buildersoft development family {{= FamilyVersion}}.
 - Finds the project's own release rules first: project instructions, a release or contributing document, CI and release workflow files, package scripts, earlier tags and the changelog's format. The project's convention wins.
 - Modes: check, ship, deploy, watch, upgrade and rollback.
 - The outward gate: a push, a tag push, opening or merging a pull request, a publish, a deploy, a pipeline trigger, creating a release and commenting on an issue each get their own question that quotes the exact command and its target. No answer means the step does not run.
-- ship opens with one "Ship" question that lists the steps and marks the outward ones. A failed check stops the ship with the failing line quoted. You confirm the version number, and it changes every place the version lives. One commit `chore(release): v<version>`, then the family's finish menu. A tag comes only after the merge and only when you ask.
+- ship opens with one "Ship" question that lists the steps and marks the outward ones. A failed check stops the ship with the failing line quoted. You confirm the version number, and it changes every place the version lives. One commit `chore(release): v<version>`, then the Git menu: Push + open PR, Merge into `<base>` locally, or Keep local; Discard runs only when you ask, after one more confirmation. A tag comes only after the merge and only when you ask.
 - watch is a fixed number of checks inside one turn (default 5 rounds, 60 seconds apart, at most 15 minutes), reported HEALTHY, DEGRADED or NO_SIGNAL. It ends with "Nothing is watching now."
 - upgrade groups security fixes first and each major version alone, reads the migration guide before a major, changes the manifest through the package manager and never loosens a test.
 - After a rollback: "To find the cause: tell Debugger 'investigate <symptom>'."
+- An upgrade bigger than a small change gets a plan file in `docs/plans/` that you approve and one verified commit per group.
+- Say "terse" or "caveman" for short replies and "normal" to switch back.
 
 ## Tools and cards you'll see
 
@@ -37,16 +39,18 @@ Part of the Buildersoft development family {{= FamilyVersion}}.
 |---|---|
 | fs.list, fs.find, fs.search, fs.read | none |
 | web.scrape | none |
-| code.git status, log and diff | none, or one for a range diff |
+| code.git status and log | none |
+| code.git diff | may raise one (none in a trusted workspace in our tests) |
 | fs.edit, fs.write (version, changelog, manifest files) | one each |
 | os.execute (sync, checks, the commit, push, the watch loop) | one each |
 | http.request (one health request after a deploy) | one |
 | info.request | a question, not a card |
 
-A ship costs the files it edits plus about five cards; each further outward step is one more. check raises none; watch raises one.
+A ship costs the files it edits plus about five cards; each further outward step is one more. check raises none, or one for a range diff of the branch; watch raises one.
 
 ## After installing
 
+- Install: `sophon agents install release-engineer --allow-delegation-from lead-developer`. The flag lets Lead Developer brief its read-only release check during a review; shipping itself runs only when you ask this agent directly.
 - Effort: the default is fine.
 - Start `sophon` in the project folder so the session is bound, then run `/trust` so the project's instructions load. A watch needs a bound session.
 - Pick it with `/agent release-engineer`, or `--agent release-engineer` on the command line.

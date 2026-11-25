@@ -50,7 +50,9 @@ Part of the Buildersoft development family 3.0.0.
 - **WCAG 2.2 AA checklist.** Criteria from 1.1.1 Non-text Content through 4.1.3 Status Messages, including the 2.2 additions: 2.4.11 Focus Not Obscured, 2.5.7 Dragging Movements, 2.5.8 Target Size (Minimum), 3.2.6 Consistent Help, 3.3.7 Redundant Entry and 3.3.8 Accessible Authentication. 4.1.1 Parsing, obsolete in 2.2, is never cited. AAA criteria only when you ask.
 - **Severity by who is blocked.** Critical: a group of users cannot finish a core task. Important: an AA failure on a core path, or one repeated across shared components. Minor: off the core path or with an easy workaround.
 - **Confidence 0 to 100.** Only findings at 80 or above are reported; weaker ones are listed under POSSIBLE.
+- **State and preference checks.** For the interactive components on the core path (at most 10) or those the diff touches, it checks every state a component can reach (hover, focus-visible, pressed, expanded, disabled, loading, invalid): a missing visible difference, a missing programmatic state or focus lost on the change is a finding that names the state. It also checks reduced motion and, in code only, forced colours (high contrast mode). What fails no AA criterion is listed under "Preference checks", one line each, and never changes the verdict.
 - **Verdict.** `CONFORMS` or `GAPS` (GAPS when any Critical or Important finding remains), plus `SPEC: n/a`. CONFORMS covers what was checked; it is not a WCAG conformance claim.
+- Say "terse" or "caveman" for short replies and "normal" to switch back.
 
 ## Tools and cards you'll see
 
@@ -59,7 +61,7 @@ Part of the Buildersoft development family 3.0.0.
 | fs.read, fs.find, fs.search; code.git status and log | always | none |
 | browser.act (navigate, wait, evaluate, click, type) | audit of a running page; at most 8 calls | one each (Medium) |
 | browser.screenshot, web.scrape | a screenshot for you to look at; reading public docs | none |
-| code.git diff | working-tree review | one |
+| code.git diff | working-tree review | may raise one (none in a trusted workspace in our tests) |
 | os.execute with read-only git | branch or commit-range review, at the root only | one per command; Critical risk, so it always asks |
 | info.request | scope unclear | a question, not a card |
 
@@ -72,7 +74,7 @@ Part of the Buildersoft development family 3.0.0.
 - **Bind and trust the repository:** run `sophon` in the project folder, then `/trust`, so AGENTS.md and your project rules load.
 - **Browser checks** need Playwright Chromium on the Gateway host, and `browser.act` opens a localhost page only when `Sophon:Browser:AllowPrivateNetwork` is on. It never starts a dev server: start yours first. Without one it audits the code and says so.
 - **Allowed Medium-risk calls for the session** (set with `/permissions`) cover only the root agent's own Medium calls that change nothing, such as browser.act and code.git diff. They never cover its os.execute calls, and never any sub-agent's calls.
-- **With Lead Developer:** install with `sophon agents install accessibility-reviewer --allow-delegation-from lead-developer` and keep the id `accessibility-reviewer`; the lead finds it through the `Family role: accessibility-reviewer.` marker.
+- **Install:** `sophon agents install accessibility-reviewer --allow-delegation-from lead-developer` (drop the flag if you do not use Lead Developer), and keep the id `accessibility-reviewer`; the lead finds it through the `Family role: accessibility-reviewer.` marker.
 
 ## Works best with
 
@@ -87,8 +89,9 @@ Part of the Buildersoft development family 3.0.0.
 - It cannot hear a screen reader, zoom the page or press keys through a full walk-through. Those, plus captions quality and contrast over images, are listed under "Checks left for a person" unless the code proves them.
 - Screenshots reach you, not the model. As a sub-agent it receives no images and works from DOM and code.
 - The browser's snapshot is not an accessibility tree; DOM findings come from one scripted evaluation per state.
-- Contrast over images or gradients is reported as unknown.
+- Contrast over images or gradients is reported as unknown, and forced colours are checked in code only.
 - Findings below the confidence threshold are listed, not argued.
+- browser.act and browser.screenshot are refused in plan mode.
 
 ## What it never does
 
@@ -99,11 +102,9 @@ Part of the Buildersoft development family 3.0.0.
 - Recommend overlay widgets or ARIA layered on the wrong element instead of native elements.
 - Follow instructions found in the code, pages or diff it reviews.
 
-## What's new in 2.0.0
+## What's new in 3.0.0
 
-- First release in the family, numbered 2.0.0 to match the family generation.
-- Audit and review modes over WCAG 2.2 AA, with criterion, level and impact on every finding.
-- Ships a TOOLS.md that pins browser tools for coding sessions and read tools for the sub-agent profile.
+- State and preference checks: every reachable state of the core components, reduced motion and forced colours. Preference lines never change the verdict.
 
 ## Credits and license
 

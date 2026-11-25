@@ -50,6 +50,8 @@ Part of the Buildersoft development family 3.0.0.
 - rule writes the scenario first, outside every package folder, and needs a control arm that fails without the new text. A control that already behaves means nothing is written. You can say "untested is fine": the text is then labelled `Untested:` in the report and the commit.
 - review is read-only: the project's lint first, then the platform's rules. Each finding has a line and a rewrite; the verdict is PASSES or FAILS.
 - diagnose reads a finished session with session.history and looks at cost, repeats, plan drift, instructions not acted on and stops. Every finding cites its sequence numbers. It ends with the one change that would have saved the most.
+- Work bigger than a small change gets a plan file in `docs/plans/` that you approve, a `sophon/<slug>` branch and one verified commit per task, then the Git menu: Push + open PR, Merge into `<base>` locally, or Keep local. Discard runs only when you ask, after one more confirmation.
+- Say "terse" or "caveman" for short replies and "normal" to switch back.
 
 ## Tools and cards you'll see
 
@@ -65,6 +67,7 @@ rule costs the scenario file, the edited sources and each run; review none, or o
 
 ## After installing
 
+- Install: `sophon agents install agent-engineer --allow-delegation-from lead-developer` (drop the flag if you do not use Lead Developer, which can hand it instruction tasks inside a plan).
 - Effort: set it to high with `sophon agents models agent-engineer --effort high`.
 - Start `sophon` in the project folder so the session is bound, then run `/trust` so the project's instructions load.
 - Pick it with `/agent agent-engineer`, or `--agent agent-engineer` on the command line.

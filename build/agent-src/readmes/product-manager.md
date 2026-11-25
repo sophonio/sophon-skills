@@ -28,7 +28,9 @@ Part of the Buildersoft development family {{= FamilyVersion}}.
 - A PRD has nine sections with stable ids (`UJ-n`, `FR-n`, `RULE-n`, `NG-n`, `SM-n`, `OQ-n`), at least one reasoned non-goal and a counter-measure for every measure. A section with nothing known holds one `Unknown:` line; it never invents a number.
 - Documents go to `docs/product/<slug>/` unless your project instructions name another folder.
 - Every draft is shown in full, then one "Product" question: Save, Change something or Stop. Nothing is written before the yes.
+- Before a document is shown or saved, it scans the prose once for filler, weight words and claims with no source, and rewrites each hit.
 - Hands off: "Next: tell Product Owner 'spec <path>'."
+- Say "terse" or "caveman" for short replies and "normal" to switch back; saved documents stay in full sentences.
 
 ## Tools and cards you'll see
 
@@ -43,6 +45,7 @@ No card while it interviews or researches; one per saved document, and one more 
 
 ## After installing
 
+- Install: `sophon agents install product-manager --allow-delegation-from lead-developer`. The flag lets Lead Developer run the analyst, prd, prioritise and pre-mortem modes when you ask it to; drop it if you only talk to this agent directly.
 - Effort: set it to high with `sophon agents models product-manager --effort high`.
 - Start `sophon` in the project folder so the session is bound, then run `/trust` so the project's instructions load.
 - Pick it with `/agent product-manager`, or `--agent product-manager` on the command line.

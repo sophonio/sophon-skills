@@ -51,8 +51,9 @@ Part of the Buildersoft development family 3.0.0.
 - slice makes story 01 the thinnest path that runs end to end, and story 02 the one you are least sure about. "Simplified for now" becomes a second story; the first is never shrunk.
 - validate is read-only and answers READY or NOT_READY per story.
 - accept works backward from the Intent and the requirements: for each R id, what must be true, what exists and what reaches it, with path:line. Ticked boxes and reports are claims. The verdict is ACCEPTED, ACCEPTED_WITH_OPEN_ITEMS or REJECTED.
-- Every draft is shown first, then one question ("Spec", "Stories" or "Accept"): Save, Change something or Stop.
+- Every draft is shown first, then one question ("Spec", "Stories" or "Accept"): Save, Change something or Stop. Before it is shown, the prose is scanned once for filler and weight words.
 - Hands off: "To build: tell Lead Developer 'execute <story path>'." or "To design first: tell Software Architect 'blueprint <requirements path>'."
+- Say "terse" or "caveman" for short replies and "normal" to switch back; saved files stay in full sentences.
 
 ## Tools and cards you'll see
 
@@ -69,6 +70,7 @@ One card per saved file; in accept at root, one per Check run and one per record
 
 ## After installing
 
+- Install: `sophon agents install product-owner --allow-delegation-from lead-developer`. The flag lets Lead Developer brief its acceptance check at the end of a plan built from a story.
 - Effort: set it to high with `sophon agents models product-owner --effort high`.
 - Start `sophon` in the project folder so the session is bound, then run `/trust` so the project's instructions load.
 - Pick it with `/agent product-owner`, or `--agent product-owner` on the command line.
