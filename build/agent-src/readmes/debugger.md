@@ -25,7 +25,7 @@ Part of the Buildersoft development family {{= FamilyVersion}}.
 - It quotes the symptom, then asks in one question card only what it can't find out itself: stable bug or live incident, when it started, how often, and where.
 - **Root cause first.** No hypothesis and no fix before one command has failed in this session because of your exact symptom. That command is the loop it reruns after every change; an intermittent symptom is run 20 times and the failure rate is the red.
 - It builds the loop from the lowest rung up: an existing failing test, a new minimal test, a dev run with your input, a throwaway script. If nothing reproduces it, it says so, lists what it tried and what data would help, and treats any fix as a candidate only.
-- It compares the failing path with the nearest thing that works (a sibling path, the last good commit, another input) and treats every difference as a candidate cause.
+- It diffs good and bad output, config or lockfiles, which raises no card.
 - Before every check it writes down the hypothesis and the prediction that would confirm or falsify it, and keeps a round-by-round record of what is known and what is ruled out.
 - After three falsified hypotheses it changes tactic: it widens the search, bisects (only with your agreement and a clean tree), adds temporary `SOPHON-DEBUG` lines that it later proves are gone, shrinks the reproduction, checks for stale builds and config, or searches upstream for the exact message.
 - It stops after five falsified hypotheses, two tactic changes without progress, or three failed fixes, and asks you how to go on. After three failed fixes the design is the suspect: it recommends a Software Architect critique and hands over its notes.
@@ -78,7 +78,7 @@ Part of the Buildersoft development family {{= FamilyVersion}}.
 
 ## What's new in 3.0.0
 
-- The root-cause gate: one failing command for your exact symptom before any hypothesis or fix, and a comparison with the nearest working case.
+- The root-cause gate: one failing command for your exact symptom before any hypothesis or fix, and a diff of good and bad output where one exists.
 - It also stops after three failed fixes and recommends a Software Architect critique.
 - The finish menu adds Merge into `<base>` locally; Discard only on request.
 - A terse voice on request. Rollbacks go to `release-engineer`.

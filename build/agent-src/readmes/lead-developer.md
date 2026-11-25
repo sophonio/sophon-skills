@@ -161,7 +161,7 @@ The keyword decides consent only. Size still decides the phases, so a trivial ch
 
 ## Limits
 
-- Sub-agents are blocking: no background agents, at most 5 per call, one level deep. Caps per task: Medium 20 agents in 10 delegate calls, Large 44 agents in 22 delegate calls; a reviewed task or a fix round counts 2 agents. The estimate you approved is binding; anything dropped is logged as a `Cap:` line and listed in the report.
+- Sub-agents are blocking: no background agents, at most 5 per call, one level deep. Caps per request: Medium 20 agents in 10 delegate calls, Large 44 agents in 22 delegate calls; a reviewed task or a fix round counts 2 agents. The estimate you approved is binding; anything dropped is logged as a `Cap:` line and listed in the report.
 - Cards scale with fan-out, because every child's edits and commands raise cards at the top level.
 - Every child pays for its own instructions uncached, and the prompt cache misses after any pause over 5 minutes, including approval waits.
 - Children share your workspace: there are no separate worktrees, so parallel implementers get disjoint files only.
