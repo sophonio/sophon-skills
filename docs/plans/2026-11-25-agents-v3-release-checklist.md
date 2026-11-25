@@ -210,7 +210,7 @@ scenarios:
 - **MX1:** Lead Developer 3.0.0 with Code Reviewer 2.1.0 (2.x brief, Form B, one update notice).
 - **MX2:** a local Code Reviewer without a version (treated as current, the 3.0.0 brief).
 - **MX3:** Lead Developer 2.1.0 with 3.0.0 companions (the 2.1.0 brief accepted; no DESIGN key gives
-  NEEDS_CONTEXT). This is the state between upload steps 7c and 7e below.
+  NEEDS_CONTEXT). This is the state from upload step 7c below until the 3.0.0 lead of step 7d is approved.
 
 While running D2, L3 and Q1, confirm the accepted assumptions listed in the evals README, section 3.
 
@@ -336,8 +336,12 @@ and the skill: `a84f4504f12d0f3ce93915168765c6978cef23e3cb9f36a2eb1c6de3982c13c7
 1. **design-sophon-default, line 67 (owner-signed, not edited).** The topic gives the interface face as
    "Outfit, then system-ui, sans-serif"; the Dashboard at `a431e1a64` sets `font-family: 'Outfit', sans-serif`
    (`src/Sophon.Dashboard/src/index.css`), and neither the design-language notes nor the website's DESIGN.md
-   name `system-ui`. `Compare-SophonDigest.ps1` reports it as the only miss (exit 1). Either change the topic
-   to "Outfit, then sans-serif" and sign it again, or add an explained row to the digest script's table.
+   name `system-ui`. `Compare-SophonDigest.ps1` reports it as the only miss (exit 1), because it reads only
+   the three token files. Shipped Dashboard code does use `system-ui`: the canvas frame's default iframe
+   (`src/Sophon.Dashboard/src/components/chat/canvas-panel.tsx:412`, `<body style="margin:0;font-family:system-ui">`)
+   renders an HTML frame in it. Either accept the value with an explained row in the digest script's table
+   (Source `topic`, Kind `font`, Value `system-ui`, reason "canvas iframe default, canvas-panel.tsx:412") and
+   keep the signature, or change the topic to "Outfit, then sans-serif" and sign it again.
 2. **No baseline tag.** The repository has no tags, so `Compare-AgentSouls.ps1 -Base agents-v2.1.0` cannot
    run. The 2.1.0 packages of the baseline were built at `3f052f3`; confirm that this is what is published,
    then `git tag -a agents-v2.1.0 3f052f3 -m "Agents 2.1.0 as published"`.
