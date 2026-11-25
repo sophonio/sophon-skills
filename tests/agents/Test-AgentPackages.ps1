@@ -956,9 +956,10 @@ try {
                 Add-Fail 'M' "an eval fixture workspace failed: $($_.Exception.Message)"
             }
             $prepOut = Join-Path $tempRoot 'evals-prepare'
-            $prep = Invoke-Native $pwsh @('-NoProfile', '-NonInteractive', '-File', $evalScript, '-RepoRoot', $RepoRoot, '-Prepare', '-Scenario', 'ACC-05,PRS-TF2', '-OutDir', $prepOut)
+            $prep = Invoke-Native $pwsh @('-NoProfile', '-NonInteractive', '-File', $evalScript, '-RepoRoot', $RepoRoot, '-Prepare', '-Scenario', 'ACC-05,ACC-21,PRS-TF2', '-OutDir', $prepOut)
             $fixed = Join-Path $prepOut 'PRS-TF2/workspace/src/lib/format.js'
-            $null = Test-Check 'M' ($prep.Code -eq 0 -and (Test-Path -LiteralPath (Join-Path $prepOut 'ACC-05/workspace/.git')) -and (Test-Path -LiteralPath $fixed) -and [IO.File]::ReadAllText($fixed).Contains('Number.isFinite', $ord) -and (Test-Path -LiteralPath (Join-Path $prepOut 'ACC-05/turn-1.md'))) "Invoke-AgentEvals.ps1 -Prepare writes the workspaces with their setup and the turns, and installs nothing (exit $($prep.Code): $(Get-Tail $prep.Lines 1))"
+            # ACC-21 has Fixture 'none': its turn file must still be written (the folder has no workspace to create it).
+            $null = Test-Check 'M' ($prep.Code -eq 0 -and (Test-Path -LiteralPath (Join-Path $prepOut 'ACC-05/workspace/.git')) -and (Test-Path -LiteralPath $fixed) -and [IO.File]::ReadAllText($fixed).Contains('Number.isFinite', $ord) -and (Test-Path -LiteralPath (Join-Path $prepOut 'ACC-05/turn-1.md')) -and (Test-Path -LiteralPath (Join-Path $prepOut 'ACC-21/turn-1.md'))) "Invoke-AgentEvals.ps1 -Prepare writes the workspaces with their setup and the turns, also for a scenario without a fixture, and installs nothing (exit $($prep.Code): $(Get-Tail $prep.Lines 1))"
         }
     }
 

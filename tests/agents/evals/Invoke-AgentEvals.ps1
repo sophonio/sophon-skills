@@ -175,6 +175,7 @@ New-Item -ItemType Directory -Path $OutDir -Force | Out-Null
 if ($PSCmdlet.ParameterSetName -eq 'Prepare') {
     foreach ($row in $runnable) {
         $dir = Join-Path $OutDir $row['Id']
+        New-Item -ItemType Directory -Path $dir -Force | Out-Null   # a scenario without a fixture still gets its turn files
         Write-Host ''
         Write-Host "== $($row['Id']) ($($row['Tier']), $($row['Agent']))"
         if ($row['Fixture'] -ne 'none') {
