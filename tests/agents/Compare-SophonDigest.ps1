@@ -18,12 +18,14 @@
     series), the value must equal that token in that theme; elsewhere it must occur in the token set of its kind.
     A colour, font or unit-bearing size or duration the tokens do not carry may instead be found in the product's
     design-language notes (sophon docs/DESIGN-LANGUAGE.md at the v3-main pin) or the website's design rules
-    (sophon-website DESIGN.md), which are searched as text. Contrast ratios, alpha percentages, font weights and
-    shadow offsets other than their px values are not checked.
+    (sophon-website DESIGN.md), which are searched as text for the whole value (a whole font name, a number with its
+    unit, a hex that is not part of a longer one). Contrast ratios, alpha percentages, font weights and shadow colours
+    are not checked; shadow px values are checked only as members of the set of all --elev-* px values.
 
-    A value that is neither found nor listed in the explain table below (value, source, reason) is a miss.
+    A value that is neither found nor listed in the explain table below (value, source, reason, line context) is a miss.
     Exit 0 when every value is found or explained, or when the sibling repository is absent (SKIP); 1 on any miss or
-    when the pinned files cannot be read.
+    when a pinned token file cannot be read. The fallback documents are optional: one that cannot be read is skipped
+    with a note, which can only add misses.
 .PARAMETER SophonRepo
     The sophon repository. Default: the folder 'sophon' beside this repository's main checkout.
 .PARAMETER SophonCommit
@@ -77,15 +79,15 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $RepoRoot = [IO.Path]::GetFullPath($RepoRoot)
 $ord = [StringComparison]::Ordinal
-$ic = [StringComparison]::OrdinalIgnoreCase
 
 # ---- Explain table ----------------------------------------------------------------------------------------------
 # A value the tokens and the fallback documents do not carry, with the reason it is still right. Source is
-# 'fragment' or 'topic'; Kind is the kind the report prints; Value is the value as the report prints it.
+# 'fragment' or 'topic'; Kind is the kind the report prints; Value is the value as the report prints it; Context is
+# text the value's line must contain, so an entry explains only the sentence it was written for.
 $Explain = @(
-    @{ Source = 'topic'; Kind = 'colour'; Value = '#100E21'
+    @{ Source = 'topic'; Kind = 'colour'; Value = '#100E21'; Context = 'flattens to about #100E21'
        Reason = 'computed, not a token: tokens.css flattens the dark shell panel as color-mix(#ffffff 3%, #09071A); the topic names it only to send readers to the panel token #110F26' }
-    @{ Source = 'topic'; Kind = 'text-size'; Value = '10 px'
+    @{ Source = 'topic'; Kind = 'text-size'; Value = '10 px'; Context = 'older 10 px labels are not copied'
        Reason = 'a rejected size: the topic says older 10 px labels are not copied; the type scale starts at --text-xs 11px' }
 )
 
@@ -460,20 +462,24 @@ function Read-Topic([string]$Path) {
 }
 
 # ---- Resolution -------------------------------------------------------------------------------------------------
-function Find-InFallback([string]$Kind, [string]$Value, $Number) {
-    $needles = switch ($Kind) {
-        'colour' { @($Value) }
-        'font' { @($Value) }
-        'font-feature' { @($Value) }
-        'duration' { @($Value, ($Value -replace '\s+', '')) }
-        'px' { @($Value, ($Value -replace '\s+', '')) }
-        'elevation-px' { @($Value, ($Value -replace '\s+', '')) }
-        default { @() }
-    }
-    foreach ($doc in $Fallback.Keys) {
-        foreach ($needle in $needles) {
-            if ($Fallback[$doc].IndexOf($needle, $ic) -ge 0) { return $doc }
+function Get-FallbackPattern([string]$Kind, [string]$Value) {
+    # Whole values only: a font or feature is a case-sensitive whole name ('Inter' is not in 'pointer'), a number
+    # stands alone with its unit ('20 ms' is not in '120ms', '6 px' not in '16px'), a hex is not part of a longer hex.
+    switch ($Kind) {
+        'colour' { return "(?i)(?<![0-9A-F])$([regex]::Escape($Value))(?![0-9A-F])" }
+        { $_ -in 'font', 'font-feature' } { return "(?<![\w-])$([regex]::Escape($Value))(?![\w-])" }
+        { $_ -in 'duration', 'px', 'elevation-px' } {
+            $u = [regex]::Match($Value, '^(?<n>\d+(?:\.\d+)?) (?<u>px|ms|s)$')
+            if ($u.Success) { return "(?<![\d.])$([regex]::Escape($u.Groups['n'].Value))\s?$($u.Groups['u'].Value)\b" }
         }
+    }
+    $null
+}
+function Find-InFallback([string]$Kind, [string]$Value, $Number) {
+    $pattern = Get-FallbackPattern $Kind $Value
+    if (-not $pattern) { return $null }
+    foreach ($doc in $Fallback.Keys) {
+        if ([regex]::IsMatch($Fallback[$doc], $pattern)) { return $doc }
     }
     $null
 }
@@ -609,9 +615,11 @@ try {
 
     if (-not (Test-Path -LiteralPath $FragmentPath -PathType Leaf)) { throw "no fragment at $FragmentPath" }
     Read-Fragment $FragmentPath
+    $SourceLines = @{ fragment = [IO.File]::ReadAllText($FragmentPath).Replace("`r", '').Split("`n") }
     if ($TopicPath) {
         if (-not (Test-Path -LiteralPath $TopicPath -PathType Leaf)) { throw "no topic at $TopicPath" }
         Read-Topic $TopicPath
+        $SourceLines['topic'] = [IO.File]::ReadAllText($TopicPath).Replace("`r", '').Split("`n")
     }
 
     $usedExplain = [System.Collections.Generic.HashSet[int]]::new()
@@ -620,7 +628,8 @@ try {
         if ($status -eq 'miss') {
             for ($k = 0; $k -lt $Explain.Count; $k++) {
                 $e = $Explain[$k]
-                if ($e.Source -ceq $rec.Source -and $e.Kind -ceq $rec.Kind -and $e.Value -ceq $rec.Value) {
+                $inContext = -not $e.ContainsKey('Context') -or $SourceLines[$rec.Source][$rec.Line - 1].Contains([string]$e.Context, $ord)
+                if ($e.Source -ceq $rec.Source -and $e.Kind -ceq $rec.Kind -and $e.Value -ceq $rec.Value -and $inContext) {
                     $status = 'explained'; $detail = $e.Reason; [void]$usedExplain.Add($k)
                 }
             }
