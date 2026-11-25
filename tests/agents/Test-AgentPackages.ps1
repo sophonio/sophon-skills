@@ -33,7 +33,8 @@
       M    the Method registry: tests/agents/fixtures/method/cases.psd1 (Invoke-AgentMethodFixtures) for METHOD-CONTROLLER,
            METHOD-EXCUSES and METHOD-REFERENCE, tests/agents/fixtures/skills/cases.psd1 (Invoke-AgentSkillUseFixtures)
            for LINT-SKILL-FRAGMENT, LINT-SKILL-UNUSED and LINT-TOPIC, then the development family's own Method key (and a copy without its
-           exemption or its test-integrity rule);
+           exemption or its test-integrity rule); the shipped Excuse/Reality tables of the composed SOULs equal the
+           'shipped table' copies in tests/agents/fixtures/scan/cases.psd1, none stale and none missing;
            in-memory anchor cases (ANCHOR-MISSING, ANCHOR-GONE, data errors); a smoke run of Compare-AgentSouls.ps1;
            Compare-SophonDigest.ps1 on tests/agents/fixtures/digest (all found, two planted wrong values, two wrong
            values that occur only inside longer fallback words, SKIP without the sibling repository);
@@ -822,6 +823,33 @@ try {
         Add-Fail 'M' "the method cases failed to run: $($_.Exception.Message) (line $($_.InvocationInfo.ScriptLineNumber))"
     }
 
+    # ---- M: the shipped excuse tables in the preflight bank -----------------------------------------------------
+    # The scan fixtures hold copies of every shipped Excuse/Reality table, so the preflight bank proves each one
+    # passes; a copy that no longer matches its SOUL, or a table without a copy, fails here.
+    try {
+        $shippedTables = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+        foreach ($agentDir in @(Get-ChildItem -LiteralPath (Join-Path $RepoRoot 'agents') -Directory)) {
+            $soulPath = Join-Path $agentDir.FullName 'SOUL.md'
+            if (-not (Test-Path -LiteralPath $soulPath -PathType Leaf)) { continue }
+            $soulLines = [IO.File]::ReadAllText($soulPath).Replace("`r", '').Split("`n")
+            for ($i = 0; $i -lt $soulLines.Count; $i++) {
+                if ($soulLines[$i] -cne '| Excuse | Reality |') { continue }
+                $table = [System.Collections.Generic.List[string]]::new()
+                for ($j = $i; $j -lt $soulLines.Count -and $soulLines[$j].StartsWith('|', $ord); $j++) { $table.Add($soulLines[$j]) }
+                [void]$shippedTables.Add($table -join "`n")
+            }
+        }
+        $tableCopies = [ordered]@{}
+        foreach ($case in @((Import-PowerShellDataFile -LiteralPath (Join-Path $RepoRoot 'tests/agents/fixtures/scan/cases.psd1'))['Cases'])) {
+            if (([string]$case['Name']).StartsWith('shipped table ', $ord)) { $tableCopies[[string]$case['Name']] = @($case['Lines']) -join "`n" }
+        }
+        $staleCopies = @($tableCopies.Keys | Where-Object { -not $shippedTables.Contains($tableCopies[$_]) })
+        $copied = [System.Collections.Generic.HashSet[string]]::new([string[]]@($tableCopies.Values), [StringComparer]::Ordinal)
+        $uncopied = @($shippedTables | Where-Object { -not $copied.Contains($_) } | ForEach-Object { $_.Split("`n")[2] })
+        $null = Test-Check 'M' ($shippedTables.Count -gt 0 -and $staleCopies.Count -eq 0 -and $uncopied.Count -eq 0) "the $($tableCopies.Count) 'shipped table' scan fixtures equal the $($shippedTables.Count) Excuse/Reality tables of the composed SOULs (stale: $(if ($staleCopies) { $staleCopies -join ', ' } else { 'none' }); without a copy, first row: $(if ($uncopied) { $uncopied -join ' / ' } else { 'none' }))"
+    } catch {
+        Add-Fail 'M' "the shipped-table check failed to run: $($_.Exception.Message) (line $($_.InvocationInfo.ScriptLineNumber))"
+    }
     # ---- M: the scenario lint -------------------------------------------------------------------------------
     # The instruction tests' lint (tests/agents/evals/AgentEvals.psm1) on its in-memory cases.
     Write-Host 'Running the scenario lint cases ...'

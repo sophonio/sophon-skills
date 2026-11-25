@@ -169,6 +169,7 @@
            Text = '| "The docs on github.com say so." | Cite the page you read. |' }
 
         # ---- the shipped excuse tables (copied from their sources; the live text is scanned by the build) ----
+        # Section M of Test-AgentPackages.ps1 fails when a copy differs from the composed SOULs or a table has none.
         @{ Name = 'shipped table 07b-discovery'; Expect = 'pass'
            Lines = @('| Excuse | Reality |', '|---|---|',
                      '| "The request is clear enough." | With nothing open, step 2 costs no turn. Otherwise clear to you is not agreed. |',
