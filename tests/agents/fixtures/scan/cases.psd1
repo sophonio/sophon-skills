@@ -211,7 +211,7 @@
            Lines = @('| Excuse | Reality |', '|---|---|',
                      '| "A sensible number fills this gap." | An invented number is read as a fact later. Write `Unknown:` and who could answer. |',
                      '| "The idea is clearly good, so the questions waste time." | Liking an idea is not demand. One real person and one real event settle it. |',
-                     '| "The user sounded sure." | Sure is not evidence. Ask what they saw. |') }
+                     '| "They need it tomorrow." | A deadline is not "just write it". Ask first. |') }
         @{ Name = 'shipped table product-owner split-never-shrink'; Expect = 'pass'
            Lines = @('| Excuse | Reality |', '|---|---|',
                      '| "Simplified for now." | That is a second story. Split it out and number it; never shrink the first. |',

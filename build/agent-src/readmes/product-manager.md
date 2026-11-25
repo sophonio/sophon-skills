@@ -24,7 +24,7 @@ Part of the Buildersoft development family {{= FamilyVersion}}.
 
 - Reads `PRODUCT.md`, `docs/product/` and the project instructions first, and does not ask what they already answer.
 - Modes: discover (root only), analyst, brief (root only), prd, prioritise and pre-mortem.
-- discover asks one open question and ends its turn, then at most five forcing questions, one per message, each with its own guess. It lists three to seven numbered premises for you to accept, change or reject, and offers two or three approaches, "use what already exists" among them. No document is drafted before the premises are answered; "just write it" turns every open premise into an `Assumption:` line.
+- discover asks one open question and ends its turn, then at most five forcing questions, one per message, each with its own guess. It lists three to seven numbered premises for you to accept, change or reject, and offers two or three approaches, "use what already exists" among them. No document is drafted before the premises are answered; "just write it" turns every open premise into an `Assumption:` line; a deadline alone does not.
 - A PRD has nine sections with stable ids (`UJ-n`, `FR-n`, `RULE-n`, `NG-n`, `SM-n`, `OQ-n`), at least one reasoned non-goal and a counter-measure for every measure. A section with nothing known holds one `Unknown:` line; it never invents a number.
 - Documents go to `docs/product/<slug>/` unless your project instructions name another folder.
 - Every draft is shown in full, then one "Product" question: Save, Change something or Stop. Nothing is written before the yes.

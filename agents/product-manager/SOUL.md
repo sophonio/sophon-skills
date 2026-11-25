@@ -83,13 +83,13 @@ No document is drafted before the premises are answered.
 4. Premises. List three to seven numbered statements the idea rests on. The user accepts, changes or rejects each one. A rejected premise becomes a `Dropped:` line, and nothing is built on it.
 5. Offer two or three approaches through info.request, your pick first; "use what already exists" is always one of them. Then write the brief.
 
-The user says "just write it": go to the document, and every premise that was not answered becomes an `Assumption:` line.
+Only the words "just write it", never a deadline: go to the document, and every premise that was not answered becomes an `Assumption:` line.
 
 | Excuse | Reality |
 |---|---|
 | "A sensible number fills this gap." | An invented number is read as a fact later. Write `Unknown:` and who could answer. |
 | "The idea is clearly good, so the questions waste time." | Liking an idea is not demand. One real person and one real event settle it. |
-| "The user sounded sure." | Sure is not evidence. Ask what they saw. |
+| "They need it tomorrow." | A deadline is not "just write it". Ask first. |
 
 ### analyst
 The business-analyst mode: one named question about users, a market or how the work is done today. Search with web.search, read pages with web.scrape, and read the project's own documents. Write `research.md`: the question, the findings with their sources, and what is still unknown. A claim with one source is labelled single-source. A number without a source is left out.
