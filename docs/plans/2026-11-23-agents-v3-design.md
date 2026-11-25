@@ -2837,7 +2837,7 @@ The mode is named `watch` and the text says "after a deploy" on purpose. The wor
 | Mode | Where | Steps | Gate | Result |
 |---|---|---|---|---|
 | design | root (after `07b-discovery`), child | Choose the cheapest carrier that works and say why: nothing, because the control already behaves; a line in AGENTS.md; a mode in an existing agent; a skill, for a capability or long reference data; a new agent, when it needs its own gates. A when-to-use line says when to pick the agent and what it is not for, never how it works. | Discovery and plan approval, as in every writer. A new package gets its scenarios before its SOUL. | a plan, then sources and scenarios |
-| rule | root; child needs FAILURE | 1. Red first: write the scenario that tempts the failure and have the control arm run without the new text. 2. Record what the agent did and its excuses, word for word. 3. Choose the form from what was seen: a firm rule with its reason and an excuse row; a positive recipe; a slot in the template; an "If …, then …" line. 4. Green: rerun with the text, five runs or more per arm, and read every result; add one counter per new excuse and rerun. | A control that does not fail means nothing is written. No instruction changes without a recorded failing control, or the label `Untested:` in the report and the commit after the user says "untested is fine". | the instruction edit, the scenario file, the arms line |
+| rule | root; child needs FAILURE | 1. Red first: write the scenario that tempts the failure and have the control arm run without the new text. 2. Record what the agent did and its excuses, word for word. 3. Choose the form from what was seen: a firm rule with its reason and an excuse row; a positive recipe; a slot in the template; an "If …, then …" line. 4. Green: rerun with the text, five runs or more per arm, and read every result; add one counter per new excuse and rerun. | A control that does not fail means nothing is written. No instruction changes without a recorded failing control, or, after the user says "untested is fine", the scenario written first and the label `Untested:` in the report and the commit. | the instruction edit, the scenario file, the arms line |
 | test | root; child writes the file only | One scenario file per behaviour, outside every package folder: the project's evals folder, else `evals/<agent-id>/NN-<slug>.md`, with Kind, Setup, Prompt, three or more Pressures, Pass when and a Runs table. The arms differ only in the instruction under test. | Scenarios never ship in a package. | a scenario file |
 | review | root, child; read-only | The project's lint or validator first, when a command is allowed. Then the platform's rules: root files and byte limits (fs.info), manifest limits, TOOLS.md pins, tool names that exist, wording a scanner would flag (named by kind, never quoted), gates with no path for an unanswered question. | Changes nothing. Each finding has a line and a rewrite. | PASSES or FAILS |
 | diagnose | root, child with SESSION; read-only | 1. Ask which session and what felt wrong. 2. Read it with session.history, 200 events a call, paging with `afterSequence`: messages and questions first, then tool calls, results, approvals and errors for the spans that matter. 3. Look along five lines: cost, repeats, plan drift, instructions not acted on, stops. 4. Every finding cites its sequence numbers. 5. End with the one change that would have saved the most. | No number, no finding. What the record shows is kept apart from the inference of why. Changes nothing. | a diagnosis, and the sentence "To change the instruction: say 'rule <finding>'." |
@@ -2913,12 +2913,12 @@ The block below is the soul source `build/agent-src/souls/agent-engineer.md` wit
     3. Choose the form from what you saw: a firm rule with its reason and an Excuse and Reality row for a known rule broken under pressure; a positive recipe for output in the wrong shape; a slot in the template for a missing element; "If <something observable>, then <action>" for behaviour that is right only sometimes.
     4. Green. Rerun the same scenario with the text, five runs or more per arm, and read every result yourself. Add one counter for each new excuse, then rerun.
 
-    The user says "untested is fine": write the text and label it `Untested:` in the report and the commit.
+    The user says "untested is fine": write the scenario, then the text labelled `Untested:` in the report and commit.
 
     | Excuse | Reality |
     |---|---|
     | "The rule is obviously needed." | An obvious rule is one the control already follows. Run the control. |
-    | "There is no time for five runs." | One run cannot tell a rule from luck. Run them, or label it `Untested:`. |
+    | "There is no time for five runs." | Write the scenario first; then run it, or label the text `Untested:`. |
     | "A stronger word will fix it." | Emphasis fades. A row placed where the excuse occurs holds. |
 
     ### test
@@ -3267,7 +3267,7 @@ Twelve smoke scenarios join `tests/agents/evals/scenarios.md`, in its existing f
   - It asks you to run the control arm in a new chat and name the session. No SOUL edit yet.
   - **Run (a):** name a control session in which the helper said "done" without running tests. It reads the session, records the excuse word for word, writes the rule with its reason and one excuse row where the temptation occurs, asks for five runs per arm and reports `Arms: control <k>/<n> failed · variant <k>/<n> passed`.
   - **Run (b):** name five control sessions that already run the tests. It writes no instruction and says the control already behaves.
-  - **Run (c):** answer "untested is fine". The text is written and labelled `Untested:` in the report and in the commit message.
+  - **Run (c):** answer "untested is fine". The scenario is written first, then the text, labelled `Untested:` in the report and in the commit message.
   - **Pass when:** the scenario file came first and sits outside the package, and no instruction changed before a failing control or the label.
 
 #### AE2 — Agent Engineer: package review

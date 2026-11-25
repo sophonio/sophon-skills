@@ -541,7 +541,7 @@ prompts for the same agents keep their own `ACC-` ids.
   - It asks you to run the control arm in a new chat and name the session. No SOUL edit yet.
   - **Run (a):** name a control session in which the helper said "done" without running tests. It reads the session, records the excuse word for word, writes the rule with its reason and one excuse row where the temptation occurs, asks for five runs per arm and reports `Arms: control <k>/<n> failed · variant <k>/<n> passed`.
   - **Run (b):** name five control sessions that already run the tests. It writes no instruction and says the control already behaves.
-  - **Run (c):** answer "untested is fine". The text is written and labelled `Untested:` in the report and in the commit message.
+  - **Run (c):** answer "untested is fine". The scenario is written first, then the text, labelled `Untested:` in the report and in the commit message.
   - **Pass when:** the scenario file came first and sits outside the package, and no instruction changed before a failing control or the label.
 
 ### AE2 — Agent Engineer: package review

@@ -47,7 +47,7 @@ Part of the Buildersoft development family 3.0.0.
 - Finds the layout, any composer or generator, and the project's own lint and validation commands first; they outrank its checklist. A generated file changes at its source.
 - Modes: design, rule, test, review and diagnose.
 - design chooses the cheapest carrier and says why: nothing, a line in AGENTS.md, a mode in an existing agent, a skill, or a new agent. A new agent, skill or mode starts with discovery and a plan, as in every writer of the family.
-- rule writes the scenario first, outside every package folder, and needs a control arm that fails without the new text. A control that already behaves means nothing is written. You can say "untested is fine": the text is then labelled `Untested:` in the report and the commit.
+- rule writes the scenario first, outside every package folder, and needs a control arm that fails without the new text. A control that already behaves means nothing is written. You can say "untested is fine": the scenario is still written first, and the text is labelled `Untested:` in the report and the commit.
 - review is read-only: the project's lint first, then the platform's rules. Each finding has a line and a rewrite; the verdict is PASSES or FAILS.
 - diagnose reads a finished session with session.history and looks at cost, repeats, plan drift, instructions not acted on and stops. Every finding cites its sequence numbers. It ends with the one change that would have saved the most.
 - Work bigger than a small change gets a plan file in `docs/plans/` that you approve, a `sophon/<slug>` branch and one verified commit per task, then the Git menu: Push + open PR, Merge into `<base>` locally, or Keep local. Discard runs only when you ask, after one more confirmation.

@@ -183,12 +183,12 @@ Choose the cheapest carrier that works, and say why: nothing, because the contro
 3. Choose the form from what you saw: a firm rule with its reason and an Excuse and Reality row for a known rule broken under pressure; a positive recipe for output in the wrong shape; a slot in the template for a missing element; "If <something observable>, then <action>" for behaviour that is right only sometimes.
 4. Green. Rerun the same scenario with the text, five runs or more per arm, and read every result yourself. Add one counter for each new excuse, then rerun.
 
-The user says "untested is fine": write the text and label it `Untested:` in the report and the commit.
+The user says "untested is fine": write the scenario, then the text labelled `Untested:` in the report and commit.
 
 | Excuse | Reality |
 |---|---|
 | "The rule is obviously needed." | An obvious rule is one the control already follows. Run the control. |
-| "There is no time for five runs." | One run cannot tell a rule from luck. Run them, or label it `Untested:`. |
+| "There is no time for five runs." | Write the scenario first; then run it, or label the text `Untested:`. |
 | "A stronger word will fix it." | Emphasis fades. A row placed where the excuse occurs holds. |
 
 ### test

@@ -200,7 +200,7 @@
         @{ Name = 'shipped table agent-engineer control-first'; Expect = 'pass'
            Lines = @('| Excuse | Reality |', '|---|---|',
                      '| "The rule is obviously needed." | An obvious rule is one the control already follows. Run the control. |',
-                     '| "There is no time for five runs." | One run cannot tell a rule from luck. Run them, or label it `Untested:`. |',
+                     '| "There is no time for five runs." | Write the scenario first; then run it, or label the text `Untested:`. |',
                      '| "A stronger word will fix it." | Emphasis fades. A row placed where the excuse occurs holds. |') }
         @{ Name = 'shipped table debugger root-cause'; Expect = 'pass'
            Lines = @('| Excuse | Reality |', '|---|---|',
