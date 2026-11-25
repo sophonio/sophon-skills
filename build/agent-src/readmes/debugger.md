@@ -5,6 +5,7 @@ Turns a symptom into a proven root cause: it reproduces the problem, tests one h
 Part of the Buildersoft development family {{= FamilyVersion}}.
 
 {{# roster}}
+
 ## When to use
 
 - An error or stack trace you can't explain.
@@ -17,17 +18,22 @@ Part of the Buildersoft development family {{= FamilyVersion}}.
 - Building features or refactoring: use `developer`, or `lead-developer` for larger work.
 - Confirming a finished fix: use `qa-engineer`.
 - Code review: use `code-reviewer`. Security review: use `security-reviewer`.
+- Rolling a release back: use `release-engineer`.
 
 ## How it works
 
-- It quotes the symptom, then asks in one question card only what it can't find out itself: live incident or stable bug, when it started, how often, and where.
-- It reproduces the problem from the lowest rung up: an existing failing test, a new minimal test, a dev run with your input, a throwaway script. If nothing reproduces it, it says so, lists what it tried and what data would help, and treats any fix as a candidate only.
-- Before every check it writes down the hypothesis and the prediction that would confirm or falsify it, and it keeps a round-by-round record of what is known and what is ruled out.
+- It quotes the symptom, then asks in one question card only what it can't find out itself: stable bug or live incident, when it started, how often, and where.
+- **Root cause first.** No hypothesis and no fix before one command has failed in this session because of your exact symptom. That command is the loop it reruns after every change; an intermittent symptom is run 20 times and the failure rate is the red.
+- It builds the loop from the lowest rung up: an existing failing test, a new minimal test, a dev run with your input, a throwaway script. If nothing reproduces it, it says so, lists what it tried and what data would help, and treats any fix as a candidate only.
+- It compares the failing path with the nearest thing that works (a sibling path, the last good commit, another input) and treats every difference as a candidate cause.
+- Before every check it writes down the hypothesis and the prediction that would confirm or falsify it, and keeps a round-by-round record of what is known and what is ruled out.
 - After three falsified hypotheses it changes tactic: it widens the search, bisects (only with your agreement and a clean tree), adds temporary `SOPHON-DEBUG` lines that it later proves are gone, shrinks the reproduction, checks for stale builds and config, or searches upstream for the exact message.
-- It stops after five falsified hypotheses and asks you how to proceed instead of guessing.
-- In a live incident it puts mitigation first and offers the options with their risk.
-- It ends with a choice: apply the fix with a regression test, add only the regression test, or leave it. It says "fixed" only when a test failed before the fix and passes after it.
-- A fix bigger than a small change gets a plan file in `docs/plans/` that you approve, a `sophon/<slug>` branch and one verified commit per task, then a Push + PR / Keep local / Discard menu.
+- It stops after five falsified hypotheses, two tactic changes without progress, or three failed fixes, and asks you how to go on. After three failed fixes the design is the suspect: it recommends a Software Architect critique and hands over its notes.
+- A fix that leaves the loop red is undone before the next idea. Retries, sleeps, wider timeouts, swallowed errors and skipped tests are suppression, not fixes.
+- In a live incident it puts mitigation first, labelled as mitigation, and offers the options with their risk. It runs `git revert --no-commit` only when you pick it.
+- It ends with a choice: apply the fix with a regression test, add only the regression test, or leave it; no answer leaves it. It says "fixed" only when a test failed before the fix and passes after it.
+- A fix bigger than a small change gets a plan file in `docs/plans/` that you approve, a `sophon/<slug>` branch and one verified commit per task, then the finish menu: Push + open PR, Merge into `<base>` locally, or Keep local. Discard runs only when you ask, after a second confirmation.
+- **Voice:** plain sentences by default; "terse" or "caveman" for short replies, "normal" to switch back.
 
 ## Tools and cards you'll see
 
@@ -35,21 +41,23 @@ Part of the Buildersoft development family {{= FamilyVersion}}.
 |---|---|
 | Reading and searching files, `code.git` status and log, `os.info`, `diff` comparisons, `web.search`, `web.scrape`, the todo list | none |
 | Each reproduction or test run (`os.execute`); related checks are chained into one command | one each |
-| `code.git` blame on a suspect file | one each |
+| `code.git` blame on a suspect file | may raise one; none in a trusted workspace on the Gateway we tested |
 | Temporary instrumentation, the regression test and the fix | one per file edit |
 | Bisect, after you agree to it | one |
 | Questions (`info.request`) | a question, not a card |
 
 ## After installing
 
+- **Install:** `sophon agents install debugger`, with `--allow-delegation-from lead-developer` if Lead Developer should brief it.
 - **Effort: high.** Root-cause work is long and benefits from more reasoning: `sophon agents models debugger --effort high`.
-- **Allowed Medium-risk calls for the session** cover at most this agent's Medium-risk reads at the root, such as `code.git` blame. They never cover its edits, commits or shell commands, nor any call it makes as a sub-agent: as a Marketplace agent it always asks for those.
-- **Bind and trust the folder.** Run `sophon` in the repository so the session is bound, then `/trust` the folder so its AGENTS.md or CLAUDE.md conventions load.
+- **Allowed Medium-risk calls for the session** cover at most this agent's Medium-risk reads at the root, such as `code.git` blame. They never cover its edits, commits or shell commands, nor any call it makes as a sub-agent.
+- **Bind and trust the folder.** Run `sophon` in the repository so the session is bound, then `/trust` the folder so its AGENTS.md conventions load.
 - Pick it with `/agent debugger` or `--agent debugger`.
 
 ## Works best with
 
 - `lead-developer`: sends it one read-only hypothesis check when a plan task keeps failing.
+- `software-architect`: critiques the design after three failed fixes.
 - `qa-engineer`: confirms the fix independently, red then green.
 - `developer`: implements a larger fix once the cause is proven.
 
@@ -68,16 +76,16 @@ Part of the Buildersoft development family {{= FamilyVersion}}.
 - Touch production systems or deploy.
 - Push or open a pull request without your choice in the Git menu, or commit outside an approved plan unless you ask.
 
-## What's new in 2.1.0
+## What's new in 3.0.0
 
-- Seven companions joined the family: `frontend-developer`, `design-system-engineer`, `visual-designer`, `e2e-test-engineer`, `accessibility-reviewer`, `mcp-integration-engineer` and `technical-writer`. They are licensed Apache-2.0; this agent stays MIT. Add the ones you install to an existing Lead Developer allow-list.
+- The root-cause gate: one failing command for your exact symptom before any hypothesis or fix, and a comparison with the nearest working case.
+- It also stops after three failed fixes and recommends a Software Architect critique.
+- The finish menu adds Merge into `<base>` locally; Discard only on request.
+- A terse voice on request. Rollbacks go to `release-engineer`.
 
-## What's new in 2.0.0
+{{> readme/80-upgrade-3}}
 
-- A new agent, released at 2.0.0 together with the rest of the family.
-- A TOOLS.md file pins `os.info`, `diff` and `web.scrape` in coding sessions.
-- Updating does not change delegation settings.
-- If your Lead Developer delegates through an allow-list, add `debugger` to it, together with the other new companions `code-reviewer` and `security-reviewer`.
+{{> readme/70-reference-skill}}
 
 ## Credits and license
 

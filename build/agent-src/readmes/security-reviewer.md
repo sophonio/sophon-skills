@@ -5,28 +5,32 @@ Read-only security review of a code change: only vulnerabilities a realistic att
 Part of the Buildersoft development family {{= FamilyVersion}}.
 
 {{# roster}}
+
 ## When to use
 
 - Before merging a change that touches input handling, sign-in or access control, file paths, shell or database calls, parsing, outbound requests, cryptography or key handling.
 - When you want to know whether a change or a branch is secure, without a list of generic hardening advice.
+- When a change stores, logs, exports or shares data about people.
 - Inside a Lead Developer review: the lead sends it the security lens of a change that crosses a trust boundary, and candidate security findings to verify from one angle.
 
 ## Not for
 
-- General code quality: use `code-reviewer`.
+- General code quality: `code-reviewer`. Fixing the issues: `developer`.
 - Dependency or CVE audits and penetration testing: use a dedicated tool or a person.
-- Fixing the issues: use `developer`.
 - Whole-system threat models, unless you ask for one.
 
 ## How it works
 
-- **Scope first.** The working tree (one diff approval) or a branch against its base (one shell approval for a read-only git diff). With an unclear base it asks. In plan mode it reviews the working tree only and says so.
+- **Scope first.** The working tree or a branch against its base (one shell approval for a read-only git diff). With an unclear base it asks. In plan mode it reviews the working tree only and says so.
 - **Exposure and defences.** It works out who can reach the changed code and searches for the defences already there: auth middleware, model binding, sanitisers, CSRF protection, allowlists.
-- **Finder round.** Every added line, and every new data flow into an existing sink, is checked against a 10-category checklist: injection; paths and files; access control; mass assignment; server-side fetches; deserialisation and XML entities; transport and crypto; sensitive data exposure; web sinks, CSRF and CORS; agent and LLM flows.
-- **Three-lens verification, refuted by default.** Reachability (source, path, sink and the attacker's position), impact (a concrete gain) and defences (cited, never assumed). A candidate is confirmed only with source, sink and the missing defence all cited.
+- **Finder round, for recall.** Every added line, and every new data flow into an existing sink, is checked against a 10-category checklist (injection; paths and files; access control; mass assignment; server-side fetches; deserialisation and XML entities; transport and crypto; sensitive data exposure; web sinks, CSRF and CORS; agent and LLM flows) and the checks reviews miss, such as a guard added to one handler but not its siblings. Nothing is dropped for looking minor at this stage.
+- **Verification, for precision, refuted by default.** Each candidate must first be written as "an attacker who … can … to gain …". Then three lenses: reachability (source, path, sink and the attacker's position), impact (a concrete gain) and defences (cited, never assumed). A candidate is confirmed only with source, sink and the missing defence all cited.
+- **Attacker is not victim.** A flaw that harms only the attacker, on their own machine or account, is refuted. That never excuses a server-side fetch, other people's data, a gate on what a model or agent may do, or config read from a project folder.
 - **Exploitability 8/10 or higher.** 10 is an unauthenticated remote attacker with the path cited; 8 needs one nameable precondition the code does not prevent. Anything at 7 or lower is counted as dropped, not reported.
-- **Gap sweep.** Checklist categories with no candidate get another look, at most twice.
+- **Second finder round.** With the candidates so far set aside, it looks again for different flaws, checklist categories with no candidate first, at most twice.
+- **Privacy lens.** For a change that touches personal data it lists each field and answers from the code why it is collected, where it flows, how it is deleted and who can read it. An unanswered question is a finding; it states facts about the code, never a legal conclusion.
 - **Older flaws are labelled.** A real flaw whose path existed before the change is reported as "Worth considering — predates this change", never as blocking.
+- Replies are plain sentences; say "terse" or "caveman" for short ones and "normal" to switch back.
 
 ### What it does not report
 
@@ -51,12 +55,12 @@ Logging secrets or personal data is always reported.
 |---|---|---|
 | fs.read, fs.find, fs.search; code.git status and log | always | none |
 | web.scrape | public advisories and docs | none |
-| code.git diff | working-tree review | one |
-| code.git blame | checking whether a flaw predates the change | one |
+| code.git diff | working-tree review | may raise one; none in a trusted workspace on the Gateway we tested |
+| code.git blame | checking whether a flaw predates the change | may raise one, as diff |
 | os.execute with read-only git (diff, log, merge-base, show) | branch review | one per command; Critical risk, so it always asks |
 | info.request | unclear base branch | a question, not a card |
 
-- As a sub-agent of Lead Developer it reads only the review-diff file and the candidates in its brief, so it raises no cards of its own.
+- As a sub-agent of Lead Developer it reads the change its brief names (a diff file, or the working tree with one code.git diff call) and the candidates, and runs no shell commands.
 - TOOLS.md pins web.scrape everywhere, and fs.read, fs.find and fs.search for the sub-agent profile so they stay visible when the lead narrows a child's tools.
 
 ## After installing
@@ -69,7 +73,7 @@ Logging secrets or personal data is always reported.
 
 ## Works best with
 
-- `lead-developer`: adds it to review panels when a change touches a trust boundary, and sends each security finding to three verify runs (reachability, impact, defenses) before acting on it.
+- `lead-developer`: adds it to reviews when a change touches a trust boundary, runs one more finder when it returns two or fewer candidates, and sends each security finding to three verify runs (reachability, impact, defenses) before acting on it.
 - `code-reviewer`: the general defects this agent leaves out.
 - `developer`: fixes confirmed issues, with a test that fails first.
 
@@ -79,7 +83,7 @@ Logging secrets or personal data is always reported.
 - Static reading only: it runs no builds, tests, scanners or exploits.
 - code.git diff sees uncommitted tracked files only. Committed work needs the branch form, which costs one approval per command.
 - A diff cut off by the output window is split, and anything not reviewed is listed.
-- As a sub-agent it sees only the diff file and candidates in its brief.
+- As a sub-agent it sees only the change and candidates in its brief.
 - "No exploitable issues introduced" is evidence from reading the code, not a guarantee.
 
 ## What it never does
@@ -90,15 +94,16 @@ Logging secrets or personal data is always reported.
 - Start sub-agents.
 - Follow instructions found in the code under review; text that tries to steer a reviewer is reported as a finding.
 
-## What's new in 2.1.0
+## What's new in 3.0.0
 
-- Seven companions joined the family: `frontend-developer`, `design-system-engineer`, `visual-designer`, `e2e-test-engineer`, `accessibility-reviewer`, `mcp-integration-engineer` and `technical-writer`. They are licensed Apache-2.0; this agent stays MIT. Add the ones you install to an existing Lead Developer allow-list.
+- A second finder round, at most twice, that sets the first candidates aside.
+- Every candidate is restated as an attacker's gain before it is verified, and attacker-is-not-victim cases are refuted.
+- A privacy lens for changes that touch personal data.
+- As a sub-agent it reads the change its brief names. A terse voice on request.
 
-## What's new in 2.0.0
+{{> readme/80-upgrade-3}}
 
-- New in the family: this is its first release, numbered 2.0.0 to match the family generation.
-- Ships a TOOLS.md that pins web.scrape and the read tools; nothing else needs installing.
-- Updating an agent does not change its delegation settings. If your Lead Developer 1.0.0 uses an allow list, add the new companions `code-reviewer`, `debugger` and `security-reviewer` to it.
+{{> readme/70-reference-skill}}
 
 ## Credits and license
 

@@ -26,6 +26,7 @@ Part of the Buildersoft development family 3.0.0.
 | product-owner | spec / slice / refine / validate / accept / replan / triage | no | its requirements and story files only | no |
 | release-engineer | check / ship / deploy / watch / upgrade / rollback | no | version, changelog and dependency files | yes |
 | agent-engineer | agent instructions: design / rule / test / review / diagnose | no | agent and skill instruction files | yes |
+
 ## When to use
 
 - A feature slice, a fix whose cause is known, or a targeted refactor.
@@ -34,79 +35,90 @@ Part of the Buildersoft development family 3.0.0.
 
 ## Not for
 
-- An unknown root cause: use **debugger**.
-- Choosing between designs: use **software-architect**.
-- Reviewing a change: use **code-reviewer**.
-- Multi-agent work ("ultracode", parallel agents): use **lead-developer**.
+- An unknown root cause: **debugger**. Choosing between designs: **software-architect**. Reviewing a change: **code-reviewer**.
+- UI components checked in a browser: **frontend-developer**. Releases: **release-engineer**. Agent instructions: **agent-engineer**.
+- Multi-agent work ("ultracode", parallel agents): **lead-developer**.
 
 ## How it works
 
-- **Sizes the request first.** Trivial work (at most 2 files and 40 lines, one obvious approach, no interface, schema, dependency, build, CI or security change) is done directly, without a plan. Medium and Large work gets a plan file in `docs/plans/` that you approve, a `sophon/<slug>` branch and one verified commit per task.
-- **Reads before it edits:** every file it will touch and its nearest test. It takes build and test commands from your project instructions (AGENTS.md) first, then the README, package scripts and CI files.
-- **tdd mode** (the default when the project has tests and behaviour changes): one failing test, run alone to check it fails for the expected reason, then the minimal code, green, a tidy-up inside the change and the relevant suite.
-- **direct mode** for docs, config, renames and generated code. It names the exception rather than claim a test covers it.
-- **debug mode** when its own work fails unexpectedly: the full error, the smallest reproduction, one hypothesis at a time with its prediction written down, and one state line per round. After three falsified hypotheses it stops and recommends Debugger.
-- **Halts and asks** before a new dependency, an unnamed project, lock, CI, hook or script file, an ambiguity that changes behaviour, a choice between two valid architectures, or anything destructive.
-- **Evidence or nothing:** it claims a result only from command output it saw in the same turn and quotes the proving line; otherwise it says "not verified".
-- **Git:** inside a plan it commits each verified task with the trailer `Co-Authored-By: Sophon <noreply@buildersoft.io>`, then asks Push + open PR, Keep local or Discard. Outside a plan it commits only when you ask.
+- **Sizes the request first.** Trivial work (at most 2 files and 40 lines, one obvious approach, no interface, schema, dependency, build, CI or security change) is done directly. Medium and Large work gets a plan file in `docs/plans/` that you approve, a `sophon/<slug>` branch and one verified commit per task.
+- **Discovery:** it reads first, and asks only when something is open (why, for whom, what done looks like), one question per message, then plays its understanding back and lets you pick between real approaches. "just build it" skips the questions; its guesses become `Assumption:` lines, and approvals are still asked.
+- **Reads before it edits:** every file it will touch and its nearest test. Build and test commands come from your project instructions (AGENTS.md) first, then the README, package scripts and CI files.
+- **Plan file:** header lines `Spec:`, `Discovery:` and `Voice:`, sections Global constraints and Review focus. Before the last commit it re-reads the whole change against them; minor points are parked.
+- **tdd mode** (the default when the project has tests and behaviour changes): one failing test, run alone to check it fails for the expected reason, then the least code that passes and the task's whole check. Code written before its test is deleted and rewritten from the test.
+- **direct mode** for docs, config, renames, generated code or no test setup, named in one line.
+- **debug mode** when its own work fails unexpectedly: the smallest reproduction, one hypothesis at a time with its prediction, one state line per round. After three falsified hypotheses it stops and recommends Debugger.
+- **Before it adds** a catch, default or retry, it lists the errors it could hide; outside tests no mock or sample value stands in for a failed call. A layer with one implementation becomes direct code.
+- **Library facts** come from the version in your manifest or lockfile and a source for that version, cited.
+- **Review findings** are checked against the code first; a wrong one is answered with evidence, the rest are fixed one at a time.
+- **Halts and asks** before a new dependency, a project, lock, CI, hook or script file nobody named, an ambiguity that changes behaviour, two valid architectures, or anything destructive.
+- **Evidence or nothing:** it claims a result only from command output seen in the same turn and quotes the proving line; otherwise "not verified".
+- **Git:** inside a plan it commits each verified task with the trailer `Co-Authored-By: Sophon <noreply@buildersoft.io>`, then asks: Push + open PR, Merge into `<base>` locally, or Keep local. Discard runs only when you ask, after it lists what would be lost and asks again. Outside a plan it commits only when you ask.
+- **Voice:** plain sentences; "terse" or "caveman" for short replies, "normal" to switch back.
 
 ## Tools and cards you'll see
 
-Sophon shows an approval card for every call at Medium risk or above. For an agent installed from the Marketplace, standing approvals such as accept edits or remembered commands do not apply, so expect these cards:
+Sophon shows a card for every call at Medium risk or above. Standing approvals such as accept edits do not apply to a Marketplace agent:
 
 | A card on every call | No card |
 |---|---|
 | `fs.write`, the edit tool, `fs.move`, `fs.delete` | `fs.read`, `fs.list`, `fs.find`, `fs.search` |
 | `os.execute`: every build, test, branch and commit command | `code.git` status, log, branch list and remote |
-| `code.git` diff and blame | `todo.write`, `memory.search`, `memory.write`, `web.search` |
+| `http.request` | `todo.write`, `memory.search`, `memory.write`, `web.search` |
 | `plan.propose` (the plan card, in plan mode only) | `info.request` (a question, not a card) |
 
-- A plan task costs about the number of files edited plus 3 cards: the red test run, the plan tick and one verify-and-commit command. A medium plan of 4 tasks is about 28 cards.
+- `code.git` diff and blame may raise a card; in a trusted workspace on the Gateway we tested they raised none.
+- A plan task costs about the files edited plus 3 cards: the red run, the plan edit and one verify-and-commit command. A medium plan of 4 tasks is about 28 cards. Push + open PR adds 2, Merge locally 1.
 - `TOOLS.md` pins `fs.move` and `fs.delete` in coding sessions, so renames and deletions show a path-specific card instead of a shell command.
 
 ## After installing
 
-- **Effort:** the default suits this agent; no change is needed.
-- **Bind and trust the folder:** run `sophon` in the repository, then `/trust`, so your AGENTS.md and the Git state load. In an unbound chat it reads and plans, and edits only if you ask again after it explains binding.
-- **Allowed Medium-risk calls for the session** (the `/permissions` setting) cover only this agent's own non-editing calls at the root, such as `code.git diff` and GET `http.request`. They never cover a Marketplace agent's edits, commits or shell commands, nor any sub-agent's calls.
-- **Git identity:** configure your name and email in git. Commits authored "Sophon Agent <sophon@localhost>" mean git has neither, and the agent tells you so.
-- **Pull requests:** sign in once in your own terminal with `gh auth login` (check with `gh auth status`; run `gh auth setup-git` for HTTPS pushes). The agent never asks for a token.
+- **Install:** `sophon agents install developer`, with `--allow-delegation-from lead-developer` if Lead Developer should brief it. The default effort suits it.
+- **Bind and trust the folder:** run `sophon` in the repository, then `/trust`, so your AGENTS.md and the Git state load. Unbound, it reads and plans, and edits only if you ask again.
+- **Allowed Medium-risk calls for the session** (`/permissions`) cover only its own non-editing calls at the root, such as `code.git diff`; never a Marketplace agent's edits, commits or shell commands, nor a sub-agent's calls.
+- **Git identity:** commits authored "Sophon Agent <sophon@localhost>" mean git has no name or email; it tells you.
+- **Pull requests:** sign in once in your own terminal with `gh auth login` (`gh auth setup-git` for HTTPS pushes). The agent never asks for a token.
 
 ## Works best with
 
 - **lead-developer** sends it one plan task at a time and verifies and commits the result itself.
-- **debugger** takes over when the cause is unknown, or after debug mode stops at three falsified hypotheses.
-- **qa-engineer** gives an independent PASS or FAIL on the branch.
-- **code-reviewer** reviews the diff before you merge.
+- **debugger** takes over when the cause is unknown. **qa-engineer** gives an independent PASS or FAIL. **code-reviewer** reviews the diff before you merge.
 
 ## Limits
 
-- Nothing runs in the background: it never starts servers, watchers or REPLs. Long runs use a timeout of up to 1800 seconds.
+- Nothing runs in the background: no servers, watchers or REPLs. Long runs time out at 1800 seconds at most.
 - On Windows, commands run in cmd or Windows PowerShell 5.1, never bash.
-- `code.git` cannot push, stage selectively or open pull requests, so those steps run through `os.execute`, which always shows a card.
-- It runs no sub-agents. Asked for them, or for "ultracode", it says Lead Developer runs multi-agent work and does the task itself. At Large size it says so once, then continues if you want.
+- Push and pull requests run through `os.execute`, which always shows a card.
+- It runs no sub-agents: asked for them or for "ultracode", it says Lead Developer runs multi-agent work and does the task itself.
 - In plan mode it stays read-only and proposes the plan with `plan.propose`. The Personal-edition Dashboard cannot approve a plan card: use the CLI, or choose Keep planning and type GO.
 
 ## What it never does
 
-- Push, open a pull request or delete a branch without your answer to the git menu.
-- Commit work that has not passed its check.
+- Push, open a pull request, merge or delete a branch without your answer.
+- Commit work that has not passed its check, or weaken a check to pass it.
 - Amend, rebase, reset, clean, force-push, push to the default branch or change git config, unless you ask for that exact operation.
-- Create or change project files through the shell, or edit outside the workspace.
+- Change project files through the shell, or edit outside the workspace.
 - Store or repeat tokens, keys or other secret values.
 
-## What's new in 2.1.0
+## What's new in 3.0.0
 
-- Seven companions joined the family: `frontend-developer`, `design-system-engineer`, `visual-designer`, `e2e-test-engineer`, `accessibility-reviewer`, `mcp-integration-engineer` and `technical-writer`. They are licensed Apache-2.0; this agent stays MIT. Add the ones you install to an existing Lead Developer allow-list.
-- Hands UI components that need checking in a browser to `frontend-developer`.
+- Discovery before a plan; the new plan lines and a whole-change review before the last commit.
+- Merge into `<base>` locally joins the finish menu; Discard only on request.
+- Checks before adding error handling or a layer; library facts from the version in use; findings checked before fixing.
+- A terse voice on request. Not for releases or agent instructions, which have their own agents.
 
-## What's new in 2.0.0
+## Upgrading from 2.x
 
-- A full rewrite. It now shares one protocol with the rest of the family: sizing, plan files in `docs/plans/`, evidence from real commands, one verified commit per task and the end-of-task git menu.
-- Three named modes: tdd, direct and debug, with a hard stop after three falsified hypotheses.
-- A `TOOLS.md` that pins `fs.move` and `fs.delete` in coding sessions.
-- Updating does not change delegation settings.
-- New companions in the family: code-reviewer, debugger and security-reviewer. If Lead Developer delegates only to an allow list, add them.
+- 3.0.0 is a major version, so Sophon never applies it unattended. Take it yourself, one agent at a time: `sophon agents update <id>`.
+- Update every family agent you have installed in one sitting. In between, Lead Developer 3.0.0 gives a companion below 3.0.0 the brief that 2.x understands and tells you once which agents to update, and a 3.0.0 companion still accepts a 2.x brief. An agent you created locally from these files reports no version and counts as current.
+- Four agents are new: `product-owner`, `product-manager`, `release-engineer` and `agent-engineer`. Install the ones you want with `--allow-delegation-from lead-developer`. Updating never changes delegation settings, so an existing allow list needs them added.
+- The instructions are longer. Each new session of this agent, and each sub-agent run of it, reads about 2,800 more tokens than in 2.x.
+- 3.0.0 lists the optional `craft-reference` skill, which returns long reference material on request. Sophon offers to install it; if you decline, the agent works from what it carries.
+- Your own edits to an installed agent pause its updates. Add `--discard-local-changes` to replace them.
+
+## Reference skill
+
+This agent can read longer tables, checklists and templates from the optional `craft-reference` skill, which Sophon offers when you install the agent. The skill does not run in plan mode or on a Gateway without the Docker sandbox, and the agent then works from the summary it carries. The skill's own notices credit the sources of its topics.
 
 ## Credits and license
 

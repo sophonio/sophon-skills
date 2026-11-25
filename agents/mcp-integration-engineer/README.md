@@ -36,18 +36,19 @@ Part of the Buildersoft development family 3.0.0.
 
 ## Not for
 
-- Application features outside the server: use `developer`.
-- Test suites beyond the server's self-check: use `qa-engineer`.
-- Security audits: use `security-reviewer`.
-- User documentation: use `technical-writer`.
+- Application features outside the server: `developer`. Test suites beyond the server's self-check: `qa-engineer`.
+- Security audits: `security-reviewer`. User documentation: `technical-writer`.
+- Agent instructions and packages: `agent-engineer`.
 
 ## How it works
 
 - It starts by looking for an existing server in the repository and noting its language, SDK major version, transport and how settings and credentials arrive. An existing server is extended, not rewritten.
-- **Design:** it reads the target API's documentation, lists the jobs people actually ask for, and chooses focused tools that compose into those jobs, adding a workflow tool only where a job always chains the same calls. Each tool gets a service-prefixed snake_case name, a description that says what it returns and when to use a sibling tool, an input schema with bounds and defaults, pagination for lists, a Markdown or JSON response format, error messages that name the next step, and honest read-only, destructive, idempotent and open-world annotations. A server reachable beyond localhost checks its allowed hosts and bearer tokens. You see the design as a table and approve it before anything is built.
-- **Build:** it uses the official MCP SDK for TypeScript or Python, never guesses an SDK call (it reads the installed package or the SDK's own documentation first), and keeps one API client, shared pagination and formatting helpers and one registered tool per design row. Work bigger than a small change gets a plan file in `docs/plans/` that you approve, a `sophon/<slug>` branch and one verified commit per task, then a Push + PR / Keep local / Discard menu.
-- **Verification:** the build, then a self-check client script that starts the built server over stdio, lists its tools, calls read-only tools and checks that a bad input comes back as a readable error. On the TypeScript SDK v2 the client is a separate package, so it asks before adding it as a dev dependency or speaks JSON-RPC to the server directly. The SDK inspector's command-line mode is used only after you agree to download it. Nothing is left running.
+- **Design:** it reads the target API's documentation, lists the jobs people actually ask for, and chooses focused tools that compose into those jobs, adding a workflow tool only where a job always chains the same calls. Each tool gets a service-prefixed snake_case name, a description that says what it returns and when to use a sibling tool, an input schema with bounds and defaults, pagination for lists, a Markdown or JSON response format, error messages that name the next step, and honest read-only, destructive, idempotent and open-world annotations. You see the design as a table and approve it before anything is built.
+- **Limits live in the server**, never in a description, because the calling model may have read hostile text: the smallest scope per tool, ownership and bounds checked on every call, reads and writes in separate tools, a destructive tool that takes one exact id, and a URL-fetching tool limited to listed schemes and hosts. A server reachable beyond localhost checks its allowed hosts and verifies bearer tokens issued for it.
+- **Build:** it uses the official MCP SDK for TypeScript or Python. Before it writes a call it reads the SDK version in use and opens a source for that version (the installed package, then the official documentation), and cites it. One API client, shared pagination and formatting helpers and one registered tool per design row. Work bigger than a small change gets a plan file in `docs/plans/` that you approve, a `sophon/<slug>` branch and one verified commit per task, then the finish menu: Push + open PR, Merge into `<base>` locally, or Keep local. Discard runs only when you ask, after a second confirmation.
+- **Verification:** the build, then a self-check client script that starts the built server over stdio, lists its tools, calls read-only tools and checks that a zero, an empty, a missing and an oversized input each come back as a readable error. On the TypeScript SDK v2 the client is a separate package, so it asks before adding it as a dev dependency or speaks JSON-RPC to the server directly. The SDK inspector's command-line mode is used only after you agree to download it. Nothing is left running.
 - **Evals:** ten independent, read-only, multi-step questions about stable data, each with one answer checked by exact string comparison, written to one XML file. It verifies every answer through the server's tools and runs no evaluation harness.
+- Replies are plain sentences; say "terse" or "caveman" for short ones and "normal" to switch back.
 
 ## Tools and cards you'll see
 
@@ -56,15 +57,15 @@ Part of the Buildersoft development family 3.0.0.
 | Reading and searching files, `code.git` status and log, `web.scrape` for API and SDK docs, the todo list | none |
 | Each file it creates or edits | one per file |
 | Builds, self-checks and installs (`os.execute`), chained into one command where possible | one each |
+| `code.git` diff | may raise one; none in a trusted workspace on the Gateway we tested |
 | Approving the tool design or a plan | a question, or the plan card in plan mode |
 
 ## After installing
 
-- **Effort:** the default is fine.
-- **Allowed Medium-risk calls for the session** never cover this agent's edits, commits or shell commands, nor any call it makes as a sub-agent: as a Marketplace agent it always asks for those.
-- **Bind and trust the folder.** Run `sophon` in the repository so the session is bound, then `/trust` the folder so its AGENTS.md or CLAUDE.md conventions load.
+- **Install:** `sophon agents install mcp-integration-engineer`, with `--allow-delegation-from lead-developer` if Lead Developer should brief it. The default effort is fine.
+- **Allowed Medium-risk calls for the session** never cover this agent's edits, commits or shell commands, nor any call it makes as a sub-agent.
+- **Bind and trust the folder.** Run `sophon` in the repository so the session is bound, then `/trust` the folder so its AGENTS.md conventions load.
 - **Credentials** for the service come from environment variables or your secret store. Set them in the environment the shell inherits if you want checks against the live API; without them the self-check runs against a local mock of the API with a placeholder key, and the report says so.
-- Pick it with `/agent mcp-integration-engineer` or `--agent mcp-integration-engineer`.
 
 ## Works best with
 
@@ -85,9 +86,25 @@ Part of the Buildersoft development family 3.0.0.
 - Write a destructive tool without saying so in its description and annotations, or use one in an evaluation.
 - Add a dependency or download a tool without asking, or push without your choice in the Git menu.
 
-## What's new in 2.0.0
+## What's new in 3.0.0
 
-- First release in the family: design, build and evals modes, a self-check client as the verification step, and plan files, one commit per verified task and the Git menu, shared with the family's other writers.
+- The self-check sends a zero, an empty, a missing and an oversized input; limits are enforced in the server, which treats its calling model as a possible attacker.
+- SDK facts come from the version in use, with the source cited.
+- The finish menu adds Merge into `<base>` locally; Discard only on request.
+- A terse voice on request.
+
+## Upgrading from 2.x
+
+- 3.0.0 is a major version, so Sophon never applies it unattended. Take it yourself, one agent at a time: `sophon agents update <id>`.
+- Update every family agent you have installed in one sitting. In between, Lead Developer 3.0.0 gives a companion below 3.0.0 the brief that 2.x understands and tells you once which agents to update, and a 3.0.0 companion still accepts a 2.x brief. An agent you created locally from these files reports no version and counts as current.
+- Four agents are new: `product-owner`, `product-manager`, `release-engineer` and `agent-engineer`. Install the ones you want with `--allow-delegation-from lead-developer`. Updating never changes delegation settings, so an existing allow list needs them added.
+- The instructions are longer. Each new session of this agent, and each sub-agent run of it, reads about 2,200 more tokens than in 2.x.
+- 3.0.0 lists the optional `craft-reference` skill, which returns long reference material on request. Sophon offers to install it; if you decline, the agent works from what it carries.
+- Your own edits to an installed agent pause its updates. Add `--discard-local-changes` to replace them.
+
+## Reference skill
+
+This agent can read longer tables, checklists and templates from the optional `craft-reference` skill, which Sophon offers when you install the agent. The skill does not run in plan mode or on a Gateway without the Docker sandbox, and the agent then works from the summary it carries. The skill's own notices credit the sources of its topics.
 
 ## Credits and license
 
