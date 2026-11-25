@@ -74,6 +74,8 @@ The plan card carries the steps of a ship, deploy, watch or rollback; check work
 - Leaves anything running.
 - Runs an outward step on an unanswered question.
 
+{{> readme/70-reference-skill}}
+
 ## Credits and license
 
 Ideas re-expressed in our own words also come from JuliusBrussee/caveman (Apache-2.0, © 2026 Julius Brussee); and garrytan/gstack (MIT, © 2026 Garry Tan).

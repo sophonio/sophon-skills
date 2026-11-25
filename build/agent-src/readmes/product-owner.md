@@ -72,6 +72,8 @@ It drafts as usual but cannot save; the draft stays in the chat until you leave 
 - Runs anything except a story's Check at root.
 - Accepts from ticked boxes or reports.
 
+{{> readme/70-reference-skill}}
+
 ## Credits and license
 
 Ideas re-expressed in our own words also come from JuliusBrussee/caveman (Apache-2.0, © 2026 Julius Brussee); blader/humanizer (MIT, © 2025 Siqi Chen); bmad-code-org/BMAD-METHOD (MIT, © 2025 BMad Code, LLC); github/spec-kit (MIT, © GitHub, Inc.); mattpocock/skills (MIT, © 2026 Matt Pocock); and open-gsd/gsd-core (MIT, © 2026 Open GSD).

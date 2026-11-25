@@ -69,6 +69,8 @@ Plans work as in every writer of the family; review and diagnose work read-only.
 - Writes skill entrypoint code.
 - Ships a scenario inside a package.
 
+{{> readme/70-reference-skill}}
+
 ## Credits and license
 
 Ideas re-expressed in our own words also come from JuliusBrussee/caveman (Apache-2.0, © 2026 Julius Brussee).

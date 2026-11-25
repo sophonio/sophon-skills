@@ -93,6 +93,10 @@ It drafts as usual but cannot save; the draft stays in the chat until you leave 
 - Runs anything except a story's Check at root.
 - Accepts from ticked boxes or reports.
 
+## Reference skill
+
+This agent can read longer tables, checklists and templates from the optional `craft-reference` skill, which Sophon offers when you install the agent. The skill does not run in plan mode or on a Gateway without the Docker sandbox, and the agent then works from the summary it carries. The skill's own notices credit the sources of its topics.
+
 ## Credits and license
 
 Ideas re-expressed in our own words also come from JuliusBrussee/caveman (Apache-2.0, © 2026 Julius Brussee); blader/humanizer (MIT, © 2025 Siqi Chen); bmad-code-org/BMAD-METHOD (MIT, © 2025 BMad Code, LLC); github/spec-kit (MIT, © GitHub, Inc.); mattpocock/skills (MIT, © 2026 Matt Pocock); and open-gsd/gsd-core (MIT, © 2026 Open GSD).

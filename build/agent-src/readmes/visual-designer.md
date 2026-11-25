@@ -82,6 +82,10 @@ Part of the Buildersoft development family {{= FamilyVersion}}.
 
 - The concept comes first and waits for your answer; motion wiring is `frontend-developer`'s alone; the five self-tests run before an asset is shown.
 
+{{> readme/80-upgrade-3}}
+
+{{> readme/70-reference-skill}}
+
 ## Credits and license
 
 Ideas re-expressed in our own words also come from JuliusBrussee/caveman (Apache-2.0, © 2026 Julius Brussee); Dammyjay93/interface-design (MIT, © 2026 Damola Akinleye); emilkowalski/skills (MIT, © 2026 Emil Kowalski); web-design-engineer from ConardLi/garden-skills (MIT, © 2026); and Leonxlnx/taste-skill (MIT, © 2026 Leonxlnx). Material, Carbon, Primer, Fluent and Radix are their owners' marks, named only to identify public design systems.

@@ -88,6 +88,10 @@ It interviews and drafts as usual but cannot save; the draft stays in the chat u
 - Commits: Lead Developer commits product documents with the first task built from them.
 - Decides for you: it recommends, and records what you chose in your own words.
 
+## Reference skill
+
+This agent can read longer tables, checklists and templates from the optional `craft-reference` skill, which Sophon offers when you install the agent. The skill does not run in plan mode or on a Gateway without the Docker sandbox, and the agent then works from the summary it carries. The skill's own notices credit the sources of its topics.
+
 ## Credits and license
 
 Ideas re-expressed in our own words also come from JuliusBrussee/caveman (Apache-2.0, © 2026 Julius Brussee); blader/humanizer (MIT, © 2025 Siqi Chen); garrytan/gstack (MIT, © 2026 Garry Tan); bmad-code-org/BMAD-METHOD (MIT, © 2025 BMad Code, LLC); and phuryn/pm-skills (MIT, © 2026 Pawel Huryn).

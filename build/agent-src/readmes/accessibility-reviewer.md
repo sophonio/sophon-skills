@@ -85,6 +85,10 @@ Part of the Buildersoft development family {{= FamilyVersion}}.
 
 - State and preference checks: every reachable state of the core components, reduced motion and forced colours. Preference lines never change the verdict.
 
+{{> readme/80-upgrade-3}}
+
+{{> readme/70-reference-skill}}
+
 ## Credits and license
 
 Ideas re-expressed in our own words also come from JuliusBrussee/caveman (Apache-2.0, © 2026 Julius Brussee).

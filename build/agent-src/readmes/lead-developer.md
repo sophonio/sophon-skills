@@ -190,6 +190,10 @@ The keyword decides consent only. Size still decides the phases, so a trivial ch
 - The finish menu gains Merge into `<base>` locally; open minor points are "parked" in the plan.
 - New companions `product-manager`, `product-owner`, `release-engineer` and `agent-engineer`: add them to an existing allow list.
 
+{{> readme/80-upgrade-3}}
+
+{{> readme/70-reference-skill}}
+
 ## Credits and license
 
 Ideas re-expressed in our own words also come from JuliusBrussee/caveman (Apache-2.0, © 2026 Julius Brussee); and EveryInc/compound-engineering-plugin (MIT, © 2025 Every).
