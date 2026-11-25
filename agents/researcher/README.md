@@ -9,14 +9,14 @@ Part of the Buildersoft development family 3.0.0.
 | lead-developer | orchestrator: sizes, plans, builds, verifies, commits | yes (depth 1) | yes | yes |
 | developer | implementer: tdd / direct / debug | no | yes | yes |
 | **researcher** (this one) | codebase and web facts, every claim cited | no | no | no |
-| software-architect | blueprint / ADR / greenfield / compare / critique | no | its plan or ADR file only | no |
+| software-architect | blueprint / ADR / greenfield / compare / critique | no | its plan, ADR or design note only | no |
 | code-reviewer | review / refute / re-review / completeness | no | no | no |
 | qa-engineer | verification gate, regression checks, tests | no | tests, when asked | yes |
 | debugger | root cause first, then a fix when asked | no | fix + regression test, when asked | yes |
 | security-reviewer | exploitable vulnerabilities only | no | no | no |
-| ui-ux-designer | direction / build / critique / copy / judge | no | UI presentation files | yes |
-| frontend-developer | UI implementer: component / direct / artifact / perf | no | yes | yes |
-| design-system-engineer | audit / tokens / theme / playground / brand-check | no | tokens, themes, components | yes |
+| ui-ux-designer | discover / direction / refine / build / critique / copy / judge | no | UI presentation files | yes |
+| frontend-developer | UI implementer: component / direct / artifact / perf / variant | no | yes | yes |
+| design-system-engineer | audit / tokens / theme / playground / brand-check / guards | no | tokens, themes, components, token guards | yes |
 | visual-designer | concept / art / generative / image / motion | no | asset files | yes |
 | e2e-test-engineer | browser end-to-end tests: write / visual / flake | no | e2e tests | yes |
 | accessibility-reviewer | WCAG 2.2 AA: audit / review | no | no | no |

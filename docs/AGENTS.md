@@ -56,9 +56,9 @@ design of 3.0.0 is [`docs/plans/2026-11-23-agents-v3-design.md`](plans/2026-11-2
 | [qa-engineer](../agents/qa-engineer) | verification gate, regression checks, tests | no | no (tests, when asked) | default | one per chained check; browser checks up to 6 |
 | [debugger](../agents/debugger) | root cause first, then a fix when asked | no | no (fix + regression test, when asked) | high | one per reproduction or check run |
 | [security-reviewer](../agents/security-reviewer) | exploitable vulnerabilities only | no | yes | high | 1-2 (the diff, a branch range) |
-| [ui-ux-designer](../agents/ui-ux-designer) | direction / build / critique / copy / judge | no | no (UI presentation files) | default | direction none until you pick; build as for developer; browser checks one each |
-| [frontend-developer](../agents/frontend-developer) | UI implementer: component / direct / artifact / perf | no | no | default | files edited + 1-2 runs; plans as for the lead |
-| [design-system-engineer](../agents/design-system-engineer) | audit / tokens / theme / playground / brand-check | no | no (tokens, themes, components) | default | audit none; token or theme changes as for developer |
+| [ui-ux-designer](../agents/ui-ux-designer) | discover / direction / refine / build / critique / copy / judge | no | no (UI presentation files) | default | direction none until you pick; build as for developer; browser checks one each |
+| [frontend-developer](../agents/frontend-developer) | UI implementer: component / direct / artifact / perf / variant | no | no | default | files edited + 1-2 runs; plans as for the lead |
+| [design-system-engineer](../agents/design-system-engineer) | audit / tokens / theme / playground / brand-check / guards | no | no (tokens, themes, components, token guards) | default | audit none; token or theme changes as for developer |
 | [visual-designer](../agents/visual-designer) | concept / art / generative / image / motion (image.generate opt-in) | no | no (asset files) | default | concept none; one per asset file written, plus one per render or check run |
 | [e2e-test-engineer](../agents/e2e-test-engineer) | browser end-to-end tests: write / visual / flake | no | no (e2e tests) | default | per test: its edits + a red and a green run; flake: one per repeat or bisection run |
 | [accessibility-reviewer](../agents/accessibility-reviewer) | WCAG 2.2 AA: audit / review, VERDICT `CONFORMS` or `GAPS` | no | yes | high | 1 for the working tree (the diff); browser checks one each |

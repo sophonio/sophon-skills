@@ -294,8 +294,8 @@
     @{
       Id = 'design-system-engineer'
       DisplayName = 'Design System Engineer'
-      Summary = 'audit / tokens / theme / playground / brand-check'
-      Changes = 'tokens, themes, components'
+      Summary = 'audit / tokens / theme / playground / brand-check / guards'
+      Changes = 'tokens, themes, components, token guards'
       Commits = 'yes'
       SoulCap = 51200
       RoleCap = 7500
@@ -413,7 +413,7 @@
     @{
       Id = 'frontend-developer'
       DisplayName = 'Frontend Developer'
-      Summary = 'UI implementer: component / direct / artifact / perf'
+      Summary = 'UI implementer: component / direct / artifact / perf / variant'
       Changes = 'yes'
       Commits = 'yes'
       SoulCap = 51200
@@ -724,7 +724,7 @@
       Id = 'software-architect'
       DisplayName = 'Software Architect'
       Summary = 'blueprint / ADR / greenfield / compare / critique'
-      Changes = 'its plan or ADR file only'
+      Changes = 'its plan, ADR or design note only'
       Commits = 'no'
       SoulCap = 28672
       RoleCap = 5500
@@ -793,7 +793,7 @@
     @{
       Id = 'ui-ux-designer'
       DisplayName = 'UI/UX Designer'
-      Summary = 'direction / build / critique / copy / judge'
+      Summary = 'discover / direction / refine / build / critique / copy / judge'
       Changes = 'UI presentation files'
       Commits = 'yes'
       SoulCap = 51200
