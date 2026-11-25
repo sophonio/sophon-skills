@@ -1026,6 +1026,8 @@ try {
     $null = Test-Check 'M' ($digestPart.Code -eq 1 -and $digestPart.Text.Contains('MISS fragment:3  font Inter', $ord) -and $digestPart.Text.Contains('MISS fragment:4  duration 20 ms', $ord) -and $digestPart.Text.Contains('doc  fragment:4  duration 120 ms', $ord) -and $digestPart.Text.Contains('FAIL: 2 value(s) missed', $ord)) "Compare-SophonDigest.ps1 matches fallback documents on whole values only ('Inter' not in 'pointer', '20 ms' not in '120ms') (exit $($digestPart.Code))"
     $digestAbsent = Invoke-Native $pwsh @('-NoProfile', '-NonInteractive', '-File', $digestScript, '-RepoRoot', $RepoRoot, '-SophonRepo', (Join-Path $digestFix 'no-such-repository'))
     $null = Test-Check 'M' ($digestAbsent.Code -eq 0 -and $digestAbsent.Text.StartsWith('SKIP:', $ord)) "Compare-SophonDigest.ps1 reports SKIP and exits 0 without the sibling repository (exit $($digestAbsent.Code))"
+    $digestRequired = Invoke-Native $pwsh @('-NoProfile', '-NonInteractive', '-File', $digestScript, '-RepoRoot', $RepoRoot, '-SophonRepo', (Join-Path $digestFix 'no-such-repository'), '-Require')
+    $null = Test-Check 'M' ($digestRequired.Code -eq 1 -and $digestRequired.Text.StartsWith('FAIL:', $ord) -and -not $digestRequired.Text.Contains('SKIP', $ord)) "Compare-SophonDigest.ps1 -Require fails instead of SKIP without the sibling repository (exit $($digestRequired.Code))"
 
     # ---- N: document counts -------------------------------------------------------------------------------
     Write-Host 'Running the document count cases ...'

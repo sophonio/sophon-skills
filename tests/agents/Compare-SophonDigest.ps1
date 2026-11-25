@@ -23,11 +23,13 @@
     are not checked; shadow px values are checked only as members of the set of all --elev-* px values.
 
     A value that is neither found nor listed in the explain table below (value, source, reason, line context) is a miss.
-    Exit 0 when every value is found or explained, or when the sibling repository is absent (SKIP); 1 on any miss or
-    when a pinned token file cannot be read. The fallback documents are optional: one that cannot be read is skipped
+    Exit 0 when every value is found or explained, or when the sibling repository is absent (SKIP, unless
+    -Require); 1 on any miss or when a pinned token file cannot be read. The fallback documents are optional: one that cannot be read is skipped
     with a note, which can only add misses.
 .PARAMETER SophonRepo
     The sophon repository. Default: the folder 'sophon' beside this repository's main checkout.
+.PARAMETER Require
+    Fail (exit 1) instead of SKIP when the sophon repository is absent. The release gate runs with it.
 .PARAMETER SophonCommit
     The Dashboard token pin. Default: a431e1a64.
 .PARAMETER DesignLanguageRepo
@@ -61,6 +63,7 @@
 [CmdletBinding()]
 param(
     [string]$SophonRepo = '',
+    [switch]$Require,
     [string]$SophonCommit = 'a431e1a64',
     [string]$DesignLanguageRepo = '',
     [string]$DesignLanguageCommit = '38c3f7d',
@@ -590,6 +593,7 @@ try {
         $siblings = Resolve-SiblingRoot
         if (-not $SophonRepo) { $SophonRepo = Join-Path $siblings 'sophon' }
         if (-not (Test-Path -LiteralPath $SophonRepo -PathType Container)) {
+            if ($Require) { Write-Host "FAIL: the sophon repository is not at $SophonRepo (pass -SophonRepo); -Require needs it"; exit 1 }
             Write-Host "SKIP: the sophon repository is not at $SophonRepo (pass -SophonRepo); nothing was checked"
             exit 0
         }

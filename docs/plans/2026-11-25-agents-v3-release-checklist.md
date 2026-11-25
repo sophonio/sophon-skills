@@ -250,8 +250,10 @@ transcript before you accept it.
 
 ## 6. The remaining release gates
 
-- **Sophon default:** `pwsh -NoProfile -File tests/agents/Compare-SophonDigest.ps1` finds every value or
-  explains each miss, and the owner's sign-off of `21-sophon-default` is recorded (section 9 has the open miss).
+- **Sophon default:** `pwsh -NoProfile -File tests/agents/Compare-SophonDigest.ps1 -Require` exits 0 with the
+  final line `OK: every value found or explained`, and the owner's sign-off of `21-sophon-default` is recorded
+  (section 9 has the open miss). `-Require` fails when the sibling repository is missing; without it the script
+  prints `SKIP:` and exits 0 having checked nothing, which does not count as a run.
 - **Regression:** `pwsh -NoProfile -File tests/agents/Compare-AgentSouls.ps1 -Base agents-v2.1.0`; read the
   lost-lines report. The repository has no tags yet, so create the baseline tag first (section 9).
 - **Sophon v3:** against the newest v3-main worktree, compare `SuspiciousPatterns.cs` and

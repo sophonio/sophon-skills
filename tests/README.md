@@ -103,7 +103,7 @@ pwsh -NoProfile -File build/Test-AgentSources.ps1 -Release   # the release gate:
 pwsh -NoProfile -File tests/agents/evals/Invoke-AgentEvals.ps1 -ValidateOnly
 
 # the Sophon-default digest check (maintainer only, at every family release; needs the sibling sophon repository)
-pwsh -NoProfile -File tests/agents/Compare-SophonDigest.ps1
+pwsh -NoProfile -File tests/agents/Compare-SophonDigest.ps1 -Require   # -Require: a missing repository fails, not SKIP
 ```
 
 | Section | What it checks |
