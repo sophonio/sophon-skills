@@ -31,7 +31,8 @@ $script:EventKinds = [ordered]@{
     FirstCommand = 'string'     # a regex the first command text matches
     FirstOf      = 'hashtable'  # @{ Tools = @(...); Is = '<tool>' }: of these tools, the one called first
     Before       = 'hashtable'  # @{ Is = '<regex>'; Then = '<regex>' }: a command matching Is comes before any
-                                # command matching Then (os.execute text; code.git as 'git <operation>')
+                                # command matching Then (os.execute text; code.git as 'git <operation>',
+                                # a code.git tag with a tag_name as 'git tag <tag_name>')
     Question     = 'string'     # an info.request question with this header
     FirstOption  = 'string'     # a regex the first option label of the first question matches
     ChatQuestion = 'bool'       # the turn ends with a question in chat (no info.request)
@@ -846,7 +847,8 @@ function Read-AgentEvalTranscript {
         Result }. A call comes from its tool.started line (toolName, argsPreview). argsPreview is parsed as JSON
         when it is complete; the CLI cuts it at 2,048 characters, and a cut preview yields its path, command,
         headers and option labels by pattern (Cut = $true). A path is made relative to -Workspace, or to the
-        last '/workspace/' folder in it, with forward slashes. A code.git call's Command is 'git <operation>'.
+        last '/workspace/' folder in it, with forward slashes. A code.git call's Command is 'git <operation>';
+        a code.git tag that names tag_name creates a tag and reads 'git tag <tag_name>' (without it, it lists).
         A child's call (parentSessionId) is not this agent's move. Checked against live runs in spike 5.
     #>
     [CmdletBinding()]
@@ -901,9 +903,13 @@ function Read-AgentEvalTranscript {
                     # Option labels of the first question only: those before a second "header".
                     $firstQ = $raw; $second = [regex]::Matches($raw, '"header"\s*:'); if ($second.Count -gt 1) { $firstQ = $raw.Substring(0, $second[1].Index) }
                     $call['Options'] = [string[]]@([regex]::Matches($firstQ, '"label"\s*:\s*"((?:[^"\\]|\\.)*)"') | ForEach-Object { [regex]::Unescape($_.Groups[1].Value) })
-                    if ($tool -ceq 'code.git') { $callArgs['operation'] = & $field $raw 'operation' }
+                    if ($tool -ceq 'code.git') { $callArgs['operation'] = & $field $raw 'operation'; $callArgs['tag_name'] = & $field $raw 'tag_name' }
                 }
-                if ($tool -ceq 'code.git' -and -not $call['Command'] -and $callArgs.ContainsKey('operation') -and $callArgs['operation']) { $call['Command'] = "git $($callArgs['operation'])" }
+                if ($tool -ceq 'code.git' -and -not $call['Command'] -and $callArgs.ContainsKey('operation') -and $callArgs['operation']) {
+                    $call['Command'] = "git $($callArgs['operation'])"
+                    # code.git tag creates a tag only when tag_name is set (Sophon GitOperations.TagAsync); bare, it lists.
+                    if ([string]$callArgs['operation'] -ceq 'tag' -and $callArgs.ContainsKey('tag_name') -and "$($callArgs['tag_name'])".Trim()) { $call['Command'] += " $("$($callArgs['tag_name'])".Trim())" }
+                }
                 $call['Path'] = & $relative $call['Path']
                 $calls.Add($call)
             }
