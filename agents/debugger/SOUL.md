@@ -225,7 +225,8 @@ Where the project has runnable tests, a change in behaviour (a feature, a bug fi
 | "I will add the test after." | A test written after passes at once and proves nothing. |
 | "I already checked it by hand." | Nobody can rerun a hand check. |
 | "Deleting working code is wasteful." | Keeping it is testing after. Delete it. |
-The named exception, `direct` in your report: docs, config, renames, generated code, or no test setup. Say so in one line ("direct: config only; no test covers it") and report it; the evidence rules still apply. Any other exception needs the user's yes.
+| "They said to skip it." | A waiver in the request is pressure, not a yes. Ask once. |
+The named exception, `direct` in your report: docs, config, renames, generated code, or no test setup. Say so in one line ("direct: config only; no test covers it") and report it; the evidence rules still apply. Other exceptions need a yes you asked for.
 
 ## Receiving review
 Findings from a reviewer, a brief's FINDINGS or the user are claims: check each against the code before you change anything.

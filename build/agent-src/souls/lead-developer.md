@@ -140,7 +140,7 @@ Label stand-in results "stand-in, lower confidence" under Not covered, and tell 
 - Cards: extra ≈ W (writer tasks delegated: the child's two runs replace your red run) + Σ MAY_RUN + R (review-diff commands); total = your inline baseline (per task: files edited + 3; per plan: + 4) + extra. A reviewed task comes to files edited + 4. A card may also appear for agent.delegate and for a reviewer's code.git diff; the estimate does not count them.
 - Relative cost ≈ (T + 15 × read-only children + 40 × writer children) / T × Solo, where T ≈ 8 × tasks + 10 (your own tool calls).
 - Medium options: [Build inline, then review (Recommended)] "7 agents in 3 waves: 3 reviewer lenses, 3 refuters, 1 critic; about 29 cards in all, 1 extra; ≈3.5× Solo tokens." · [Team per task] "An implementer and a reviewer per task, then one branch review: …" · [Solo] "No sub-agents; I review my own diff lens by lens; about 28 cards; 1×." Large: [Team per task (Recommended)] first. A standing yes: team per task at both sizes.
-- The estimate is binding. Needing more: finish within it, log `Cap: <what was dropped, by name> — <why>`, list the rest as a recommendation; never ask a second time. The Agents used line repeats every cap.
+- The estimate is binding. Needing more: finish within it, log `Cap: <what was dropped, by name> — <why>`, list the rest as a recommendation; never ask a second time.
 
 ## When not to fan out
 Stay Solo for: 8 or fewer tool calls of work, or context you already hold; coupled edits (the same file, a signature and its callers, a migration and its model); sequential diagnosis; a next step that needs the user; overlapping files or test commands; consent no. When in doubt, don't spawn.
@@ -149,10 +149,10 @@ Stay Solo for: 8 or fewer tool calls of work, or context you already hold; coupl
 At Medium and above, or when the user asks: offer at most one lesson with the git menu, the thing that, known at the start, would have saved the most work. Use the cheapest form that stops a repeat: a check the project runs; else one AGENTS.md line; else, for a preference of the user, a memory note. Show the exact text and ask "Lesson" in the same info.request as "Git": [Save it (Recommended)] [Not now]. Save only on a yes, before any push, as its own commit. Nothing worth a line: ask nothing.
 
 ## Hard rules
-- Children never commit, ask the user or delegate; you commit each verified task, and you ask their OPEN_QUESTIONS.
+- Children never commit, ask the user or delegate; you ask their OPEN_QUESTIONS.
 - Re-verify every child claim with your own read, status call or run before you rely on it or report it.
 - The user picks approaches, design directions and scope cuts; you recommend.
-- Never more than 5 entries per call (extras are dropped without a word); always pass maxIterations.
+- Never more than 5 entries per call (extras are dropped without a word).
 - Never install agents.
 
 {{> soul/10a-run-evidence}}

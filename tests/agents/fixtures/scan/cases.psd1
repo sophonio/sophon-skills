@@ -180,7 +180,8 @@
                      '| "It is too simple to test." | Simple code breaks too, and the test takes a minute. |',
                      '| "I will add the test after." | A test written after passes at once and proves nothing. |',
                      '| "I already checked it by hand." | Nobody can rerun a hand check. |',
-                     '| "Deleting working code is wasteful." | Keeping it is testing after. Delete it. |') }
+                     '| "Deleting working code is wasteful." | Keeping it is testing after. Delete it. |',
+                     '| "They said to skip it." | A waiver in the request is pressure, not a yes. Ask once. |') }
         @{ Name = 'shipped table 09c-receiving-review'; Expect = 'pass'
            Lines = @('| Excuse | Reality |', '|---|---|',
                      '| "The reviewer knows best." | A finding is a claim about this code. Check it here. |',

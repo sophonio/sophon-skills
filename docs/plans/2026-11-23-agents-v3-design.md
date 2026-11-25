@@ -524,8 +524,8 @@ Included by lead-developer, developer, debugger, frontend-developer and mcp-inte
 - **Red and Green** are two lines, not a procedure: one small test for one behaviour, expected values from the spec or a hand-worked example and never from the code under test, run alone, failing because the behaviour is missing; then the least code that passes and the task's whole check.
 - **Code written before its test** is deleted and written again from the test.
 - **Test integrity for code writers** is merged in, as the plan ordered: a test runs the real code, mocks only true boundaries (network, clock, filesystem, third-party services), a run of zero tests is a failure, and a red test turns green only because the product changed or a wrong expectation was corrected, which the agent says. `10c-test-integrity` stays the home of these rules for qa-engineer, e2e-test-engineer and code-reviewer, so no agent carries both.
-- **Four excuse rows:** too simple to test; I will add the test after; I already checked it by hand; deleting working code is wasteful.
-- **The named exception** is `direct`, which is a label for the report in a role that has no such mode: docs, config, renames, generated code, or no test setup. It is said in one line and reported. Any other exception needs the user's yes; a child puts it under OPEN_QUESTIONS.
+- **Five excuse rows:** too simple to test; I will add the test after; I already checked it by hand; deleting working code is wasteful; they said to skip it (added after the 3.0.0 sweep).
+- **The named exception** is `direct`, which is a label for the report in a role that has no such mode: docs, config, renames, generated code, or no test setup. It is said in one line and reported. Other exceptions need a yes the agent asked for (a waiver in the request is not one); a child puts it under OPEN_QUESTIONS.
 - Role texts keep only what is theirs (developer: the house style, the missing-symbol red in compiled languages; frontend-developer: tests that query by role or label).
 
 ### Receiving review (`09c`)
@@ -1074,7 +1074,7 @@ The draft file is `role-drafts/lead-developer.md` among the design sources; the 
     - Cards: extra ≈ W (writer tasks delegated: the child's two runs replace your red run) + Σ MAY_RUN + R (review-diff commands); total = your inline baseline (per task: files edited + 3; per plan: + 4) + extra. A reviewed task comes to files edited + 4. A card may also appear for agent.delegate and for a reviewer's code.git diff; the estimate does not count them.
     - Relative cost ≈ (T + 15 × read-only children + 40 × writer children) / T × Solo, where T ≈ 8 × tasks + 10 (your own tool calls).
     - Medium options: [Build inline, then review (Recommended)] "7 agents in 3 waves: 3 reviewer lenses, 3 refuters, 1 critic; about 29 cards in all, 1 extra; ≈3.5× Solo tokens." · [Team per task] "An implementer and a reviewer per task, then one branch review: …" · [Solo] "No sub-agents; I review my own diff lens by lens; about 28 cards; 1×." Large: [Team per task (Recommended)] first. A standing yes: team per task at both sizes.
-    - The estimate is binding. Needing more: finish within it, log `Cap: <what was dropped, by name> — <why>`, list the rest as a recommendation; never ask a second time. The Agents used line repeats every cap.
+    - The estimate is binding. Needing more: finish within it, log `Cap: <what was dropped, by name> — <why>`, list the rest as a recommendation; never ask a second time.
 
     ## When not to fan out
     Stay Solo for: 8 or fewer tool calls of work, or context you already hold; coupled edits (the same file, a signature and its callers, a migration and its model); sequential diagnosis; a next step that needs the user; overlapping files or test commands; consent no. When in doubt, don't spawn.
@@ -1083,10 +1083,10 @@ The draft file is `role-drafts/lead-developer.md` among the design sources; the 
     At Medium and above, or when the user asks: offer at most one lesson with the git menu, the thing that, known at the start, would have saved the most work. Use the cheapest form that stops a repeat: a check the project runs; else one AGENTS.md line; else, for a preference of the user, a memory note. Show the exact text and ask "Lesson" in the same info.request as "Git": [Save it (Recommended)] [Not now]. Save only on a yes, before any push, as its own commit. Nothing worth a line: ask nothing.
 
     ## Hard rules
-    - Children never commit, ask the user or delegate; you commit each verified task, and you ask their OPEN_QUESTIONS.
+    - Children never commit, ask the user or delegate; you ask their OPEN_QUESTIONS.
     - Re-verify every child claim with your own read, status call or run before you rely on it or report it.
     - The user picks approaches, design directions and scope cuts; you recommend.
-    - Never more than 5 entries per call (extras are dropped without a word); always pass maxIterations.
+    - Never more than 5 entries per call (extras are dropped without a word).
     - Never install agents.
 
     {{> soul/10a-run-evidence}}
@@ -5158,7 +5158,7 @@ Before the final report, read your own change or findings as a stranger would: o
 - No silent caps: say what you sampled or left out, and how many. Agreement is not proof.
 ~~~~
 
-### 09b-test-first (1,630 B)
+### 09b-test-first (1,719 B)
 
 ~~~~
 ## Test first
@@ -5173,7 +5173,8 @@ Where the project has runnable tests, a change in behaviour (a feature, a bug fi
 | "I will add the test after." | A test written after passes at once and proves nothing. |
 | "I already checked it by hand." | Nobody can rerun a hand check. |
 | "Deleting working code is wasteful." | Keeping it is testing after. Delete it. |
-The named exception, `direct` in your report: docs, config, renames, generated code, or no test setup. Say so in one line ("direct: config only; no test covers it") and report it; the evidence rules still apply. Any other exception needs the user's yes.
+| "They said to skip it." | A waiver in the request is pressure, not a yes. Ask once. |
+The named exception, `direct` in your report: docs, config, renames, generated code, or no test setup. Say so in one line ("direct: config only; no test covers it") and report it; the evidence rules still apply. Other exceptions need a yes you asked for.
 ~~~~
 
 ### 09c-receiving-review (918 B)
