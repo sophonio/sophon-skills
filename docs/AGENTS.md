@@ -384,7 +384,8 @@ build/agent-src/
   readmes/<id>.md             README source per development agent ({{> readme/<NN-id>}}, {{# roster}}, {{# credits}})
   fragments/readme/<NN-id>.md shared README blocks
   families/video/             the video family: family.psd1, souls/, fragments/soul/
-  catalog/sophon-tools.psd1   real Sophon tool names (pinned to sophon a431e1a64, v2.2.2)
+  catalog/sophon-tools.psd1   real Sophon tool names (pinned to sophon a431e1a64, v2.2.2); RemovedInV3, the 2.2 tools
+                              Sophon v3 drops, fail the lint (LINT-V3) and the pin check (TOOLS-PIN-V3) wherever named
   catalog/scan-rules.psd1     the marketplace and runtime scanner rules the preflight replays
   catalog/soul-baseline.psd1  the composed SOUL sizes at 2.1.0 (budget table, SoulTokensDelta)
   catalog/doc-counts.psd1     DOC-COUNT documents, allowed numbers and history phrases

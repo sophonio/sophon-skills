@@ -140,7 +140,9 @@ live under the system temp folder and are removed at the end; nothing in the rep
   `Invoke-AgentLintFixtures` in `build/AgentLint.psm1`. A case has a `Name`, `Expect` (`pass` or
   `fail`), the expected `Rule` id for a failure, and its text. `{U+XXXX}` and `{REPEAT:<text>:<n>}`
   expand at run time, so no hidden character, long blob or secret-shaped string is committed.
-  Manifest cases are `Replace` pairs applied to a valid `Base` manifest.
+  Manifest cases are `Replace` pairs applied to a valid `Base` manifest. The scan cases include the
+  excuse-row phrase bank: one failing row per "Do not write" form of the CLAUDE.md safe-phrasing table,
+  a passing row per "Write instead" form, and a copy of every shipped `| Excuse | Reality |` table.
 - `method/cases.psd1` and `skills/cases.psd1` hold the Method-registry and skill-use cases of section M.
 - `anchors/development.psd1` lists the strings the composed SOULs and READMEs must carry, the 2.x
   wording that must be gone, and the anchors removed on purpose.

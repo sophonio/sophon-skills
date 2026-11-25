@@ -37,6 +37,8 @@
            Lines = @('---', 'profiles:', '  coding.subagent:', '    pins:', '      - fs.edit', '---', 'Edit tools are never pinned.', '') }
         @{ Name = 'restricted pin'; Expect = 'fail'; Rule = 'TOOLS-PIN-RESTRICTED'
            Lines = @('---', 'profiles:', '  coding:', '    pins:', '      - code.test', '---', 'code.test cannot see the project.', '') }
+        @{ Name = 'pin of a tool Sophon v3 removes'; Expect = 'fail'; Rule = 'TOOLS-PIN-V3'
+           Lines = @('---', 'profiles:', '  coding.subagent:', '    pins:', '      - memory.graph', '---', 'Child notes.', '') }
         @{ Name = 'denied pin'; Expect = 'fail'; Rule = 'TOOLS-PIN-DENIED'
            Lines = @('---', 'pins:', '  - web.fetch', '---', 'There is no such tool.', '') }
         @{ Name = 'unknown pin'; Expect = 'fail'; Rule = 'TOOLS-PIN-UNKNOWN'

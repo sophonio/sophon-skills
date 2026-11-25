@@ -433,3 +433,41 @@ wants evals on the test Gateway, an explicit opt-in parameter is the way, not a 
   holds only the status and timestamps and takes SessionRun ids, not task ids.
 - `sophon exec --allow agent.delegate` is refused with `not_offered`, which covers every tool outside the list a
   card can remember.
+
+## M9 v3 checks
+
+Read with `git show` and `git ls-tree` only (2026-11-25): sophon a431e1a64 (v2.2.2), sophon v3-main 38c3f7d,
+the v3 memory branch 13183e700 for the memory contract, and sophon-marketplace HEAD 102cd75.
+
+- **Scanner sources unchanged.** `SuspiciousPatterns.cs`, `AgentPackageScanner.cs`, `ToolArgsRedactor.cs`,
+  `AgentPackageValidator.cs`, `PreviewTextSanitizer.cs` and `ProjectInstructionsProvider.cs` have the same blob at
+  a431e1a64 and 38c3f7d. `AgentPromptHeuristics.cs` was last changed in 61cf910 (2026-11-06).
+- **`scan-rules.psd1` against the sources: no gap in either direction.** A script compared the literals. P2: the 44
+  tiered literals (14 High, 17 Medium, 13 Low) equal the `Tiered` table and the flat list. P4: all nine regexes and
+  the remote-exec pipe regex equal the marketplace's, options included. P5: the link-host regex is the same. P1: the
+  16 `RedactText` rules (pattern, group, case, name test) and the three key lists are the same. The family-only
+  rules (P3 stricter than the runtime, bare hosts in P5, P6, SCAN-WORD, and README.md scanned, which neither
+  scanner does) are deliberate. Nothing was added, so no shipped text needed a change.
+- **Excuse-row phrase bank.** `tests/agents/fixtures/scan/cases.psd1` gained 21 failing rows, one per "Do not
+  write" form of the safe-phrasing table. Among them, "I'll skip the approval this once." fails both `SCAN-P4` and
+  `SCAN-WORD`, and "This is only a first pass:" fails `SCAN-P1`. It also gained 8 passing "Write instead" rows,
+  "The approval can wait this once." among them, and copies of the 10 shipped `| Excuse | Reality |` tables
+  (31 rows). All 193 lint, scan, TOOLS.md and manifest fixtures pass. The heading row is enforced by the tool lint
+  (`LINT-HEADING`, already in the lint fixtures), not by the preflight.
+- **Tool catalogue.** The 141 tool names are the same at 38c3f7d. The four constant-named tools and the
+  `ToolProfile` cores are unchanged too, so the v3 code drops or renames nothing yet. The v3 memory contract
+  (`docs/MEMORY-CONTRACT.md` section 7 at 13183e700) replaces the memory tools with memory.search, memory.write,
+  memory.relate, memory.list, memory.forget, memory.entity and memory.diagram, with no alias for a v2 name. That
+  drops memory.link, memory.traverse, memory.graph and memory.entity.list. No SOUL, TOOLS.md, README or manifest
+  names any of the four. The packages use only memory.search and memory.write, and their arguments (`content`,
+  `category` preference|fact|observation, `scope` user|agent) are valid under v3. The new catalogue list
+  `RemovedInV3` fails the tool lint (`LINT-V3`, negated or not), a pin (`TOOLS-PIN-V3`) and an
+  `ExtraRequiredTools` entry on any future mention. Five lint cases and one TOOLS.md case cover it.
+- **Package format unchanged.** `AgentPackageFormat.cs` (the 7-file set, `PersonaFiles`, the manifest key lists),
+  `AgentPackageManifest.cs`, `AgentPackageReader.cs`, `AgentManifestWalker.cs` and `AgentPackageValidator.cs` have the
+  same blob at both commits. The `AGENT-PACKAGE-CONTRACT.md` diff only moves line references and adds tenant and
+  owner-rule (GV29) behaviour to install and the routes. No manifest field or file changed.
+- **Browser refusal text.** At 38c3f7d the refusal moved to `BrowserNavigationGuard.cs` with the same words
+  ("Navigation blocked: … Set Sophon:Browser:AllowPrivateNetwork …"), so `25-browser-measure` still matches it.
+- Not checked here: the Enterprise Gateway refusal of skill tools without Docker, and sections J and K on a 3.x CLI
+  (no CLI runs in this milestone).

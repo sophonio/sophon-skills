@@ -237,6 +237,7 @@ function Get-AgentCatalog {
         RestrictedExact    = $restrictedExact
         RestrictedPrefixes = $restrictedPrefixes.ToArray()
         Restricted         = [string[]]$data.Restricted
+        RemovedInV3        = New-StringSet $data.RemovedInV3
         ClaudeCodeNames    = [string[]]$data.ClaudeCodeNames
         ClaudeCodeRx       = [regex]::new('`(?:' + $claudeNames + ')(?:\([^`]*\))?`', $script:CI)
         NotTools           = New-StringSet $data.NotTools
@@ -513,6 +514,9 @@ function Invoke-ToolNameLint {
             if ($Catalog.NotTools.Contains($token)) { continue }
             if (-not $Catalog.Namespaces.Contains($segments[0])) { continue }
 
+            if ($Catalog.RemovedInV3.Contains($token)) {
+                & $add 'LINT-V3' $n $token "$token is removed in Sophon v3 (no alias); do not name it, negated or not"
+            }
             switch ($class) {
                 'denied' {
                     if (-not $negated) {
@@ -1153,6 +1157,10 @@ function Test-ToolsMdPins {
                 $issues.Add((New-AgentIssue 'TOOLS-PIN-RESTRICTED' $Path $line "$pin is restricted and may not be pinned"))
                 continue
             }
+            if ($Catalog.RemovedInV3.Contains($pin)) {
+                $issues.Add((New-AgentIssue 'TOOLS-PIN-V3' $Path $line "$pin is removed in Sophon v3 and may not be pinned"))
+                continue
+            }
             if (-not $Catalog.Allowed.Contains($pin)) {
                 if ($skillOk.Contains($pin)) { continue }
                 $issues.Add((New-AgentIssue 'TOOLS-PIN-UNKNOWN' $Path $line "$pin is not a Sophon tool (build/agent-src/catalog/sophon-tools.psd1)"))
@@ -1479,6 +1487,7 @@ function Test-AgentManifest {
         foreach ($extra in $policy.ExtraRequiredTools) {
             if (-not $Catalog.Allowed.Contains($extra)) { & $add 'MAN-REQUIRES' 'requires' "SkillPolicy.ExtraRequiredTools entry $extra is not a built-in Sophon tool (build/agent-src/catalog/sophon-tools.psd1)" }
             elseif (Test-RestrictedToolName $extra $Catalog) { & $add 'MAN-REQUIRES' 'requires' "SkillPolicy.ExtraRequiredTools entry $extra is restricted" }
+            elseif ($Catalog.RemovedInV3.Contains($extra)) { & $add 'MAN-REQUIRES' 'requires' "SkillPolicy.ExtraRequiredTools entry $extra is removed in Sophon v3" }
             elseif ($rootCore.Contains($extra) -or $Catalog.MetaTools.Contains($extra)) { & $add 'MAN-REQUIRES' 'requires' "SkillPolicy.ExtraRequiredTools entry $extra is a core tool; core tools are always present" }
         }
     }

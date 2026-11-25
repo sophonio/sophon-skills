@@ -50,6 +50,14 @@
            Text = '## Interaction' }
         @{ Name = 'denied name in manifest text'; Kind = 'manifest'; Expect = 'fail'; Rule = 'LINT-DENIED'
            Text = 'Reads pages with web.fetch and plans changes.' }
+        @{ Name = 'memory.link, removed in v3'; Expect = 'fail'; Rule = 'LINT-V3'
+           Text = 'Connect the two facts with memory.link.' }
+        @{ Name = 'memory.traverse, removed in v3, even negated'; Expect = 'fail'; Rule = 'LINT-V3'
+           Text = 'There is no memory.traverse; use memory.search.' }
+        @{ Name = 'memory.graph in a readme'; Kind = 'readme'; Expect = 'fail'; Rule = 'LINT-V3'
+           Text = 'It maps the project with memory.graph.' }
+        @{ Name = 'memory.entity.list in a TOOLS body'; Kind = 'tools'; Expect = 'fail'; Rule = 'LINT-V3'
+           Text = 'List people with memory.entity.list.' }
 
         # ---- must pass ----
         @{ Name = 'negated web.fetch'; Expect = 'pass'
@@ -94,6 +102,8 @@
            Text = 'Needs Sophon 2.2.0; see docs/plans/2026-11-15-agents-v2.md and build/agent-src/family.psd1.' }
         @{ Name = 'heading that is not reserved'; Expect = 'pass'
            Lines = @('## Scope', '### Workspace check') }
+        @{ Name = 'memory tools v3 keeps'; Expect = 'pass'
+           Text = 'Recall with memory.search and save with memory.write {content, category:"preference", scope:"user"}.' }
         @{ Name = 'git commands through os.execute'; Expect = 'pass'
            Text = 'Run git push -u origin sophon/<slug> && gh pr create through os.execute.' }
     )

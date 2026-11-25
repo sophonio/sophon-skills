@@ -3,6 +3,8 @@
 # Each block mirrors a scanner the package meets after it leaves this repo, so a package that passes here
 # passes those scanners cleanly. Sources are pinned to sophon a431e1a64 (v2.2.2) and the sophon-marketplace
 # tree of the same date. Copy changes from the named source file; do not edit the literals by hand.
+# Re-diffed at M9 (2026-11-25): the sophon source files are byte-identical at v3-main 38c3f7d, and
+# AgentPromptHeuristics.cs at sophon-marketplace 102cd75 (last changed 61cf910) matches P4 and P5; nothing to copy.
 #
 # Rule ids: SCAN-P1 possible_secret, SCAN-P2 injection literals, SCAN-P3 hidden characters, SCAN-P4 prompt
 # heuristics, SCAN-P5 hosts, SCAN-P6 template residue, SCAN-WORD this family's stricter wording policy.
