@@ -15,8 +15,10 @@
       MAN-JSON MAN-FORMAT MAN-KEYS MAN-ORDER MAN-TYPE MAN-NAME MAN-DISPLAY MAN-VERSION MAN-DESC MAN-META
       MAN-TAGS MAN-AGENT MAN-REQUIRES MAN-DEFAULTS MAN-SOPHON
 
-    Family keys read here (build/AgentFamily.psm1 documents them): Category, RequiredTag, Lead, SkillPolicy and,
-    through the callers, AllowRestrictedMentions. A family with a SkillPolicy may name and pin the tools of its
+    Family keys read here (build/AgentFamily.psm1 documents them): Category, RequiredTag, Lead, SkillPolicy, the agent
+    key Skills and, through the callers, AllowRestrictedMentions. Skill rules are evaluated per agent: an agent's
+    Skills list (absent = every SkillPolicy skill, @() = none) decides which skill tools it may name and pin and what
+    requires.skills holds. A family with a SkillPolicy may name and pin the tools of its
     skills (LINT-SKILL and TOOLS-PIN-UNKNOWN are waived for those tools only) and lists the skills in
     requires.skills; every other family keeps the single-family rules.
 
@@ -29,7 +31,8 @@ $script:Opt = [System.Text.RegularExpressions.RegexOptions]
 $script:CI = $script:Opt::CultureInvariant
 $script:CII = $script:Opt::CultureInvariant -bor $script:Opt::IgnoreCase
 
-# Lint patterns (design section 7.3, lint items 1-6).
+# Lint patterns (docs/plans/2026-11-15-agents-v2-design.md section 7.3, lint items 1-6). What 3.0 adds to
+# sections C, D, F and G (the skill rules, findings at the source line): docs/plans/2026-11-23-agents-v3-design.md, "Static checks".
 $script:CandidateRx = [regex]::new('(?<![\w./\\@:-])([a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+)(?![\w/\\(@-]|\.[A-Za-z0-9_])', $script:CI)
 $script:WireRx = [regex]::new('(?<![\w./\\@:-])([a-z][a-z0-9]*(?:_[a-z0-9]+)+)(?![\w/\\(@-]|\.[A-Za-z0-9_])', $script:CI)
 $script:NegationRx = [regex]::new("\b(?:no|not|never|cannot|can't|can$([char]0x2019)t|does not|doesn't|doesn$([char]0x2019)t|isn't|isn$([char]0x2019)t|instead of|there is no)\b", $script:CII)
@@ -43,25 +46,6 @@ $script:OperationRx = [regex]::new('(?<![\w-])["'']?operation["'']?\s*:\s*["''](
 $script:CallShapeRx = [regex]::new('(?<![\w./\\@:-])([a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)*)\s*\{', $script:CI)
 $script:StashActionRx = [regex]::new('(?<![\w-])stash_action["'']?\s*:\s*["'']?([A-Za-z][A-Za-z_-]*)', $script:CI)
 $script:GitProseRx = [regex]::new('(?<![\w./\\@:-])code\.git`?\s+["''`]?([a-z][a-z_-]*)', $script:CI)
-
-$script:RoleDisplayNames = @{
-    'lead-developer'     = 'Lead Developer'
-    'developer'          = 'Developer'
-    'researcher'         = 'Researcher'
-    'software-architect' = 'Software Architect'
-    'code-reviewer'      = 'Code Reviewer'
-    'qa-engineer'        = 'QA Engineer'
-    'debugger'           = 'Debugger'
-    'security-reviewer'  = 'Security Reviewer'
-    'ui-ux-designer'     = 'UI/UX Designer'
-    'accessibility-reviewer'   = 'Accessibility Reviewer'
-    'design-system-engineer'   = 'Design System Engineer'
-    'e2e-test-engineer'        = 'E2E Test Engineer'
-    'frontend-developer'       = 'Frontend Developer'
-    'mcp-integration-engineer' = 'MCP Integration Engineer'
-    'technical-writer'         = 'Technical Writer'
-    'visual-designer'          = 'Visual Designer'
-}
 
 $script:ManifestKeyOrder = @(
     'type', 'schemaVersion', 'name', 'displayName', 'version', 'description', 'author', 'license', 'category',
@@ -254,6 +238,7 @@ function Get-AgentCatalog {
         RestrictedExact    = $restrictedExact
         RestrictedPrefixes = $restrictedPrefixes.ToArray()
         Restricted         = [string[]]$data.Restricted
+        RemovedInV3        = New-StringSet $data.RemovedInV3
         ClaudeCodeNames    = [string[]]$data.ClaudeCodeNames
         ClaudeCodeRx       = [regex]::new('`(?:' + $claudeNames + ')(?:\([^`]*\))?`', $script:CI)
         NotTools           = New-StringSet $data.NotTools
@@ -379,19 +364,49 @@ function Get-AgentToolClass {
     return 'unknown'
 }
 
+function Get-AgentSkillRoster {
+    <#
+    .SYNOPSIS
+        An agent's optional Skills key: @{ Has; Names }. Has is $false when the agent entry has no Skills key
+        (the agent uses every SkillPolicy skill); Names is the listed skill names (empty for Skills = @()).
+    #>
+    param($Family, [string]$AgentId)
+    $entry = $null
+    foreach ($agent in @(Get-AgentField $Family 'Agents' @())) {
+        if ([string](Get-AgentField $agent 'Id') -ceq $AgentId) { $entry = $agent; break }
+    }
+    # Read the key without the pipeline: an empty array returned through a function becomes $null.
+    $has = $false
+    $value = $null
+    if ($entry -is [System.Collections.IDictionary]) {
+        if ($entry.Contains('Skills')) { $has = $true; $value = $entry['Skills'] }
+    } elseif ($null -ne $entry -and $null -ne $entry.PSObject.Properties['Skills']) {
+        $has = $true
+        $value = $entry.PSObject.Properties['Skills'].Value
+    }
+    $names = [string[]]@(foreach ($item in @($value)) { if ($item -is [string]) { $item } })
+    [pscustomobject]@{ Has = $has; Names = $names }
+}
+
 function Get-AgentSkillPolicy {
     <#
     .SYNOPSIS
         A family's SkillPolicy, normalised: @{ Skills (ordinal by Name, each @{ Name; MinVersion }); Names;
         ExtraRequiredTools; Any }. Empty lists when the family has no SkillPolicy.
+    .PARAMETER AgentId
+        Evaluate the policy for one agent: when its entry has a Skills key, only those skills count (Skills = @()
+        means none). Without the key, or without AgentId, every SkillPolicy skill counts. ExtraRequiredTools stay
+        family-wide.
     #>
-    param($Family)
+    param($Family, [string]$AgentId = '')
     $policy = Get-AgentField $Family 'SkillPolicy'
+    $roster = if ($AgentId) { Get-AgentSkillRoster $Family $AgentId } else { [pscustomobject]@{ Has = $false; Names = [string[]]@() } }
     $skills = [System.Collections.Generic.List[object]]::new()
     foreach ($skill in @(Get-AgentField $policy 'Skills' @())) {
         if ($null -eq $skill) { continue }
         $name = Get-AgentField $skill 'Name'
         if ($name -isnot [string]) { continue }
+        if ($roster.Has -and $name -cnotin $roster.Names) { continue }
         $min = Get-AgentField $skill 'MinVersion'
         $skills.Add([pscustomobject]@{ Name = $name; MinVersion = $(if ($min -is [string]) { $min } else { $null }) })
     }
@@ -407,14 +422,23 @@ function Get-AgentSkillPolicy {
     }
 }
 
+function Get-AgentNegationRegex {
+    <#
+    .SYNOPSIS
+        The tool lint's negation words (no, not, never, cannot, instead of, there is no and their contractions) as
+        one case-insensitive regex. METHOD-CONTROLLER (build/AgentFamily.psm1) uses the same list.
+    #>
+    return $script:NegationRx
+}
 function Get-AgentAllowedSkillTools {
     <#
     .SYNOPSIS
         The skill tools a family may name and pin: every tool (Catalog.SkillToolOwner) of a SkillPolicy skill,
-        in ordinal order. Empty for a family without a SkillPolicy.
+        in ordinal order. Empty for a family without a SkillPolicy. With AgentId, only the skills that agent
+        uses (its Skills key; absent means all).
     #>
-    param([Parameter(Mandatory)]$Family, [Parameter(Mandatory)]$Catalog)
-    $names = New-StringSet (Get-AgentSkillPolicy $Family).Names
+    param([Parameter(Mandatory)]$Family, [Parameter(Mandatory)]$Catalog, [string]$AgentId = '')
+    $names = New-StringSet (Get-AgentSkillPolicy $Family $AgentId).Names
     $list = [System.Collections.Generic.List[string]]::new()
     foreach ($pair in $Catalog.SkillToolOwner.GetEnumerator()) {
         if ($names.Contains($pair.Value)) { $list.Add($pair.Key) }
@@ -426,7 +450,7 @@ function Get-AgentAllowedSkillTools {
 function Invoke-ToolNameLint {
     <#
     .SYNOPSIS
-        Checks the tool names in one text (design section 7.3, lint items 1-6).
+        Checks the tool names in one text (v2 design section 7.3, lint items 1-6).
     .PARAMETER Kind
         soul | tools | readme | manifest. Claude Code names and the phrase are checked in soul and tools only.
     .PARAMETER AllowedSkillTools
@@ -491,6 +515,9 @@ function Invoke-ToolNameLint {
             if ($Catalog.NotTools.Contains($token)) { continue }
             if (-not $Catalog.Namespaces.Contains($segments[0])) { continue }
 
+            if ($Catalog.RemovedInV3.Contains($token)) {
+                & $add 'LINT-V3' $n $token "$token is removed in Sophon v3 (no alias); do not name it, negated or not"
+            }
             switch ($class) {
                 'denied' {
                     if (-not $negated) {
@@ -638,7 +665,7 @@ function Find-PossibleSecret {
 function Invoke-AgentPreflight {
     <#
     .SYNOPSIS
-        Replays the marketplace and runtime scanners over one text (design section 7.3, preflight P1-P6) plus
+        Replays the marketplace and runtime scanners over one text (v2 design section 7.3, preflight P1-P6) plus
         the family's wording policy (SCAN-WORD).
     .PARAMETER Rules
         The object from Get-ScanRules.
@@ -909,7 +936,7 @@ function Invoke-AgentToolPinsParse {
 function Read-ToolsMd {
     <#
     .SYNOPSIS
-        Strict TOOLS.md parse (block lists only, the line shapes of design section 7.5 G), plus a check that
+        Strict TOOLS.md parse (block lists only, the line shapes of v2 design section 7.5 G), plus a check that
         the runtime's parser reads the same pins.
     .OUTPUTS
         @{ GlobalPins; Profiles (ordered: profile -> pins); Body; BodyLines; PinLines; Issues }
@@ -1131,6 +1158,10 @@ function Test-ToolsMdPins {
                 $issues.Add((New-AgentIssue 'TOOLS-PIN-RESTRICTED' $Path $line "$pin is restricted and may not be pinned"))
                 continue
             }
+            if ($Catalog.RemovedInV3.Contains($pin)) {
+                $issues.Add((New-AgentIssue 'TOOLS-PIN-V3' $Path $line "$pin is removed in Sophon v3 and may not be pinned"))
+                continue
+            }
             if (-not $Catalog.Allowed.Contains($pin)) {
                 if ($skillOk.Contains($pin)) { continue }
                 $issues.Add((New-AgentIssue 'TOOLS-PIN-UNKNOWN' $Path $line "$pin is not a Sophon tool (build/agent-src/catalog/sophon-tools.psd1)"))
@@ -1259,14 +1290,15 @@ function Test-AgentRequiresPolicy {
 function Test-AgentManifest {
     <#
     .SYNOPSIS
-        Manifest rules of the family contract (design section 7.5 F).
+        Manifest rules of the family contract (v2 design section 7.5 F; the skill rules: v3 design, "Static checks").
     .PARAMETER Manifest
         The parsed manifest (ConvertFrom-Json output); $null when Raw did not parse.
     .PARAMETER Raw
         The manifest.json text, for format, key order and line numbers.
     .PARAMETER Family
         family.psd1 data (or Get-AgentFamily output): FamilyMajor, MinSophonVersion, Author, License, Category,
-        RequiredTag, Lead, SkillPolicy, Agents[] with Id, SubAgents and optional DisplayName.
+        RequiredTag, Lead, SkillPolicy, Agents[] with Id, DisplayName (MAN-DISPLAY expects it exactly), SubAgents and the
+        optional Skills.
     .PARAMETER ToolsMd
         The Read-ToolsMd result for the same agent; $null when TOOLS.md is missing.
     .PARAMETER Catalog
@@ -1324,9 +1356,10 @@ function Test-AgentManifest {
     if ($null -ne $ToolsMd) { $pins = Get-ToolsMdPinUnion $ToolsMd }
 
     # What requires must hold: the built-in pins plus the family SkillPolicy (skill-tool pins never count).
-    $policy = Get-AgentSkillPolicy $Family
+    # Per agent: an agent's Skills key narrows the policy skills (absent = all, @() = none).
+    $policy = Get-AgentSkillPolicy $Family $Id
     $policyTools = New-StringSet
-    if ($null -ne $Catalog -and $policy.Any) { $policyTools = New-StringSet (Get-AgentAllowedSkillTools $Family $Catalog) }
+    if ($null -ne $Catalog -and $policy.Any) { $policyTools = New-StringSet (Get-AgentAllowedSkillTools $Family $Catalog $Id) }
     $requiredSet = New-StringSet (@($pins | Where-Object { -not $policyTools.Contains($_) }) + @($policy.ExtraRequiredTools))
     $requiredList = [System.Collections.Generic.List[string]]::new($requiredSet)
     $requiredList.Sort([System.StringComparer]::Ordinal)
@@ -1364,7 +1397,8 @@ function Test-AgentManifest {
 
     # displayName.
     $display = & $get $Manifest 'displayName'
-    $expectedDisplay = Get-AgentField $agentEntry 'DisplayName' $script:RoleDisplayNames[$Id]
+    # The roster's DisplayName (a required family key) is the only source of the expected name.
+    $expectedDisplay = Get-AgentField $agentEntry 'DisplayName'
     if ($display -isnot [string] -or $display.Trim().Length -eq 0) { & $add 'MAN-DISPLAY' 'displayName' 'displayName is required' }
     else {
         if ($display.Length -gt 64) { & $add 'MAN-DISPLAY' 'displayName' 'displayName must be at most 64 characters' }
@@ -1454,6 +1488,7 @@ function Test-AgentManifest {
         foreach ($extra in $policy.ExtraRequiredTools) {
             if (-not $Catalog.Allowed.Contains($extra)) { & $add 'MAN-REQUIRES' 'requires' "SkillPolicy.ExtraRequiredTools entry $extra is not a built-in Sophon tool (build/agent-src/catalog/sophon-tools.psd1)" }
             elseif (Test-RestrictedToolName $extra $Catalog) { & $add 'MAN-REQUIRES' 'requires' "SkillPolicy.ExtraRequiredTools entry $extra is restricted" }
+            elseif ($Catalog.RemovedInV3.Contains($extra)) { & $add 'MAN-REQUIRES' 'requires' "SkillPolicy.ExtraRequiredTools entry $extra is removed in Sophon v3" }
             elseif ($rootCore.Contains($extra) -or $Catalog.MetaTools.Contains($extra)) { & $add 'MAN-REQUIRES' 'requires' "SkillPolicy.ExtraRequiredTools entry $extra is a core tool; core tools are always present" }
         }
     }
@@ -1502,9 +1537,21 @@ function Get-AgentLintTestFamily {
     .SYNOPSIS
         The family contract as data, for fixtures that must not depend on build/agent-src/family.psd1.
     #>
-    $agents = foreach ($id in @('code-reviewer', 'debugger', 'developer', 'lead-developer', 'qa-engineer', 'researcher', 'security-reviewer', 'software-architect', 'ui-ux-designer')) {
+    # The fixture family carries its own display names, so no name lives in code outside it.
+    $names = [ordered]@{
+        'code-reviewer'      = 'Code Reviewer'
+        'debugger'           = 'Debugger'
+        'developer'          = 'Developer'
+        'lead-developer'     = 'Lead Developer'
+        'qa-engineer'        = 'QA Engineer'
+        'researcher'         = 'Researcher'
+        'security-reviewer'  = 'Security Reviewer'
+        'software-architect' = 'Software Architect'
+        'ui-ux-designer'     = 'UI/UX Designer'
+    }
+    $agents = foreach ($id in $names.Keys) {
         $lead = $id -ceq 'lead-developer'
-        @{ Id = $id; DisplayName = $script:RoleDisplayNames[$id]; SubAgents = @{ enabled = $lead; maxDepth = $(if ($lead) { 1 } else { 0 }) } }
+        @{ Id = $id; DisplayName = $names[$id]; SubAgents = @{ enabled = $lead; maxDepth = $(if ($lead) { 1 } else { 0 }) } }
     }
     # One agent with its own license, for the per-agent License override.
     $agents = @($agents) + @(@{ Id = 'frontend-developer'; DisplayName = 'Frontend Developer'; License = 'Apache-2.0'; SubAgents = @{ enabled = $false; maxDepth = 0 } })
@@ -1613,7 +1660,7 @@ function Invoke-AgentLintFixtures {
 Export-ModuleMember -Function @(
     'Get-AgentCatalog', 'Get-ScanRules', 'Get-AgentToolClass', 'Invoke-ToolNameLint', 'Invoke-AgentPreflight',
     'Read-ToolsMd', 'Invoke-AgentToolPinsParse', 'Test-ToolsMdPins', 'Get-ToolsMdPinUnion', 'Test-AgentManifest',
-    'Get-AgentSkillPolicy', 'Get-AgentAllowedSkillTools',
+    'Get-AgentSkillPolicy', 'Get-AgentSkillRoster', 'Get-AgentAllowedSkillTools', 'Get-AgentNegationRegex',
     'Test-SensitiveKeyName', 'Get-AgentField', 'Get-AgentLintTestFamily', 'Expand-AgentFixtureText',
     'Invoke-AgentLintFixtures'
 )

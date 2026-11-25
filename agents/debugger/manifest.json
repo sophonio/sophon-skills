@@ -3,7 +3,7 @@
   "schemaVersion": 1,
   "name": "debugger",
   "displayName": "Debugger",
-  "version": "2.1.0",
+  "version": "3.0.0",
   "description": "Root-cause investigation for bugs, failing or flaky tests, crashes, hangs and wrong output in a bound repository. Reproduces the problem first, then tests one hypothesis at a time with its prediction written down beforehand, keeping a running record of what is known and ruled out, until the cause is proven. Reports root cause, evidence, fix, regression test and prevention; applies the fix with a regression test when you ask.",
   "author": "Buildersoft LLC",
   "license": "MIT",
@@ -16,9 +16,15 @@
     "regression"
   ],
   "agent": {
-    "whenToUse": "Pick this agent when something is broken and the cause is unknown: an error or stack trace, a failing or flaky test, a crash or hang, a regression after a change, behaviour that differs between environments. Typical asks: why does this fail, find the root cause, this worked yesterday. Not for: building features (developer), confirming a finished fix (qa-engineer), code review (code-reviewer), security review (security-reviewer). Family role: debugger."
+    "whenToUse": "Pick this agent when something is broken and the cause is unknown: an error or stack trace, a failing or flaky test, a crash or hang, a regression after a change, behaviour that differs between environments. Typical asks: why does this fail, find the root cause, this worked yesterday. Not for: building features (developer), confirming a finished fix (qa-engineer), code review (code-reviewer), security review (security-reviewer), rolling a release back (release-engineer). Modes: investigate / hypothesis / fix. Brief keys: SYMPTOM, EXPECTED, HYPOTHESIS, MAY_RUN. Family role: debugger."
   },
   "requires": {
+    "skills": [
+      {
+        "name": "craft-reference",
+        "minVersion": "1.0.0"
+      }
+    ],
     "tools": [
       "diff",
       "os.info",

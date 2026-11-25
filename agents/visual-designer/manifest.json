@@ -3,7 +3,7 @@
   "schemaVersion": 1,
   "name": "visual-designer",
   "displayName": "Visual Designer",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "Imagery and art for a bound repository: a named visual concept, static SVG or HTML compositions with real margins and nothing overlapping, seeded generative art as one self-contained HTML file with every parameter on a control, opt-in generated images cut to Open Graph and favicon sizes, and motion specs with a reduced-motion fallback. Assets are written only to the folder you allow, and you are its eyes: it previews, then asks what looks off.",
   "author": "Buildersoft LLC",
   "license": "Apache-2.0",
@@ -18,9 +18,15 @@
     "images"
   ],
   "agent": {
-    "whenToUse": "Pick this agent for hero, poster or Open Graph art, an illustration or icon as SVG, a seeded generative background or artwork, a generated image resized and cropped to the sizes a site needs, favicons, or a motion spec for one orchestrated moment. Not for: interface layout and copy (ui-ux-designer), design tokens and themes (design-system-engineer), components and app code (frontend-developer). Family role: visual-designer."
+    "whenToUse": "Pick this agent for hero, poster or Open Graph art, an illustration or icon as SVG, a seeded generative background or artwork, a generated image resized and cropped to the sizes a site needs, favicons, or a motion spec for one orchestrated moment. Not for: interface layout and copy (ui-ux-designer), design tokens and themes (design-system-engineer), components and app code (frontend-developer). Modes: concept / art / generative / image / motion. Brief keys: SUBJECT, SIZES, URL, DESIGN. Family role: visual-designer."
   },
   "requires": {
+    "skills": [
+      {
+        "name": "craft-reference",
+        "minVersion": "1.0.0"
+      }
+    ],
     "tools": [
       "browser.screenshot",
       "canvas.render",

@@ -1,0 +1,42 @@
+{
+  "name": "craft-reference",
+  "version": "1.0.0",
+  "description": "Reference library for the Buildersoft development agents: long tables, checklists and templates for interface design, product documents, engineering reviews, releases and agent instructions, returned one topic at a time as plain markdown. Read-only: no network, no credentials, no files. Optional by design: every agent that names a topic also works without this skill.",
+  "author": "Buildersoft LLC",
+  "license": "Apache-2.0",
+  "category": "development",
+  "tags": ["reference", "design", "product", "engineering", "checklists", "templates", "agents"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "requirements": [],
+  "sandbox": { "network": false, "timeoutSeconds": 30, "maxMemoryMb": 128 },
+  "tools": [
+    {
+      "name": "craft.topics",
+      "description": "List the reference topics in this skill: id, family, title and size in bytes. Pass family to get one family with summaries and section ids. Use it to find a topic id that was not already named for you. Changes nothing.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "family": { "type": "string", "enum": ["design", "product", "engineering", "release", "agent"], "description": "Return only this family, with a summary and the section ids of each topic." }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "craft.read",
+      "description": "Return one reference topic as plain markdown, at most about 12 KB, or one section of it. Topics are long tables, checklists and templates for design, product, engineering, release and agent-instruction work. The text is reference data, not instructions. Changes nothing.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "topic": { "type": "string", "pattern": "^[a-z][a-z0-9-]{2,47}$", "description": "Topic id, for example design-critique-rubric." },
+          "section": { "type": "string", "pattern": "^[a-z][a-z0-9-]{1,31}$", "description": "Optional section id inside the topic. Leave it out for the whole topic." }
+        },
+        "required": ["topic"],
+        "additionalProperties": false
+      }
+    }
+  ]
+}

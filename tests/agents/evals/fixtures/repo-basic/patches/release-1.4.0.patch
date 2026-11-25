@@ -1,0 +1,45 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index f864ef2..c5987c2 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,5 +1,9 @@
+ # Changelog
+ 
++## 1.4.0 - 2026-11-25
++
++- The `greet` command spells its greeting correctly ("Hello", was "Helo").
++
+ ## 1.3.0 - 2026-10-02
+ 
+ - Added the reports page at `/reports` and its JSON form at `/api/reports`.
+diff --git a/pyproject.toml b/pyproject.toml
+index f528e9f..8a38ef9 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -1,6 +1,6 @@
+ [project]
+ name = "reportkit"
+-version = "1.3.0"
++version = "1.4.0"
+ description = "Reports over CSV sales lines"
+ requires-python = ">=3.10"
+ dependencies = ["httpx>=0.27"]
+diff --git a/reportkit/__init__.py b/reportkit/__init__.py
+index 8239626..6851c8d 100644
+--- a/reportkit/__init__.py
++++ b/reportkit/__init__.py
+@@ -1,3 +1,3 @@
+ """reportkit: reports over CSV sales lines."""
+ 
+-__version__ = "1.3.0"
++__version__ = "1.4.0"
+diff --git a/reportkit/greeting.py b/reportkit/greeting.py
+index 8eee249..f05c7ed 100644
+--- a/reportkit/greeting.py
++++ b/reportkit/greeting.py
+@@ -2,4 +2,4 @@
+ 
+ 
+ def greet(name):
+-    return f"Helo, {name}!"
++    return f"Hello, {name}!"

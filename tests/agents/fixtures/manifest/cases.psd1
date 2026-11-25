@@ -1,4 +1,5 @@
-# Manifest fixtures (design section 7.5 F), run by Invoke-AgentLintFixtures in build/AgentLint.psm1 against
+# Manifest fixtures (docs/plans/2026-11-15-agents-v2-design.md section 7.5 F; the skill rules: docs/plans/2026-11-23-agents-v3-design.md,
+# "Static checks"), run by Invoke-AgentLintFixtures in build/AgentLint.psm1 against
 # the family contract (Get-AgentLintTestFamily), not against build/agent-src/family.psd1.
 # Base is a valid lead-developer manifest and BaseTools its TOOLS.md. A case either gives its own Json, or
 # Replace pairs applied to Base in order (both sides expand {U+XXXX} and {REPEAT:<text>:<n>}). Id defaults to

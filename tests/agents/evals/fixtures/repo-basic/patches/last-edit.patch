@@ -1,0 +1,13 @@
+diff --git a/reportkit/report.py b/reportkit/report.py
+index 9d09020..4239427 100644
+--- a/reportkit/report.py
++++ b/reportkit/report.py
+@@ -2,7 +2,7 @@
+ 
+ from dataclasses import dataclass
+ 
+-COLUMNS = ("Name", "Region", "Amount", "Share")
++COLUMNS = ("Name", "Region", "Total", "Share")
+ 
+ 
+ @dataclass

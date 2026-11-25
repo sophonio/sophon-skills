@@ -200,24 +200,31 @@ offline test file (see [`tests/README.md`](tests/README.md)).
 
 ## Agents
 
-The agents in `agents/` are Sophon agent packages, not skills, and follow their own rules. They
-come in two families, registered in `build/agent-src/families.psd1`: **development** (sixteen development
-agents and Artifact Creator, `build/agent-src/family.psd1`) and **video** (`video-producer`,
-`build/agent-src/families/video/family.psd1`).
+The agents in `agents/` are Sophon agent packages, not skills, and follow their own rules. There
+are twenty-two packages in two families, registered in `build/agent-src/families.psd1`:
+**development** 3.0.0 (twenty development agents and Artifact Creator, `build/agent-src/family.psd1`)
+and **video** (`video-producer`, `build/agent-src/families/video/family.psd1`).
 
-- Each `agents/<id>/SOUL.md` is generated. Edit the sources of its family (the `souls/` and
-  `fragments/soul/` folders beside its family file), then run
-  `pwsh -File build/Compose-AgentSouls.ps1`. Never edit a SOUL.md by hand. Families share no
-  fragments.
+- Each `agents/<id>/SOUL.md` is generated, and so is each development agent's `README.md`. Edit the
+  sources of its family (the `souls/`, `fragments/soul/`, `readmes/` and `fragments/readme/`
+  folders beside its family file), then run `pwsh -File build/Compose-AgentSouls.ps1`. Never edit a
+  SOUL.md or a generated README.md by hand. Families share no fragments.
 - An agent may use a skill's tools only through its family's `SkillPolicy`: the skill goes in
-  `requires.skills`, its tools may be named and pinned, and they never go in `requires.tools`.
-- Before a PR, run `pwsh -NoProfile -File build/Test-AgentSources.ps1` (CI runs it together with
-  `Compose-AgentSouls.ps1 -Check`). With Sophon CLI 2.2.x installed, also run
-  `pwsh -NoProfile -File tests/agents/Test-AgentPackages.ps1`.
+  `requires.skills`, its tools may be named and pinned, and they never go in `requires.tools`. The
+  development family's skill is `craft-reference`, which is generated from `build/craft-reference/`
+  (`python -B build/craft-reference/generate.py`); never edit `skills/craft-reference/` by hand.
+- A new discipline rule is registered in the family's `Method` key with one excuse table and a
+  pressure scenario whose control arm fails without it (see [`CLAUDE.md`](CLAUDE.md), "Method").
+- Before a PR, run `pwsh -NoProfile -File build/Test-AgentSources.ps1` and the scenario lint,
+  `pwsh -NoProfile -File tests/agents/evals/Invoke-AgentEvals.ps1 -ValidateOnly` (CI runs both with
+  `-Release`, together with `Compose-AgentSouls.ps1 -Check`). With Sophon CLI 2.2.x installed, also run
+  `pwsh -NoProfile -File tests/agents/Test-AgentPackages.ps1`; without it, add `-SourceOnly`.
+- A count of agents, packages or companions in the documents must match the rosters (`DOC-COUNT`,
+  checked by `Test-AgentSources.ps1`).
 - Agents are published by hand through the Marketplace wizard, never with
   `Publish-MarketplacePackages.ps1`.
 
-The full rules (allowed files, real tool names, safe phrasing, versioning) are in
+The full rules (allowed files, real tool names, safe phrasing, budgets, versioning) are in
 [`CLAUDE.md`](CLAUDE.md) and [`docs/AGENTS.md`](docs/AGENTS.md).
 
 ## Publishing

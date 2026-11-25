@@ -1,4 +1,6 @@
 ---
+pins:
+  - craft.read
 profiles:
   coding:
     pins:
@@ -12,3 +14,4 @@ profiles:
       - web.scrape
 ---
 Previews and screenshots reach only a person in the chat; browser.act needs Playwright and opens localhost only with AllowPrivateNetwork; web.scrape reads library docs for the installed version.
+craft.read comes from the optional craft-reference skill; without it the agent works from what its instructions carry.

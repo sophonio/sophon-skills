@@ -1,0 +1,23 @@
+diff --git a/src/lib/format.js b/src/lib/format.js
+index dc66943..f5ddb96 100644
+--- a/src/lib/format.js
++++ b/src/lib/format.js
+@@ -3,7 +3,15 @@ export function formatCount(count, noun) {
+ }
+ 
+ export function formatDuration(minutes) {
+-  const hours = Math.floor(minutes / 60);
+-  const rest = minutes % 60;
+-  return hours > 0 ? `${hours} h ${rest} min` : `${rest} min`;
++  if (!Number.isFinite(minutes)) {
++    return '-';
++  }
++  const sign = minutes < 0 ? '-' : '';
++  const whole = Math.round(Math.abs(minutes));
++  const hours = Math.floor(whole / 60);
++  const rest = whole % 60;
++  if (hours === 0) {
++    return `${sign}${rest} min`;
++  }
++  return rest === 0 ? `${sign}${hours} h` : `${sign}${hours} h ${rest} min`;
+ }

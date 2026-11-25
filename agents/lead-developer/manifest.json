@@ -3,8 +3,8 @@
   "schemaVersion": 1,
   "name": "lead-developer",
   "displayName": "Lead Developer",
-  "version": "2.1.0",
-  "description": "Runs a code change end to end in a repository bound with the Sophon CLI. Small fixes are made directly; larger work gets a plan file in docs/plans that you approve, then is carried out task by task with a live checklist, real build and test runs and one verified commit per task on a feature branch. Asks once per task before using specialist sub-agents and says what they cost. Say \"ultracode\" for multi-agent research, design, review and verification, or \"no subagents\" to keep one thread. Offers Push + PR, Keep local or Discard at the end; never pushes silently.",
+  "version": "3.0.0",
+  "description": "Runs a code change end to end in a repository bound with the Sophon CLI. Small fixes are made directly; larger work gets a plan file in docs/plans that you approve, then is carried out task by task with a live checklist, real build and test runs and one verified commit per task on a feature branch. Asks once per task before using specialist sub-agents and says what they cost. Say \"ultracode\" for multi-agent research, design, review and verification, or \"no subagents\" to keep one thread. Offers Push + PR, Merge locally or Keep local at the end; discards only when asked; never pushes silently.",
   "author": "Buildersoft LLC",
   "license": "MIT",
   "category": "development",
@@ -20,11 +20,18 @@
     "ultracode"
   ],
   "agent": {
-    "whenToUse": "Pick this agent to plan and deliver a code change in a bound repository: a feature, a multi-file fix, a refactor, a migration, or a review-and-fix pass. It plans in a markdown file you approve, tracks todos, asks before using sub-agents, verifies with real commands, commits each task on a branch and offers a pull request. Triggers: implement, build, add a feature, refactor, plan and execute, continue the plan, ultracode. Not for: questions about how code works (researcher), a design without implementation (software-architect), one scoped task from a lead (developer), review of an existing diff (code-reviewer), an unknown bug cause (debugger). Family role: lead-developer."
+    "whenToUse": "Pick this agent to plan and deliver a code change in a bound repository: a feature, a multi-file fix, a refactor, a migration, or a review-and-fix pass. It plans in a markdown file you approve, tracks todos, asks before using sub-agents, verifies with real commands, commits each task on a branch and offers a pull request. Triggers: implement, build, add a feature, refactor, plan and execute, continue the plan, ultracode. Not for: questions about how code works (researcher), a design without implementation (software-architect), one scoped task from a lead (developer), review of an existing diff (code-reviewer), an unknown bug cause (debugger), whether to build something (product-manager), requirements and acceptance (product-owner), releasing a merged branch (release-engineer). Family role: lead-developer."
   },
   "requires": {
+    "skills": [
+      {
+        "name": "craft-reference",
+        "minVersion": "1.0.0"
+      }
+    ],
     "tools": [
       "agent.list",
+      "canvas.render",
       "fs.find",
       "fs.search",
       "session.history",

@@ -1,0 +1,99 @@
+diff --git a/README.md b/README.md
+index 56ea922..36dad89 100644
+--- a/README.md
++++ b/README.md
+@@ -7,3 +7,5 @@ project for each week. A small JSON API lists, deletes and archives entries.
+ python -m timesheet weekly data/entries.csv
+ python -m timesheet serve --port 8100
+ ```
++
++`GET /entries.csv` downloads your own entries as CSV, newest first.
+diff --git a/docs/plans/2026-11-20-entries-csv.md b/docs/plans/2026-11-20-entries-csv.md
+new file mode 100644
+index 0000000..e093ac8
+--- /dev/null
++++ b/docs/plans/2026-11-20-entries-csv.md
+@@ -0,0 +1,32 @@
++# Plan: CSV download of a user's entries
++
++Date: 2026-11-20
++Size: Medium
++Status: done
++Request: Let a user download their own entries as CSV from the API.
++
++## Goal
++
++`GET /entries.csv` returns the caller's entries as CSV, newest first.
++
++## Tasks
++
++### Task 1: CSV handler
++
++- [x] Add `entries_csv` to `timesheet/handlers.py`.
++
++### Task 2: Handler test
++
++- [x] Add `tests/test_entries_csv.py`; it passes.
++
++### Task 3: Route
++
++- [x] Register `GET /entries.csv` in `timesheet/routes.py`.
++
++### Task 4: README
++
++- [x] Mention the download in `README.md`.
++
++## Progress
++
++- 2026-11-20: Tasks 1 to 4 done; the full suite passes.
+diff --git a/tests/test_entries_csv.py b/tests/test_entries_csv.py
+new file mode 100644
+index 0000000..8053308
+--- /dev/null
++++ b/tests/test_entries_csv.py
+@@ -0,0 +1,25 @@
++import unittest
++from datetime import datetime
++
++from timesheet import handlers
++from timesheet.storage import Entry
++
++
++class EntriesCsvTest(unittest.TestCase):
++    def test_lists_the_callers_entries_newest_first(self):
++        store = handlers.Store([
++            Entry("e1", datetime(2026, 11, 10, 9), 60, "billing", "ada"),
++            Entry("e2", datetime(2026, 11, 12, 9), 30, "support", "ada"),
++            Entry("e3", datetime(2026, 11, 11, 9), 15, "support", "grace"),
++        ])
++        status, body = handlers.entries_csv(store, handlers.Request(user="ada"))
++        self.assertEqual(status, 200)
++        self.assertEqual(body.splitlines(), [
++            "id,start,minutes,project",
++            "e2,2026-11-12T09:00:00,30,support",
++            "e1,2026-11-10T09:00:00,60,billing",
++        ])
++
++
++if __name__ == "__main__":
++    unittest.main()
+diff --git a/timesheet/handlers.py b/timesheet/handlers.py
+index c7f27aa..44171bc 100644
+--- a/timesheet/handlers.py
++++ b/timesheet/handlers.py
+@@ -34,3 +34,15 @@ def archive_entry(store, request):
+         return 404, {"error": "no such entry"}
+     entry.archived = True
+     return 200, {"id": entry.id, "archived": True}
++
++
++def entries_csv(store, request):
++    """The caller's entries as CSV text, newest first."""
++    mine = sorted(
++        (entry for entry in store.entries.values() if entry.owner == request.user and not entry.archived),
++        key=lambda entry: entry.start,
++        reverse=True,
++    )
++    lines = ["id,start,minutes,project"]
++    lines += [f"{entry.id},{entry.start.isoformat()},{entry.minutes},{entry.project}" for entry in mine]
++    return 200, "\n".join(lines) + "\n"

@@ -2,7 +2,7 @@
 
 <#
 .SYNOPSIS
-    Composes agents/<id>/SOUL.md from build/agent-src/ (agent templates plus shared fragments).
+    Composes agents/<id>/SOUL.md, and README.md for a family with a readmes/ folder, from build/agent-src/.
 .DESCRIPTION
     Families are listed in build/agent-src/families.psd1 (without it: the single family in
     build/agent-src/family.psd1). For each family, with <dir> the folder of its family file, each
@@ -11,12 +11,18 @@
     Values. Lines starting with "%% " are template comments and are dropped. Never hand-edit a
     SOUL.md. Families never share templates or fragments; an agent id belongs to one family.
 
+    A family with a <dir>/readmes/ folder also generates every agents/<id>/README.md, after the SOULs and from
+    their composed bytes: from <dir>/readmes/<id>.md with {{> readme/<NN-id>}} replaced by
+    <dir>/fragments/readme/<NN-id>.md, the family Values plus FamilyVersion, Id, DisplayName, License,
+    SoulTokens and SoulTokensDelta, and the generated blocks {{# roster}} and {{# credits}}. A family without
+    the folder (video) keeps a hand-written README.
+
     Output is UTF-8 without BOM, LF line endings, exactly one trailing newline, no banner.
-    A SOUL.md is written only when its bytes change; no other file is touched. When any error
-    is found nothing is written.
+    A SOUL.md or README.md is written only when its bytes change; no other file is touched. When any
+    error is found nothing is written.
 
     Errors print as "ERROR <path>:<line>: <message>" and the script exits 1; otherwise it
-    exits 0 (or 1 under -Check when a SOUL.md drifted).
+    exits 0 (or 1 under -Check when a SOUL.md or README.md drifted).
 .PARAMETER RepoRoot
     Repository root holding build/agent-src/ and agents/. Defaults to the parent of this script.
 .PARAMETER Family
@@ -26,10 +32,16 @@
     Compose only these agent ids (comma-separated values are accepted). Unknown ids are errors.
     The unused-fragment check runs per family, only when that family's whole roster is composed.
 .PARAMETER Check
-    Write nothing. Compare each composed SOUL with the committed file and report every drift
+    Write nothing. Compare each composed SOUL and README with the committed file and report every drift
     (a missing file is drift too), then exit 1 if any drifted.
 .PARAMETER OutDir
-    Write (or, with -Check, compare against) <OutDir>/<id>/SOUL.md instead of agents/<id>/SOUL.md.
+    Write (or, with -Check, compare against) <OutDir>/<id>/SOUL.md (and README.md) instead of agents/<id>/.
+.PARAMETER Omit
+    Control arms for the instruction tests: compose without these ids (comma-separated values are accepted).
+    A fragment id (NN-name) or a whole-fragment Method rule drops that include line; a block rule (Anchor)
+    drops its lines, and one of two blank lines around it. Valid only with -OutDir and never with -Check,
+    so an ablated SOUL cannot reach agents/. Every selected agent must carry every id. The script prints
+    what it removed: the id, the source and line range, the lines and the bytes.
 .PARAMETER Explain
     Also print each agent's fragment list, the source of every output line, and which agents
     include each fragment.
@@ -41,6 +53,8 @@
     pwsh -NoProfile -File build/Compose-AgentSouls.ps1 -Family development -Check
 .EXAMPLE
     pwsh -NoProfile -File build/Compose-AgentSouls.ps1 -Agents developer -OutDir $env:TEMP/souls -Explain
+.EXAMPLE
+    pwsh -NoProfile -File build/Compose-AgentSouls.ps1 -Agents developer -Omit test-first -OutDir $env:TEMP/ctl
 #>
 [CmdletBinding()]
 param(
@@ -49,7 +63,8 @@ param(
     [switch]$Check,
     [string]$OutDir = '',
     [switch]$Explain,
-    [string[]]$Family = @()
+    [string[]]$Family = @(),
+    [string[]]$Omit = @()
 )
 
 Set-StrictMode -Version Latest
@@ -64,6 +79,11 @@ try {
         exit 1
     }
     $root = Resolve-AgentFullPath -Path $RepoRoot
+    $omitIds = [string[]]@(foreach ($entry in $Omit) { foreach ($part in ([string]$entry).Split(',')) { if ($part.Trim()) { $part.Trim() } } })
+    if ($omitIds.Length -gt 0 -and (-not $OutDir -or $Check)) {
+        Write-Output "ERROR build/Compose-AgentSouls.ps1:0: -Omit is valid only with -OutDir and never with -Check (an ablated SOUL must not reach agents/)"
+        exit 1
+    }
 
     # Families: every registered family, or the -Family selection (the legacy single family without a registry).
     $registry = Get-AgentFamilyRegistry -RepoRoot $root
@@ -139,7 +159,7 @@ try {
         if ($multi) {
             $familyAgents = if ($agentsByFamily.ContainsKey([string]$entry['Id'])) { [string[]]$agentsByFamily[[string]$entry['Id']].ToArray() } else { [string[]]@() }
         }
-        $run = Invoke-AgentFamilyCompose -RepoRoot $root -Agents $familyAgents -Family $familyData
+        $run = Invoke-AgentFamilyCompose -RepoRoot $root -Agents $familyAgents -Family $familyData -Omit $omitIds
         foreach ($item in @($run['AllErrors'])) {
             Format-AgentComposeError -Item $item
             $allErrors.Add($item)
@@ -149,14 +169,33 @@ try {
 
     $outRoot = ''
     if ($OutDir) { $outRoot = Resolve-AgentFullPath -Path $OutDir }
-    $results = @(foreach ($r in $runs) { @($r['Run']['Results']) })
+    if ($omitIds.Length -gt 0) {
+        $agentsRoot = [IO.Path]::Combine($root, 'agents')
+        $relOut = [IO.Path]::GetRelativePath($agentsRoot, $outRoot)
+        if ($relOut -eq '.' -or -not ($relOut.StartsWith('..') -or [IO.Path]::IsPathRooted($relOut))) {
+            Write-Output "ERROR build/Compose-AgentSouls.ps1:0: -Omit writes to -OutDir, which must be outside agents/ (got $outRoot)"
+            exit 1
+        }
+    }
+    $soulResults = @(foreach ($r in $runs) { @($r['Run']['Results']) })
+    $readmeResults = @(foreach ($r in $runs) { @($r['Run']['ReadmeResults']) })
+    $results = @($soulResults) + @($readmeResults)
     $clean = @($results | Where-Object { @($_['Errors']).Count -eq 0 })
+
+    foreach ($result in $clean) {
+        if (-not $result.ContainsKey('Omitted')) { continue }
+        foreach ($record in @($result['Omitted'])) {
+            $what = if ($record['Rule']) { "rule $($record['Rule'])" } else { "fragment $($record['Id'])" }
+            $where = if ($record['Include']) { "include line $($record['Include']):$($record['From'])" } else { "$($record['Source']):$($record['From'])-$($record['To'])" }
+            Write-Output "omit $($result['Id']): $what from $($record['Source']) ($where), $($record['Lines']) line(s), $($record['Bytes']) byte(s)"
+        }
+    }
 
     # Phase 2: compare or write.
     $drift = 0
     if ($Check) {
         foreach ($result in $clean) {
-            $target = Get-AgentSoulPath -RepoRoot $root -Id $result['Id'] -OutDir $outRoot
+            $target = Get-AgentSoulPath -RepoRoot $root -Id $result['Id'] -OutDir $outRoot -File $result['File']
             $display = ConvertTo-AgentRepoPath -RepoRoot $root -Path $target
             $committed = $null
             if ([System.IO.File]::Exists($target)) { $committed = [System.IO.File]::ReadAllBytes($target) }
@@ -177,7 +216,7 @@ try {
     }
     else {
         foreach ($result in $clean) {
-            $target = Get-AgentSoulPath -RepoRoot $root -Id $result['Id'] -OutDir $outRoot
+            $target = Get-AgentSoulPath -RepoRoot $root -Id $result['Id'] -OutDir $outRoot -File $result['File']
             $display = ConvertTo-AgentRepoPath -RepoRoot $root -Path $target
             if (Write-AgentSoulFile -Path $target -Text $result['Text']) {
                 Write-Output "wrote $display"
@@ -193,7 +232,7 @@ try {
             $map = @($result['LineMap'])
             $top = @($result['Fragments'])
             $nested = @(@($result['Included']) | Where-Object { [Array]::IndexOf([string[]]$top, [string]$_) -lt 0 })
-            Write-Output "EXPLAIN $($result['Id']): $($map.Count) lines, $($result['Bytes']) bytes"
+            Write-Output "EXPLAIN $($result['Id'])$(if ($result['File'] -ceq 'README.md') { ' README.md' }): $($map.Count) lines, $($result['Bytes']) bytes"
             Write-Output ('  fragments: ' + $(if ($top.Count) { $top -join ', ' } else { '(none)' }))
             if ($nested.Count) { Write-Output ('  nested:    ' + ($nested -join ', ')) }
             for ($i = 0; $i -lt $map.Count; $i++) {
@@ -209,10 +248,11 @@ try {
         }
     }
 
-    if ($clean.Count -gt 0) { Format-AgentBudgetTable -Results $clean }
+    $cleanSouls = @($clean | Where-Object { $_['File'] -ceq 'SOUL.md' })
+    if ($cleanSouls.Count -gt 0) { Format-AgentBudgetTable -Results $cleanSouls }
 
     if ($drift -gt 0) {
-        Write-Output "$drift SOUL file(s) drifted; run: pwsh -File build/Compose-AgentSouls.ps1"
+        Write-Output "$drift SOUL or README file(s) drifted; run: pwsh -File build/Compose-AgentSouls.ps1"
     }
     if ($allErrors.Count -gt 0 -or $drift -gt 0) { $exitCode = 1 }
 }

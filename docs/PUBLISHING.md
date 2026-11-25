@@ -138,9 +138,16 @@ A successful publish returns `201 Created` with `{ name, version, status: "pendi
 Two workflows live in `.github/workflows/`:
 
 - **`validate.yml`** runs automatically on PRs and pushes to `main` that touch `skills/`, `build/`,
-  `agents/`, `tests/skills/`, `tests/build/`, `tests/agents/` or `templates/`: `-ValidateOnly`,
-  `generate.py --check`, `Test-SkillLint.ps1`, `run_all.py`, then the agent source checks. It needs
-  no configuration.
+  `agents/`, `tests/skills/`, `tests/build/`, `tests/agents/`, `templates/`, the root `LICENSE`, or
+  one of the documents whose agent counts `DOC-COUNT` checks (`README.md`, `CLAUDE.md`,
+  `CONTRIBUTING.md`, `docs/AGENTS.md`, `docs/PUBLISHING.md`, `tests/README.md`). Its steps:
+  `Build-MarketplacePackages.ps1 -ValidateOnly`; `generate.py --check` for `ffmpeg-video` and
+  `generate.py --check --release` for `craft-reference`; `Test-CraftSources.ps1` (the craft-reference
+  topic sources); `Test-SkillLint.ps1`; `run_all.py`; the agent source checks
+  (`Compose-AgentSouls.ps1 -Check`, then `Test-AgentSources.ps1 -Release`, which includes `DOC-COUNT`);
+  and the instruction-test scenario lint (`Invoke-AgentEvals.ps1 -ValidateOnly -Release`). The release
+  switches make every change a release check. Each step runs even when an earlier one failed. It needs no
+  configuration, no Sophon CLI and no Gateway; the CLI checks and the package build stay local.
 - **`ffmpeg-video.yml`** runs on changes to the `ffmpeg-video` skill, its build folder, the skill
   lint or its tests: unit tests on Python 3.10 and 3.13, the Python-floor refusal, real-FFmpeg
   tests on Ubuntu 24.04 (FFmpeg 6.1) and Windows, and the provenance check (`Sync-FfmpegSkill.ps1
@@ -190,6 +197,34 @@ order is fixed:
 
 The agent's `requires.skills[].minVersion` must be a version that is approved and live. Raise it
 only after the newer skill version is approved, and bump the agent version when you do.
+
+The same order holds for `craft-reference`, which every development agent except Artifact Creator
+requires. Run `python -B build/craft-reference/generate.py --check --release` and
+`pwsh -NoProfile -File build/craft-reference/Test-CraftSources.ps1` first; the release check fails
+while a topic source is unpinned or the owner's sign-off of the Sophon topics is missing. The
+development family 3.0.0 is then published in this order, by hand:
+
+1. Check the five new slugs while signed in: `craft-reference`, `product-owner`, `product-manager`,
+   `release-engineer` and `agent-engineer` (skill and agent names share one namespace). A hit not
+   owned by Buildersoft stops the release.
+2. Publish `craft-reference` 1.0.0 (`pwsh -File build/Publish-MarketplacePackages.ps1 -Skills
+   craft-reference`) and wait until it is **approved**, not only `pendingReview`. An agent uploaded
+   before then is refused with `moderation.unresolved_requirements`.
+3. Upload the four new agents in the Marketplace wizard. A 2.1.0 lead does not know them, so they can
+   wait in review without affecting anyone.
+4. Upload the fifteen existing companions and Artifact Creator (Artifact Creator has no skill
+   dependency).
+5. Upload `lead-developer` last, so that a user who takes the new lead finds every companion at 3.0.0.
+6. Announce when all 21 agents are approved, then tag `agents-v3.0.0` and commit its `SHA256SUMS` as
+   the baseline for 3.0.x.
+
+The owner runbook for the 3.0.0 release, with the sweep, the install previews, the smoke scenarios, the
+ship rule and the tag, is [the release checklist](plans/2026-11-25-agents-v3-release-checklist.md).
+
+That is 22 uploads. The hourly upload limit is a deployment setting (the Marketplace source defaults to
+500 for one publisher), so confirm the production value before planning the sitting. Publishing stays
+manual: nothing on merge or in CI uploads an agent, and the full runbook is in
+[AGENTS.md](AGENTS.md) section 13.
 
 ## 8. Releasing a vendored skill (ffmpeg-video)
 

@@ -1,0 +1,12 @@
+{
+  "formatVersion": 1,
+  "id": "helper",
+  "name": "Helper",
+  "version": "0.2.0",
+  "description": "Answers questions about this repository and makes small, careful code changes.",
+  "author": "Example Team",
+  "license": "MIT",
+  "category": "development",
+  "tags": ["development"],
+  "whenToUse": "Small code changes and questions about this repository. Not for releases or design work."
+}

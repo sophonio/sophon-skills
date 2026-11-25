@@ -1,0 +1,550 @@
+[
+  {
+    "id": "design-sophon-default",
+    "family": "design",
+    "title": "Sophon default: full token tables",
+    "maxBytes": 10240,
+    "originalOrAdapted": "original",
+    "sources": [],
+    "usedBy": [
+      "ui-ux-designer",
+      "frontend-developer",
+      "design-system-engineer",
+      "visual-designer"
+    ]
+  },
+  {
+    "id": "design-sophon-components",
+    "family": "design",
+    "title": "Sophon default: archetypes, layout and components",
+    "maxBytes": 8192,
+    "originalOrAdapted": "original",
+    "sources": [],
+    "usedBy": [
+      "frontend-developer"
+    ]
+  },
+  {
+    "id": "design-schools",
+    "family": "design",
+    "title": "Design schools: six recipes in one anatomy",
+    "maxBytes": 11264,
+    "originalOrAdapted": "adapted",
+    "sources": [
+      "webDesignEngineer"
+    ],
+    "usedBy": [
+      "ui-ux-designer",
+      "design-system-engineer"
+    ]
+  },
+  {
+    "id": "design-open-systems",
+    "family": "design",
+    "title": "Open design systems: five recipes",
+    "maxBytes": 9216,
+    "originalOrAdapted": "original",
+    "sources": [],
+    "usedBy": [
+      "ui-ux-designer",
+      "design-system-engineer"
+    ]
+  },
+  {
+    "id": "design-directions-round",
+    "family": "design",
+    "title": "Direction round: option anatomy and examples",
+    "maxBytes": 4096,
+    "originalOrAdapted": "adapted",
+    "sources": [
+      "impeccable",
+      "interfaceDesign",
+      "emilSkills"
+    ],
+    "usedBy": [
+      "ui-ux-designer"
+    ]
+  },
+  {
+    "id": "design-generated-defaults",
+    "family": "design",
+    "title": "Generated-looking defaults: the dated catalogue",
+    "maxBytes": 11264,
+    "originalOrAdapted": "adapted",
+    "sources": [
+      "anthropicSkills",
+      "impeccable",
+      "tasteSkill",
+      "webDesignEngineer",
+      "baselineUi",
+      "webInterfaceGuidelines"
+    ],
+    "usedBy": [
+      "ui-ux-designer",
+      "frontend-developer",
+      "design-system-engineer",
+      "visual-designer"
+    ]
+  },
+  {
+    "id": "design-critique-rubric",
+    "family": "design",
+    "title": "Critique rubric: heuristics, personas, severities",
+    "maxBytes": 7168,
+    "originalOrAdapted": "adapted",
+    "sources": [
+      "impeccable",
+      "nielsen"
+    ],
+    "usedBy": [
+      "ui-ux-designer"
+    ]
+  },
+  {
+    "id": "design-refinement-verbs",
+    "family": "design",
+    "title": "Refinement verbs: bolder, quieter, distill, polish",
+    "maxBytes": 5120,
+    "originalOrAdapted": "adapted",
+    "sources": [
+      "impeccable"
+    ],
+    "usedBy": [
+      "ui-ux-designer"
+    ]
+  },
+  {
+    "id": "design-motion",
+    "family": "design",
+    "title": "Motion: purpose, durations, easing, reduced motion",
+    "maxBytes": 5120,
+    "originalOrAdapted": "adapted",
+    "sources": [
+      "emilSkills",
+      "webInterfaceGuidelines"
+    ],
+    "usedBy": [
+      "frontend-developer",
+      "visual-designer"
+    ]
+  },
+  {
+    "id": "design-md-template",
+    "family": "design",
+    "title": "DESIGN.md: skeleton, token block and dated rules",
+    "maxBytes": 5120,
+    "originalOrAdapted": "adapted",
+    "sources": [
+      "designMd",
+      "interfaceDesign"
+    ],
+    "usedBy": [
+      "ui-ux-designer",
+      "design-system-engineer"
+    ]
+  },
+  {
+    "id": "design-frontend-floors",
+    "family": "design",
+    "title": "Frontend floors: use what exists, the interaction floor",
+    "maxBytes": 5120,
+    "originalOrAdapted": "adapted",
+    "sources": [
+      "webInterfaceGuidelines",
+      "baselineUi",
+      "anthropicSkills"
+    ],
+    "usedBy": [
+      "frontend-developer"
+    ]
+  },
+  {
+    "id": "design-states-matrix",
+    "family": "design",
+    "title": "States: nine control states, five page states, break data",
+    "maxBytes": 5120,
+    "originalOrAdapted": "original",
+    "sources": [],
+    "usedBy": [
+      "frontend-developer",
+      "accessibility-reviewer"
+    ]
+  },
+  {
+    "id": "design-variants",
+    "family": "design",
+    "title": "Variants: axes, comparison table, switcher",
+    "maxBytes": 2048,
+    "originalOrAdapted": "adapted",
+    "sources": [
+      "emilSkills"
+    ],
+    "usedBy": [
+      "frontend-developer"
+    ]
+  },
+  {
+    "id": "design-a11y-preferences",
+    "family": "design",
+    "title": "Preference checks: reduced motion, contrast, forced colours",
+    "maxBytes": 4096,
+    "originalOrAdapted": "original",
+    "sources": [],
+    "usedBy": [
+      "accessibility-reviewer"
+    ]
+  },
+  {
+    "id": "design-token-guards",
+    "family": "design",
+    "title": "Token guards: literal, parity and contrast tests",
+    "maxBytes": 4096,
+    "originalOrAdapted": "original",
+    "sources": [],
+    "usedBy": [
+      "design-system-engineer"
+    ]
+  },
+  {
+    "id": "design-evaluate",
+    "family": "design",
+    "title": "Measuring a page without sight: evaluate recipes",
+    "maxBytes": 5120,
+    "originalOrAdapted": "original",
+    "sources": [],
+    "usedBy": [
+      "ui-ux-designer",
+      "frontend-developer",
+      "design-system-engineer",
+      "accessibility-reviewer",
+      "e2e-test-engineer"
+    ]
+  },
+  {
+    "id": "product-brief",
+    "family": "product",
+    "title": "Product brief and PRODUCT.md skeletons",
+    "maxBytes": 4096,
+    "originalOrAdapted": "adapted",
+    "sources": [
+      "pmSkills"
+    ],
+    "usedBy": [
+      "product-manager"
+    ]
+  },
+  {
+    "id": "product-prd",
+    "family": "product",
+    "title": "Lean PRD: sections, id forms, examples",
+    "maxBytes": 5120,
+    "originalOrAdapted": "adapted",
+    "sources": [
+      "bmadMethod",
+      "specKit"
+    ],
+    "usedBy": [
+      "product-manager"
+    ]
+  },
+  {
+    "id": "product-discovery",
+    "family": "product",
+    "title": "Discovery question bank and premise forms",
+    "maxBytes": 3072,
+    "originalOrAdapted": "adapted",
+    "sources": [
+      "gstack",
+      "specKit"
+    ],
+    "usedBy": [
+      "product-manager"
+    ]
+  },
+  {
+    "id": "product-prioritisation",
+    "family": "product",
+    "title": "Prioritisation lenses and the pre-mortem sheet",
+    "maxBytes": 3072,
+    "originalOrAdapted": "original",
+    "sources": [],
+    "usedBy": [
+      "product-manager"
+    ]
+  },
+  {
+    "id": "product-tickets",
+    "family": "product",
+    "title": "Tickets: requirements and story files, status words, id chain",
+    "maxBytes": 5120,
+    "originalOrAdapted": "adapted",
+    "sources": [
+      "specKit",
+      "gsdCore",
+      "mattpocock"
+    ],
+    "usedBy": [
+      "product-owner"
+    ]
+  },
+  {
+    "id": "product-slicing",
+    "family": "product",
+    "title": "Slicing patterns: thin paths and story splits",
+    "maxBytes": 4096,
+    "originalOrAdapted": "original",
+    "sources": [],
+    "usedBy": [
+      "product-owner"
+    ]
+  },
+  {
+    "id": "product-acceptance",
+    "family": "product",
+    "title": "Acceptance: criteria patterns and the evidence table",
+    "maxBytes": 4096,
+    "originalOrAdapted": "original",
+    "sources": [],
+    "usedBy": [
+      "product-owner",
+      "qa-engineer"
+    ]
+  },
+  {
+    "id": "eng-review-checks",
+    "family": "engineering",
+    "title": "Review checks by defect class",
+    "maxBytes": 5120,
+    "originalOrAdapted": "adapted",
+    "sources": [
+      "anthropic"
+    ],
+    "usedBy": [
+      "code-reviewer",
+      "lead-developer"
+    ]
+  },
+  {
+    "id": "eng-silent-failures",
+    "family": "engineering",
+    "title": "Silent failures: catches, defaults and fallbacks",
+    "maxBytes": 3072,
+    "originalOrAdapted": "adapted",
+    "sources": [
+      "anthropic"
+    ],
+    "usedBy": [
+      "developer",
+      "code-reviewer"
+    ]
+  },
+  {
+    "id": "eng-test-quality",
+    "family": "engineering",
+    "title": "Test quality: tautology, vacuity, boundaries, examples",
+    "maxBytes": 5120,
+    "originalOrAdapted": "adapted",
+    "sources": [
+      "mattpocock",
+      "superpowers"
+    ],
+    "usedBy": [
+      "qa-engineer"
+    ]
+  },
+  {
+    "id": "eng-debugging-tactics",
+    "family": "engineering",
+    "title": "Debugging: reproduction loops and tactics by symptom",
+    "maxBytes": 5120,
+    "originalOrAdapted": "adapted",
+    "sources": [
+      "superpowers",
+      "mattpocock"
+    ],
+    "usedBy": [
+      "debugger"
+    ]
+  },
+  {
+    "id": "eng-security-checklist",
+    "family": "engineering",
+    "title": "Security checklist by class, with the high-miss patterns",
+    "maxBytes": 6144,
+    "originalOrAdapted": "adapted",
+    "sources": [
+      "anthropicSecurityReview",
+      "anthropicSecurityGuidance"
+    ],
+    "usedBy": [
+      "security-reviewer"
+    ]
+  },
+  {
+    "id": "eng-privacy-sweep",
+    "family": "engineering",
+    "title": "Privacy sweep: personal data fields and flows",
+    "maxBytes": 3072,
+    "originalOrAdapted": "original",
+    "sources": [],
+    "usedBy": [
+      "security-reviewer"
+    ]
+  },
+  {
+    "id": "eng-adr",
+    "family": "engineering",
+    "title": "Decision records: the gate, the short form, worked examples",
+    "maxBytes": 3072,
+    "originalOrAdapted": "adapted",
+    "sources": [
+      "mattpocock",
+      "anthropic"
+    ],
+    "usedBy": [
+      "software-architect"
+    ]
+  },
+  {
+    "id": "eng-api-contract",
+    "family": "engineering",
+    "title": "API contract checklist",
+    "maxBytes": 3072,
+    "originalOrAdapted": "original",
+    "sources": [],
+    "usedBy": [
+      "software-architect"
+    ]
+  },
+  {
+    "id": "eng-e2e",
+    "family": "engineering",
+    "title": "Browser end-to-end tests: locators, waits, healing",
+    "maxBytes": 4096,
+    "originalOrAdapted": "adapted",
+    "sources": [
+      "playwright",
+      "anthropicSkills"
+    ],
+    "usedBy": [
+      "e2e-test-engineer"
+    ]
+  },
+  {
+    "id": "eng-mcp-contract",
+    "family": "engineering",
+    "title": "MCP tool contracts and the evaluation set",
+    "maxBytes": 4096,
+    "originalOrAdapted": "adapted",
+    "sources": [
+      "anthropicSkills"
+    ],
+    "usedBy": [
+      "mcp-integration-engineer"
+    ]
+  },
+  {
+    "id": "eng-perf-measure",
+    "family": "engineering",
+    "title": "Measuring performance: baselines, noise, reporting",
+    "maxBytes": 3072,
+    "originalOrAdapted": "adapted",
+    "sources": [
+      "addyosmani"
+    ],
+    "usedBy": [
+      "qa-engineer"
+    ]
+  },
+  {
+    "id": "eng-sources-versions",
+    "family": "engineering",
+    "title": "Sources and versions: where the version lives, by ecosystem",
+    "maxBytes": 2048,
+    "originalOrAdapted": "adapted",
+    "sources": [
+      "addyosmani"
+    ],
+    "usedBy": [
+      "researcher",
+      "developer",
+      "mcp-integration-engineer"
+    ]
+  },
+  {
+    "id": "eng-docs-accuracy",
+    "family": "engineering",
+    "title": "Documentation accuracy: drift checks, glossary, change notes",
+    "maxBytes": 3072,
+    "originalOrAdapted": "adapted",
+    "sources": [
+      "mattpocock",
+      "humanizer"
+    ],
+    "usedBy": [
+      "technical-writer"
+    ]
+  },
+  {
+    "id": "release-ship",
+    "family": "release",
+    "title": "Shipping: version places, changelog forms, pre-ship checks",
+    "maxBytes": 4096,
+    "originalOrAdapted": "original",
+    "sources": [],
+    "usedBy": [
+      "release-engineer"
+    ]
+  },
+  {
+    "id": "release-deploy-rollback",
+    "family": "release",
+    "title": "Deploy and rollback: checklists and health signals",
+    "maxBytes": 5120,
+    "originalOrAdapted": "adapted",
+    "sources": [
+      "gstack",
+      "compoundEngineering"
+    ],
+    "usedBy": [
+      "release-engineer"
+    ]
+  },
+  {
+    "id": "agent-pressure-tests",
+    "family": "agent",
+    "title": "Pressure tests: scenario format, pressures, run tables",
+    "maxBytes": 5120,
+    "originalOrAdapted": "adapted",
+    "sources": [
+      "superpowers"
+    ],
+    "usedBy": [
+      "agent-engineer"
+    ]
+  },
+  {
+    "id": "agent-instruction-style",
+    "family": "agent",
+    "title": "Instruction forms: which form fits which failure",
+    "maxBytes": 4096,
+    "originalOrAdapted": "adapted",
+    "sources": [
+      "superpowers"
+    ],
+    "usedBy": [
+      "agent-engineer"
+    ]
+  },
+  {
+    "id": "agent-package-facts",
+    "family": "agent",
+    "title": "Sophon package facts: files, limits, scanner families",
+    "maxBytes": 3072,
+    "originalOrAdapted": "original",
+    "sources": [],
+    "usedBy": [
+      "agent-engineer"
+    ]
+  }
+]

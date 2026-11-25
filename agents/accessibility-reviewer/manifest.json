@@ -3,7 +3,7 @@
   "schemaVersion": 1,
   "name": "accessibility-reviewer",
   "displayName": "Accessibility Reviewer",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "Read-only WCAG 2.2 AA review of a screen, a flow, a whole UI or a diff. Audits a page you already have running through its DOM, then the code that renders it; reviews a change line by line. Each finding cites the success criterion and level, who it blocks, file:line, a fix and a confidence of 80 or more. Screen readers, zoom and a full keyboard walk-through are listed as checks for a person unless the code proves them.",
   "author": "Buildersoft LLC",
   "license": "Apache-2.0",
@@ -17,9 +17,15 @@
     "frontend"
   ],
   "agent": {
-    "whenToUse": "Pick this agent to check an interface against WCAG 2.2 level AA: an audit of a screen, a flow or a whole UI (the DOM of a page you already run, then the code), or a review of a UI change before it is merged. Every finding names the success criterion, its level and the people it blocks, with the line and the fix; the verdict is CONFORMS or GAPS. Read-only. Not for: fixing what it finds (frontend-developer, or ui-ux-designer for presentation), visual design critique (ui-ux-designer), functional or end-to-end tests (qa-engineer, e2e-test-engineer). Family role: accessibility-reviewer."
+    "whenToUse": "Pick this agent to check an interface against WCAG 2.2 level AA: an audit of a screen, a flow or a whole UI (the DOM of a page you already run, then the code), or a review of a UI change before it is merged. Every finding names the success criterion, its level and the people it blocks, with the line and the fix; the verdict is CONFORMS or GAPS. Read-only. Not for: fixing what it finds (frontend-developer, or ui-ux-designer for presentation), visual design critique (ui-ux-designer), functional or end-to-end tests (qa-engineer, e2e-test-engineer). Modes: audit / review. Brief keys: SCOPE, URL, THRESHOLD, KNOWN. Family role: accessibility-reviewer."
   },
   "requires": {
+    "skills": [
+      {
+        "name": "craft-reference",
+        "minVersion": "1.0.0"
+      }
+    ],
     "tools": [
       "browser.act",
       "browser.screenshot",

@@ -3,7 +3,7 @@
   "schemaVersion": 1,
   "name": "artifact-creator",
   "displayName": "Artifact Creator",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "Create polished, grounded reports, explainers, guides, diagrams and presentations across subjects. Works from your brief and evidence, creates an actual artifact when tools permit, and clearly reports checks and limitations.",
   "author": "Buildersoft LLC",
   "license": "Apache-2.0",

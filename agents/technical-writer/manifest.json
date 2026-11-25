@@ -3,7 +3,7 @@
   "schemaVersion": 1,
   "name": "technical-writer",
   "displayName": "Technical Writer",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "Documentation for a bound repository: drafts READMEs, docs pages, guides, ADR prose and changelogs with you section by section; tightens existing docs for one reader, task-first structure and accuracy against the code; and reader-tests a doc as a newcomer, listing the questions it leaves open and the steps that fail when followed literally. Every command and path it documents is checked in the repository first.",
   "author": "Buildersoft LLC",
   "license": "Apache-2.0",
@@ -17,9 +17,15 @@
     "docs"
   ],
   "agent": {
-    "whenToUse": "Pick this agent to write a README, a docs page, a guide, ADR prose or a changelog entry; to tighten or restructure existing documentation; to check that documented commands and paths still match the code; or to read a doc as a newcomer and find what it leaves unanswered. Not for: code changes (developer), architecture decisions (software-architect), interface microcopy (ui-ux-designer), test suites (qa-engineer). Family role: technical-writer."
+    "whenToUse": "Pick this agent to write a README, a docs page, a guide, ADR prose or a changelog entry; to tighten or restructure existing documentation; to check that documented commands and paths still match the code; or to read a doc as a newcomer and find what it leaves unanswered. Not for: code changes (developer), architecture decisions (software-architect), interface microcopy (ui-ux-designer), test suites (qa-engineer), agent instructions (agent-engineer), cutting a release (release-engineer). Modes: draft / edit / reader-test. Brief keys: DOC, AUDIENCE, URL, MAY_RUN. Family role: technical-writer."
   },
   "requires": {
+    "skills": [
+      {
+        "name": "craft-reference",
+        "minVersion": "1.0.0"
+      }
+    ],
     "tools": [
       "fs.find",
       "fs.read",

@@ -3,6 +3,8 @@
 # Each block mirrors a scanner the package meets after it leaves this repo, so a package that passes here
 # passes those scanners cleanly. Sources are pinned to sophon a431e1a64 (v2.2.2) and the sophon-marketplace
 # tree of the same date. Copy changes from the named source file; do not edit the literals by hand.
+# Re-diffed at M9 (2026-11-25): the sophon source files are byte-identical at v3-main 38c3f7d, and
+# AgentPromptHeuristics.cs at sophon-marketplace 102cd75 (last changed 61cf910) matches P4 and P5. Its rune walk flags Cf above U+FFFF, so P3 gained 'format-astral'.
 #
 # Rule ids: SCAN-P1 possible_secret, SCAN-P2 injection literals, SCAN-P3 hidden characters, SCAN-P4 prompt
 # heuristics, SCAN-P5 hosts, SCAN-P6 template residue, SCAN-WORD this family's stricter wording policy.
@@ -101,9 +103,11 @@
     # sophon/src/Sophon.Core/Workspaces/ProjectInstructionsProvider.cs (HiddenFindings: tag characters
     # U+E0000-U+E007F and bidi controls), sophon/src/Sophon.Core/Security/PreviewTextSanitizer.cs (what counts
     # as hidden: C0/C1 controls, zero-width characters, Hangul fillers, variation selectors, U+2028/U+2029)
-    # and AgentPromptHeuristics.FirstHiddenCharacter (any Cf). Stricter here: CR, NUL and a BOM always fail,
+    # and AgentPromptHeuristics.FirstHiddenCharacter (any Cf, walked by rune, so supplementary planes too).
+    # Stricter here: CR, NUL and a BOM always fail,
     # and so does any variation selector (the PrFooter emoji is written without U+FE0F). TAB is not hidden
-    # (layout checks forbid it separately). Supplementary planes are matched as UTF-16 surrogate pairs.
+    # (layout checks forbid it separately). Supplementary planes are matched as UTF-16 surrogate pairs: \p{Cf}
+    # never matches a pair, so 'tag' and 'format-astral' list the Cf code points above U+FFFF (.NET 11 data).
     # ---------------------------------------------------------------------------------------------------------
     P3 = @(
         @{ Id = 'bom';       Pattern = '\uFEFF';                                         Message = 'byte order mark (U+FEFF)' }
@@ -116,6 +120,8 @@
         @{ Id = 'variation'; Pattern = '[\uFE00-\uFE0F]|\uDB40[\uDD00-\uDDEF]';          Message = 'variation selector' }
         @{ Id = 'filler';    Pattern = '[\u115F\u1160\u3164\uFFA0]';                     Message = 'Hangul filler (renders as blank)' }
         @{ Id = 'format';    Pattern = '\p{Cf}';                                         Message = 'invisible formatting character (Unicode Cf, e.g. ZWJ or zero-width space)' }
+        @{ Id = 'format-astral'; Pattern = '\uD804[\uDCBD\uDCCD]|\uD80D[\uDC30-\uDC3F]|\uD82F[\uDCA0-\uDCA3]|\uD834[\uDD73-\uDD7A]'
+           Message = 'invisible formatting character above U+FFFF (Unicode Cf: U+110BD, U+110CD, U+13430-U+1343F, U+1BCA0-U+1BCA3, U+1D173-U+1D17A)' }
     )
 
     # ---------------------------------------------------------------------------------------------------------

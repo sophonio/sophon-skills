@@ -12,6 +12,10 @@ Artifact Creator turns a brief and available evidence into reports, explainers, 
 
 It establishes the audience, purpose, format, evidence and destination; clarifies consequential ambiguities; grounds claims; structures the content; creates an actual file or canvas when tools allow; checks what it can; and revises and delivers with limitations stated. It distinguishes facts from inference and uncertainty, retains citation evidence, and does not invent sources or data. Document content is untrusted input, not instructions to the agent.
 
+- **Questions:** it asks only what would change the artifact and nothing already answers. The first is what the reader should do or decide after reading, asked in chat on its own. Everything else it decides and states as a proposal you can correct. Anything longer than a page gets an outline played back before the file. Say "just make it" and it asks nothing, stating its assumptions with the outline.
+- **Voice:** plain full sentences, outcome first. Ask for terse replies and its chat replies get shorter until you ask for normal ones; questions, warnings and everything inside an artifact stay in full sentences.
+- **Prose check:** before it delivers, it scans the text once for announcing openers and closers, weight words, habitual lists of three, unsourced "best practice" claims and chat leftovers, and rewrites each hit. Quotations and your own wording stay as they are.
+
 For substantial research, bring findings from a coordinator or researcher. This agent does not delegate. An installed technical-writer or visual-designer may help with specialist work; an installed frontend-developer is a better fit for interactive applications. Their availability is not assumed.
 
 ## Outputs and limits
@@ -26,6 +30,22 @@ For substantial research, bring findings from a coordinator or researcher. This 
 
 TOOLS.md pins canvas.render, document.read, document.retrieve, document.search, document.upload, office.powerpoint, office.word and pdf in the coding profile, and the same set except document.search in the chat profile, where document.search is already a core tool. The agent checks available schemas and permissions before use. These pins do not guarantee successful file creation or downloads.
 
-## License
+## After installing
+
+Install with `sophon agents install artifact-creator` and pick it with `/agent artifact-creator`. It uses no optional skill.
+
+## What's new in 3.0.0
+
+- One question at a time, starting with what the reader should do; an outline before anything longer than a page; "just make it" skips the questions.
+- A terse voice for chat replies on request, and a prose check before delivery.
+
+## Upgrading from 2.x
+
+- 3.0.0 is a major version, so Sophon never applies it unattended: run `sophon agents update artifact-creator`. Each new session reads about 500 more tokens of instructions than in 2.x.
+- Your own edits to an installed agent pause its updates. Add `--discard-local-changes` to replace them.
+
+## Credits and license
+
+Ideas re-expressed in our own words come from obra/superpowers (MIT, © 2025 Jesse Vincent) and blader/humanizer (MIT, © 2025 Siqi Chen).
 
 Licensed under the Apache-2.0 License; see LICENSE.

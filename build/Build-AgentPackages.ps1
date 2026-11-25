@@ -4,13 +4,15 @@
 .SYNOPSIS
     Validates and builds the Buildersoft agent families (agents/<id>) with Sophon's agent-package CLI.
 .DESCRIPTION
-    Order (docs/plans/2026-11-15-agents-v2-design.md section 7.4):
+    Order (docs/plans/2026-11-15-agents-v2-design.md section 7.4; the -Release switch:
+    docs/plans/2026-11-23-agents-v3-design.md, "Static checks"):
       1. Load every family in build/agent-src/families.psd1 (or the single build/agent-src/family.psd1 when
          there is no registry). The roster is the union of the family rosters; an id in two families fails.
          The agents/ folders must equal the roster ids exactly, and every -Agents entry must be a roster id.
       2. 'sophon' must be on PATH and 'sophon --version' must match the SophonCli pattern of every family
          being built. The CLI version and 'git rev-parse --short HEAD' are printed.
-      3. build/Compose-AgentSouls.ps1 -Check (every SOUL.md must equal its composed text).
+      3. build/Compose-AgentSouls.ps1 -Check (every SOUL.md, and every generated README.md, must equal its composed
+         text).
       4. build/Test-AgentSources.ps1 (-Agents <selection> on a subset build).
       5. 'sophon dev validate <dir> --json' per selected agent. Any error and ANY warning fails the build.
       6. -ValidateOnly stops here.
@@ -32,6 +34,9 @@
 .PARAMETER Family
     Build only this family (a registry Id). Its agents must have folders; folders of other families are
     checked by a build without -Family. A build of fewer families than the registry lists is a subset build.
+.PARAMETER Release
+    Release build (alias -StrictHeadroom): passes -Release to Test-AgentSources.ps1, so its release-gated findings
+    (BUDGET-HEADROOM under 5% free, a missing RoleCap) fail the build instead of warning.
 .EXAMPLE
     pwsh -NoProfile -File build/Build-AgentPackages.ps1 -ValidateOnly
 .EXAMPLE
@@ -47,7 +52,8 @@ param(
     [string]$OutputDir = '',
     [string[]]$Agents = @(),
     [switch]$ValidateOnly,
-    [string]$Family = ''
+    [string]$Family = '',
+    [Alias('StrictHeadroom')][switch]$Release
 )
 
 Set-StrictMode -Version Latest
@@ -230,15 +236,16 @@ try {
     $compose = Invoke-Native $pwsh $composeArgs
     if ($compose.Code -ne 0) {
         foreach ($line in $compose.Lines) { Write-Host "  | $line" }
-        throw "SOUL drift — run the composer (pwsh -File build/Compose-AgentSouls.ps1); Compose-AgentSouls.ps1 -Check exited $($compose.Code)."
+        throw "SOUL or README drift — run the composer (pwsh -File build/Compose-AgentSouls.ps1); Compose-AgentSouls.ps1 -Check exited $($compose.Code)."
     }
-    Write-Host "Compose-AgentSouls -Check: ok ($(@($compose.Lines | Where-Object { $_ -clike 'ok *' }).Count) SOUL file(s) match)"
+    Write-Host "Compose-AgentSouls -Check: ok ($(@($compose.Lines | Where-Object { $_ -clike 'ok *' }).Count) SOUL and README file(s) match)"
 
     # 4. Source checks. ------------------------------------------------------------------------------------
     $sources = Get-RepoScript 'Test-AgentSources.ps1'
     $sourceArgs = @('-NoProfile', '-NonInteractive', '-File', $sources, '-RepoRoot', $RepoRoot)
     if ($Family) { $sourceArgs += @('-Family', $Family) }
     if ($selectionSubset) { $sourceArgs += @('-Agents', ($selected -join ',')) }
+    if ($Release) { $sourceArgs += '-Release' }
     $sourceRun = Invoke-Native $pwsh $sourceArgs
     if ($sourceRun.Code -ne 0) {
         foreach ($line in $sourceRun.Lines) { Write-Host "  | $line" }

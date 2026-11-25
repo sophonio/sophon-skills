@@ -1,0 +1,65 @@
+diff --git a/src/main.js b/src/main.js
+index 958ecdb..f40d377 100644
+--- a/src/main.js
++++ b/src/main.js
+@@ -15,6 +15,7 @@ export function renderPage(path, params) {
+ <meta charset="utf-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1">
+ <title>${title} - plainboard</title>
++<link rel="stylesheet" href="/src/styles/app.css">
+ </head>
+ <body>
+ ${Header({ current: path })}
+diff --git a/src/styles/app.css b/src/styles/app.css
+new file mode 100644
+index 0000000..49347e3
+--- /dev/null
++++ b/src/styles/app.css
+@@ -0,0 +1,47 @@
++body {
++  margin: 0;
++  font: 15px/1.5 Georgia, "Times New Roman", serif;
++  color: #2b2118;
++  background: #fbf7f0;
++}
++
++header {
++  display: flex;
++  gap: 24px;
++  align-items: center;
++  padding: 12px 24px;
++  border-bottom: 2px solid #2b2118;
++}
++
++header ul {
++  display: flex;
++  gap: 16px;
++  margin: 0;
++  padding: 0;
++  list-style: none;
++}
++
++a {
++  color: #8a3b12;
++}
++
++main {
++  max-width: 880px;
++  margin: 0 auto;
++  padding: 24px;
++}
++
++article {
++  padding: 16px;
++  margin-bottom: 16px;
++  border: 1px solid #d8cbb8;
++  background: #fffdf9;
++}
++
++button {
++  padding: 8px 16px;
++  border: 0;
++  color: #fffdf9;
++  background: #8a3b12;
++  font: inherit;
++}

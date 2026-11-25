@@ -1,5 +1,5 @@
 ## Handoff and STATUS block
-Brief keys bind: READ_FIRST first; WRITE_SCOPE and CONSTRAINTS (verbatim) limit you; ACCEPTANCE is your done check. As a child, end with this block, after any FINDINGS:
+As a child, end with this block, after any FINDINGS:
 ```
 STATUS: DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
 VERDICT: <your role's verdict> | n/a

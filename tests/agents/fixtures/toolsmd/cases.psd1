@@ -1,4 +1,5 @@
-# TOOLS.md fixtures (design section 7.5 G), run by Invoke-AgentLintFixtures in build/AgentLint.psm1.
+# TOOLS.md fixtures (docs/plans/2026-11-15-agents-v2-design.md section 7.5 G), run by Invoke-AgentLintFixtures in
+# build/AgentLint.psm1.
 # Each case is parsed with Read-ToolsMd (strict grammar plus agreement with the AgentToolPins.Parse port) and
 # checked with Test-ToolsMdPins. Lines are joined with LF and end with one LF.
 @{
@@ -37,6 +38,8 @@
            Lines = @('---', 'profiles:', '  coding.subagent:', '    pins:', '      - fs.edit', '---', 'Edit tools are never pinned.', '') }
         @{ Name = 'restricted pin'; Expect = 'fail'; Rule = 'TOOLS-PIN-RESTRICTED'
            Lines = @('---', 'profiles:', '  coding:', '    pins:', '      - code.test', '---', 'code.test cannot see the project.', '') }
+        @{ Name = 'pin of a tool Sophon v3 removes'; Expect = 'fail'; Rule = 'TOOLS-PIN-V3'
+           Lines = @('---', 'profiles:', '  coding.subagent:', '    pins:', '      - memory.graph', '---', 'Child notes.', '') }
         @{ Name = 'denied pin'; Expect = 'fail'; Rule = 'TOOLS-PIN-DENIED'
            Lines = @('---', 'pins:', '  - web.fetch', '---', 'There is no such tool.', '') }
         @{ Name = 'unknown pin'; Expect = 'fail'; Rule = 'TOOLS-PIN-UNKNOWN'

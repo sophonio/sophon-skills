@@ -1,0 +1,9 @@
+{"type":"session.started","v":1,"sessionId":"s1","ts":"2026-11-24T10:00:00Z","agentId":"developer","permissionMode":"default"}
+{"type":"turn.started","v":1,"sessionId":"s1","ts":"2026-11-24T10:00:01Z","taskId":"t1"}
+{"type":"tool.started","v":1,"sessionId":"s1","ts":"2026-11-24T10:00:02Z","toolCallId":"c1","toolName":"fs.read","rootSessionId":"s1","agentKind":"agent","argsPreview":"{\"path\":\"reportkit/slug.py\"}"}
+{"type":"tool.completed","v":1,"sessionId":"s1","ts":"2026-11-24T10:00:03Z","toolCallId":"c1","toolName":"fs.read","rootSessionId":"s1","agentKind":"agent","outcome":"success"}
+{"type":"tool.started","v":1,"sessionId":"s1","ts":"2026-11-24T10:00:04Z","toolCallId":"c2","toolName":"fs.read","rootSessionId":"s1","agentKind":"agent","argsPreview":"{\"path\":\"tests/test_slug.py\"}"}
+{"type":"tool.started","v":1,"sessionId":"s1","ts":"2026-11-24T10:00:05Z","toolCallId":"c3","toolName":"fs.edit","rootSessionId":"s1","agentKind":"agent","argsPreview":"{\"path\":\"tests/test_slug.py\",\"old_string\":\"if __name__\",\"new_string\":\"    def test_collapses_spaces(self):\\n        self.assertEqual(slugify(\\\"Hello  World\\\"), \\\"hello-world\\\")\\n\"}"}
+{"type":"approval.requested","v":1,"sessionId":"s1","ts":"2026-11-24T10:00:05Z","approvalId":"a1","toolCallId":"c3","toolName":"fs.edit","risk":"medium","summary":"Edit tests/test_slug.py"}
+{"type":"message.completed","v":1,"sessionId":"s1","ts":"2026-11-24T10:00:06Z","taskId":"t1","text":"The failing test comes first: it pins slugify(\"Hello  World\") to \"hello-world\"."}
+{"type":"result","v":1,"sessionId":"s1","ts":"2026-11-24T10:00:07Z","status":"stopped","exitCode":2,"text":"The failing test comes first: it pins slugify(\"Hello  World\") to \"hello-world\".","turns":1,"toolCalls":3,"denied":{"approvals":1,"questions":0},"usage":{"inputTokens":9000,"outputTokens":200,"costUsd":0.03}}

@@ -5,29 +5,56 @@
     Source checks for the agent packages in agents/: layout, SOUL composition, tool-name lint, scanner
     preflight, budgets, manifests, TOOLS.md, attribution and credits. Needs no Sophon CLI.
 .DESCRIPTION
-    Sections (docs/plans/2026-11-15-agents-v2-design.md section 7.5), run per agent family:
+    Sections (docs/plans/2026-11-23-agents-v3-design.md, "Static checks", which extends docs/plans/2026-11-15-agents-v2-design.md section 7.5),
+    run per agent family:
       A  roster and layout       roster agents have folders; exactly 5 files each; strict UTF-8, no BOM, CR,
                                  NUL, tabs or hidden characters; one trailing LF; size limits; LICENSE copy
-      B  composer                build/Compose-AgentSouls.ps1 -Check in a child pwsh
-      C  tool-name lint          SOUL.md, TOOLS.md, README.md, manifest displayName/description/whenToUse
-      D  preflight               the same texts through the scanner replay; every fragment <= 4,096 B and
+      B  composer                build/Compose-AgentSouls.ps1 -Check in a child pwsh (SOULs, and the READMEs of a
+                                 family with a readmes/ folder)
+      C  tool-name lint          SOUL.md, TOOLS.md, README.md, manifest displayName/description/whenToUse;
+                                 LINT-SKILL-FRAGMENT (an agent includes a skill's reference Fragment exactly when
+                                 it uses that skill) and LINT-SKILL-UNUSED (a SkillPolicy skill no agent uses)
+      D  preflight               the same texts through the scanner replay; every fragment <= 4,096 B (or its
+                                 FragmentCaps limit; BUDGET-FRAGMENT) and
                                  starts with its only "## " heading
       E  budgets                 SOUL <= SoulCap, TOOLS.md <= 2,048 B, README <= ReadmeCaps (default 12 KiB,
-                                 lead 24 KiB); prints the headroom table
+                                 lead 24 KiB); BUDGET-HEADROOM (a warning under 8% free; under 5% free an error
+                                 with -Release, else a warning); BUDGET-ROLE (role text <= the optional RoleCap;
+                                 with -Release, every agent needs one once the family sets any); prints the
+                                 headroom table with free bytes and percent, role bytes and the change against
+                                 build/agent-src/catalog/soul-baseline.psd1
       F  manifest                the family contract (keys, lengths, marker, subAgents, requires) and
                                  MAN-SKILL-VERSION (every SkillPolicy skill exists at its MinVersion or later)
+                                 and prints each whenToUse length against the 950-character limit
       G  TOOLS.md                strict grammar, runtime-parser agreement, pin rules
       H  attribution             exact trailer and footer bytes; present in every agent that includes a
                                  fragment using {{= CommitTrailer}} or {{= PrFooter}}, absent otherwise
       I  credits                 family Credits strings and the family CreditsSentence in each README
+      M  method registry         only when its data exists: METHOD-CONTROLLER and METHOD-EXCUSES (the family key
+                                 Method), METHOD-REFERENCE (a SkillPolicy skill with a Fragment); findings at the
+                                 source line, once (Test-AgentMethod in build/AgentFamily.psm1); with
+                                 tests/agents/fixtures/anchors/<family>.psd1, ANCHOR-MISSING (a listed string is
+                                 absent from a composed SOUL or README) and ANCHOR-GONE (a Gone string is still
+                                 present once FamilyVersion reaches its Since, unless it is still Pending a
+                                 milestone; under -Release a remaining Pending is an error) (Test-AgentAnchors); LINT-TOPIC
+                                 (topic pointers against a SkillPolicy skill's TopicIndex and topics.lock.json; an
+                                 agent without the skill carries none; under -Release every skill user names a
+                                 topic and each topic's users equal its usedBy, else one note each)
+
+    The repository pass (no -Family, no -Agents) also runs
+      N  documents               DOC-COUNT: a number of 10 or more before "agents", "packages" or "companions" in
+                                 the documents of build/agent-src/catalog/doc-counts.psd1 must be a roster count
+                                 (all packages, a family roster, a RosterOrder table, the lead's companions) or an
+                                 allowed value; a warning, an error with -Release
 
     Families come from build/agent-src/families.psd1. Without -Family this script checks that the agents/
     folders equal the union of every family roster (an id belongs to one family), then runs itself once per
     family (-Family <id>) and fails when any family fails. Without a registry it checks the single family in
     build/agent-src/family.psd1, folders == roster included.
 
-    Every issue prints as "ERROR <rule> <path>:<line>: <message>". Exit code 1 on any error, else 0.
-    Pure cross-platform PowerShell 7; runs on Linux CI.
+    Every issue prints as "ERROR <rule> <path>:<line>: <message>". A warning prints as
+    "WARN <rule> <path>:<line>: <message>", is counted in the summary and never changes the exit code.
+    Exit code 1 on any error, else 0. Pure cross-platform PowerShell 7; runs on Linux CI.
 .PARAMETER RepoRoot
     Repository root. Defaults to the parent of this script.
 .PARAMETER Agents
@@ -35,6 +62,11 @@
     without -Agents.
 .PARAMETER Family
     Check one family (a registry Id). The agents/-equals-union check runs only without -Family.
+.PARAMETER Release
+    The release switch (alias -StrictHeadroom): the release-gated findings become errors. Today these are
+    BUDGET-HEADROOM under 5% free, BUDGET-ROLE for an agent without a RoleCap in a family that sets them, and
+    DOC-COUNT.
+    Build-AgentPackages.ps1 -Release passes it through.
 .EXAMPLE
     pwsh -NoProfile -File build/Test-AgentSources.ps1
 .EXAMPLE
@@ -46,7 +78,8 @@
 param(
     [string]$RepoRoot = (Join-Path $PSScriptRoot '..'),
     [string[]]$Agents = @(),
-    [string]$Family = ''
+    [string]$Family = '',
+    [Alias('StrictHeadroom')][switch]$Release
 )
 
 Set-StrictMode -Version Latest
@@ -57,13 +90,16 @@ Import-Module (Join-Path $PSScriptRoot 'AgentLint.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'AgentFamily.psm1') -Force
 
 $script:Errors = [System.Collections.Generic.List[object]]::new()
+$script:Warnings = [System.Collections.Generic.List[object]]::new()
 $script:SectionCounts = [ordered]@{}
+$script:SectionWarnings = @{}
 $script:Section = ''
 
 function Enter-Section {
     param([string]$Id, [string]$Title)
     $script:Section = $Id
     $script:SectionCounts[$Id] = 0
+    $script:SectionWarnings[$Id] = 0
     Write-Host ''
     Write-Host "== $Id. $Title"
 }
@@ -73,6 +109,20 @@ function Add-SourceError {
     $script:Errors.Add([pscustomobject]@{ Section = $script:Section; Rule = $Rule; Path = $Path; Line = $Line; Message = $Message })
     $script:SectionCounts[$script:Section]++
     Write-Host "ERROR $Rule ${Path}:${Line}: $Message"
+}
+
+function Add-SourceWarning {
+    # A warning is counted in the summary and never changes the exit code.
+    param([string]$Rule, [string]$Path, [int]$Line, [string]$Message)
+    $script:Warnings.Add([pscustomobject]@{ Section = $script:Section; Rule = $Rule; Path = $Path; Line = $Line; Message = $Message })
+    $script:SectionWarnings[$script:Section]++
+    Write-Host "WARN $Rule ${Path}:${Line}: $Message"
+}
+
+function Add-SourceFinding {
+    # An error under -Release, a warning otherwise (the release-gated checks, such as BUDGET-HEADROOM below 5%).
+    param([string]$Rule, [string]$Path, [int]$Line, [string]$Message)
+    if ($Release) { Add-SourceError $Rule $Path $Line $Message } else { Add-SourceWarning $Rule $Path $Line $Message }
 }
 
 function Add-Issues {
@@ -146,6 +196,17 @@ if (-not $Family -and -not $registry['Legacy']) {
         }
     }
 
+    # N. DOC-COUNT: counts in prose must equal a roster count (one value spans both families, so this runs here).
+    # A warning until the release switch makes it an error.
+    if ($requested.Count -eq 0) {
+        Enter-Section 'N' 'Documents'
+        $docCounts = Test-AgentDocCounts -RepoRoot $RepoRoot -Union $union
+        foreach ($e in @($docCounts['Errors'])) { Add-SourceError 'DOC-COUNT' $e['Path'] $e['Line'] $e['Message'] }
+        foreach ($f in @($docCounts['Findings'])) { Add-SourceFinding 'DOC-COUNT' $f['Path'] $f['Line'] $f['Message'] }
+        $accepted = @($docCounts['Values'].Keys) -join ', '
+        Write-Host "  $(@($docCounts['Documents']).Count) document(s) checked; accepted counts: $accepted"
+    }
+
     $pwsh = [Environment]::ProcessPath
     if (-not $pwsh -or [IO.Path]::GetFileNameWithoutExtension($pwsh) -ne 'pwsh') { $pwsh = 'pwsh' }
     $results = [System.Collections.Generic.List[object]]::new()
@@ -154,6 +215,7 @@ if (-not $Family -and -not $registry['Legacy']) {
     foreach ($loaded in @($union['Families'])) {
         $id = [string]$loaded['Id']
         $childArgs = @('-NoProfile', '-NonInteractive', '-File', $PSCommandPath, '-RepoRoot', $RepoRoot, '-Family', $id)
+        if ($Release) { $childArgs += '-Release' }
         if ($requested.Count -gt 0) {
             if (-not $byFamily.ContainsKey($id)) { continue }
             $childArgs += @('-Agents', ($byFamily[$id] -join ','))
@@ -176,14 +238,15 @@ if (-not $Family -and -not $registry['Legacy']) {
         }
         foreach ($line in $output) { Write-Host $line }
         $childErrors += @($output | Where-Object { $_ -clike 'ERROR *' }).Count
-        $results.Add([pscustomobject]@{ Id = $id; Code = $code })
+        $childWarnings = @($output | Where-Object { $_ -clike 'WARN *' }).Count
+        $results.Add([pscustomobject]@{ Id = $id; Code = $code; Warnings = $childWarnings })
     }
 
     Write-Host ''
     Write-Host '== Summary'
-    Write-Host ('  roster union  {0} error(s)' -f $script:Errors.Count)
+    Write-Host ('  repository (roster union, documents)  {0} error(s), {1} warning(s)' -f $script:Errors.Count, $script:Warnings.Count)
     foreach ($result in $results) {
-        Write-Host ('  family {0}  {1}' -f $result.Id, $(if ($result.Code -eq 0) { 'OK' } else { "FAILED (exit $($result.Code))" }))
+        Write-Host ('  family {0}  {1}, {2} warning(s)' -f $result.Id, $(if ($result.Code -eq 0) { 'OK' } else { "FAILED (exit $($result.Code))" }), $result.Warnings)
     }
     $failed = @($results | Where-Object { $_.Code -ne 0 } | ForEach-Object { $_.Id })
     if ($script:Errors.Count -gt 0 -or $failed.Count -gt 0) {
@@ -378,8 +441,18 @@ if ($requested.Count -gt 0 -and $selected.Count -eq 0) {
     }
     foreach ($line in @($output)) { Write-Host "  | $line" }
     if ($code -ne 0) {
-        Add-SourceError 'COMPOSE-CHECK' 'build/Compose-AgentSouls.ps1' 0 "-Check exited $code (SOUL drift or a source error; run pwsh -File build/Compose-AgentSouls.ps1)"
+        Add-SourceError 'COMPOSE-CHECK' 'build/Compose-AgentSouls.ps1' 0 "-Check exited $code (SOUL or README drift, or a source error; run pwsh -File build/Compose-AgentSouls.ps1)"
     }
+}
+
+# The composed sources, once (E reads the role bytes, H the include lists, M the line maps). Composer errors
+# are section B's; here a failed compose only leaves an agent out of those checks.
+$composedById = @{}
+try {
+    $familyCompose = Invoke-AgentFamilyCompose -RepoRoot $RepoRoot -Agents ([string[]]$selected.ToArray()) -Family $fam
+    foreach ($result in @($familyCompose['Results'])) { $composedById[[string]$result['Id']] = $result }
+} catch {
+    Write-Host "note: composing the family in-process failed ($($_.Exception.Message)); E, H and M use what they can"
 }
 
 # Shared inputs for C-G.
@@ -387,11 +460,23 @@ $catalog = Get-AgentCatalog -RepoRoot $RepoRoot
 foreach ($warning in $catalog.Warnings) { Write-Host "note: $warning" }
 $rules = Get-ScanRules -RepoRoot $RepoRoot
 $allowedHosts = [string[]]@(Get-AgentField $fam 'AllowedHosts' @())
-# Skill tools are named and pinned only by a family whose SkillPolicy lists their skill; restricted names in
-# AllowRestrictedMentions may be named un-negated (never pinned).
-$allowedSkillTools = Get-AgentAllowedSkillTools -Family $fam -Catalog $catalog
+# Skill tools are named and pinned only by an agent whose family SkillPolicy lists their skill and whose own Skills key (absent =
+# every policy skill, @() = none) keeps it; restricted names in AllowRestrictedMentions may be named un-negated (never pinned).
+$allowedSkillToolsById = @{}
+foreach ($id in $selected) { $allowedSkillToolsById[$id] = [string[]](Get-AgentAllowedSkillTools -Family $fam -Catalog $catalog -AgentId $id) }
 $allowRestricted = [string[]]@(@(Get-AgentField $fam 'AllowRestrictedMentions' @()) | Where-Object { $_ -is [string] })
 $skillPolicy = Get-AgentSkillPolicy $fam
+# Skill use (Test-AgentSkillUse): LINT-SKILL-FRAGMENT and LINT-SKILL-UNUSED are reported in C, LINT-TOPIC in M. A
+# policy skill's TopicIndex (and the topics.lock.json beside it) is read once.
+$topicIndexes = @{}
+foreach ($policySkill in @(Get-AgentField (Get-AgentField $fam 'SkillPolicy') 'Skills' @())) {
+    $topicIndexRel = Get-AgentField $policySkill 'TopicIndex'
+    if ($topicIndexRel -is [string] -and (Test-Path -LiteralPath (Join-Path $RepoRoot $topicIndexRel) -PathType Leaf)) {
+        $topicIndexes[[string](Get-AgentField $policySkill 'Name')] = Read-AgentTopicIndex -RepoRoot $RepoRoot -RelativePath $topicIndexRel
+    }
+}
+$skillUseResults = @(foreach ($id in $selected) { if ($composedById.ContainsKey($id)) { $composedById[$id] } })
+$skillUse = @(Test-AgentSkillUse -Family $fam -Results $skillUseResults -TopicIndexes $topicIndexes -FullRoster ($requested.Count -eq 0) -Release ([bool]$Release) -FamilyPath $familyRel -RepoRoot $RepoRoot)
 
 # Manifest texts per agent: parsed object, raw text, and the scanned fields with their manifest.json lines.
 $manifests = @{}
@@ -423,6 +508,7 @@ Enter-Section 'C' 'Tool-name lint'
 # =============================================================================================================
 
 foreach ($id in $selected) {
+    $allowedSkillTools = $allowedSkillToolsById[$id]
     foreach ($pair in @(@('SOUL.md', 'soul'), @('TOOLS.md', 'tools'), @('README.md', 'readme'))) {
         $text = $texts[$id][$pair[0]]
         if ($null -eq $text) { continue }
@@ -434,6 +520,8 @@ foreach ($id in $selected) {
         }
     }
 }
+
+foreach ($issue in @($skillUse | Where-Object { $_['Rule'] -ne 'LINT-TOPIC' })) { Add-SourceError $issue['Rule'] $issue['Path'] $issue['Line'] $issue['Message'] }
 
 # =============================================================================================================
 Enter-Section 'D' 'Preflight (scanner replay)'
@@ -456,11 +544,24 @@ foreach ($id in $selected) {
 }
 
 $fragmentDir = Join-Path $RepoRoot $familyContext['FragmentsRelDir']
+# FragmentCaps (optional family key): a lower limit per fragment id; the shape is checked with the family data.
+$fragmentCaps = Get-AgentField $fam 'FragmentCaps'
 if (Test-Path -LiteralPath $fragmentDir -PathType Container) {
-    foreach ($fragment in @(Get-ChildItem -LiteralPath $fragmentDir -File -Filter '*.md' | Sort-Object Name)) {
+    $fragmentFiles = @(Get-ChildItem -LiteralPath $fragmentDir -File -Filter '*.md' | Sort-Object Name)
+    if ($fragmentCaps -is [hashtable]) {
+        foreach ($capId in @($fragmentCaps.Keys | Sort-Object)) {
+            if (@($fragmentFiles | Where-Object { [string]::Equals($_.BaseName, [string]$capId, $ord) }).Count -eq 0) {
+                Add-SourceError 'BUDGET-FRAGMENT' $familyRel (Get-AgentFamilyLine -RepoRoot $RepoRoot -Key 'FragmentCaps') "FragmentCaps names '$capId', which is not a fragment in $($familyContext['FragmentsRelDir'])"
+            }
+        }
+    }
+    foreach ($fragment in $fragmentFiles) {
         $fragRel = Get-RelPath $fragment.FullName
-        if ($fragment.Length -gt 4096) {
-            Add-SourceError 'BUDGET-FRAGMENT' $fragRel 0 "$($fragment.Length) bytes; a fragment is at most 4,096"
+        $fragCap = 4096
+        if ($fragmentCaps -is [hashtable] -and $fragmentCaps[$fragment.BaseName] -is [int]) { $fragCap = [int]$fragmentCaps[$fragment.BaseName] }
+        if ($fragment.Length -gt $fragCap) {
+            $why = if ($fragCap -lt 4096) { "its FragmentCaps limit is $($fragCap.ToString('N0', [Globalization.CultureInfo]::InvariantCulture))" } else { 'a fragment is at most 4,096' }
+            Add-SourceError 'BUDGET-FRAGMENT' $fragRel 0 "$($fragment.Length) bytes; $why"
         }
         # Family contract: a fragment starts with exactly one "## <Heading>" line and holds no other heading
         # outside code fences, so each fragment is one section of the composed SOUL.
@@ -489,14 +590,35 @@ $readmeCaps = Get-AgentField $fam 'ReadmeCaps'
 $readmeCapLead = [int](Get-AgentField $readmeCaps 'Lead' 24576)
 $readmeCapOther = [int](Get-AgentField $readmeCaps 'Other' 12288)
 $budgetRows = [System.Collections.Generic.List[object]]::new()
+# RoleCap: optional per agent. Once any agent of the family sets one, -Release requires it of every agent.
+$roleCapsSet = @($familyAgents | Where-Object { $null -ne (Get-AgentField $_ 'RoleCap') }).Count -gt 0
+$baseline = Get-AgentSoulBaseline -RepoRoot $RepoRoot
+foreach ($e in @($baseline['Errors'])) { Add-SourceError 'BUDGET-BASELINE' $e['Path'] $e['Line'] $e['Message'] }
 foreach ($id in $selected) {
     $entry = $agentById[$id]
     $cap = [int](Get-AgentField $entry 'SoulCap' 0)
+    $composedEntry = if ($composedById.ContainsKey($id)) { $composedById[$id] } else { $null }
+    $roleBytes = if ($null -ne $composedEntry) { [int]$composedEntry['RoleBytes'] } else { -1 }
+    $roleCap = [int](Get-AgentField $entry 'RoleCap' 0)
+    $templateRel = Get-AgentTemplatePath -RepoRoot $RepoRoot -Id $id
+    if ($roleCap -gt 0 -and $roleBytes -gt $roleCap) {
+        Add-SourceError 'BUDGET-ROLE' $templateRel 0 "role text is $roleBytes bytes (template without include and comment lines); RoleCap $roleCap (over by $($roleBytes - $roleCap))"
+    } elseif ($roleCap -le 0 -and $roleCapsSet -and $Release) {
+        Add-SourceError 'BUDGET-ROLE' $familyRel (Get-AgentFamilyLine -RepoRoot $RepoRoot -AgentId $id) "agent '$id' has no RoleCap, and the family sets role caps (required under -Release)"
+    }
     if ($bytes[$id].ContainsKey('SOUL.md')) {
         $size = $bytes[$id]['SOUL.md'].Length
+        $budget = Get-AgentSoulBudget -Bytes $size -Cap $cap
         if ($cap -le 0) { Add-SourceError 'BUDGET-SOUL' $familyRel 1 "agent '$id' has no SoulCap" }
         elseif ($size -gt $cap) { Add-SourceError 'BUDGET-SOUL' "agents/$id/SOUL.md" 0 "$size bytes; cap $cap (over by $($size - $cap))" }
-        $budgetRows.Add([pscustomobject]@{ Id = $id; Bytes = $size; Cap = $cap })
+        elseif ($budget['Headroom'] -eq 'fail') {
+            Add-SourceFinding 'BUDGET-HEADROOM' "agents/$id/SOUL.md" 0 ("$size bytes; cap $cap leaves $($budget['Free']) bytes free ({0:0.00}%), under the 5% floor" -f $budget['FreePercent'])
+        } elseif ($budget['Headroom'] -eq 'warn') {
+            Add-SourceWarning 'BUDGET-HEADROOM' "agents/$id/SOUL.md" 0 ("$size bytes; cap $cap leaves $($budget['Free']) bytes free ({0:0.00}%), under 8%" -f $budget['FreePercent'])
+        }
+        $base = 0
+        $hasBase = $baseline['Souls'].TryGetValue($id, [ref]$base)
+        $budgetRows.Add([pscustomobject]@{ Id = $id; Bytes = $size; Cap = $cap; Free = $budget['Free']; FreePercent = $budget['FreePercent']; Role = $roleBytes; RoleCap = $roleCap; Base = $(if ($hasBase) { $base } else { $null }) })
     }
     if ($bytes[$id].ContainsKey('TOOLS.md') -and $bytes[$id]['TOOLS.md'].Length -gt 2048) {
         Add-SourceError 'BUDGET-TOOLS' "agents/$id/TOOLS.md" 0 "$($bytes[$id]['TOOLS.md'].Length) bytes; at most 2,048"
@@ -507,12 +629,30 @@ foreach ($id in $selected) {
     }
 }
 if ($budgetRows.Count -gt 0) {
-    Write-Host ('  {0,-20} {1,8} {2,8} {3,7} {4,10}' -f 'agent', 'bytes', 'cap', 'used', '~tokens')
+    $inv = [Globalization.CultureInfo]::InvariantCulture
+    $tableFormat = '  {0,-24} {1,8} {2,8} {3,8} {4,7} {5,7} {6,7} {7,9} {8,8}'
+    Write-Host ($tableFormat -f 'agent', 'bytes', 'cap', 'free', 'free%', 'role', 'rolecap', "vs $(if ($baseline['Tag']) { 'base' } else { 'n/a' })", '~tokens')
+    $sumBytes = 0
+    $sumGrowth = 0
+    $withBase = 0
     foreach ($row in $budgetRows) {
-        $pct = if ($row.Cap -gt 0) { '{0:0.0}%' -f (100.0 * $row.Bytes / $row.Cap) } else { 'n/a' }
-        Write-Host ('  {0,-20} {1,8:N0} {2,8:N0} {3,7} {4,10:N0}' -f $row.Id, $row.Bytes, $row.Cap, $pct, [Math]::Round($row.Bytes / 3.8))
+        $freePct = if ($row.Cap -gt 0) { $row.FreePercent.ToString('0.00', $inv) + '%' } else { 'n/a' }
+        $role = if ($row.Role -ge 0) { $row.Role.ToString('N0', $inv) } else { '?' }
+        $roleCapText = if ($row.RoleCap -gt 0) { $row.RoleCap.ToString('N0', $inv) } else { '-' }
+        $delta = '-'
+        if ($null -ne $row.Base) {
+            $growth = $row.Bytes - $row.Base
+            $delta = $(if ($growth -ge 0) { '+' } else { '' }) + $growth.ToString('N0', $inv)
+            $sumGrowth += $growth
+            $withBase++
+        }
+        $sumBytes += $row.Bytes
+        Write-Host ($tableFormat -f $row.Id, $row.Bytes.ToString('N0', $inv), $row.Cap.ToString('N0', $inv), $row.Free.ToString('N0', $inv), $freePct, $role, $roleCapText, $delta, ([Math]::Round($row.Bytes / 3.8)).ToString('N0', $inv))
     }
-    Write-Host '  ~tokens = bytes/3.8, an estimate. Body of TOOLS.md (at most 5 lines) is checked in G.'
+    $growthText = if ($withBase -gt 0) { "$(if ($sumGrowth -ge 0) { '+' } else { '' })$($sumGrowth.ToString('N0', $inv)) bytes against $($baseline['Tag']) over $withBase agent(s)" } else { 'no baseline' }
+    Write-Host ("  family total: {0} bytes in {1} SOUL(s), {2}" -f $sumBytes.ToString('N0', $inv), $budgetRows.Count, $growthText)
+    Write-Host '  role = template bytes without include and comment lines; ~tokens = bytes/3.8, an estimate.'
+    Write-Host '  BUDGET-HEADROOM warns under 8% free and, under -Release, fails under 5%. Body of TOOLS.md (at most 5 lines) is checked in G.'
 }
 
 # =============================================================================================================
@@ -530,6 +670,13 @@ foreach ($id in $selected) {
     $tools = if ($toolsParsed.ContainsKey($id)) { $toolsParsed[$id] } else { $null }
     Add-Issues (Test-AgentManifest -Manifest $m.Parsed -Raw $m.Raw -Id $id -Family $fam -ToolsMd $tools -Path "agents/$id/manifest.json" -Catalog $catalog)
 }
+# The whenToUse lengths against the MAN-AGENT limit of 950 characters, so the room is visible.
+$whenLengths = @(foreach ($id in $selected) {
+        if (-not $manifests.ContainsKey($id)) { continue }
+        $when = Get-AgentField (Get-AgentField $manifests[$id].Parsed 'agent') 'whenToUse'
+        if ($when -is [string]) { '{0} {1}' -f $id, $when.Length }
+    })
+if ($whenLengths.Count -gt 0) { Write-Host "  whenToUse characters (at most 950): $($whenLengths -join ', ')" }
 
 # MAN-SKILL-VERSION: every SkillPolicy skill is in skills/ at its MinVersion or later.
 foreach ($skill in $skillPolicy.Skills) {
@@ -564,7 +711,7 @@ foreach ($id in $selected) {
     if (-not $toolsParsed.ContainsKey($id)) { continue }
     $parsed = $toolsParsed[$id]
     Add-Issues $parsed.Issues
-    Add-Issues (Test-ToolsMdPins -ToolsMd $parsed -Path "agents/$id/TOOLS.md" -Catalog $catalog -AllowedSkillTools $allowedSkillTools)
+    Add-Issues (Test-ToolsMdPins -ToolsMd $parsed -Path "agents/$id/TOOLS.md" -Catalog $catalog -AllowedSkillTools $allowedSkillToolsById[$id])
 }
 
 # =============================================================================================================
@@ -581,8 +728,7 @@ $attributionUsers = @{}
 $sourceTexts = @{}
 foreach ($id in $selected) {
     $users = [System.Collections.Generic.List[string]]::new()
-    $composed = $null
-    try { $composed = Invoke-AgentCompose -RepoRoot $RepoRoot -Id $id -Family $fam } catch { $composed = $null }
+    $composed = if ($composedById.ContainsKey($id)) { $composedById[$id] } else { $null }
     if ($null -ne $composed) {
         $sources = @([pscustomobject]@{ Name = $id; Rel = [string]$composed['Template'] }) +
             @(@($composed['Included']) | ForEach-Object { [pscustomobject]@{ Name = [string]$_; Rel = (Get-AgentFragmentPath -RepoRoot $RepoRoot -FragmentId ([string]$_)) } })
@@ -663,8 +809,10 @@ Enter-Section 'I' 'Credits'
 # =============================================================================================================
 
 # CreditsSentence: the family's verbatim README sentence (absent or empty: no sentence check).
-# An agent with no Credits needs only its license sentence.
+# An agent with no Credits needs only its license sentence. CreditsSentenceKeys (absent: every key) names the Credits
+# keys the sentence speaks for: an agent with Credits but none of those keys needs its credits and license sentence only.
 $creditSentence = [string](Get-AgentField $fam 'CreditsSentence' '')
+$sentenceKeys = Get-AgentField $fam 'CreditsSentenceKeys'
 $credits = Get-AgentField $fam 'Credits' @{}
 foreach ($id in $selected) {
     $license = [string](Get-AgentField $agentById[$id] 'License' (Get-AgentField $fam 'License' 'MIT'))
@@ -678,7 +826,8 @@ foreach ($id in $selected) {
         if ($null -eq $credit) { Add-SourceError 'CREDITS-KEY' $familyRel 1 "agent '$id' lists credit '$key', which Credits does not define"; continue }
         if (-not $readme.Contains([string]$credit, $ord)) { Add-SourceError 'CREDITS-MISSING' $rel 0 "missing the credit '$credit'" }
     }
-    if ($agentCredits.Count -eq 0) {
+    $needsSentence = $null -eq $sentenceKeys -or @($agentCredits | Where-Object { @($sentenceKeys) -ccontains [string]$_ }).Count -gt 0
+    if ($agentCredits.Count -eq 0 -or ($creditSentence -and -not $needsSentence)) {
         if ($readme.IndexOf($licenseSentence, $ord) -lt 0) { Add-SourceError 'CREDITS-SENTENCE' $rel 0 "missing the license sentence '$licenseSentence'" }
     }
     elseif ($creditSentence) {
@@ -692,14 +841,78 @@ foreach ($id in $selected) {
 }
 
 # =============================================================================================================
+Enter-Section 'M' 'Method registry'
+# =============================================================================================================
+
+# Each check runs only when its data exists: the family key Method (METHOD-CONTROLLER, METHOD-EXCUSES) and a
+# SkillPolicy skill that names its reference Fragment (METHOD-REFERENCE).
+$methodData = Get-AgentField $fam 'Method'
+$referenceSkills = @(@(Get-AgentField (Get-AgentField $fam 'SkillPolicy') 'Skills' @()) | Where-Object { $null -ne (Get-AgentField $_ 'Fragment') })
+if ($null -eq $methodData -and $referenceSkills.Count -eq 0) {
+    Write-Host '  skipped: the family has no Method key and no SkillPolicy reference fragment'
+} else {
+    $sourceLines = @{}
+    foreach ($dir in @($familyContext['SoulsRelDir'], $familyContext['FragmentsRelDir'])) {
+        $full = Join-Path $RepoRoot $dir
+        if (-not (Test-Path -LiteralPath $full -PathType Container)) { continue }
+        foreach ($file in @(Get-ChildItem -LiteralPath $full -File -Filter '*.md' | Sort-Object Name)) {
+            $rel = "$dir/$($file.Name)"
+            $sourceLines[$rel] = @((Read-AgentSourceFile -RepoRoot $RepoRoot -RelativePath $rel)['Lines'])
+        }
+    }
+    $skillTools = @{}
+    foreach ($pair in $catalog.SkillToolOwner.GetEnumerator()) {
+        if (-not $skillTools.ContainsKey($pair.Value)) { $skillTools[$pair.Value] = [System.Collections.Generic.List[string]]::new() }
+        $skillTools[$pair.Value].Add($pair.Key)
+    }
+    $methodResults = @(foreach ($id in $selected) { if ($composedById.ContainsKey($id)) { $composedById[$id] } })
+    $methodIssues = @(Test-AgentMethod -Family $fam -Results $methodResults -SourceLines $sourceLines -Negation (Get-AgentNegationRegex) -SkillTools $skillTools -FullRoster ($requested.Count -eq 0) -RepoRoot $RepoRoot)
+    foreach ($issue in $methodIssues) { Add-SourceError $issue['Rule'] $issue['Path'] $issue['Line'] $issue['Message'] }
+    Write-Host "  $(@(Get-AgentField $methodData 'Rules' @()).Count) registered rule(s), $($referenceSkills.Count) reference fragment(s), $($methodIssues.Count) finding(s)"
+}
+
+# LINT-TOPIC: only when a SkillPolicy skill names a TopicIndex. Before -Release the two presence rules print as notes.
+if ($topicIndexes.Count -eq 0) {
+    Write-Host '  topic pointers skipped: no SkillPolicy skill names a TopicIndex'
+} else {
+    $topicIssues = @($skillUse | Where-Object { $_['Rule'] -eq 'LINT-TOPIC' })
+    foreach ($issue in $topicIssues) {
+        if ($issue['Note']) { Write-Host "  note LINT-TOPIC $($issue['Path']): $($issue['Message']) (an error under -Release)" }
+        else { Add-SourceError 'LINT-TOPIC' $issue['Path'] $issue['Line'] $issue['Message'] }
+    }
+    $indexText = @($topicIndexes.GetEnumerator() | ForEach-Object { "$($_.Key) $(@($_.Value['Ids']).Count) topic(s)" }) -join ', '
+    Write-Host "  topic pointers checked against $indexText; $(@($topicIssues | Where-Object { -not $_['Note'] }).Count) finding(s)"
+}
+
+# Anchors: only when the family has an anchor file. ANCHOR-MISSING and ANCHOR-GONE (Test-AgentAnchors).
+$anchorRel = "tests/agents/fixtures/anchors/$familyId.psd1"
+$anchorFull = Join-Path $RepoRoot $anchorRel
+if (-not (Test-Path -LiteralPath $anchorFull -PathType Leaf)) {
+    Write-Host "  anchors skipped: no $anchorRel"
+} else {
+    $anchorData = $null
+    try { $anchorData = Import-PowerShellDataFile -LiteralPath $anchorFull } catch { Add-SourceError 'ANCHOR-DATA' $anchorRel 1 "cannot load: $(($_.Exception.Message -replace '\s+', ' ').Trim())" }
+    if ($anchorData -is [hashtable]) {
+        $anchorTexts = @{}
+        foreach ($id in $selected) { $anchorTexts[$id] = @{ SOUL = $texts[$id]['SOUL.md']; README = $texts[$id]['README.md'] } }
+        $anchorRun = Test-AgentAnchors -Data $anchorData -DataLines ([IO.File]::ReadAllLines($anchorFull)) -DataPath $anchorRel -Family $fam -Texts $anchorTexts -Selected ([string[]]$selected) -Release:$Release
+        foreach ($e in @($anchorRun['Errors'])) { Add-SourceError 'ANCHOR-DATA' $e['Path'] $e['Line'] $e['Message'] }
+        foreach ($f in @($anchorRun['Findings'])) { Add-SourceError $f['Rule'] $f['Path'] $f['Line'] $f['Message'] }
+        Write-Host "  $($anchorRun['Anchors']) anchor(s), $($anchorRun['Checked']) placement(s) checked, $($anchorRun['Pending']) gone string(s) pending their Since version or milestone, $(@($anchorRun['Findings']).Count) finding(s)"
+    }
+}
+
+# =============================================================================================================
 # Summary
 # =============================================================================================================
 
 Write-Host ''
 Write-Host '== Summary'
 foreach ($key in $script:SectionCounts.Keys) {
-    Write-Host ('  {0}  {1} error(s)' -f $key, $script:SectionCounts[$key])
+    $warned = if ($script:SectionWarnings[$key] -gt 0) { ", $($script:SectionWarnings[$key]) warning(s)" } else { '' }
+    Write-Host ('  {0}  {1} error(s){2}' -f $key, $script:SectionCounts[$key], $warned)
 }
+Write-Host ('  warnings: {0}{1}' -f $script:Warnings.Count, $(if ($Release) { ' (-Release: release-gated findings are errors)' } else { '' }))
 if ($script:Errors.Count -gt 0) {
     Write-Host "Test-AgentSources: $($script:Errors.Count) error(s) across $($selected.Count) agent(s)."
     exit 1

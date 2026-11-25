@@ -71,21 +71,29 @@ wrapping folder); excludes `__pycache__/`, `dist/`, `.DS_Store`, `Thumbs.db`, `*
 
 ## Agent packages (`agents/`)
 
-Eighteen `.sophon-agent` packages in two families, listed in the registry
-`build/agent-src/families.psd1`: **development** (sixteen development agents plus the Artifact
-Creator productivity agent, `build/agent-src/family.psd1`, souls and fragments beside it) and
+Twenty-two `.sophon-agent` packages in two families, listed in the registry
+`build/agent-src/families.psd1`: **development** 3.0.0 (twenty development agents plus the Artifact
+Creator productivity agent, `build/agent-src/family.psd1`, 37 shared fragments beside it) and
 **video** (`video-producer`, `build/agent-src/families/video/family.psd1`, its own `souls/` and
-`fragments/soul/`). Families
-share no templates or fragments; an id belongs to one family; `agents/` holds exactly the union of
-the rosters. The tools take `-Family <id>` to work on one family (default: all). Full guide:
-[`docs/AGENTS.md`](docs/AGENTS.md); designs: `docs/plans/2026-11-15-agents-v2-design.md`,
+`fragments/soul/`). Families share no templates or fragments; an id belongs to one family;
+`agents/` holds exactly the union of the rosters. The tools take `-Family <id>` to work on one
+family (default: all). Full guide: [`docs/AGENTS.md`](docs/AGENTS.md); designs:
+`docs/plans/2026-11-23-agents-v3-design.md` (development 3.0), `docs/plans/2026-11-15-agents-v2-design.md`,
 `docs/plans/2026-11-15-ffmpeg-video-design.md`.
 
 - **SkillPolicy is the only way an agent uses skill tools.** A family's `SkillPolicy` names skills
-  (`requires.skills` must equal it); only their tools may be named or pinned, and they never go in
-  `requires.tools` (sorted built-in pins plus `ExtraRequiredTools`). The development family has none,
-  so a skill tool there fails `LINT-SKILL`. `AllowRestrictedMentions` lets a family name a
-  restricted tool (video: `message.send`), never pin it.
+  (`requires.skills` must equal the agent's share of it: the roster key `Skills`, absent meaning all
+  and `@()` meaning none); only their tools may be named or pinned, and they never go in
+  `requires.tools` (sorted built-in pins plus `ExtraRequiredTools`). The development family's policy
+  is `craft-reference` (every agent but Artifact Creator, which sets `Skills = @()`); its tools
+  appear only in that skill's `Fragment` (`18-reference-topics`, at most 450 B), and topic ids named
+  in SOUL text must exist in `build/craft-reference/topics.index.json` (`LINT-TOPIC`). The skill is
+  reference data, never process: every gate stays inline and every agent works without it.
+  `AllowRestrictedMentions` lets a family name a restricted tool (video: `message.send`), never pin it.
+- **craft-reference** (`skills/craft-reference/`) is generated: edit `build/craft-reference/` (topic
+  sources, `topics.index.json`, `topics.lock.json`), then `python -B build/craft-reference/generate.py`
+  (`--check` for drift, `--release` before publishing) and `pwsh -NoProfile -File
+  build/craft-reference/Test-CraftSources.ps1`. Never hand-edit the skill folder.
 - **Files.** Only the 7 package files may live in `agents/<id>/` (`manifest.json`, `SOUL.md`,
   `VOICE.md`, `HEARTBEAT.md`, `TOOLS.md`, `README.md`, `LICENSE`); anything else is `not_packaged`
   and fails the build. Both families use exactly 5 (no VOICE, no HEARTBEAT). Each `LICENSE` is
@@ -94,23 +102,47 @@ the rosters. The tools take `-Family <id>` to work on one family (default: all).
   UTF-8 without BOM, LF, no tabs, no trailing whitespace,
   one final newline.
 - **Licenses.** An agent entry in `family.psd1` may set `License = 'Apache-2.0'`; without it the
-  agent takes the family license (MIT). The nine original development agents stay MIT; the seven
-  added in 2.1 are Apache-2.0 because they adapt anthropics/skills text (Credits key
-  `anthropicSkills`), and so is Artifact Creator. The manifest `license` and the README sentence
+  agent takes the family license (MIT). The nine original development agents and the four added in
+  3.0 are MIT; the seven added in 2.1 are Apache-2.0 because they adapt anthropics/skills text
+  (Credits key `anthropicSkills`), and so is Artifact Creator. Licences never change in a release.
+  Credits are one key per upstream in the family `Credits` table; each README prints the string of
+  every key its agent lists (section I), and the fixed `CreditsSentence` only when it lists a key
+  of `CreditsSentenceKeys` (Artifact Creator does not). The manifest `license` and the README sentence
   ("Licensed under the MIT License; see LICENSE." or "Licensed under the Apache-2.0 License; see
   LICENSE.") must match it.
-- **Never hand-edit `agents/*/SOUL.md`.** It is generated: edit the family's sources beside its
-  family file (`souls/<id>.md` for role text, `fragments/soul/<NN-id>.md` for shared protocol) and run
-  `pwsh -File build/Compose-AgentSouls.ps1`. CI fails on drift. Manifests, TOOLS.md and READMEs
-  are hand-written.
+- **Never hand-edit `agents/*/SOUL.md`, nor a development agent's `README.md`.** Both are generated:
+  edit the family's sources beside its family file (`souls/<id>.md` for role text,
+  `fragments/soul/<NN-id>.md` for shared protocol, `readmes/<id>.md` and `fragments/readme/<NN-id>.md`
+  for README text; the roster table comes from `RosterOrder` and each agent's `Summary`, `Changes`
+  and `Commits`) and run `pwsh -File build/Compose-AgentSouls.ps1`. CI fails on drift. Manifests and
+  TOOLS.md are hand-written, and so is the README of a family without a `readmes/` folder (video).
 - **Commands.**
   - Compose: `pwsh -NoProfile -File build/Compose-AgentSouls.ps1` (`-Check` for drift, `-Explain`
-    for line provenance and which agents include each fragment)
-  - Source checks, no CLI: `pwsh -NoProfile -File build/Test-AgentSources.ps1`
+    for line provenance and which agents include each fragment, `-Omit <id> -OutDir <dir>` for a
+    control arm)
+  - Source checks, no CLI: `pwsh -NoProfile -File build/Test-AgentSources.ps1` (sections A-I and M
+    per family, N once; `-Release` makes headroom under 5%, a missing RoleCap, a remaining anchor
+    `Pending` and DOC-COUNT errors instead of warnings)
   - Validate: `pwsh -NoProfile -File build/Build-AgentPackages.ps1 -ValidateOnly` (Sophon CLI
     2.2.x; any CLI warning fails)
   - Build: `pwsh -NoProfile -File build/Build-AgentPackages.ps1` → `dist/agents/<id>-<version>.sophon-agent` + `SHA256SUMS`
-  - Tests: `pwsh -NoProfile -File tests/agents/Test-AgentPackages.ps1` (`-SourceOnly` without the CLI)
+  - Tests: `pwsh -NoProfile -File tests/agents/Test-AgentPackages.ps1` (sections A-N; `-SourceOnly`
+    runs A-I, L, M and N without the CLI)
+  - Scenario lint, before a PR that touches agent text: `pwsh -NoProfile -File
+    tests/agents/evals/Invoke-AgentEvals.ps1 -ValidateOnly` (`-Release` fails on a `Pending` row)
+  - Lost lines: `pwsh -NoProfile -File tests/agents/Compare-AgentSouls.ps1 -Base agents-v2.1.0`
+    (the 2.1.0 baseline, commit `3f052f3`, where the tag is missing)
+- **Budgets.** `SoulCap` per tier (lead 62,464; design writers 51,200; writers 44,032; readers
+  28,672; researcher and artifact-creator 22,528) with 5% headroom required at release, and a
+  `RoleCap` per agent for its role text (`BUDGET-ROLE`). The SOULs have almost no spare bytes
+  (lead-developer and software-architect sit just above the 5% floor): growth in a shared fragment
+  that reaches them is offset in the same change. Nothing a README promises is removed to save bytes.
+- **Method.** A discipline rule is registered in the family key `Method.Rules` (a whole fragment, or
+  an `Anchor` line in a fragment or one agent's role text) and carries exactly one excuse table:
+  header `| Excuse | Reality |`, then `|---|---|`, 3-6 rows, the first cell a quoted excuse and the
+  second a sentence ending with a full stop. No such table outside a rule (`METHOD-EXCUSES`). Each
+  rule needs a pressure scenario in `tests/agents/evals/pressure.psd1` whose control arm
+  (`-Omit <rule>`) fails. Only lead-developer carries controller text (`METHOD-CONTROLLER`).
 - **Tool names must be real.** Write them dotted and exact (`fs.read`, `code.git`, `agent.delegate`);
   the lint checks every name against `build/agent-src/catalog/sophon-tools.psd1`. Denied names
   (`web.fetch`, git push or PR tools) and restricted ones (`sessions.yield`, `code.test`, workflow
@@ -129,11 +161,13 @@ the rosters. The tools take `-Family <id>` to work on one family (default: all).
   | injection-style phrases (instruction overrides, prompt reveals, personas), `<!--`, role tags, long base64 runs, zero-width or bidi characters, `curl … \| sh` | plain instructions |
   | hosts other than sophon.buildersoft.io, marketplace.sophon.buildersoft.io, github.com | — |
   | headings Sophon appends itself (`## Interaction`, `## Tool Access`, `## Workspace`, `## Memory Knowledge Graph`, `### Available tool index`) | another heading |
+  | an excuse row that names the step it skips (`"I'll skip the approval this once."`) | the excuse as a wish: `"The approval can wait this once."` |
+  | an excuse that puts pass before a colon (`"This is only a first pass:"`) | `"This is only a draft."` |
 
 - **Attribution strings live only in a family file** (`Values.CommitTrailer`, `Values.PrFooter`,
   `Values.PlanDir`). Templates and fragments write `{{= CommitTrailer}}`, `{{= PrFooter}}` and
   `{{= PlanDir}}`, never the literal text. The video family commits nothing and has none.
-- **Versions.** One major in lockstep per family (`FamilyMajor`: development 2, video 1); minor and
+- **Versions.** One major in lockstep per family (`FamilyMajor`: development 3, video 1); minor and
   patch per agent. Any content change bumps every affected agent (strictly greater SemVer); a
   shared-fragment change bumps every agent that includes it.
 - **Publishing is manual:** each `.sophon-agent` is uploaded on its own through the Marketplace

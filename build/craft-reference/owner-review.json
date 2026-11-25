@@ -1,0 +1,30 @@
+{
+  "topics": [
+    "design-sophon-default",
+    "design-sophon-components"
+  ],
+  "signoffs": [
+    {
+      "topic": "design-sophon-default",
+      "sha256": "74c08749cc49c22391e38149f7d983a2a48bfee15c9e21da0a3dfec651a96f1c",
+      "date": "2026-11-24",
+      "reviewer": "owner",
+      "sources": {
+        "sophon": "a431e1a64",
+        "sophon-wt/v3-main": "38c3f7d",
+        "sophon-website": "4973283"
+      }
+    },
+    {
+      "topic": "design-sophon-components",
+      "sha256": "d60f60d548663d9e3c73690e15c057439e2b21153a97114818c50c7302b933ac",
+      "date": "2026-11-24",
+      "reviewer": "owner",
+      "sources": {
+        "sophon": "a431e1a64",
+        "sophon-wt/v3-main": "38c3f7d",
+        "sophon-website": "4973283"
+      }
+    }
+  ]
+}

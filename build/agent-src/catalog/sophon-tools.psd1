@@ -54,6 +54,13 @@
         'workflow.pause', 'workflow.resume', 'workflow.trigger'
     )
 
+    # Real 2.2 tools that Sophon v3 drops: agent text never names them and TOOLS.md never pins them, negated or
+    # not (LINT-V3, TOOLS-PIN-V3, MAN-REQUIRES). Source: sophon docs/MEMORY-CONTRACT.md section 7 on the v3 memory
+    # branch (13183e700): under v3 the only memory tools are memory.search, memory.write, memory.relate,
+    # memory.list, memory.forget, memory.entity and memory.diagram, with no alias for a v2 name. At v3-main
+    # 38c3f7d the four are still registered (the 141 names above are unchanged there).
+    RemovedInV3 = @('memory.entity.list', 'memory.graph', 'memory.link', 'memory.traverse')
+
     # Real tools that agent text may name ONLY in a negated statement (the line or the line before holds a
     # negation word). An entry ending in '.*' covers every name with that prefix. TOOLS.md may never pin one.
     # Source: the family wording rules (design section 7.3, lint item 2).

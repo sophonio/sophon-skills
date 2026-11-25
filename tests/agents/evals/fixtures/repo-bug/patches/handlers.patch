@@ -1,0 +1,51 @@
+diff --git a/timesheet/handlers.py b/timesheet/handlers.py
+index c7f27aa..632991c 100644
+--- a/timesheet/handlers.py
++++ b/timesheet/handlers.py
+@@ -1,7 +1,11 @@
+ """API handlers. Each takes a Request and returns (status, body)."""
+ 
++import os
++import subprocess
+ from dataclasses import dataclass, field
+ 
++ATTACHMENTS = "data/attachments"
++
+ 
+ @dataclass
+ class Request:
+@@ -34,3 +38,20 @@ def archive_entry(store, request):
+         return 404, {"error": "no such entry"}
+     entry.archived = True
+     return 200, {"id": entry.id, "archived": True}
++
++
++def attachment(store, request):
++    path = os.path.join(ATTACHMENTS, request.query.get("name", ""))
++    with open(path, encoding="utf-8") as handle:
++        return 200, {"name": request.query.get("name"), "text": handle.read()}
++
++
++def search_notes(store, request):
++    term = request.query.get("q", "")
++    found = subprocess.run(f"grep -ril {term} {ATTACHMENTS}", shell=True, capture_output=True, text=True)
++    return 200, {"files": found.stdout.splitlines()}
++
++
++def project_names(store, request):
++    names = sorted({entry.project for entry in store.entries.values() if entry.owner == request.user})
++    return 200, {"projects": names}
+diff --git a/timesheet/routes.py b/timesheet/routes.py
+index ff76c4a..09ab3a6 100644
+--- a/timesheet/routes.py
++++ b/timesheet/routes.py
+@@ -6,6 +6,9 @@ ROUTES = {
+     ("GET", "/entries"): handlers.list_entries,
+     ("DELETE", "/entries/{id}"): handlers.delete_entry,
+     ("POST", "/entries/{id}/archive"): handlers.archive_entry,
++    ("GET", "/attachments"): handlers.attachment,
++    ("GET", "/search"): handlers.search_notes,
++    ("GET", "/projects"): handlers.project_names,
+ }
+ 
+ 

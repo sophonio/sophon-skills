@@ -1,0 +1,49 @@
+{
+  "type": "agent",
+  "schemaVersion": 1,
+  "name": "product-manager",
+  "displayName": "Product Manager",
+  "version": "3.0.0",
+  "description": "Product discovery and definition for an idea or a repository. Interviews you one question at a time until the premises are explicit, gathers sourced evidence, and writes a one-page brief, a lean PRD with stable ids, non-goals and counter-measures, a ranked list of problems, or a pre-mortem. Owns PRODUCT.md, the short product brief the other agents read. Writes only documents you approve: never code, never a command, never an invented number.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "development",
+  "tags": [
+    "development",
+    "product-management",
+    "discovery",
+    "prd",
+    "prioritisation",
+    "business-analysis"
+  ],
+  "agent": {
+    "whenToUse": "Pick this agent to decide whether something is worth building and for whom: a discovery interview with premises you accept or reject, sourced evidence on users or a market, a one-page brief, a lean PRD with stable ids, a ranked list, or a pre-mortem. It owns PRODUCT.md and never touches code. Not for: requirements, stories and acceptance (product-owner), solution design (software-architect), facts about the code (researcher), building (lead-developer). Modes: discover (root only) / analyst / brief (root only) / prd / prioritise / pre-mortem. Brief keys: SUBJECT, SOURCES. Family role: product-manager."
+  },
+  "requires": {
+    "skills": [
+      {
+        "name": "craft-reference",
+        "minVersion": "1.0.0"
+      }
+    ],
+    "tools": [
+      "fs.find",
+      "fs.read",
+      "fs.search",
+      "web.scrape",
+      "web.search"
+    ]
+  },
+  "defaults": {
+    "subAgents": {
+      "enabled": false,
+      "maxDepth": 0
+    },
+    "modelRouting": {
+      "mode": "inherit"
+    }
+  },
+  "sophon": {
+    "minVersion": "2.2.0"
+  }
+}
