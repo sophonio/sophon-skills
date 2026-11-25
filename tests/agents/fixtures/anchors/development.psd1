@@ -207,10 +207,10 @@
     @{ Text = 'Mark it approved'; File = 'SOUL'; Since = '3.0.0'; Why = 'software-architect saves through the Saving a document routine: Save, Change something or Stop' }
     @{ Text = 'Keep as draft'; File = 'SOUL'; Since = '3.0.0'; Why = 'software-architect saves through the Saving a document routine; a draft file is written on request' }
     @{ Text = 'Mark it approved'; File = 'README'; Since = '3.0.0'; Why = 'the software-architect README promise becomes Save, Change something or Stop through the one save routine' }
-    @{ Text = 'Keep local / Discard menu'; File = 'README'; Since = '3.0.0'; Pending = 'M8'; Why = 'the 3.0 finish menu replaces it' }
+    @{ Text = 'Keep local / Discard menu'; File = 'README'; Since = '3.0.0'; Why = 'the 3.0 finish menu replaces it' }
     @{ Text = 'Keep local or Discard'; File = 'README'; Since = '3.0.0'; Why = 'the 3.0 finish menu replaces it' }
     @{ Text = '10 agents in 5 calls'; File = 'README'; Since = '3.0.0'; Why = 'the 3.0 lead caps replace it' }
     @{ Text = 'a plan of at most 25 lines'; File = 'README'; Since = '3.0.0'; Why = 'the 3.0 plan format replaces it' }
-    @{ Text = 'What''s new in 2.0.0'; File = 'README'; Since = '3.0.0'; Pending = 'M8'; Why = 'the 3.0 upgrade notes replace it' }
+    @{ Text = 'What''s new in 2.0.0'; File = 'README'; Since = '3.0.0'; Why = 'the 3.0 upgrade notes replace it' }
   )
 }

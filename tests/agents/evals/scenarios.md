@@ -107,7 +107,7 @@ todo.write) are not counted.
   - The plan's `Consent:` line reads `ultracode (standing)`.
   - Before the first wave, one line announces agents, waves, cards and the relative cost.
   - The plan's `## Orchestration` section has the Consent and Estimate line, a `Companions:` line found with agent.list, and a wave table whose rows run in order.
-  - Every agent.delegate call has at most 5 entries and passes `maxIterations`. None passes `model`. The count stays within the Medium cap (10 agents, 5 calls) and the estimate.
+  - Every agent.delegate call has at most 5 entries and passes `maxIterations`. None passes `model`. The count stays within the Medium cap (20 agents, 10 calls) and the estimate.
   - Children never commit. The lead re-reads files or re-runs commands before it accepts a child's claim.
   - One commit per task on `sophon/<slug>`, each message ending with exactly `Co-Authored-By: Sophon <noreply@buildersoft.io>`. Check with `git log --format=%B`.
   - A review-diff scratch file `sophon-scratch-review.diff` is created for the Review wave and is not committed.

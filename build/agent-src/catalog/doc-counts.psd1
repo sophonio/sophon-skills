@@ -18,8 +18,6 @@
     'build/agent-src/readmes/*.md'
   )
   Allow = @(
-    @{ Value = 10; Why = 'the 2.x lead cap at Medium (10 agents in 5 calls), until the documents are rewritten for 3.0' }
-    @{ Value = 25; Why = 'the 2.x lead cap at Large (25 agents in 14 calls), until the documents are rewritten for 3.0' }
     @{ Value = 20; Why = 'the 3.0 lead cap at Medium (20 agents in 10 delegate calls), not a roster count' }
     @{ Value = 44; Why = 'the 3.0 lead cap at Large (44 agents in 22 delegate calls), not a roster count' }
   )

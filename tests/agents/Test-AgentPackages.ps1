@@ -1023,7 +1023,7 @@ try {
         $docTableWord = $docWords[$docTable]; $docTableWord = $docTableWord.Substring(0, 1).ToUpperInvariant() + $docTableWord.Substring(1)
         $planted = @(
             "The family ships $allCount agent packages, and $docTableWord development agents sit in the table.",
-            "Lead Developer has $($docWords[$docTable - 1]) companions and runs at most 10 agents in 5 calls.",
+            "Lead Developer has $($docWords[$docTable - 1]) companions and runs at most 20 agents in 10 calls.",
             'Install all thirty-three development agents first.',
             'There are 99 Sophon agents in the store.',
             'In 2.0.0 the family had nine agents and 12 packages.',
