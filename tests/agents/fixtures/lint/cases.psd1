@@ -1,4 +1,5 @@
-# Tool-name lint fixtures (design section 7.5 C), run by Invoke-AgentLintFixtures in build/AgentLint.psm1.
+# Tool-name lint fixtures (docs/plans/2026-11-15-agents-v2-design.md section 7.5 C), run by Invoke-AgentLintFixtures in
+# build/AgentLint.psm1.
 # Expect 'fail' passes when an issue carries Rule; Expect 'pass' passes when there is no issue at all.
 # Kind is soul unless stated. Lines are joined with LF.
 @{

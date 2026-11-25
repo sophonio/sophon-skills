@@ -4,7 +4,8 @@
 .SYNOPSIS
     Validates and builds the Buildersoft agent families (agents/<id>) with Sophon's agent-package CLI.
 .DESCRIPTION
-    Order (docs/plans/2026-11-15-agents-v2-design.md section 7.4):
+    Order (docs/plans/2026-11-15-agents-v2-design.md section 7.4; the -Release switch:
+    docs/plans/2026-11-23-agents-v3-design.md, "Static checks"):
       1. Load every family in build/agent-src/families.psd1 (or the single build/agent-src/family.psd1 when
          there is no registry). The roster is the union of the family rosters; an id in two families fails.
          The agents/ folders must equal the roster ids exactly, and every -Agents entry must be a roster id.

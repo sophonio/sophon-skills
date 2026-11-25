@@ -1,4 +1,5 @@
-# TOOLS.md fixtures (design section 7.5 G), run by Invoke-AgentLintFixtures in build/AgentLint.psm1.
+# TOOLS.md fixtures (docs/plans/2026-11-15-agents-v2-design.md section 7.5 G), run by Invoke-AgentLintFixtures in
+# build/AgentLint.psm1.
 # Each case is parsed with Read-ToolsMd (strict grammar plus agreement with the AgentToolPins.Parse port) and
 # checked with Test-ToolsMdPins. Lines are joined with LF and end with one LF.
 @{

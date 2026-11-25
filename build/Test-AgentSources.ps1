@@ -5,7 +5,8 @@
     Source checks for the agent packages in agents/: layout, SOUL composition, tool-name lint, scanner
     preflight, budgets, manifests, TOOLS.md, attribution and credits. Needs no Sophon CLI.
 .DESCRIPTION
-    Sections (docs/plans/2026-11-15-agents-v2-design.md section 7.5), run per agent family:
+    Sections (docs/plans/2026-11-23-agents-v3-design.md, "Static checks", which extends docs/plans/2026-11-15-agents-v2-design.md section 7.5),
+    run per agent family:
       A  roster and layout       roster agents have folders; exactly 5 files each; strict UTF-8, no BOM, CR,
                                  NUL, tabs or hidden characters; one trailing LF; size limits; LICENSE copy
       B  composer                build/Compose-AgentSouls.ps1 -Check in a child pwsh (SOULs, and the READMEs of a

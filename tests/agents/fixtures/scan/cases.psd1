@@ -1,4 +1,5 @@
-# Preflight fixtures (design section 7.5 D), run by Invoke-AgentLintFixtures in build/AgentLint.psm1.
+# Preflight fixtures (docs/plans/2026-11-15-agents-v2-design.md section 7.5 D), run by Invoke-AgentLintFixtures in
+# build/AgentLint.psm1.
 # {U+XXXX} expands to that code point and {REPEAT:<text>:<n>} to <text> repeated n times at run time, so no
 # invisible character and no long blob is committed. Nothing here is, or looks like, a real secret.
 @{

@@ -31,7 +31,8 @@ $script:Opt = [System.Text.RegularExpressions.RegexOptions]
 $script:CI = $script:Opt::CultureInvariant
 $script:CII = $script:Opt::CultureInvariant -bor $script:Opt::IgnoreCase
 
-# Lint patterns (design section 7.3, lint items 1-6).
+# Lint patterns (docs/plans/2026-11-15-agents-v2-design.md section 7.3, lint items 1-6). What 3.0 adds to
+# sections C, D, F and G (the skill rules, findings at the source line): docs/plans/2026-11-23-agents-v3-design.md, "Static checks".
 $script:CandidateRx = [regex]::new('(?<![\w./\\@:-])([a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+)(?![\w/\\(@-]|\.[A-Za-z0-9_])', $script:CI)
 $script:WireRx = [regex]::new('(?<![\w./\\@:-])([a-z][a-z0-9]*(?:_[a-z0-9]+)+)(?![\w/\\(@-]|\.[A-Za-z0-9_])', $script:CI)
 $script:NegationRx = [regex]::new("\b(?:no|not|never|cannot|can't|can$([char]0x2019)t|does not|doesn't|doesn$([char]0x2019)t|isn't|isn$([char]0x2019)t|instead of|there is no)\b", $script:CII)
@@ -449,7 +450,7 @@ function Get-AgentAllowedSkillTools {
 function Invoke-ToolNameLint {
     <#
     .SYNOPSIS
-        Checks the tool names in one text (design section 7.3, lint items 1-6).
+        Checks the tool names in one text (v2 design section 7.3, lint items 1-6).
     .PARAMETER Kind
         soul | tools | readme | manifest. Claude Code names and the phrase are checked in soul and tools only.
     .PARAMETER AllowedSkillTools
@@ -664,7 +665,7 @@ function Find-PossibleSecret {
 function Invoke-AgentPreflight {
     <#
     .SYNOPSIS
-        Replays the marketplace and runtime scanners over one text (design section 7.3, preflight P1-P6) plus
+        Replays the marketplace and runtime scanners over one text (v2 design section 7.3, preflight P1-P6) plus
         the family's wording policy (SCAN-WORD).
     .PARAMETER Rules
         The object from Get-ScanRules.
@@ -935,7 +936,7 @@ function Invoke-AgentToolPinsParse {
 function Read-ToolsMd {
     <#
     .SYNOPSIS
-        Strict TOOLS.md parse (block lists only, the line shapes of design section 7.5 G), plus a check that
+        Strict TOOLS.md parse (block lists only, the line shapes of v2 design section 7.5 G), plus a check that
         the runtime's parser reads the same pins.
     .OUTPUTS
         @{ GlobalPins; Profiles (ordered: profile -> pins); Body; BodyLines; PinLines; Issues }
@@ -1289,7 +1290,7 @@ function Test-AgentRequiresPolicy {
 function Test-AgentManifest {
     <#
     .SYNOPSIS
-        Manifest rules of the family contract (design section 7.5 F).
+        Manifest rules of the family contract (v2 design section 7.5 F; the skill rules: v3 design, "Static checks").
     .PARAMETER Manifest
         The parsed manifest (ConvertFrom-Json output); $null when Raw did not parse.
     .PARAMETER Raw

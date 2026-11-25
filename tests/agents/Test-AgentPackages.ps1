@@ -2,10 +2,10 @@
 
 <#
 .SYNOPSIS
-    End-to-end tests for the Buildersoft agent family packages in agents/ (sections A-L).
+    End-to-end tests for the Buildersoft agent family packages in agents/ (sections A-N).
 .DESCRIPTION
     The roster is the union of every family in build/agent-src/families.psd1 (an id belongs to one family).
-    Sections (docs/plans/2026-11-15-agents-v2-design.md section 7.5):
+    Sections (docs/plans/2026-11-23-agents-v3-design.md, "Static checks", which extends docs/plans/2026-11-15-agents-v2-design.md section 7.5):
       A-I  build/Test-AgentSources.ps1 on the real tree (every family): layout, composer -Check, tool-name lint,
            preflight, budgets (with the headroom table), manifests, TOOLS.md, attribution, credits.
       B    plus every tests/agents/fixtures/compose/<case> through Compose-AgentSouls.ps1 -RepoRoot <case> -Check (or the
