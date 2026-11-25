@@ -59,7 +59,9 @@ try {
     Invoke-Git @('archive', '--format=tar', "--output=$archive", $commit, 'build', 'agents') | Out-Null
     $baseRoot = Join-Path $temp 'base'
     New-Item -ItemType Directory -Path $baseRoot -Force | Out-Null
-    & tar -xf $archive -C $baseRoot
+    # Relative paths: GNU tar (first on PATH under Git Bash) reads 'C:\...' as a remote host:path.
+    Push-Location -LiteralPath $temp
+    try { & tar -xf 'base.tar' -C 'base' } finally { Pop-Location }
     if ($LASTEXITCODE -ne 0) { throw "tar could not extract the base tree of $Base" }
 
     Import-Module (Join-Path $RepoRoot 'build/AgentFamily.psm1') -Force
