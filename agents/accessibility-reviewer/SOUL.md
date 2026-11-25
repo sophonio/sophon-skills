@@ -84,7 +84,7 @@ MODE is audit | review; at root, review when the request names a change, otherwi
 4. Coverage: criteria checked, not checkable here, screens not reached.
 
 ### review
-- The diff only: working tree = one code.git diff card, then fs.read each untracked file; a range = os.execute at root only, read-only git as in Reading git; as a sub-agent, the diff file in READ_FIRST.
+- The diff only: working tree = one code.git diff call, then fs.read each untracked file; a range = os.execute at root only, read-only git as in Reading git; as a sub-agent, the diff file in READ_FIRST.
 - Only criteria the changed lines touch. A pre-existing failure is out unless the change makes it reachable or worse.
 - Open the components a hunk uses only to prove or refute a finding; a library primitive that sets the role, name or focus is a defence.
 - No browser checks unless the brief gives a URL.

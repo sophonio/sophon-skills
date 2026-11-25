@@ -164,7 +164,7 @@ sophon agents models agent-engineer --effort high
 - **Per plan task:** the files it edits + 1 failing-check run + 1 plan tick + 1 verify-and-commit command.
 - **Per plan:** about 4 more (the plan file, the branch, the PR body file, push + PR). A design note adds one (its save).
 - **Example:** a medium 4-task plan touching about 3 files per task raises about 4 × 6 + 4 = **28 cards**.
-- **With sub-agents:** a task built and reviewed by a delegated pair comes to its files edited + 4, plus any card agent.delegate or the reviewer's diff raises, which the estimate does not count. "Build inline, then review" on that medium plan comes to about 29 in all. Each option of the "Agents" question states its cards before you choose. For far fewer cards, see the local-install form (section 10).
+- **With sub-agents:** a task built and reviewed by a delegated pair comes to its files edited + 4, plus any card agent.delegate or the reviewer's diff raises, which the estimate does not count. "Build inline, then review" on that medium plan comes to about 29 in all, "Team per task" to about 33. Each option of the "Agents" question states its cards before you choose. For far fewer cards, see the local-install form (section 10).
 
 ## 6. Discovery, the design note and plan files
 
@@ -233,7 +233,7 @@ The lead scans your own messages, newest first; the first match wins.
 
 **The options at Medium** (the "Agents" question):
 - [Build inline, then review (Recommended)]: the lead builds every task itself, then 3 reviewer lenses, 3 refuters and 1 critic review the branch: about 7 agents in 3 waves, about 29 cards for the 4-task example, ≈3.5× Solo tokens.
-- [Team per task]: an implementer and a reviewer for each task, then one review of the whole branch.
+- [Team per task]: an implementer and a reviewer for each task, then one review of the whole branch: about 33 cards for the 4-task example (files edited + 4 per task).
 - [Solo]: no sub-agents; the lead reviews its own diff lens by lens; about 28 cards; 1×.
 
 At Large, [Team per task (Recommended)] comes first. A standing "ultracode" picks Team per task at both sizes, about 7× Solo tokens on four tasks.
@@ -351,7 +351,7 @@ The agents read the project instructions as trusted conventions, and they sugges
 - **Skill tools need the Docker sandbox.** On a Gateway without Docker (and without the process fallback), every skill call fails, so `craft-reference` is effectively absent there. Nothing in a task depends on it.
 - **browser.act needs AllowPrivateNetwork for localhost.** It opens `localhost` only when `Sophon:Browser:AllowPrivateNetwork` is on, and it needs Playwright Chromium on the Gateway host. On a blocked navigation the design agents stop browser work, report the setting and continue from the code.
 - **code.git has no push,** no PR and no selective commit, so those steps, and the local merge, go through os.execute cards.
-- **Cards scale with fan-out:** every sub-agent's edits, commands and diffs raise cards at the top level.
+- **Cards scale with fan-out:** every sub-agent's edits and commands raise cards at the top level; its code.git diff may raise one too.
 - **Caching:** every new session, including every sub-agent, pays for its own instructions uncached. The cache also misses after any pause over 5 minutes (approval and question waits count) and after each tool load.
 - **Questions:** info.request waits 15 minutes, and sub-agents, heartbeat and cron runs cannot ask at all. No answer is never a yes: nothing the question asks about runs.
 - **Plan approval on the Personal-edition Dashboard** needs the CLI or the GO escape (section 6).

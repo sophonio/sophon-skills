@@ -199,7 +199,7 @@ Can't press Approve (Dashboard on Personal, mobile)? Choose Keep planning and ty
 - **Setup:** an uncommitted change on top of the baseline with three planted bugs: an off-by-one loop bound, a missing null or None check on an error path, and an inverted condition. Add two style-only changes (naming, spacing) that break no rule in the project instructions.
 - **Prompt:** `Review my working tree changes.`
 - **Expect:**
-  - One code.git diff card.
+  - One code.git diff call (it may raise a card; in a trusted workspace it raised none in spike S2).
   - A FINDINGS block that reports at least 2 of the 3 bugs, each with `path:line`, "Fails when", a fix and a confidence of 80 or more.
   - Zero style nits.
   - The verdict is `REQUEST_CHANGES`, with a coverage line "Reviewed n of m files".
@@ -678,7 +678,9 @@ Run once, on a medium task of about 4 tasks touching about 3 files each (L2 run 
 
 - **Expected Solo count:** per task, files edited + 1 red run + 1 plan tick + 1 verify-and-commit; per plan, about 4 more (the plan file, the branch, the PR body file, push + PR). Choosing Keep local saves the last 2.
   - Example: 4 × (3 + 3) + 4 = **28**, or 26 with Keep local.
-- **With sub-agents** (L3): the estimate on the plan's Orchestration line is the baseline above plus the extra cards: one per delegate call, two per delegated writer task, one per MAY_RUN command and one per review-diff command.
+- **With sub-agents** (L3): the estimate on the plan's Orchestration line is the baseline above plus the extra cards: one per delegated writer task (the child's red and green runs replace the lead's red run), one per MAY_RUN command and one per review-diff command. agent.delegate and a reviewer's code.git diff may raise one each; the estimate leaves them out, and neither did in spikes S1 and S2.
+  - Per reviewed task: Solo and Build inline, then review, files edited + 3; Team per task, files edited + 4 (the child's edits and its two runs, then the lead's plan tick and verify-and-commit).
+  - Example: Build inline, then review 28 + 1 = **29** (the branch-diff command of the review); Team per task 4 × (3 + 4) + 4 + 1 = **33**.
 - **Record** the expected and the actual count.
   - A count more than about 20% above the estimate usually means unchained commands.
   - A count well below it may mean a missing red run or an unverified commit. Read the transcript before you accept it.
