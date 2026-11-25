@@ -47,6 +47,19 @@ every registered `Method` rule, and the per-track scenarios of milestone M6. Own
 caps the sweep at $25: on the test Gateway (option B) the pressure scenarios run 3 times per arm, and the
 acceptance, design and voice tracks move to the owner's manual smoke run.
 
+**Result (2026-11-25): [`tests/agents/evals/results/3.0.0.md`](../../tests/agents/evals/results/3.0.0.md).** Option
+B, the pressure tier at 3 runs per arm (84 scored Opus runs), the 2.1.0 rows that ran on Haiku, and G3: $24.12
+of the $25 cap. The model was pinned per `-eval` agent (`sophon agents models <id> --pin`), not in cli.json.
+Outcome by the scaled ship rule (section 3): discovery-gate and split-never-shrink shown; test-first,
+control-first and premises-first flagged (wording proposals recorded there, not applied); outward-gate not
+readable (scenario and scorer defects); run-evidence, test-integrity, receiving-review and root-cause not shown
+to be needed (their controls pass). Before any further batch, review the test Gateway's shared memory: entries
+from the baseline runs bias PRS-TF1, and runs carry memory into later runs (caveat 2 there).
+
+**Still the owner's, by hand:** the acceptance track (ACC-01 to ACC-32), the 3.0.0 design track (DSN-01 to
+DSN-13) and the voice track (VOC-01 to VOC-07); DSN-10, DSN-12 and VOC-08; the smoke scenarios of section 5
+with MX1 to MX3 and the card count; and G6, which needs a throwaway Gateway (option A) or the approved skill.
+
 **The run list** was prepared on 2026-11-25 with
 `pwsh -NoProfile -File tests/agents/evals/Invoke-AgentEvals.ps1 -Prepare -OutDir <scratch>/sweep/prepared`
 (the files stay outside the repository; prepare again on the machine that runs the sweep, since a prepared
@@ -177,6 +190,12 @@ returns (G3). Record both in the spike results' "Checks not run".
 
 A rule's text ships as tested when its treatment arm passes at least 4 of 5 runs and its control arm fails at
 least 3 of 5.
+
+Scaled to the 3 runs per arm of decision 12, as the 2026-11-25 sweep applied it: shown when the treatment
+passes 3 of 3 and the control fails at least 2 of 3; otherwise the rows below apply with "3 of 3" for "4 or 5
+of 5". Three runs is weaker evidence than five. The per-rule table, the verbatim excuses and the proposed
+rewordings are in [`results/3.0.0.md`](../../tests/agents/evals/results/3.0.0.md), "The ship rule, scaled to 3
+runs"; applying any of them is the last paragraph of this section.
 
 | Treatment passes | Control fails | Reading | What to do |
 |---|---|---|---|
@@ -361,6 +380,7 @@ and the skill: `a84f4504f12d0f3ce93915168765c6978cef23e3cb9f36a2eb1c6de3982c13c7
 2. **No baseline tag.** The repository has no tags, so `Compare-AgentSouls.ps1 -Base agents-v2.1.0` cannot
    run. The 2.1.0 packages of the baseline were built at `3f052f3`; confirm that this is what is published,
    then `git tag -a agents-v2.1.0 3f052f3 -m "Agents 2.1.0 as published"`.
-3. **The Gateway for the sweep:** option A or B of section 2, and the model pin.
+3. **The Gateway for the sweep:** option A or B of section 2, and the model pin. Decided by decision 12:
+   option B, pinned per agent; the result is in section 2. G6 still needs option A.
 4. **Sophon v3 moved on.** sophon-wt v3-main is now past the `38c3f7d` pin; the M9 comparison used the pins
    only. Rerun the section 6 v3 checks against the newest worktree before the upload.

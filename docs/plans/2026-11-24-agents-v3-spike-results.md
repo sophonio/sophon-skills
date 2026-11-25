@@ -285,6 +285,12 @@ G3 (the string a call to a missing `craft.read` returns), G4 (plan mode with the
 Docker), G8 (skill updates), the local-copy half of G7 and the save routine's screen check did not run, because
 craft-reference was not installed and the test Gateway was shared. They stay open for a throwaway Gateway.
 
+G3 was recorded in the M9 sweep on 2026-11-25 (`tests/agents/evals/results/3.0.0.md`, "G6 and G3"): without the
+skill, `tools.load {names:["craft.read"]}` returns the name under `unknown` with the suggestions
+`document.read`, `fs.read` and `email.send`, and the agent says it cannot call craft.read. G6 with craft.read
+did not run there: the local skill install cannot be removed from a shared Gateway, so it stays open for a
+throwaway Gateway.
+
 ## Baseline against 2.1.0
 
 The 2.1.0 packages were built with `build/Build-AgentPackages.ps1` in a detached worktree at `3f052f3`; the
