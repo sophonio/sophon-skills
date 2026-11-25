@@ -698,6 +698,9 @@ try {
             $parsedCore = $coreRaw | ConvertFrom-Json
             $coreIssues = @(Test-AgentManifest -Manifest $parsedCore -Raw $coreRaw -Id 'media-maker' -Family $coreFamily -ToolsMd $toolsParsed -Path 'L/manifest.json' -Catalog $catalogL)
             $null = Test-Check 'L' (@($coreIssues | Where-Object { $_.Rule -ceq 'MAN-REQUIRES' -and $_.Message.Contains('fs.read is a core tool', $ord) }).Count -eq 1) 'an ExtraRequiredTools entry that is a core tool fails MAN-REQUIRES'
+            $coreFamily['SkillPolicy'] = @{ Skills = $mediaFamily['SkillPolicy']['Skills']; ExtraRequiredTools = @('media.video', 'memory.graph') }
+            $v3Issues = @(Test-AgentManifest -Manifest ($mediaRaw | ConvertFrom-Json) -Raw $mediaRaw -Id 'media-maker' -Family $coreFamily -ToolsMd $toolsParsed -Path 'L/manifest.json' -Catalog $catalogL)
+            $null = Test-Check 'L' (@($v3Issues | Where-Object { $_.Rule -ceq 'MAN-REQUIRES' -and $_.Message.Contains('memory.graph is removed in Sophon v3', $ord) }).Count -eq 1) 'an ExtraRequiredTools entry removed in Sophon v3 fails MAN-REQUIRES'
 
             # Per-agent skills: the agent key Skills narrows the SkillPolicy (absent = all, @() = none) for
             # MAN-REQUIRES, LINT-SKILL and TOOLS-PIN-UNKNOWN; listing every policy skill equals leaving it out.

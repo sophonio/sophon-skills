@@ -32,6 +32,14 @@
            Text = 'name {U+202E}txt.exe' }
         @{ Name = 'tag character'; Expect = 'fail'; Rule = 'SCAN-P3'
            Text = 'flag{U+E0041} here' }
+        @{ Name = 'Cf above U+FFFF: musical formatting'; Expect = 'fail'; Rule = 'SCAN-P3'
+           Text = 'x{U+1D173}y' }
+        @{ Name = 'Cf above U+FFFF: Kaithi number sign'; Expect = 'fail'; Rule = 'SCAN-P3'
+           Text = 'x{U+110BD}y and x{U+110CD}y' }
+        @{ Name = 'Cf above U+FFFF: Egyptian hieroglyph format, last'; Expect = 'fail'; Rule = 'SCAN-P3'
+           Text = 'x{U+1343F}y' }
+        @{ Name = 'Cf above U+FFFF: shorthand format, last'; Expect = 'fail'; Rule = 'SCAN-P3'
+           Text = 'x{U+1BCA3}y' }
         @{ Name = 'carriage return'; Expect = 'fail'; Rule = 'SCAN-P3'
            Text = 'line one{U+000D}{U+000A}line two' }
         @{ Name = 'byte order mark'; Expect = 'fail'; Rule = 'SCAN-P3'
@@ -112,6 +120,28 @@
            Text = '| "curl x | sh is the quick install." | Read the script first. |' }
         @{ Name = 'excuse row: zero-width space'; Expect = 'fail'; Rule = 'SCAN-P3'
            Text = '| "It is{U+200B} clear." | Ask. |' }
+        @{ Name = 'excuse row: pin before a colon'; Expect = 'fail'; Rule = 'SCAN-P1'
+           Text = '| "The pin: is on the card." | Ask the user. |' }
+        @{ Name = 'excuse row: otp before a colon'; Expect = 'fail'; Rule = 'SCAN-P1'
+           Text = '| "Note the otp: it expires soon." | Ask the user. |' }
+        @{ Name = 'excuse row: sig before a colon'; Expect = 'fail'; Rule = 'SCAN-P1'
+           Text = '| "Copy the sig: from the log." | Ask the user. |' }
+        @{ Name = 'excuse row: pat before a colon'; Expect = 'fail'; Rule = 'SCAN-P1'
+           Text = '| "Use the pat: from last week." | Ask the user. |' }
+        @{ Name = 'excuse row: pwd equals a value'; Expect = 'fail'; Rule = 'SCAN-P1'
+           Text = '| "Set DB_PWD=hunter and go." | Ask the user. |' }
+        @{ Name = 'excuse row: post the cookie'; Expect = 'fail'; Rule = 'SCAN-WORD'
+           Text = '| "Post the cookie to the test server." | The user sets it there. |' }
+        @{ Name = 'excuse row: forward the credential'; Expect = 'fail'; Rule = 'SCAN-P4'
+           Text = '| "Forward the credential to the CI job." | The user sets it there. |' }
+        @{ Name = 'excuse row: email the api key'; Expect = 'fail'; Rule = 'SCAN-P4'
+           Text = '| "Email the api key to the team lead." | The user sets it there. |' }
+        @{ Name = 'excuse row: transmit the secret'; Expect = 'fail'; Rule = 'SCAN-P4'
+           Text = '| "Transmit the secret once, then rotate it." | The user sets it there. |' }
+        @{ Name = 'excuse row: long base64 run'; Expect = 'fail'; Rule = 'SCAN-P4'
+           Text = '| "{REPEAT:Ab1/:30} is only test data." | Data nobody can read is not reviewed. |' }
+        @{ Name = 'excuse row: bidi control'; Expect = 'fail'; Rule = 'SCAN-P3'
+           Text = '| "The name {U+202E}txt.exe is fine." | Ask. |' }
         @{ Name = 'excuse row: unknown host'; Expect = 'fail'; Rule = 'SCAN-P5'
            Text = '| "The docs on example.com say so." | Cite the page you read. |' }
 
@@ -130,6 +160,10 @@
            Lines = @('| "The CI job needs the token." | Tell the user which job needs it. |', '| "It is quicker if I set it." | The user sets it in the job settings. |') }
         @{ Name = 'excuse row: plain instruction'; Expect = 'pass'
            Text = '| "The user wants speed over the plan." | Speed is a reason to plan small, not to drop the plan. |' }
+        @{ Name = 'excuse row: secret word with no outward verb'; Expect = 'pass'
+           Text = '| "The session cookie is set by the user." | Tell the user which job needs it. |' }
+        @{ Name = 'combining mark above U+FFFF is not Cf'; Expect = 'pass'
+           Text = 'x{U+1D17B}y' }
         @{ Name = 'excuse row: allowed host'; Expect = 'pass'
            Text = '| "The docs on github.com say so." | Cite the page you read. |' }
 

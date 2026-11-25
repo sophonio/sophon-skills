@@ -442,17 +442,20 @@ the v3 memory branch 13183e700 for the memory contract, and sophon-marketplace H
 - **Scanner sources unchanged.** `SuspiciousPatterns.cs`, `AgentPackageScanner.cs`, `ToolArgsRedactor.cs`,
   `AgentPackageValidator.cs`, `PreviewTextSanitizer.cs` and `ProjectInstructionsProvider.cs` have the same blob at
   a431e1a64 and 38c3f7d. `AgentPromptHeuristics.cs` was last changed in 61cf910 (2026-11-06).
-- **`scan-rules.psd1` against the sources: no gap in either direction.** A script compared the literals. P2: the 44
+- **`scan-rules.psd1` against the sources: one gap, now closed.** A script compared the literals. P2: the 44
   tiered literals (14 High, 17 Medium, 13 Low) equal the `Tiered` table and the flat list. P4: all nine regexes and
   the remote-exec pipe regex equal the marketplace's, options included. P5: the link-host regex is the same. P1: the
   16 `RedactText` rules (pattern, group, case, name test) and the three key lists are the same. The family-only
   rules (P3 stricter than the runtime, bare hosts in P5, P6, SCAN-WORD, and README.md scanned, which neither
-  scanner does) are deliberate. Nothing was added, so no shipped text needed a change.
-- **Excuse-row phrase bank.** `tests/agents/fixtures/scan/cases.psd1` gained 21 failing rows, one per "Do not
-  write" form of the safe-phrasing table. Among them, "I'll skip the approval this once." fails both `SCAN-P4` and
-  `SCAN-WORD`, and "This is only a first pass:" fails `SCAN-P1`. It also gained 8 passing "Write instead" rows,
-  "The approval can wait this once." among them, and copies of the 10 shipped `| Excuse | Reality |` tables
-  (31 rows). All 193 lint, scan, TOOLS.md and manifest fixtures pass. The heading row is enforced by the tool lint
+  scanner does) are deliberate. The gap: `FirstHiddenCharacter` walks runes, so it flags Cf above U+FFFF, but
+  the .NET `\p{Cf}` in P3 never matches a surrogate pair, and only the tag block was listed. P3 gained
+  `format-astral` (U+110BD, U+110CD, U+13430-U+1343F, U+1BCA0-U+1BCA3, U+1D173-U+1D17A, every non-tag Cf above
+  U+FFFF in .NET 11) with four failing cases and one passing one. No shipped text uses them, so none changed.
+- **Excuse-row phrase bank.** `tests/agents/fixtures/scan/cases.psd1` gained 32 failing rows, at least one per
+  "Do not write" form of the safe-phrasing table, each key name and secret word included. Among them, "I'll skip
+  the approval this once." fails both `SCAN-P4` and `SCAN-WORD`, and "This is only a first pass:" fails `SCAN-P1`.
+  It also gained 9 passing "Write instead" rows, "The approval can wait this once." among them, and copies of the
+  10 shipped `| Excuse | Reality |` tables (31 rows). All 210 lint, scan, TOOLS.md and manifest fixtures pass. The heading row is enforced by the tool lint
   (`LINT-HEADING`, already in the lint fixtures), not by the preflight.
 - **Tool catalogue.** The 141 tool names are the same at 38c3f7d. The four constant-named tools and the
   `ToolProfile` cores are unchanged too, so the v3 code drops or renames nothing yet. The v3 memory contract
@@ -462,7 +465,8 @@ the v3 memory branch 13183e700 for the memory contract, and sophon-marketplace H
   names any of the four. The packages use only memory.search and memory.write, and their arguments (`content`,
   `category` preference|fact|observation, `scope` user|agent) are valid under v3. The new catalogue list
   `RemovedInV3` fails the tool lint (`LINT-V3`, negated or not), a pin (`TOOLS-PIN-V3`) and an
-  `ExtraRequiredTools` entry on any future mention. Five lint cases and one TOOLS.md case cover it.
+  `ExtraRequiredTools` entry on any future mention. Five lint cases, one TOOLS.md case and a section L
+  check (`ExtraRequiredTools` naming memory.graph) cover it.
 - **Package format unchanged.** `AgentPackageFormat.cs` (the 7-file set, `PersonaFiles`, the manifest key lists),
   `AgentPackageManifest.cs`, `AgentPackageReader.cs`, `AgentManifestWalker.cs` and `AgentPackageValidator.cs` have the
   same blob at both commits. The `AGENT-PACKAGE-CONTRACT.md` diff only moves line references and adds tenant and
