@@ -161,7 +161,7 @@ function Get-AgentEvalFixtureInfo {
     .SYNOPSIS
         Reads every fixture folder under <EvalRoot>/fixtures: its fixture.psd1, its patches and its file texts.
     .DESCRIPTION
-        Returns @{ Fixtures = @{ <name> = @{ Dir; Base; Patches = @{ <name> = @{ File; Exists; Commit; Branch } }; Files = @(@{ Path; Text }); Error } };
+        Returns @{ Fixtures = @{ <name> = @{ Dir; Base; Patches = @{ <name> = @{ File; Exists; Commit; Branch; Remote } }; Files = @(@{ Path; Text }); Error } };
         Briefs = @{ <file name> = <text> } }.
     #>
     [CmdletBinding()]
@@ -187,7 +187,7 @@ function Get-AgentEvalFixtureInfo {
                 if ($data.ContainsKey('Base')) { $info['Base'] = [string]$data['Base'] }
                 if ($data.ContainsKey('Test')) { $info['Test'] = [string]$data['Test'] }
                 $patches = $data['Patches']
-                if ($null -ne $patches -and $patches -isnot [hashtable]) { $info['Error'] = 'Patches must be @{ <name> = @{ Why; Commit; Branch } }' }
+                if ($null -ne $patches -and $patches -isnot [hashtable]) { $info['Error'] = 'Patches must be @{ <name> = @{ Why; Commit; Branch; Remote } }' }
                 elseif ($null -ne $patches) {
                     foreach ($name in @($patches.Keys)) {
                         $entry = $patches[$name]
@@ -197,6 +197,7 @@ function Get-AgentEvalFixtureInfo {
                             Exists = (Test-Path -LiteralPath $file -PathType Leaf)
                             Commit = if ($entry -is [hashtable] -and $entry.ContainsKey('Commit')) { [string]$entry['Commit'] } else { '' }
                             Branch = if ($entry -is [hashtable] -and $entry.ContainsKey('Branch')) { [string]$entry['Branch'] } else { '' }
+                            Remote = if ($entry -is [hashtable] -and $entry.ContainsKey('Remote')) { [string]$entry['Remote'] } else { '' }
                             Why    = if ($entry -is [hashtable] -and $entry.ContainsKey('Why')) { [string]$entry['Why'] } else { '' }
                         }
                     }
@@ -713,7 +714,7 @@ function New-AgentEvalTestContext {
         DefaultFamily = 'fam'
         FragmentText  = @{ fam = @{ '09b-test-first' = "## Test first`nWrite the failing test first.`n"; '16-reporting' = "## Reporting`nSay terse to switch.`n"; '07b-discovery' = "## Discovery`nOpt-out: say ""just build it"".`n" } }
         SoulText      = @{ dev = "# Dev`n## Root cause first`n" }
-        Fixtures      = @{ 'repo-x' = @{ Dir = ''; Base = ''; Test = ''; Error = ''; Patches = @{ p1 = @{ File = ''; Exists = $true; Commit = ''; Branch = ''; Why = '' }; gone = @{ File = ''; Exists = $false; Commit = ''; Branch = ''; Why = '' } }; Files = @(@{ Path = 'files/README.md'; Text = "A plain project.`n" }) } }
+        Fixtures      = @{ 'repo-x' = @{ Dir = ''; Base = ''; Test = ''; Error = ''; Patches = @{ p1 = @{ File = ''; Exists = $true; Commit = ''; Branch = ''; Remote = ''; Why = '' }; gone = @{ File = ''; Exists = $false; Commit = ''; Branch = ''; Remote = ''; Why = '' } }; Files = @(@{ Path = 'files/README.md'; Text = "A plain project.`n" }) } }
         Briefs        = @{ 'b.md' = "You are a delegated sub-agent working at depth 1 of 3.`n`nTask:`nROLE: dev`n" }
         Corpus        = "Every package says: the quick brown fox jumps over the lazy dog near the river bank today.`n"
         Mentions      = [string[]]@('dev-agent')
@@ -787,7 +788,9 @@ function New-AgentEvalWorkspace {
     .SYNOPSIS
         Copies a fixture (after its Base) to Destination, makes it a git repository with one commit on main, and
         applies the Setup patches: a patch with Commit is committed (on its Branch when it names one), any other
-        patch is left uncommitted.
+        patch is left uncommitted. A patch with Remote first pushes the current branch, with upstream tracking, to a
+        new bare repository beside Destination (<Destination>-<Remote>.git) added under that remote name, so the
+        patch's commit is one ahead of the remote.
     #>
     [CmdletBinding()]
     param(
@@ -815,6 +818,14 @@ function New-AgentEvalWorkspace {
     foreach ($patch in $Setup) {
         $entry = $info['Patches'][$patch]
         if ($null -eq $entry) { throw "fixture $Name has no patch '$patch'" }
+        if ($entry['Remote']) {
+            $bare = Join-Path (Split-Path -Parent $Destination) ((Split-Path -Leaf $Destination) + "-$($entry['Remote']).git")
+            if (Test-Path -LiteralPath $bare) { throw "the remote folder $bare already exists" }
+            Invoke-EvalGit $Destination @('init', '-q', '--bare', '-b', 'main', $bare) | Out-Null
+            Invoke-EvalGit $Destination @('remote', 'add', $entry['Remote'], $bare.Replace('\', '/')) | Out-Null
+            $branch = @(Invoke-EvalGit $Destination @('rev-parse', '--abbrev-ref', 'HEAD'))[0]
+            Invoke-EvalGit $Destination @('push', '-q', '-u', $entry['Remote'], $branch) | Out-Null
+        }
         if ($entry['Branch']) { Invoke-EvalGit $Destination @('checkout', '-q', '-b', $entry['Branch']) | Out-Null }
         Invoke-EvalGit $Destination @('apply', '--whitespace=nowarn', $entry['File']) | Out-Null
         if ($entry['Commit']) {

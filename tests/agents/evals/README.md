@@ -40,7 +40,7 @@ briefs. Results go to `results/<version>.md`; transcripts go to `dist/evals/<dat
 ```
 
 - `Fixture` names a folder under `fixtures/`, or `none`. `Setup` names its patches: a patch with `Commit` in
-  its `fixture.psd1` is committed (on its `Branch`), any other is left uncommitted.
+  its `fixture.psd1` is committed (on its `Branch`), any other is left uncommitted. A patch with `Remote` first pushes`n  the branch to a local bare repository beside the workspace under that remote name (PRS-OG1 uses one).
 - `Turns` is sent unchanged; a multi-turn scenario is scored on its last turn. A delegated scenario
   (`Mode = 'delegated'`) sends its `Brief` from `fixtures/briefs/` instead. `Mode = 'plan'` turns plan mode on.
   `SameRunAs` scores another scenario's run. `Manual = $true` is run by hand only. `Skill = 'installed'` needs
@@ -122,7 +122,7 @@ and one `NOTE` or `ERROR` line per finding. It checks:
 
 `tests/agents/Test-AgentPackages.ps1` (section M) runs the lint's own cases
 (`tests/agents/fixtures/evals/cases.psd1`), the scorer on two recorded transcripts and on in-memory ones (the
-PRS-EV1 and PRS-EV2 events, a cut `argsPreview`), the runner's exec line, package choice, SOUL hash and run-error
+PRS-EV1, PRS-EV2, PRS-OG1, PRS-PF1 and PRS-SN1 events, a cut `argsPreview`), the runner's exec line, package choice, SOUL hash and run-error
 rule, the `-Run` Gateway guard and its `-AllowTestGateway` opt-in (the URL decision, the `-eval` install ids and
 the `-Cleanup` ledger), the lint on these files, every fixture and patch as a git workspace, and
 `-Prepare` on two scenarios.
