@@ -141,11 +141,12 @@ Two workflows live in `.github/workflows/`:
   `agents/`, `tests/skills/`, `tests/build/`, `tests/agents/`, `templates/`, the root `LICENSE`, or
   one of the documents whose agent counts `DOC-COUNT` checks (`README.md`, `CLAUDE.md`,
   `CONTRIBUTING.md`, `docs/AGENTS.md`, `docs/PUBLISHING.md`, `tests/README.md`). Its steps:
-  `Build-MarketplacePackages.ps1 -ValidateOnly`; `generate.py --check` for `ffmpeg-video` and for
-  `craft-reference`; `Test-CraftSources.ps1` (the craft-reference topic sources); `Test-SkillLint.ps1`;
-  `run_all.py`; the agent source checks (`Compose-AgentSouls.ps1 -Check`, then
-  `Test-AgentSources.ps1`, which includes `DOC-COUNT`); and the instruction-test scenario lint
-  (`Invoke-AgentEvals.ps1 -ValidateOnly`). Each step runs even when an earlier one failed. It needs no
+  `Build-MarketplacePackages.ps1 -ValidateOnly`; `generate.py --check` for `ffmpeg-video` and
+  `generate.py --check --release` for `craft-reference`; `Test-CraftSources.ps1` (the craft-reference
+  topic sources); `Test-SkillLint.ps1`; `run_all.py`; the agent source checks
+  (`Compose-AgentSouls.ps1 -Check`, then `Test-AgentSources.ps1 -Release`, which includes `DOC-COUNT`);
+  and the instruction-test scenario lint (`Invoke-AgentEvals.ps1 -ValidateOnly -Release`). The release
+  switches make every change a release check. Each step runs even when an earlier one failed. It needs no
   configuration, no Sophon CLI and no Gateway; the CLI checks and the package build stay local.
 - **`ffmpeg-video.yml`** runs on changes to the `ffmpeg-video` skill, its build folder, the skill
   lint or its tests: unit tests on Python 3.10 and 3.13, the Python-floor refusal, real-FFmpeg

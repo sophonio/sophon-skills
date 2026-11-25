@@ -102,8 +102,8 @@ that misses the ship rule there is reworded or goes to the owner as described ab
 ## 2. The scenario lint
 
 ```powershell
-pwsh -NoProfile -File tests/agents/evals/Invoke-AgentEvals.ps1 -ValidateOnly            # daily and in CI
-pwsh -NoProfile -File tests/agents/evals/Invoke-AgentEvals.ps1 -ValidateOnly -Release   # the release gate
+pwsh -NoProfile -File tests/agents/evals/Invoke-AgentEvals.ps1 -ValidateOnly            # daily
+pwsh -NoProfile -File tests/agents/evals/Invoke-AgentEvals.ps1 -ValidateOnly -Release   # the release gate, and in CI
 ```
 
 It needs no Sophon CLI and no Gateway, and prints the scenario counts per tier, the pending rows per milestone

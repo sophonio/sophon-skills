@@ -95,11 +95,11 @@ pwsh -NoProfile -File tests/agents/Test-AgentPackages.ps1
 # sections A-I, L, M and N, no Sophon CLI; prints "CLI CHECKS NOT RUN (-SourceOnly)" in red
 pwsh -NoProfile -File tests/agents/Test-AgentPackages.ps1 -SourceOnly
 
-# the source checks on their own (what CI runs, with Compose-AgentSouls.ps1 -Check): A-I and M per family, N once
+# the source checks on their own (CI runs the -Release line, with Compose-AgentSouls.ps1 -Check): A-I and M per family, N once
 pwsh -NoProfile -File build/Test-AgentSources.ps1
 pwsh -NoProfile -File build/Test-AgentSources.ps1 -Release   # the release gate: headroom, RoleCap, anchors Pending, DOC-COUNT
 
-# the instruction-test scenario lint (CI runs it too)
+# the instruction-test scenario lint (CI runs it with -Release)
 pwsh -NoProfile -File tests/agents/evals/Invoke-AgentEvals.ps1 -ValidateOnly
 
 # the Sophon-default digest check (maintainer only, at every family release; needs the sibling sophon repository)

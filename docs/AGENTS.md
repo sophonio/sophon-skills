@@ -396,7 +396,7 @@ build/licenses/Apache-2.0.txt the LICENSE the Apache-2.0 agents ship
 build/AgentFamily.psm1        registry, roster, composer, Method registry, anchors, DOC-COUNT
 build/AgentLint.psm1          tool-name lint, scanner preflight, TOOLS.md parser, manifest checks
 build/Compose-AgentSouls.ps1  [-RepoRoot] [-Agents] [-Check] [-OutDir] [-Explain] [-Family] [-Omit]
-build/Test-AgentSources.ps1   sections A-I and M per family, N once, no Sophon CLI needed (CI runs it) [-Agents] [-Family] [-Release]
+build/Test-AgentSources.ps1   sections A-I and M per family, N once, no Sophon CLI needed (CI runs it with -Release) [-Agents] [-Family] [-Release]
 build/Build-AgentPackages.ps1 [-RepoRoot] [-OutputDir] [-Agents] [-ValidateOnly] [-Family] [-Release]
 tests/agents/                 Test-AgentPackages.ps1 (A-N), Compare-AgentSouls.ps1, Compare-SophonDigest.ps1, fixtures/, evals/
 ```
@@ -418,7 +418,7 @@ tests/agents/                 Test-AgentPackages.ps1 (A-N), Compare-AgentSouls.p
 - **Reference topics** (`LINT-TOPIC`, `LINT-SKILL-FRAGMENT`, `LINT-SKILL-UNUSED`): every "topic `<id>`" pointer must exist in `build/craft-reference/topics.index.json`, the reference fragment must be in exactly the agents that use the skill, and a policy skill no agent uses fails.
 - **Document counts** (`DOC-COUNT`, section N, once per repository): a number of 10 or more before "agents", "packages" or "companions" in the documents listed in `build/agent-src/catalog/doc-counts.psd1` must be a roster count derived from the families (all packages, a family roster, the `RosterOrder` table, the lead's companions) or an allowed value; an intended older count goes under `History`. It warns, and fails only with `-Release`.
 - **Control arms.** `Compose-AgentSouls.ps1 -Agents <id> -Omit <rule or fragment id> -OutDir <folder>` composes an agent without a registered rule (or a fragment) for a pressure scenario. It is refused without `-OutDir`, with `-Check`, for an `-OutDir` inside `agents/`, and for an agent that does not carry the id; it prints the source, line range, lines and bytes it removed.
-- **Instruction tests.** `tests/agents/evals/Invoke-AgentEvals.ps1 -ValidateOnly` lints the scenarios (no CLI, no Gateway; CI runs it) and `-Release` fails while a row is still `Pending`. Run it before a pull request that touches agent text. The tiers, the ship rule, the by-hand steps and the headless runner are in [`tests/agents/evals/README.md`](../tests/agents/evals/README.md).
+- **Instruction tests.** `tests/agents/evals/Invoke-AgentEvals.ps1 -ValidateOnly` lints the scenarios (no CLI, no Gateway; CI runs it with `-Release`) and `-Release` fails while a row is still `Pending`. Run it before a pull request that touches agent text. The tiers, the ship rule, the by-hand steps and the headless runner are in [`tests/agents/evals/README.md`](../tests/agents/evals/README.md).
 
 **The reference skill.** `skills/craft-reference/` is generated: edit the topic sources under `build/craft-reference/` and run `python -B build/craft-reference/generate.py` (`--check` for drift, `--release` for the release rules). `pwsh -NoProfile -File build/craft-reference/Test-CraftSources.ps1` checks the topic sources, and `python tests/skills/run_all.py` runs the skill's offline tests. Its tools are `craft.topics` and `craft.read`, risk `none`, read-only, with no network, credentials or files. The skill carries reference data only: gates, approvals and output formats stay inline in each SOUL, and every agent works without it.
 

@@ -10,6 +10,8 @@ name: validate
 # TOOLS.md, and the roster counts the documents state (DOC-COUNT). The Sophon CLI checks (sophon dev
 # validate and the package build) are not run here; maintainers run them locally before publishing. The last step lints the instruction-test scenarios
 # (tests/agents/evals/Invoke-AgentEvals.ps1 -ValidateOnly), which needs no CLI and no Gateway. ffmpeg-video's own jobs are in ffmpeg-video.yml.
+# From milestone M9 of the agents v3 design on, the agent source checks, the scenario lint and the craft-reference
+# generator run with their release switch (-Release, --release), so every change is checked as a release.
 
 on:
   push:
@@ -71,9 +73,9 @@ jobs:
       - name: Check ffmpeg-video generated files (generate.py --check)
         if: ${{ !cancelled() }}
         run: python -B build/ffmpeg-video/generate.py --check
-      - name: Check craft-reference generated files (generate.py --check)
+      - name: Check craft-reference generated files (generate.py --check --release)
         if: ${{ !cancelled() }}
-        run: python -B build/craft-reference/generate.py --check
+        run: python -B build/craft-reference/generate.py --check --release
       - name: Check craft-reference topic sources (Test-CraftSources.ps1)
         if: ${{ !cancelled() }}
         shell: pwsh
@@ -91,9 +93,9 @@ jobs:
         run: |
           pwsh -NoProfile -File build/Compose-AgentSouls.ps1 -Check
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          pwsh -NoProfile -File build/Test-AgentSources.ps1
+          pwsh -NoProfile -File build/Test-AgentSources.ps1 -Release
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Lint the instruction-test scenarios (Invoke-AgentEvals.ps1 -ValidateOnly)
+      - name: Lint the instruction-test scenarios (Invoke-AgentEvals.ps1 -ValidateOnly -Release)
         if: ${{ !cancelled() }}
         shell: pwsh
-        run: pwsh -NoProfile -File tests/agents/evals/Invoke-AgentEvals.ps1 -ValidateOnly
+        run: pwsh -NoProfile -File tests/agents/evals/Invoke-AgentEvals.ps1 -ValidateOnly -Release

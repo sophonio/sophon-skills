@@ -1,7 +1,7 @@
 # Agents v3: release checklist (owner runbook)
 
 - **Date:** 2026-11-25 (milestone M9, release candidate).
-- **Branch:** `agents-v3`. Release-candidate commit: the commit that adds this file (`git log -1 --format=%H -- docs/plans/2026-11-25-agents-v3-release-checklist.md`).
+- **Branch:** `agents-v3`. Release-candidate commit: the last commit that changes this file (`git log -1 --format=%H -- docs/plans/2026-11-25-agents-v3-release-checklist.md`).
 - **Design:** [`2026-11-23-agents-v3-design.md`](2026-11-23-agents-v3-design.md), "Release" and "Publish order". Spike results:
   [`2026-11-24-agents-v3-spike-results.md`](2026-11-24-agents-v3-spike-results.md).
 - **What ships:** 21 development agents at 3.0.0, `craft-reference` 1.0.0, and `video-producer` 1.0.0 unchanged
@@ -16,6 +16,7 @@ or ruled on.
 | Check | Result on 2026-11-25 |
 |---|---|
 | The gate: compose and `-Check`, `Test-AgentSources.ps1` with and without `-Release`, `Build-AgentPackages.ps1`, `Test-AgentPackages.ps1 -SourceOnly`, `Invoke-AgentEvals.ps1 -ValidateOnly`, `Test-SkillLint.ps1`, `generate.py --check --release`, `Test-CraftSources.ps1`, `run_all.py`, `Build-MarketplacePackages.ps1 -ValidateOnly` | all exit 0 |
+| CI (`validate.yml`), switched in M9 as the design asks | `Test-AgentSources.ps1 -Release`, `Invoke-AgentEvals.ps1 -ValidateOnly -Release` and the craft-reference `generate.py --check --release`; all three exit 0 locally |
 | Reproducible agent build: `Build-AgentPackages.ps1 -Release` twice into two empty folders, at `be0945c` and again at `080a212` | each time the two `SHA256SUMS` files are byte-identical; 22 packages, 0 CLI errors and 0 warnings (section 8) |
 | Reproducible skill build: `Build-MarketplacePackages.ps1 -Skills craft-reference` twice into two empty folders | the same file twice: `a84f4504f12d0f3ce93915168765c6978cef23e3cb9f36a2eb1c6de3982c13c7  craft-reference-1.0.0.sophon-skill` |
 | video-producer | `96bcd4d883d1ad7d691fb36492eca462bc8b56d3a334f8ae0b993cd907808e94`, equal to the 2.1.0 baseline |
@@ -256,8 +257,6 @@ transcript before you accept it.
 - **Sophon v3:** against the newest v3-main worktree, compare `SuspiciousPatterns.cs` and
   `docs/AGENT-PACKAGE-FORMAT.md` with `a431e1a64`; a changed phrase list goes into
   `build/agent-src/catalog/scan-rules.psd1`, then the preflight and `CRAFT-FLAT` run again.
-- **CI:** the design has `validate.yml` pass `-Release` from M9 on; it does not yet. Add `-Release` to its
-  `Test-AgentSources.ps1` and `Invoke-AgentEvals.ps1 -ValidateOnly` steps (both pass with it on 2026-11-25).
 
 ## 7. Publish, in this order
 

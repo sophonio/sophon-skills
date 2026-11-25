@@ -216,8 +216,8 @@ and **video** (`video-producer`, `build/agent-src/families/video/family.psd1`).
 - A new discipline rule is registered in the family's `Method` key with one excuse table and a
   pressure scenario whose control arm fails without it (see [`CLAUDE.md`](CLAUDE.md), "Method").
 - Before a PR, run `pwsh -NoProfile -File build/Test-AgentSources.ps1` and the scenario lint,
-  `pwsh -NoProfile -File tests/agents/evals/Invoke-AgentEvals.ps1 -ValidateOnly` (CI runs both,
-  together with `Compose-AgentSouls.ps1 -Check`). With Sophon CLI 2.2.x installed, also run
+  `pwsh -NoProfile -File tests/agents/evals/Invoke-AgentEvals.ps1 -ValidateOnly` (CI runs both with
+  `-Release`, together with `Compose-AgentSouls.ps1 -Check`). With Sophon CLI 2.2.x installed, also run
   `pwsh -NoProfile -File tests/agents/Test-AgentPackages.ps1`; without it, add `-SourceOnly`.
 - A count of agents, packages or companions in the documents must match the rosters (`DOC-COUNT`,
   checked by `Test-AgentSources.ps1`).
