@@ -217,6 +217,9 @@ development family 3.0.0 is then published in this order, by hand:
 6. Announce when all 21 agents are approved, then tag `agents-v3.0.0` and commit its `SHA256SUMS` as
    the baseline for 3.0.x.
 
+The owner runbook for the 3.0.0 release, with the sweep, the install previews, the smoke scenarios, the
+ship rule and the tag, is [the release checklist](plans/2026-11-25-agents-v3-release-checklist.md).
+
 That is 22 uploads. The hourly upload limit is a deployment setting (the Marketplace source defaults to
 500 for one publisher), so confirm the production value before planning the sitting. Publishing stays
 manual: nothing on merge or in CI uploads an agent, and the full runbook is in
