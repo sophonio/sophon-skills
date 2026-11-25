@@ -17,7 +17,7 @@ or ruled on.
 |---|---|
 | The gate: compose and `-Check`, `Test-AgentSources.ps1` with and without `-Release`, `Build-AgentPackages.ps1`, `Test-AgentPackages.ps1 -SourceOnly`, `Invoke-AgentEvals.ps1 -ValidateOnly`, `Test-SkillLint.ps1`, `generate.py --check --release`, `Test-CraftSources.ps1`, `run_all.py`, `Build-MarketplacePackages.ps1 -ValidateOnly` | all exit 0 |
 | CI (`validate.yml`), switched in M9 as the design asks | `Test-AgentSources.ps1 -Release`, `Invoke-AgentEvals.ps1 -ValidateOnly -Release` and the craft-reference `generate.py --check --release`; all three exit 0 locally |
-| Reproducible agent build: `Build-AgentPackages.ps1 -Release` twice into two empty folders, at `be0945c` and again at `080a212` | each time the two `SHA256SUMS` files are byte-identical; 22 packages, 0 CLI errors and 0 warnings (section 8) |
+| Reproducible agent build: `Build-AgentPackages.ps1 -Release` twice into two empty folders, at `be0945c`, at `080a212` and again at `e6d959a` (after the sweep's text fixes) | each time the two `SHA256SUMS` files are byte-identical; 22 packages, 0 CLI errors and 0 warnings (section 8) |
 | Reproducible skill build: `Build-MarketplacePackages.ps1 -Skills craft-reference` twice into two empty folders | the same file twice: `a84f4504f12d0f3ce93915168765c6978cef23e3cb9f36a2eb1c6de3982c13c7  craft-reference-1.0.0.sophon-skill` |
 | video-producer | `96bcd4d883d1ad7d691fb36492eca462bc8b56d3a334f8ae0b993cd907808e94`, equal to the 2.1.0 baseline |
 | Sweep preparation (`Invoke-AgentEvals.ps1 -Prepare`) | 62 scenarios prepared, 14 control packages built, nothing installed (section 2), after `ea03bd9` fixed the prepare mode for a scenario without a fixture |
@@ -55,6 +55,17 @@ control-first and premises-first flagged (wording proposals recorded there, not 
 readable (scenario and scorer defects); run-evidence, test-integrity, receiving-review and root-cause not shown
 to be needed (their controls pass). Before any further batch, review the test Gateway's shared memory: entries
 from the baseline runs bias PRS-TF1, and runs carry memory into later runs (caveat 2 there).
+
+**Re-run (2026-11-25), same file, section "Re-run 2026-11-25".** After the owner approved proposals 1 to 4 and the
+scenario rewording, both arms ran again for PRS-TF1, -TF2, -CF1, -PF1, -OG1, -RR1, -EV1, -EV2, -DG1, -TI1 and
+-RC1 (64 scored Opus runs, $14.44 of a $15 hard stop, a fresh `-eval` id per run; shared memory could not be
+turned off and is recorded as a confound). Outcome: control-first now shown, with discovery-gate and
+split-never-shrink; premises-first now holds but is not shown to be needed, like run-evidence and
+test-integrity (owner decides on their excuse tables); root-cause the same on 2 runs, incomplete (PRS-RC1 rep 3
+and PRS-RC2 not run for the budget); test-first still does not hold (the agent asks once, then takes the
+unanswered question as a no); outward-gate and receiving-review not readable (scenario defects). Proposals R1 to
+R5 there, not applied. Nothing is cut; the packages are unchanged by the re-run and the section 8 sums are those
+of `e6d959a`.
 
 **Still the owner's, by hand:** the acceptance track (ACC-01 to ACC-32), the 3.0.0 design track (DSN-01 to
 DSN-13) and the voice track (VOC-01 to VOC-07); DSN-10, DSN-12 and VOC-08; the smoke scenarios of section 5
@@ -335,23 +346,25 @@ git commit -m "test(agents): record the 3.0.0 package hashes as the baseline for
 git push origin agents-v3.0.0
 ```
 
-The `SHA256SUMS` of the release candidate, built with `-Release` twice at `080a212` (the commit before this
-file; this file changes no package), both builds byte-identical; the file itself has sha256
-`8b5d08618f430fc0a724679ed6bb4ff0a6e0dcedf21a3c67f044814d5071d3fc`:
+The `SHA256SUMS` of the release candidate, built with `-Release` twice at `e6d959a` (after the sweep's text fixes,
+before the re-run was recorded; recording it changes no package), both builds byte-identical; the file itself
+has sha256 `2220ade6e061dcfc69c2876c40c029e96752ecc7480ba0ed8df5c3cf01055c6b`. It replaces the `080a212`
+sums: seven packages changed (agent-engineer, debugger, developer, frontend-developer, lead-developer,
+mcp-integration-engineer, product-manager); the other fourteen and video-producer are the same bytes:
 
 ```text
 6cb49a272a2d436d206dff4e24a195f16b940f22b1a35bb46047c115a9f0cc31  accessibility-reviewer-3.0.0.sophon-agent
-1c483694e80ada25347b6738bb978a77eb762f894b18b8803ccb9fdc8b7af8c8  agent-engineer-3.0.0.sophon-agent
+c72e59fae436a7433cab42cb7e295423d1cfc630b2d7a040369984c9be6b6678  agent-engineer-3.0.0.sophon-agent
 54a3e8c903a9a5ca6e2fc9ece20027ccd4d642755dbeacbefddaaa5c05395ec2  artifact-creator-3.0.0.sophon-agent
 fb7acc82165c775e7980b3b5b3ce8913d35f342bdaa631ccc7ce53fd253544c4  code-reviewer-3.0.0.sophon-agent
-3cb48940c9363b5e84fe5144d30bb6b5f4a96078cc52a122f647f3725a85744a  debugger-3.0.0.sophon-agent
+dd4e0d7387afdaabbcd49702d3656fbc6ecb096a2460fac6a75fedaa24667120  debugger-3.0.0.sophon-agent
 21e5dc7855f563730ecfcf56f5753415f8387e77cd352ce7de8afc0caa811323  design-system-engineer-3.0.0.sophon-agent
-816113b90b199a3d6b1007c191247885d384d09157a3953eb5f761508d2da1b3  developer-3.0.0.sophon-agent
+be9b968447638fa8a1bf457fb4f3265d3de2385ba76c67b9af55480c3a57a871  developer-3.0.0.sophon-agent
 4b960f0db9fca7cf8ee60deea34d0515811c8fbc9c81d47370162b1fbba9fe38  e2e-test-engineer-3.0.0.sophon-agent
-000d33f94038331861133ba5addce5034b6339c385cb0e0af40514a0503c5246  frontend-developer-3.0.0.sophon-agent
-62041223a4e3d74f4f5e01c1061ee7c37d6e664d98446710207673a2fff1b2b6  lead-developer-3.0.0.sophon-agent
-991fa3fd2b425153d70e17e8d5dae05ca43ba27b170d51eb88363aa2f2a7fed6  mcp-integration-engineer-3.0.0.sophon-agent
-10b20ac3fbf27cfe533ae5ea66a855d8fae7f939cc57af3d86dae51ac92d5a82  product-manager-3.0.0.sophon-agent
+b12591b690f7e6615e031826d686d45f22710c9563955c05863bfd0d0896fea5  frontend-developer-3.0.0.sophon-agent
+05fe154da45e2a4dfc09dbf30124a1b0e24711bf9bc13853745891b6878c3549  lead-developer-3.0.0.sophon-agent
+b8fb3aae7af5835d0840f57829b6dabad6ae9154c02446fc43faa6cd8d984bf3  mcp-integration-engineer-3.0.0.sophon-agent
+7d7631f76aa88bf5715cdcf2352d1500343cf47c96353c4e314be56c5ee9d13c  product-manager-3.0.0.sophon-agent
 4164ec3af97762dcc4d75981d7225f932f57aee463d1eecccd6aac1738345684  product-owner-3.0.0.sophon-agent
 141168f448d49c76e7bcad6adb5c9fd4d10ab3b76acbec2de809ddf43f396344  qa-engineer-3.0.0.sophon-agent
 6a88f591a8b899693282ccec191916f5c7878a663fb2622833f883b45cc892fa  release-engineer-3.0.0.sophon-agent
