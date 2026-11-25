@@ -1,0 +1,16 @@
+/* Fixture palette for Compare-SophonDigest.ps1: not the Sophon values. */
+@theme {
+  --color-background: #FAFAFA;
+  --color-foreground: #202020;
+  --color-card: #FFFFFF;
+}
+@layer base {
+  .dark {
+    --color-background: #101010;
+    --color-foreground: #E0E0E0;
+    --color-card: #181818;
+  }
+  body {
+    font-family: 'Facey', sans-serif;
+  }
+}

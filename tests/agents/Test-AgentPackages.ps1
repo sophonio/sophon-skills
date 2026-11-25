@@ -35,6 +35,8 @@
            for LINT-SKILL-FRAGMENT, LINT-SKILL-UNUSED and LINT-TOPIC, then the development family's own Method key (and a copy without its
            exemption or its test-integrity rule);
            in-memory anchor cases (ANCHOR-MISSING, ANCHOR-GONE, data errors); a smoke run of Compare-AgentSouls.ps1;
+           Compare-SophonDigest.ps1 on tests/agents/fixtures/digest (all found, two planted wrong values, SKIP without
+           the sibling repository);
            the scenario lint of the instruction tests on tests/agents/fixtures/evals/cases.psd1
            (Invoke-AgentEvalLintFixtures in tests/agents/evals/AgentEvals.psm1), the transcript scorer on two
            stream-json fixtures and on in-memory ones (PRS-EV1, PRS-EV2, a cut argsPreview), the runner's exec
@@ -1007,6 +1009,17 @@ try {
         $badBase = Invoke-Native $pwsh @('-NoProfile', '-NonInteractive', '-File', $compareScript, '-RepoRoot', $RepoRoot, '-Base', 'no-such-ref-for-the-test', '-Summary')
         $null = Test-Check 'M' ($compare.Code -eq 0 -and $compare.Text.Contains('lost line(s) in', $ord) -and $badBase.Code -eq 1) "Compare-AgentSouls.ps1 reports against HEAD (exit $($compare.Code)) and fails on an unknown base (exit $($badBase.Code))"
     }
+
+    # ---- M: Sophon-default digest check (fixtures; the real run needs the sibling repository) -------------
+    $digestScript = Join-Path $RepoRoot 'tests/agents/Compare-SophonDigest.ps1'
+    $digestFix = Join-Path $RepoRoot 'tests/agents/fixtures/digest'
+    $digestArgs = @('-NoProfile', '-NonInteractive', '-File', $digestScript, '-RepoRoot', $RepoRoot, '-TokenDir', (Join-Path $digestFix 'tokens'))
+    $digestOk = Invoke-Native $pwsh ($digestArgs + @('-FallbackDir', (Join-Path $digestFix 'fallback'), '-FragmentPath', (Join-Path $digestFix 'fragment-ok.md'), '-TopicPath', (Join-Path $digestFix 'topic-ok.md')))
+    $null = Test-Check 'M' ($digestOk.Code -eq 0 -and $digestOk.Text.Contains('OK: every value found or explained', $ord) -and $digestOk.Text.Contains('doc  topic:', $ord) -and -not $digestOk.Text.Contains('MISS', $ord)) "Compare-SophonDigest.ps1 finds every fixture value, one through a fallback document (exit $($digestOk.Code))"
+    $digestBad = Invoke-Native $pwsh ($digestArgs + @('-FragmentPath', (Join-Path $digestFix 'fragment-wrong.md'), '-NoTopic'))
+    $null = Test-Check 'M' ($digestBad.Code -eq 1 -and $digestBad.Text.Contains('MISS fragment:3  colour #212121 (light --color-foreground)', $ord) -and $digestBad.Text.Contains('MISS fragment:6  radius 12 px', $ord) -and $digestBad.Text.Contains('FAIL: 2 value(s) missed', $ord)) "Compare-SophonDigest.ps1 fails on the two planted wrong values (exit $($digestBad.Code))"
+    $digestAbsent = Invoke-Native $pwsh @('-NoProfile', '-NonInteractive', '-File', $digestScript, '-RepoRoot', $RepoRoot, '-SophonRepo', (Join-Path $digestFix 'no-such-repository'))
+    $null = Test-Check 'M' ($digestAbsent.Code -eq 0 -and $digestAbsent.Text.StartsWith('SKIP:', $ord)) "Compare-SophonDigest.ps1 reports SKIP and exits 0 without the sibling repository (exit $($digestAbsent.Code))"
 
     # ---- N: document counts -------------------------------------------------------------------------------
     Write-Host 'Running the document count cases ...'

@@ -101,6 +101,9 @@ pwsh -NoProfile -File build/Test-AgentSources.ps1 -Release   # the release gate:
 
 # the instruction-test scenario lint (CI runs it too)
 pwsh -NoProfile -File tests/agents/evals/Invoke-AgentEvals.ps1 -ValidateOnly
+
+# the Sophon-default digest check (maintainer only, at every family release; needs the sibling sophon repository)
+pwsh -NoProfile -File tests/agents/Compare-SophonDigest.ps1
 ```
 
 | Section | What it checks |
@@ -117,7 +120,7 @@ pwsh -NoProfile -File tests/agents/evals/Invoke-AgentEvals.ps1 -ValidateOnly
 | J | `sophon --version` matches each family's `SophonCli`; `sophon dev validate --json` per agent: ok, projectType agent, no errors, no warnings |
 | K | `build/Build-AgentPackages.ps1` into a temp folder: a decoy package removed; 22 `<id>-<version>.sophon-agent` (each version from its manifest); SHA256SUMS (22 lines, ordinal file-name order, LF, hashes recomputed); zip entries `manifest.json` first then ordinal, equal to the sources byte for byte, stamped 1980-01-01 00:00:00; identical repeat build; a subset build; failure cases (unknown agent, roster mismatch, name mismatch, SOUL drift, a lint error) |
 | L | families: a temporary copy with the fixture family `tests/agents/fixtures/families/media/` installed composes, lints and checks on its own (`-Family`); the roster union, and an id in two families fails; the legacy single family without a registry; `SkillPolicy` and the per-agent `Skills` key (absent, all, none, schema); `message.send` named only where `AllowRestrictedMentions` allows it and never pinned; `requires.skills` and `requires.tools` variants against `MAN-REQUIRES`; a skill below `MinVersion` fails `MAN-SKILL-VERSION` |
-| M | the Method registry and the instruction tests: the method fixtures (`METHOD-CONTROLLER`, `METHOD-EXCUSES`, `METHOD-REFERENCE`), the skill-use fixtures (`LINT-SKILL-FRAGMENT`, `LINT-SKILL-UNUSED`, `LINT-TOPIC`), the development family's own `Method` key; anchor cases (`ANCHOR-MISSING`, `ANCHOR-GONE`); a smoke run of `Compare-AgentSouls.ps1`; the scenario lint's own cases, the transcript scorer, the runner's exec line, package choice, SOUL hash and run-error rule, `Invoke-AgentEvals.ps1 -ValidateOnly` on the real scenario files (and `-Release` failing while a row is `Pending`), every eval fixture and patch as a git workspace, and `-Prepare` on two scenarios |
+| M | the Method registry and the instruction tests: the method fixtures (`METHOD-CONTROLLER`, `METHOD-EXCUSES`, `METHOD-REFERENCE`), the skill-use fixtures (`LINT-SKILL-FRAGMENT`, `LINT-SKILL-UNUSED`, `LINT-TOPIC`), the development family's own `Method` key; anchor cases (`ANCHOR-MISSING`, `ANCHOR-GONE`); a smoke run of `Compare-AgentSouls.ps1`; `Compare-SophonDigest.ps1` on the digest fixtures (all found, two planted wrong values, SKIP without the sibling repository); the scenario lint's own cases, the transcript scorer, the runner's exec line, package choice, SOUL hash and run-error rule, `Invoke-AgentEvals.ps1 -ValidateOnly` on the real scenario files (and `-Release` failing while a row is `Pending`), every eval fixture and patch as a git workspace, and `-Prepare` on two scenarios |
 | N | documents: `DOC-COUNT` from the repository pass of `Test-AgentSources.ps1`, plus a temporary copy with planted counts (number words and digits, qualifiers, a History phrase, and `-Release` turning the warning into an error) |
 
 Each section prints PASS, FAIL or SKIP, and the script exits 1 on any failure. Temporary folders
@@ -144,6 +147,9 @@ live under the system temp folder and are removed at the end; nothing in the rep
 - `baseline/SHA256SUMS-2.1.0` holds the package hashes of the 2.1.0 baseline; video-producer must still
   match it.
 - `evals/` holds the scenario lint's own cases and two recorded stream-json transcripts for the scorer.
+- `digest/` holds made-up token files (`tokens/`: `index.css`, `tokens.css`, `motion.css`), a fallback
+  `DESIGN.md`, a small fragment and topic whose values all resolve, and `fragment-wrong.md` with two planted
+  wrong values (a light text colour and a radius) that `Compare-SophonDigest.ps1 -TokenDir` must report.
 
 **Instruction tests** (`tests/agents/evals/`): the scenarios that show whether the agent text changes what
 an agent does, in four automated tiers (acceptance, pressure, design and voice) and the smoke scenarios
