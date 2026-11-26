@@ -1,5 +1,5 @@
 # Plan: Sophon Science M1 — evidence, bounded statistics and the science family
-Status: in-progress
+Status: done
 Date: 2026-11-26 · Agent: lead-developer · Size: large · Base: main@0103b15c · Branch: sophon/science-m1
 Approved: 2026-11-26 via info.request
 Consent: Team per task (2026-11-26)
@@ -74,10 +74,10 @@ M2-M5 (biology databases, managed compute, viewers, monitoring), OpenAlex, NCBI 
 | Wave | Phase | Agents | Access | Briefs | Gate | Status |
 |---|---|---|---|---|---|---|
 | 0 | Understand + Design | 3 researchers, 2 architects | read-only | research and compare briefs | design note approved | done |
-| 1-8 | Implement, one task per wave | implementer (developer; agent-engineer for Task 5) + code-reviewer | write / read-only | Task N heading, CHANGE working tree | APPROVE with SPEC: MET, then lead verify-and-commit | pending |
-| 9 | Final review | 1 code-reviewer, LENS cross-task (interfaces, Global constraints, Review focus including Task 3 egress) | read-only | branch diff file | findings at THRESHOLD 80 | pending |
-| 10 | Refute | 3 code-reviewers | read-only | Critical and Important findings | 2 of 3 CONFIRMED | pending |
-| 11 | Critic | 1 code-reviewer, MODE completeness | read-only | request, goal, verification, commits | COMPLETE | pending |
+| 1-8 | Implement, one task per wave | implementer (developer; agent-engineer for Task 5) + code-reviewer | write / read-only | Task N heading, CHANGE working tree | APPROVE with SPEC: MET, then lead verify-and-commit | done |
+| 9 | Final review | 1 code-reviewer, LENS cross-task (interfaces, Global constraints, Review focus including Task 3 egress) | read-only | branch diff file | findings at THRESHOLD 80 | done |
+| 10 | Refute | 3 code-reviewers | read-only | Critical and Important findings | 2 of 3 CONFIRMED | skipped (no Critical or Important finding) |
+| 11 | Critic | 1 code-reviewer, MODE completeness | read-only | request, goal, verification, commits | COMPLETE | done |
 
 ## Tasks
 ### Task 1: Add the science-statistics skill
@@ -135,9 +135,9 @@ Files: `build/agent-src/families.psd1` (modify), `build/agent-src/families/scien
 Depends on: Task 3
 Covers: none
 Interfaces: `SkillPolicy.Skills` = science-evidence, science-literature, science-statistics (MinVersion 1.0.0); per agent `Skills`: lead all three; literature-researcher literature + evidence; scientific-analyst statistics + evidence; scientific-reviewer all three; lead `SubAgents = @{ enabled = $true; maxDepth = 1 }`, the others disabled; each `whenToUse` ends "Family role: <id>."; `SoulCap` lead 24,576, others 16,384; `RoleCap` lead 8,192, others 4,096; `Credits = @{}`; no `Method` key and no excuse table.
-- [ ] direct (decision 2026-11-26: agent text is checked statically; live runs gate publishing). Write the family file and the registry entry; the fragments: ground rules (scope, non-clinical boundary, assumptions stated before calculation), evidence (the bundle fields, tool-reported provenance, citation resolution is not claim support, preprint and retraction labels), data (public or synthetic data, no secrets or patient data, no evidence in memory, approval before any network lookup batch), delegated contract (the brief keys and the STATUS block), reporting (claim table, limitations, what was not verified).
-- [ ] Role texts: the lead plans the question with the user through info.request, runs at most two literature tracks then one review through agent.delegate, assembles and verifies the bundle; the literature researcher searches, screens and quotes; the analyst refuses to compute until units, experimental unit and missing-value policy are stated; the reviewer reads the bundle, runs `scievidence.verify_bundle` and `scistat.replay`, and reports findings without judging method suitability as settled.
-- [ ] Hand-write each `manifest.json` (agent schema 1, version 1.0.0, MIT, category `ai`, tags including `science`, `requires.skills` sorted, `requires.tools` the sorted built-in pins, `sophon.minVersion` 2.2.0), `TOOLS.md` (≤2,048 bytes, skill tools pinned only through SkillPolicy), `README.md` (≤12 KiB, ends "Licensed under the MIT License; see LICENSE.") and `LICENSE` (copy of the root `LICENSE`); compose the SOULs.
+- [x] direct (decision 2026-11-26: agent text is checked statically; live runs gate publishing). Write the family file and the registry entry; the fragments: ground rules (scope, non-clinical boundary, assumptions stated before calculation), evidence (the bundle fields, tool-reported provenance, citation resolution is not claim support, preprint and retraction labels), data (public or synthetic data, no secrets or patient data, no evidence in memory, approval before any network lookup batch), delegated contract (the brief keys and the STATUS block), reporting (claim table, limitations, what was not verified).
+- [x] Role texts: the lead plans the question with the user through info.request, runs at most two literature tracks then one review through agent.delegate, assembles and verifies the bundle; the literature researcher searches, screens and quotes; the analyst refuses to compute until units, experimental unit and missing-value policy are stated; the reviewer reads the bundle, runs `scievidence.verify_bundle` and `scistat.replay`, and reports findings without judging method suitability as settled.
+- [x] Hand-write each `manifest.json` (agent schema 1, version 1.0.0, MIT, category `ai`, tags including `science`, `requires.skills` sorted, `requires.tools` the sorted built-in pins, `sophon.minVersion` 2.2.0), `TOOLS.md` (≤2,048 bytes, skill tools pinned only through SkillPolicy), `README.md` (≤12 KiB, ends "Licensed under the MIT License; see LICENSE.") and `LICENSE` (copy of the root `LICENSE`); compose the SOULs.
 Run: `pwsh -NoProfile -File build/Compose-AgentSouls.ps1 && pwsh -NoProfile -File build/Compose-AgentSouls.ps1 -Check && pwsh -NoProfile -File build/Test-AgentSources.ps1 -Family science`
 Expected: exit 0; `-Check` reports no drift; `Test-AgentSources.ps1` reports 0 errors for family science
 Commit: feat(agents): add the science family with four agents
@@ -167,13 +167,13 @@ Expected: exit 0 for both; no `DOC-COUNT` finding
 Commit: docs: describe the science family and its skills
 
 ### Task 8: Verify the milestone end to end
-- [ ] Done
+- [x] Done
 Files: `docs/plans/2026-11-26-sophon-science-m1.md` (modify)
 Depends on: Task 7
 Covers: none
 Interfaces: none
-- [ ] Re-read every changed file against the Request, the Global constraints and the Review focus; fix with a failing check first; add `Parked:` lines for minor points.
-- [ ] Run the whole Verification list and the regression `git diff --name-only` command.
+- [x] Re-read every changed file against the Request, the Global constraints and the Review focus; fix with a failing check first; add `Parked:` lines for minor points.
+- [x] Run the whole Verification list and the regression `git diff --name-only` command.
 Run: `python tests/skills/run_all.py && pwsh -NoProfile -File build/Build-MarketplacePackages.ps1 -ValidateOnly && pwsh -NoProfile -File tests/build/Test-SkillLint.ps1 && pwsh -NoProfile -File build/Compose-AgentSouls.ps1 -Check && pwsh -NoProfile -File build/Test-AgentSources.ps1 -Release && pwsh -NoProfile -File tests/agents/Test-AgentPackages.ps1 -SourceOnly && pwsh -NoProfile -File tests/agents/evals/Invoke-AgentEvals.ps1 -ValidateOnly -Release && git --no-pager diff --name-only 0103b15c HEAD -- agents build/agent-src/family.psd1 build/agent-src/souls build/agent-src/fragments build/agent-src/readmes build/agent-src/families/video`
 Expected: exit 0 for every check; the final listing contains only paths under the four science agent folders; `Build-AgentPackages.ps1 -ValidateOnly` run separately when the Sophon CLI is present, otherwise reported as not verified
 Commit: chore(science): verify milestone one
@@ -220,3 +220,7 @@ Commit: chore(science): verify milestone one
 - 2026-11-26 Task 6: complete — fixture check (12 rows, unit a3 repeated, 1 NA; `scievidence.verify_bundle` errors ['NUMBER_MISMATCH'] only), `Test-AgentSources.ps1 -Family science -Release` → "5 anchor(s), 19 placement(s) checked, … 0 finding(s)", `Invoke-AgentEvals.ps1 -ValidateOnly -Release` → "acceptance 36", "PASS (0 error(s), 0 note(s))". Implemented by developer (hit its 25-call cap after finishing); verified by the lead.
 - 2026-11-26 Ruling: Task 7 is `direct` (documentation only); `tests/agents/Test-AgentPackages.ps1` was left unchanged — its only `22` is a number-word table that already reaches twenty-five and is not a package count — cost if wrong: none.
 - 2026-11-26 Task 7: complete — `Test-AgentSources.ps1 -Release` → "Test-AgentSources: OK (26 agent(s) in 3 families: development, video, science)", repository documents "0 error(s), 0 warning(s)" (the 8 warnings are the existing development budget-headroom notes); `Test-AgentPackages.ps1 -SourceOnly` → "Test-AgentPackages: PASS (A-I, L, M and N; J and K skipped)".
+- 2026-11-26 Task 8: complete — `run_all.py` → "48/48 test files passed"; Build-MarketplacePackages -ValidateOnly, Test-SkillLint ("All skill lint checks passed."), Compose -Check, Test-AgentSources -Release ("OK (26 agent(s) in 3 families: development, video, science)"), Test-AgentPackages -SourceOnly ("PASS (A-I, L, M and N; J and K skipped)"), Invoke-AgentEvals -ValidateOnly -Release ("PASS (0 error(s), 0 note(s))") all exit 0; Build-AgentPackages -ValidateOnly with Sophon CLI 2.2.2 → "Validated 26 agent package(s)", 0 errors and 0 warnings each; the regression diff lists only the 20 files under the four science agent folders.
+- 2026-11-26 Review: final cross-task review APPROVE, 0 Critical, 0 Important, 1 Minor (parked); refute wave not needed; critic GAPS on plan bookkeeping only (Task 5 sub-boxes, Task 8 record), fixed in this edit.
+- 2026-11-26 Parked: F-X1 Minor skills/science-literature/main.py:198 — a non-list esummary `articleids` returns INTERNAL_ERROR instead of BAD_RESPONSE (fails closed).
+- 2026-11-26 Ruling: Global constraint line 41 "provenance" applies to analysis records and bundle analyses; `scievidence.*` results carry `verification_scope` instead — they report checks, not computed values — cost if wrong: one key added to three results.
