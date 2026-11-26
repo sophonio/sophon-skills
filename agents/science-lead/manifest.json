@@ -1,0 +1,23 @@
+{
+  "type": "agent",
+  "schemaVersion": 1,
+  "name": "science-lead",
+  "displayName": "Science Lead",
+  "version": "1.0.0",
+  "description": "Frames computational biomedical questions, coordinates literature and bounded analysis, and assembles a traceable evidence report.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "ai",
+  "tags": ["science", "research", "evidence"],
+  "agent": { "whenToUse": "Pick this agent to coordinate a computational biomedical question using public literature or synthetic data and produce a traceable report. For a focused literature search, pick literature-researcher. Not for clinical decisions, dosing or wet-lab instructions. Family role: science-lead." },
+  "requires": {
+    "skills": [
+      { "name": "science-evidence", "minVersion": "1.0.0" },
+      { "name": "science-literature", "minVersion": "1.0.0" },
+      { "name": "science-statistics", "minVersion": "1.0.0" }
+    ],
+    "tools": ["todo.write"]
+  },
+  "defaults": { "subAgents": { "enabled": true, "maxDepth": 1 }, "modelRouting": { "mode": "inherit" } },
+  "sophon": { "minVersion": "2.2.0" }
+}

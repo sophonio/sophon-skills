@@ -1,0 +1,21 @@
+{
+  "type": "agent",
+  "schemaVersion": 1,
+  "name": "literature-researcher",
+  "displayName": "Literature Researcher",
+  "version": "1.0.0",
+  "description": "Searches and screens public scientific literature and returns traceable sources and quoted claim candidates.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "ai",
+  "tags": ["science", "research", "literature"],
+  "agent": { "whenToUse": "Pick this agent for targeted public literature searches, screening and quoted passages with source identifiers. For an integrated report, pick science-lead. Not for clinical decisions, dosing or wet-lab instructions. Family role: literature-researcher." },
+  "requires": {
+    "skills": [
+      { "name": "science-evidence", "minVersion": "1.0.0" },
+      { "name": "science-literature", "minVersion": "1.0.0" }
+    ]
+  },
+  "defaults": { "subAgents": { "enabled": false, "maxDepth": 0 }, "modelRouting": { "mode": "inherit" } },
+  "sophon": { "minVersion": "2.2.0" }
+}

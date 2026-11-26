@@ -8,5 +8,6 @@
   Families = @(
     @{ Id = 'development'; Path = 'build/agent-src/family.psd1' }
     @{ Id = 'video'; Path = 'build/agent-src/families/video/family.psd1' }
+    @{ Id = 'science'; Path = 'build/agent-src/families/science/family.psd1' }
   )
 }

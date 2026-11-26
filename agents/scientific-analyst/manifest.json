@@ -1,0 +1,21 @@
+{
+  "type": "agent",
+  "schemaVersion": 1,
+  "name": "scientific-analyst",
+  "displayName": "Scientific Analyst",
+  "version": "1.0.0",
+  "description": "Runs bounded descriptive statistics on scientific tables and returns replayable analysis records.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "ai",
+  "tags": ["science", "research", "statistics"],
+  "agent": { "whenToUse": "Pick this agent for bounded descriptive analysis of a public or synthetic table with explicit experimental units and measurement units. For an integrated report, pick science-lead. Not for clinical decisions, causal conclusions, dosing or wet-lab instructions. Family role: scientific-analyst." },
+  "requires": {
+    "skills": [
+      { "name": "science-evidence", "minVersion": "1.0.0" },
+      { "name": "science-statistics", "minVersion": "1.0.0" }
+    ]
+  },
+  "defaults": { "subAgents": { "enabled": false, "maxDepth": 0 }, "modelRouting": { "mode": "inherit" } },
+  "sophon": { "minVersion": "2.2.0" }
+}

@@ -130,7 +130,7 @@ Expected: exit 0; the container prints "python 3.13" and "<M>/<M> passed"; `run_
 Commit: test(skills): cover the science skills in the container smoke
 
 ### Task 5: Add the science agent family
-- [ ] Done
+- [x] Done
 Files: `build/agent-src/families.psd1` (modify), `build/agent-src/families/science/family.psd1` (create), `build/agent-src/families/science/souls/science-lead.md` (create), `build/agent-src/families/science/souls/literature-researcher.md` (create), `build/agent-src/families/science/souls/scientific-analyst.md` (create), `build/agent-src/families/science/souls/scientific-reviewer.md` (create), `build/agent-src/families/science/fragments/soul/01-science-ground-rules.md` (create), `…/02-science-evidence.md` (create), `…/03-science-data.md` (create), `…/04-science-delegated.md` (create), `…/05-science-reporting.md` (create), `agents/science-lead/{manifest.json,SOUL.md,TOOLS.md,README.md,LICENSE}` (create), `agents/literature-researcher/{…}` (create), `agents/scientific-analyst/{…}` (create), `agents/scientific-reviewer/{…}` (create), `docs/plans/2026-11-26-sophon-science-m1.md` (modify)
 Depends on: Task 3
 Covers: none
@@ -187,6 +187,10 @@ Commit: chore(science): verify milestone one
 - Agent behaviour is unverified until the live evaluation gate; the README and the plan say so.
 
 ## Progress
+- 2026-11-26 Task 5: complete — composer, global drift check and science source validation passed before the verify-gated commit. Direct: agent instruction text, static checks only; live behaviour remains unverified.
+- 2026-11-26 Review: Task 5 reviewer reported APPROVE with SPEC: GAPS (missing explicit brief keys); added READ_FIRST, CONSTRAINTS, WRITE_SCOPE and ACCEPTANCE meanings and the claim-number path key to the source fragments, then recomposed.
+- 2026-11-26 Ruling: serial literature tracks use dependsOn within one delegate call — preserves the one-call-at-a-time provider constraint. The lead pins todo.write and declares it in requires.tools; companions have no built-in pins and omit the empty requires.tools key.
+- 2026-11-26 Cap: Task 5 paired reviewer failed on the runtime token limit; resumed with a focused review. Task 6 implementation hit its 25-call limit after writing files; lead will inspect and verify rather than repeat the implementation.
 - 2026-11-26 Ruling: Task 1 implemented by the lead, reviewed by code-reviewer — the developer child returned no output (it spent its 8,000-token output cap on reasoning) and the paired reviewer found no files; doing the task inline keeps the agent estimate — cost if wrong: none to the code; 2 agents spent without result.
 - 2026-11-26 Ruling: `scistat.replay` returns `{"result": …}` without its own record — a replay of a replay has no use — cost if wrong: one extra field to add later.
 - 2026-11-26 Task 1: red — `python tests/skills/test_science_statistics.py` → FileNotFoundError for skills/science-statistics/main.py (the skill did not exist).
