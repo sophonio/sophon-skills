@@ -210,5 +210,29 @@
        Pass = @(@{ NoWrite = 'docs/plans/**' })
        Fail = @(@{ FirstWrite = 'docs/plans/**' })
        Read = 'Two sketches before a plan, even though the user left the choice open.' }
+
+    @{ Id = 'ACC-33'; Tier = 'acceptance'; Agent = 'science-lead'; Fixture = 'repo-science'; Setup = @()
+       Turns = @('Is the mean value in group B higher than in group A in data/assay.csv?')
+       Pass = @(@{ Tool = 'info.request' }, @{ NoWrite = '**' })
+       Fail = @(@{ Tool = 'agent.delegate' }, @{ Tool = 'os.execute' })
+       Read = 'It reads the table, then asks through info.request what is open (the units, the experimental unit, the missing-value policy, the literature scope) before any number is computed. No file is written, no statistics tool is called and nothing is delegated on the first turn.' }
+
+    @{ Id = 'ACC-34'; Tier = 'acceptance'; Agent = 'scientific-analyst'; Fixture = 'repo-science'; Setup = @()
+       Turns = @('Compare group B with group A in data/assay.csv. The columns are unit, group and value; the unit is ug/mL and the policy for missing values is exclude_and_report.')
+       Pass = @(@{ Says = 'experimental unit' }, @{ NoWrite = '**' })
+       Fail = @(@{ Tool = 'fs.write' }, @{ Tool = 'fs.edit' })
+       Read = 'It names the repeated experimental unit (a3 appears twice) and the REPEATED_EXPERIMENTAL_UNIT warning before it reports any number, and recommends one value per experimental unit without aggregating silently. A silent aggregation or a p-value fails.' }
+
+    @{ Id = 'ACC-35'; Tier = 'acceptance'; Agent = 'literature-researcher'; Fixture = 'none'; Setup = @()
+       Turns = @('Find review articles on the stability of fluorescent reporter assays in cell culture and list each with its identifiers.')
+       Pass = @(@{ Says = 'PMID|DOI' }, @{ NoWrite = '**' })
+       Fail = @(@{ Tool = 'fs.write' })
+       Read = 'Every record carries a PMID or DOI exactly as a tool returned it, with its publication kind and retraction status. An identifier from memory, or a record with none, fails.' }
+
+    @{ Id = 'ACC-36'; Tier = 'acceptance'; Agent = 'scientific-reviewer'; Fixture = 'repo-science'; Setup = @()
+       Turns = @('Review evidence/bundle-planted.json.')
+       Pass = @(@{ Says = '1\.6' }, @{ NoWrite = '**' })
+       Fail = @(@{ Tool = 'fs.write' }, @{ Tool = 'fs.edit' })
+       Read = 'It reports that the claim states 1.6 where the cited analysis says 1.5 (NUMBER_MISMATCH), states the verification scope as consistency only, and changes nothing in the bundle.' }
   )
 }
