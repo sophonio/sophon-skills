@@ -24,7 +24,11 @@ paths, and the skill's quirks (see existing files for the pattern).
 The sandbox parity smoke (`run_all_container.py`) exercises the unknown-tool and
 missing-credential paths inside `python:3.13-alpine` — the image the Sophon runtime actually
 uses per tool call. It also checks that `ffmpeg-video`, run from the Docker backend's
-`/workspace`, refuses with `BACKEND_UNSUPPORTED` and gives Sophon nothing to pip-install:
+`/workspace`, refuses with `BACKEND_UNSUPPORTED` and gives Sophon nothing to pip-install. The three
+Sophon Science skills run from `/workspace` too: `science-statistics` answers one `scistat.describe`,
+`science-evidence` one `scievidence.canonical_hash` and `science-literature` refuses an empty query
+before any request; each answers an unknown tool with `UNKNOWN_TOOL` and gives Sophon nothing to
+pip-install:
 
 ```bash
 docker run --rm --memory=256m -v "<repo>:/repo:ro" \

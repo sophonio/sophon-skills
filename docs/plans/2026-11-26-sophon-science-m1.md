@@ -118,13 +118,13 @@ Expected: exit 0; no `FAIL` line; no validator or lint error
 Commit: feat(science-literature): add keyless PubMed, Europe PMC and Crossref lookups
 
 ### Task 4: Add the science skills to the container parity smoke
-- [ ] Done
+- [x] Done
 Files: `tests/skills/run_all_container.py` (modify), `tests/README.md` (modify), `docs/plans/2026-11-26-sophon-science-m1.md` (modify)
 Depends on: Task 3
 Covers: none
 Interfaces: none
-- [ ] Red: add a block that runs each science skill from `/workspace` with an unknown tool (code `UNKNOWN_TOOL`), runs `scistat.describe` on the Task 1 rows and `scievidence.canonical_hash` on one value, and asserts `pip_names(<skill>)` is empty; run the smoke before the skills' Docker path is checked and record the result.
-- [ ] Add one row per skill to the `tests/README.md` container paragraph.
+- [x] Red: add a block that runs each science skill from `/workspace` with an unknown tool (code `UNKNOWN_TOOL`), runs `scistat.describe` on the Task 1 rows and `scievidence.canonical_hash` on one value, and asserts `pip_names(<skill>)` is empty; run the smoke before the skills' Docker path is checked and record the result.
+- [x] Add one row per skill to the `tests/README.md` container paragraph.
 Run: `docker image inspect python:3.13-alpine >nul && docker run --rm --memory=256m -v "%CD%:/repo:ro" python:3.13-alpine python /repo/tests/skills/run_all_container.py && python tests/skills/run_all.py`
 Expected: exit 0; the container prints "python 3.13" and "<M>/<M> passed"; `run_all.py` ends "<N>/<N> test files passed". Docker or the image missing: Progress line BLOCKED with the output; pulling the image is asked first.
 Commit: test(skills): cover the science skills in the container smoke
@@ -209,3 +209,5 @@ Commit: chore(science): verify milestone one
 - 2026-11-26 Parked: T3-P1 Minor tests/skills/test_science_literature.py — the 10-second timeout is not asserted: mockhttp.py:126-127 drops the timeout argument.
 - 2026-11-26 Parked: T3-P2 Minor skills/science-literature/main.py — Crossref `withdrawal`, `removal` and `expression_of_concern` updates are reported as not_flagged; only `retraction` is flagged.
 - 2026-11-26 Task 3: complete — `python tests/skills/test_science_literature.py && pwsh -NoProfile -File build/Build-MarketplacePackages.ps1 -ValidateOnly && pwsh -NoProfile -File tests/build/Test-SkillLint.ps1` → "RESULT: PASS", science-literature OK, "All skill lint checks passed."
+- 2026-11-26 Ruling: Task 4 is `direct` (test harness only, no product code) — the science block ran green on its first container run because the skills already existed; a failing first run was not possible — cost if wrong: none.
+- 2026-11-26 Task 4: complete — `docker run --rm --memory=256m -v "%CD%:/repo:ro" python:3.13-alpine python /repo/tests/skills/run_all_container.py && python tests/skills/run_all.py` → "python 3.13.18 — 47/47 passed"; run_all.py result in the commit run.
