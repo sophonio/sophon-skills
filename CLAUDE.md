@@ -71,15 +71,17 @@ wrapping folder); excludes `__pycache__/`, `dist/`, `.DS_Store`, `Thumbs.db`, `*
 
 ## Agent packages (`agents/`)
 
-Twenty-two `.sophon-agent` packages in two families, listed in the registry
+Twenty-six `.sophon-agent` packages in three families, listed in the registry
 `build/agent-src/families.psd1`: **development** 3.0.0 (twenty development agents plus the Artifact
-Creator productivity agent, `build/agent-src/family.psd1`, 37 shared fragments beside it) and
+Creator productivity agent, `build/agent-src/family.psd1`, 37 shared fragments beside it),
 **video** (`video-producer`, `build/agent-src/families/video/family.psd1`, its own `souls/` and
-`fragments/soul/`). Families share no templates or fragments; an id belongs to one family;
+`fragments/soul/`) and **science** 1.0.0 (`science-lead`, `literature-researcher`,
+`scientific-analyst`, `scientific-reviewer`, `build/agent-src/families/science/family.psd1`; not
+published until a live evaluation passes). Families share no templates or fragments; an id belongs to one family;
 `agents/` holds exactly the union of the rosters. The tools take `-Family <id>` to work on one
 family (default: all). Full guide: [`docs/AGENTS.md`](docs/AGENTS.md); designs:
 `docs/plans/2026-11-23-agents-v3-design.md` (development 3.0), `docs/plans/2026-11-15-agents-v2-design.md`,
-`docs/plans/2026-11-15-ffmpeg-video-design.md`.
+`docs/plans/2026-11-15-ffmpeg-video-design.md`, `docs/plans/2026-11-26-sophon-science-design.md`.
 
 - **SkillPolicy is the only way an agent uses skill tools.** A family's `SkillPolicy` names skills
   (`requires.skills` must equal the agent's share of it: the roster key `Skills`, absent meaning all
@@ -130,6 +132,8 @@ family (default: all). Full guide: [`docs/AGENTS.md`](docs/AGENTS.md); designs:
     runs A-I, L, M and N without the CLI)
   - Scenario lint, before a PR that touches agent text: `pwsh -NoProfile -File
     tests/agents/evals/Invoke-AgentEvals.ps1 -ValidateOnly` (`-Release` fails on a `Pending` row)
+    It rejects the word "sophon" in eval fixture files (escape schema names in fixture JSON as
+    `\u0073ophon…`) and accepts only catalogue tool names in `Pass`/`Fail` events (no skill tools).
   - Lost lines: `pwsh -NoProfile -File tests/agents/Compare-AgentSouls.ps1 -Base agents-v2.1.0`
     (the 2.1.0 baseline, commit `3f052f3`, where the tag is missing)
 - **Budgets.** `SoulCap` per tier (lead 62,464; design writers 51,200; writers 44,032; readers

@@ -88,7 +88,18 @@ a local edit, captions, mix, platform checks and render with the
 that runs Sophon, and Sophon's process sandbox (the Docker sandbox has no FFmpeg). Install the
 skill first; the agent's README covers requirements, the isolation trade-off and limits.
 
-Both families are built by the same commands above; `-Family <id>` limits a command to one of
+## Science agents
+
+The **science** family 1.0.0 has four agents for computational biomedical questions over public
+literature and public or synthetic data: **[Science Lead](agents/science-lead)** (frames the
+question, plans with you, assembles and verifies a traceable evidence bundle),
+**[Literature Researcher](agents/literature-researcher)**, **[Scientific Analyst](agents/scientific-analyst)**
+and **[Scientific Reviewer](agents/scientific-reviewer)**. They give no clinical, dosing or wet-lab
+instructions; verification checks consistency only, not authenticity or method validity. Install the
+three science skills first. The agents are checked statically and are not published until a live
+evaluation passes.
+
+All three families are built by the same commands above; `-Family <id>` limits a command to one of
 them. See [docs/AGENTS.md](docs/AGENTS.md) section 14.
 
 ## Skills in this repo
@@ -158,6 +169,14 @@ them. See [docs/AGENTS.md](docs/AGENTS.md) section 14.
 | [`json-yaml-tools`](skills/json-yaml-tools) | data | Convert, query (JMESPath), validate, and merge JSON/YAML/TOML |
 | [`youtube-watcher`](skills/youtube-watcher) | data | Fetch YouTube transcripts to summarize or answer questions about a video |
 | [`ffmpeg-video`](skills/ffmpeg-video) | utility | Edit, caption, mix, check and render video locally with FFmpeg (44 tools; process sandbox only) |
+
+**Science**
+
+| Skill | Category | Description |
+|-------|----------|-------------|
+| [`science-literature`](skills/science-literature) | data | Keyless PubMed, Europe PMC and Crossref lookups with retrieval provenance (read-only) |
+| [`science-statistics`](skills/science-statistics) | data | Bounded descriptive statistics, Welch mean difference, Benjamini-Hochberg and replay; no p-values |
+| [`science-evidence`](skills/science-evidence) | data | Evidence bundles: canonical hashes, schema validation and consistency verification |
 
 **Enterprise systems**
 

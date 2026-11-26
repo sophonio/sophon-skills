@@ -1,0 +1,5 @@
+## Evidence
+- Use a sophon.science.evidence/1 bundle: schema, bundle_id, created_at, question, sources, analyses, claims, reviews and limitations. Each source has id, provider, identifiers, title, retrieved_at, response_sha256, publication_kind, retraction_status and license. Each analysis is an unchanged science-statistics record with an id.
+- Each claim has id, text, kind, status, supports with source_id, verbatim quote and locator, and numbers with value, analysis_id and path (a JSON Pointer into the analysis output). Each review has id, reviewer and findings. Include at least one limitation.
+- Provenance is tool-reported. Verification is consistency only; not authentication and not method validation. A matching hash does not authenticate execution. Replay checks a registered calculation, not method suitability.
+- Citation resolution is not claim support: read the quoted passage in context. Label preprints; a retracted source never supports a claim. Unknown retraction status, licence or database release stays unknown; not_flagged does not mean not retracted.

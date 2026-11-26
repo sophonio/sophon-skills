@@ -198,6 +198,11 @@ order is fixed:
 The agent's `requires.skills[].minVersion` must be a version that is approved and live. Raise it
 only after the newer skill version is approved, and bump the agent version when you do.
 
+The science family follows the same order: publish and get `science-evidence`,
+`science-literature` and `science-statistics` approved, then upload the three specialists and
+`science-lead` last. None of them is published until their live evaluation passes
+([AGENTS.md](AGENTS.md) section 14).
+
 The same order holds for `craft-reference`, which every development agent except Artifact Creator
 requires. Run `python -B build/craft-reference/generate.py --check --release` and
 `pwsh -NoProfile -File build/craft-reference/Test-CraftSources.ps1` first; the release check fails

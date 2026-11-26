@@ -103,6 +103,28 @@ except Exception as e:  # noqa: BLE001
 print(f"{'ok  ' if ok else 'FAIL'} craft-reference: {topic.splitlines()[0][:70] if topic else ''}")
 if not ok:
     fails += 1
-total = len(PAIRS) + 2
+# Sophon Science skills: single stdlib entrypoints, run from /workspace like the Docker backend.
+SCIENCE_CSV = "unit,group,value\na1,A,1\na2,A,2\na3,A,3\na4,A,4\nb1,B,2\nb2,B,4\nb3,B,6\nb4,B,NA\n"
+science = [
+    ("science-statistics", {"tool": "scistat.describe", "csv": SCIENCE_CSV, "value_column": "value",
+                            "group_column": "group", "unit_column": "unit", "units": "mg/L",
+                            "missing_policy": "exclude_and_report"},
+     lambda out: [g["mean"] for g in out["result"]["groups"]] == [2.5, 4.0]),
+    ("science-evidence", {"tool": "scievidence.canonical_hash", "value": {"b": 1, "a": "\u00e9"}},
+     lambda out: out["result"]["bytes"] == 16),
+    ("science-literature", {"tool": "scilit.pubmed_search", "query": ""},
+     lambda out: out.get("code") == "INVALID_ARGUMENT"),
+]
+for skill, params, expect in science:
+    try:
+        unknown = json.loads(run(skill, {"tool": "nope.nope"}, cwd="/workspace"))
+        out = json.loads(run(skill, params, cwd="/workspace"))
+        ok = unknown.get("code") == "UNKNOWN_TOOL" and expect(out) and not pip_names(skill)
+    except Exception as e:  # noqa: BLE001
+        ok, out = False, {"error": f"{type(e).__name__}: {e}"}
+    print(f"{'ok  ' if ok else 'FAIL'} {skill}: {json.dumps(out)[:70]}")
+    if not ok:
+        fails += 1
+total = len(PAIRS) + 2 + len(science)
 print(f"python {sys.version.split()[0]} — {total - fails}/{total} passed")
 sys.exit(1 if fails else 0)

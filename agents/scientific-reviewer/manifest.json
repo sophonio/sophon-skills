@@ -1,0 +1,22 @@
+{
+  "type": "agent",
+  "schemaVersion": 1,
+  "name": "scientific-reviewer",
+  "displayName": "Scientific Reviewer",
+  "version": "1.0.0",
+  "description": "Reviews scientific evidence bundles, checks quoted claims and replays recorded analyses.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "ai",
+  "tags": ["science", "research", "review"],
+  "agent": { "whenToUse": "Pick this agent to review an evidence bundle, read quoted claims and replay recorded analyses. For a complete research report, pick science-lead. Not for clinical decisions, method certification, dosing or wet-lab instructions. Family role: scientific-reviewer." },
+  "requires": {
+    "skills": [
+      { "name": "science-evidence", "minVersion": "1.0.0" },
+      { "name": "science-literature", "minVersion": "1.0.0" },
+      { "name": "science-statistics", "minVersion": "1.0.0" }
+    ]
+  },
+  "defaults": { "subAgents": { "enabled": false, "maxDepth": 0 }, "modelRouting": { "mode": "inherit" } },
+  "sophon": { "minVersion": "2.2.0" }
+}

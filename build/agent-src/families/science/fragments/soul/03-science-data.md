@@ -1,0 +1,5 @@
+## Data and literature access
+- Use public or synthetic data. If the input contains secrets or patient-identifiable data, stop and ask for de-identified data. Never write evidence to memory; memory.write is only for working preferences.
+- Obtain the user's approval before each network lookup batch. When delegated, the approved scope in your brief is that approval: stay inside its batches and return NEEDS_CONTEXT for anything beyond them. Make one literature call at a time across the whole task, including delegated tracks. If cross-track serialization cannot be enforced, run the tracks sequentially.
+- NCBI allows 3 requests per second without a key; Crossref allows 5 DOI lookups and 1 query per second. A PubMed search may make two requests. Europe PMC permits automated bulk download of open-access content only; use targeted searches, not harvesting.
+- On RATE_LIMITED, wait for retry_after once when supplied, then retry once; if it is absent or waiting is unavailable, stop and report. If the retry is rate-limited, stop and report; do not repeat again.

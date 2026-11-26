@@ -24,7 +24,11 @@ paths, and the skill's quirks (see existing files for the pattern).
 The sandbox parity smoke (`run_all_container.py`) exercises the unknown-tool and
 missing-credential paths inside `python:3.13-alpine` — the image the Sophon runtime actually
 uses per tool call. It also checks that `ffmpeg-video`, run from the Docker backend's
-`/workspace`, refuses with `BACKEND_UNSUPPORTED` and gives Sophon nothing to pip-install:
+`/workspace`, refuses with `BACKEND_UNSUPPORTED` and gives Sophon nothing to pip-install. The three
+Sophon Science skills run from `/workspace` too: `science-statistics` answers one `scistat.describe`,
+`science-evidence` one `scievidence.canonical_hash` and `science-literature` refuses an empty query
+before any request; each answers an unknown tool with `UNKNOWN_TOOL` and gives Sophon nothing to
+pip-install:
 
 ```bash
 docker run --rm --memory=256m -v "<repo>:/repo:ro" \
@@ -83,9 +87,10 @@ otherwise.
 
 ## Agent package tests (`tests/agents/`)
 
-`Test-AgentPackages.ps1` checks the twenty-two agent packages in `agents/` end to end: the development
+`Test-AgentPackages.ps1` checks the twenty-six agent packages in `agents/` end to end: the development
 family 3.0.0, with its twenty development agents (thirteen MIT, seven Apache-2.0) and the Apache-2.0
-productivity agent `artifact-creator`, and the video family's `video-producer`. It needs PowerShell 7 and
+productivity agent `artifact-creator`, the video family's `video-producer`, and the science family's four
+MIT agents (`science-lead`, `literature-researcher`, `scientific-analyst`, `scientific-reviewer`). It needs PowerShell 7 and
 git; sections J and K also need Sophon CLI 2.2.x on PATH.
 
 ```powershell
@@ -118,7 +123,7 @@ pwsh -NoProfile -File tests/agents/Compare-SophonDigest.ps1 -Require   # -Requir
 | H | attribution: exact commit trailer and PR footer bytes in every committing agent, none in the read-only ones |
 | I | README credits: every Credits key's string, the family sentence where `CreditsSentenceKeys` asks for it, the license sentence |
 | J | `sophon --version` matches each family's `SophonCli`; `sophon dev validate --json` per agent: ok, projectType agent, no errors, no warnings |
-| K | `build/Build-AgentPackages.ps1` into a temp folder: a decoy package removed; 22 `<id>-<version>.sophon-agent` (each version from its manifest); SHA256SUMS (22 lines, ordinal file-name order, LF, hashes recomputed); zip entries `manifest.json` first then ordinal, equal to the sources byte for byte, stamped 1980-01-01 00:00:00; identical repeat build; a subset build; failure cases (unknown agent, roster mismatch, name mismatch, SOUL drift, a lint error) |
+| K | `build/Build-AgentPackages.ps1` into a temp folder: a decoy package removed; one `<id>-<version>.sophon-agent` per roster agent, 26 today (each version from its manifest); SHA256SUMS (one line per package, ordinal file-name order, LF, hashes recomputed); zip entries `manifest.json` first then ordinal, equal to the sources byte for byte, stamped 1980-01-01 00:00:00; identical repeat build; a subset build; failure cases (unknown agent, roster mismatch, name mismatch, SOUL drift, a lint error) |
 | L | families: a temporary copy with the fixture family `tests/agents/fixtures/families/media/` installed composes, lints and checks on its own (`-Family`); the roster union, and an id in two families fails; the legacy single family without a registry; `SkillPolicy` and the per-agent `Skills` key (absent, all, none, schema); `message.send` named only where `AllowRestrictedMentions` allows it and never pinned; `requires.skills` and `requires.tools` variants against `MAN-REQUIRES`; a skill below `MinVersion` fails `MAN-SKILL-VERSION` |
 | M | the Method registry and the instruction tests: the method fixtures (`METHOD-CONTROLLER`, `METHOD-EXCUSES`, `METHOD-REFERENCE`), the skill-use fixtures (`LINT-SKILL-FRAGMENT`, `LINT-SKILL-UNUSED`, `LINT-TOPIC`), the development family's own `Method` key; anchor cases (`ANCHOR-MISSING`, `ANCHOR-GONE`); a smoke run of `Compare-AgentSouls.ps1`; `Compare-SophonDigest.ps1` on the digest fixtures (all found, two planted wrong values, two wrong values inside longer fallback words, SKIP without the sibling repository); the scenario lint's own cases, the transcript scorer, the runner's exec line, package choice, SOUL hash and run-error rule, `Invoke-AgentEvals.ps1 -ValidateOnly` on the real scenario files (and `-Release` failing while a row is `Pending`), every eval fixture and patch as a git workspace, and `-Prepare` on two scenarios |
 | N | documents: `DOC-COUNT` from the repository pass of `Test-AgentSources.ps1`, plus a temporary copy with planted counts (number words and digits, qualifiers, a History phrase, and `-Release` turning the warning into an error) |

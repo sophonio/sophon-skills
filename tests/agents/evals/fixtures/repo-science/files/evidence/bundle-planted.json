@@ -1,0 +1,79 @@
+{
+  "schema": "\u0073ophon.science.evidence/1",
+  "bundle_id": "assay-1",
+  "created_at": "2026-11-26T10:00:00Z",
+  "question": "Is the mean assay value higher in group B than in group A in this synthetic table?",
+  "sources": [],
+  "analyses": [
+    {
+      "schema": "\u0073ophon.science.analysis/1",
+      "tool": "scistat.mean_difference",
+      "tool_version": "1.0.0",
+      "method": "mean_difference_welch/1",
+      "parameters": {
+        "units": "ug/mL",
+        "missing_policy": "exclude_and_report",
+        "group_a": "A",
+        "group_b": "B"
+      },
+      "input": {
+        "csv": "unit,group,value\na1,A,10\na2,A,11\na3,A,12\na3,A,13\na4,A,14\na5,A,12\nb1,B,12\nb2,B,13\nb3,B,14\nb4,B,14.5\nb5,B,14\nb6,B,NA\n",
+        "value_column": "value",
+        "group_column": "group",
+        "unit_column": "unit"
+      },
+      "input_sha256": "8c12d7006ebc8d9c14b7ce408ce1ca0739a9b544aa9a31be6d0511bc1aa63934",
+      "output": {
+        "units": "ug/mL",
+        "value_column": "value",
+        "group_a": "A",
+        "group_b": "B",
+        "n_a": 6,
+        "n_b": 5,
+        "missing_a": 0,
+        "missing_b": 1,
+        "mean_a": 12.0,
+        "mean_b": 13.5,
+        "difference": 1.5,
+        "difference_definition": "mean(group_b) - mean(group_a)",
+        "welch_se": 0.7302967433402214,
+        "welch_df": 8.827586206896552,
+        "excluded_rows": 0,
+        "other_rows": 0,
+        "warnings": [
+          {
+            "code": "REPEATED_EXPERIMENTAL_UNIT",
+            "rows": 12,
+            "effective_units": 11,
+            "message": "Some experimental units appear in more than one row. These statistics treat rows as independent; they are not valid for repeated measures without aggregating to one value per unit."
+          }
+        ],
+        "note": "No p-value or confidence interval is computed. The difference describes these samples only and is not evidence of a cause."
+      },
+      "output_sha256": "ddb970395132d10137849cd5602c55fcd0d1b40375d59b030151f33df8df56d5",
+      "python_version": "3.12.6",
+      "provenance": "tool-reported",
+      "id": "an1"
+    }
+  ],
+  "claims": [
+    {
+      "id": "c1",
+      "text": "The group B mean exceeds the group A mean by 1.6 ug/mL in these samples.",
+      "kind": "numerical",
+      "status": "supported",
+      "supports": [],
+      "numbers": [
+        {
+          "value": 1.6,
+          "analysis_id": "an1",
+          "path": "/difference"
+        }
+      ]
+    }
+  ],
+  "reviews": [],
+  "limitations": [
+    "Synthetic data; one unit id repeats in group A, so rows are not independent."
+  ]
+}
