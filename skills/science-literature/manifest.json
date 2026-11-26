@@ -1,0 +1,77 @@
+{
+  "name": "science-literature",
+  "version": "1.0.0",
+  "description": "Keyless, read-only literature lookups for scientific work: search PubMed and fetch abstracts through NCBI E-utilities, search Europe PMC (journal articles and preprints) with cursor paging, and resolve a DOI through Crossref. Each record carries PMID, PMCID and DOI where known, title, journal, year, publication types, whether it is a preprint, and whether the provider's data flags it as retracted (retracted, not_flagged or unknown). Every result includes retrieval provenance (provider, request URL, UTC time, SHA-256 of the raw response) that drops straight into a science-evidence bundle. Requests go only to eutils.ncbi.nlm.nih.gov, www.ebi.ac.uk and api.crossref.org over HTTPS, with no caller-supplied URLs, no retries and at most 100 records per call. A record that resolves is not evidence that it supports a claim.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "data",
+  "tags": ["science", "literature", "pubmed", "europe-pmc", "crossref", "citations", "research"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "tools": [
+    {
+      "name": "scilit.pubmed_search",
+      "description": "Search PubMed through NCBI E-utilities (esearch, then esummary for the hits) and return citation records: PMID, PMCID, DOI, title, journal, year, publication types, preprint and retraction flags. Optional publication-date range (min_date and max_date together, YYYY, YYYY/MM or YYYY/MM/DD). Abstracts come from scilit.pubmed_abstracts. NCBI allows about 3 requests per second without a key; make one call at a time.",
+      "riskLevel": "low",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string", "description": "PubMed query, with field tags if needed, for example malaria vaccine[tiab] (at most 1,000 characters)" },
+          "limit": { "type": "integer", "minimum": 1, "maximum": 100, "description": "Records to return, 1 to 100 (default 20)" },
+          "min_date": { "type": "string", "description": "Earliest publication date, YYYY, YYYY/MM or YYYY/MM/DD (requires max_date)" },
+          "max_date": { "type": "string", "description": "Latest publication date in the same format (requires min_date)" }
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "scilit.pubmed_abstracts",
+      "description": "Fetch PubMed abstracts and citation details for up to 100 PMIDs through E-utilities efetch. Labelled abstract sections are kept with their labels. Use the text to quote passages into an evidence bundle; PubMed holds abstracts, not full text.",
+      "riskLevel": "low",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "pmids": { "type": "array", "items": { "type": "string" }, "description": "PubMed ids as strings, 1 to 100" }
+        },
+        "required": ["pmids"]
+      }
+    },
+    {
+      "name": "scilit.europepmc_search",
+      "description": "Search Europe PMC (journal articles, preprints and more) and return citation records with publication types, preprint and retraction flags, and licence where given. Page with the returned next_cursor. Europe PMC permits automated bulk download of its open-access subset only; use this for targeted searches.",
+      "riskLevel": "low",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string", "description": "Europe PMC query (at most 1,000 characters)" },
+          "limit": { "type": "integer", "minimum": 1, "maximum": 100, "description": "Records per page, 1 to 100 (default 20)" },
+          "cursor": { "type": "string", "description": "next_cursor from a previous page; omit for the first page" }
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "scilit.crossref_work",
+      "description": "Resolve one DOI through the Crossref REST API: title, container (journal), year, work type, preprint flag, licence and retraction updates where Crossref records them. A resolving DOI shows the work exists; it does not show the work supports a claim.",
+      "riskLevel": "low",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "doi": { "type": "string", "description": "A bare DOI such as 10.1000/xyz123 (not a URL)" }
+        },
+        "required": ["doi"]
+      }
+    }
+  ],
+  "requirements": [],
+  "permissions": {
+    "network": ["eutils.ncbi.nlm.nih.gov", "www.ebi.ac.uk", "api.crossref.org"]
+  },
+  "sandbox": {
+    "network": true,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}
