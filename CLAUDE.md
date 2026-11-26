@@ -132,6 +132,8 @@ family (default: all). Full guide: [`docs/AGENTS.md`](docs/AGENTS.md); designs:
     runs A-I, L, M and N without the CLI)
   - Scenario lint, before a PR that touches agent text: `pwsh -NoProfile -File
     tests/agents/evals/Invoke-AgentEvals.ps1 -ValidateOnly` (`-Release` fails on a `Pending` row)
+    It rejects the word "sophon" in eval fixture files (escape schema names in fixture JSON as
+    `\u0073ophon…`) and accepts only catalogue tool names in `Pass`/`Fail` events (no skill tools).
   - Lost lines: `pwsh -NoProfile -File tests/agents/Compare-AgentSouls.ps1 -Base agents-v2.1.0`
     (the 2.1.0 baseline, commit `3f052f3`, where the tag is missing)
 - **Budgets.** `SoulCap` per tier (lead 62,464; design writers 51,200; writers 44,032; readers
