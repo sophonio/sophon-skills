@@ -1,0 +1,57 @@
+{
+  "name": "science-evidence",
+  "version": "1.0.0",
+  "description": "Check that a scientific report's claims trace back to their evidence. An evidence bundle links a research question to its literature sources, the analysis records produced by science-statistics, the claims made from them, reviews and limitations. Validate the bundle's schema, verify that every reference resolves, every analysis matches its recorded hashes, every stated number equals the analysis output it cites, supported literature claims carry quotes, and no supported claim rests on a retracted source; preprint support is flagged. Also computes the canonical SHA-256 used across Sophon Science. These are consistency checks only: they do not authenticate that an analysis ran, do not judge whether a quote truly supports a claim, and do not validate the method. Offline, standard library only.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "data",
+  "tags": ["science", "evidence", "provenance", "reproducibility", "research"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "tools": [
+    {
+      "name": "scievidence.canonical_hash",
+      "description": "SHA-256 of the canonical JSON form of a value (sorted keys, compact separators, UTF-8, no NaN or infinity), the same form science-statistics uses for its records. Returns the hex digest and the byte count. At most 1 MiB.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "value": { "type": "object", "description": "Any JSON value to hash" }
+        },
+        "required": ["value"]
+      }
+    },
+    {
+      "name": "scievidence.validate_bundle",
+      "description": "Check an evidence bundle (schema sophon.science.evidence/1) against its schema only: required fields, allowed claim kinds and statuses, publication kinds, retraction statuses and analysis record fields. Returns valid and a list of findings. At most 1 MiB.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "bundle": { "type": "object", "description": "The evidence bundle, as an object or a JSON string" }
+        },
+        "required": ["bundle"]
+      }
+    },
+    {
+      "name": "scievidence.verify_bundle",
+      "description": "Validate an evidence bundle and check its consistency: unique ids, resolving references, analysis input and output hashes, claimed numbers against the analysis outputs they cite (JSON Pointer paths), quotes on supported literature claims, retracted sources behind supported claims, preprint support (warning) and stated limitations. Returns consistent, findings with codes and severities, the bundle hash and the verification scope. Consistency only: not authentication and not method validation.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "bundle": { "type": "object", "description": "The evidence bundle, as an object or a JSON string" }
+        },
+        "required": ["bundle"]
+      }
+    }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": false,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}
