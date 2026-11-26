@@ -1,0 +1,83 @@
+{
+  "name": "science-statistics",
+  "version": "1.0.0",
+  "description": "Bounded, replayable descriptive statistics for scientific tables. Summarize a CSV by group, compute a two-group mean difference with its Welch standard error and degrees of freedom, apply a Benjamini-Hochberg false discovery rate adjustment to p-values you supply, and replay any result from its analysis record. Every result carries a record with the exact input, parameters, output and canonical SHA-256 hashes. Units, the experimental-unit column and a missing-value policy are required; repeated experimental units are flagged. It computes no p-values, confidence intervals or causal claims, records are tool-reported (consistency, not authentication), and nothing here is validated for clinical use. Offline, standard library only.",
+  "author": "Buildersoft LLC",
+  "license": "MIT",
+  "category": "data",
+  "tags": ["science", "statistics", "reproducibility", "research", "data-analysis"],
+  "runtime": "sandbox",
+  "language": "python",
+  "entrypoint": "main.py",
+  "tools": [
+    {
+      "name": "scistat.describe",
+      "description": "Summarize a numeric column of a CSV table by group: n, missing count, mean, sample standard deviation, median, min and max. Requires the units, the experimental-unit column and a missing-value policy. Flags experimental units that repeat across rows. Limits: 1 MiB of CSV, 5,000 data rows, 64 columns. Returns the result and a replayable analysis record.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "csv": { "type": "string", "description": "CSV text with a header row (at most 1 MiB)" },
+          "value_column": { "type": "string", "description": "Header of the numeric column to summarize" },
+          "group_column": { "type": "string", "description": "Header of the column that names each row's group" },
+          "unit_column": { "type": "string", "description": "Header of the column that identifies the experimental unit (animal, patient, culture, plate)" },
+          "units": { "type": "string", "description": "Measurement units of the value column, for example mg/L" },
+          "missing_policy": { "type": "string", "enum": ["exclude_and_report", "reject"], "description": "Applies to the value, group and experimental-unit cells (other columns are not read). exclude_and_report counts empty and NA values and leaves them out, and drops rows with a missing group or unit (counted in excluded_rows); reject fails on any such missing cell" }
+        },
+        "required": ["csv", "value_column", "group_column", "unit_column", "units", "missing_policy"]
+      }
+    },
+    {
+      "name": "scistat.mean_difference",
+      "description": "Difference of two group means, mean(group_b) - mean(group_a), with the Welch standard error and Welch-Satterthwaite degrees of freedom. Each group needs at least 2 values. No p-value or confidence interval is computed. Same table arguments and limits as scistat.describe. Returns the result and a replayable analysis record.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "csv": { "type": "string", "description": "CSV text with a header row (at most 1 MiB)" },
+          "value_column": { "type": "string", "description": "Header of the numeric column" },
+          "group_column": { "type": "string", "description": "Header of the group column" },
+          "unit_column": { "type": "string", "description": "Header of the experimental-unit column" },
+          "units": { "type": "string", "description": "Measurement units of the value column" },
+          "missing_policy": { "type": "string", "enum": ["exclude_and_report", "reject"], "description": "exclude_and_report or reject" },
+          "group_a": { "type": "string", "description": "Reference group (subtracted)" },
+          "group_b": { "type": "string", "description": "Comparison group" }
+        },
+        "required": ["csv", "value_column", "group_column", "unit_column", "units", "missing_policy", "group_a", "group_b"]
+      }
+    },
+    {
+      "name": "scistat.bh_adjust",
+      "description": "Benjamini-Hochberg false discovery rate adjustment of p-values you supply (at most 5,000, each between 0 and 1). Returns adjusted values in input order and whether each is at or below alpha. It does not compute the p-values themselves. Returns the result and a replayable analysis record.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "p_values": { "type": "array", "items": { "type": "number" }, "description": "Raw p-values, each between 0 and 1" },
+          "labels": { "type": "array", "items": { "type": "string" }, "description": "Optional label per p-value, same length" },
+          "alpha": { "type": "number", "minimum": 0, "maximum": 1, "description": "False discovery rate threshold, exclusive of 0 and 1 (default 0.05)" }
+        },
+        "required": ["p_values"]
+      }
+    },
+    {
+      "name": "scistat.replay",
+      "description": "Recompute a result from an analysis record produced by this skill and compare hashes. Returns REPLAY_MATCH or REPLAY_MISMATCH with the fields that differ. This checks consistency with the registered method only; it does not authenticate the record or validate the method choice.",
+      "riskLevel": "none",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "record": { "type": "object", "description": "An analysis record (schema sophon.science.analysis/1) as returned by scistat.describe, scistat.mean_difference or scistat.bh_adjust" }
+        },
+        "required": ["record"]
+      }
+    }
+  ],
+  "requirements": [],
+  "sandbox": {
+    "network": false,
+    "timeoutSeconds": 30,
+    "maxMemoryMb": 256
+  },
+  "platforms": []
+}
