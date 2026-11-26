@@ -201,9 +201,10 @@ offline test file (see [`tests/README.md`](tests/README.md)).
 ## Agents
 
 The agents in `agents/` are Sophon agent packages, not skills, and follow their own rules. There
-are twenty-two packages in two families, registered in `build/agent-src/families.psd1`:
-**development** 3.0.0 (twenty development agents and Artifact Creator, `build/agent-src/family.psd1`)
-and **video** (`video-producer`, `build/agent-src/families/video/family.psd1`).
+are twenty-six packages in three families, registered in `build/agent-src/families.psd1`:
+**development** 3.0.0 (twenty development agents and Artifact Creator, `build/agent-src/family.psd1`),
+**video** (`video-producer`, `build/agent-src/families/video/family.psd1`) and **science** 1.0.0
+(four agents, `build/agent-src/families/science/family.psd1`).
 
 - Each `agents/<id>/SOUL.md` is generated, and so is each development agent's `README.md`. Edit the
   sources of its family (the `souls/`, `fragments/soul/`, `readmes/` and `fragments/readme/`

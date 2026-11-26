@@ -430,7 +430,7 @@ pwsh -NoProfile -File build/Compose-AgentSouls.ps1                # regenerate S
 pwsh -NoProfile -File build/Compose-AgentSouls.ps1 -Check         # exit 0, no drift
 pwsh -NoProfile -File build/Test-AgentSources.ps1 -Release        # sections A-I, M and N; no release finding
 pwsh -NoProfile -File build/Build-AgentPackages.ps1 -ValidateOnly -Release # sophon dev validate: 0 errors, 0 warnings
-pwsh -NoProfile -File build/Build-AgentPackages.ps1 -Release      # 22 x <id>-<version>.sophon-agent + SHA256SUMS; run twice, compare
+pwsh -NoProfile -File build/Build-AgentPackages.ps1 -Release      # 26 x <id>-<version>.sophon-agent + SHA256SUMS; run twice, compare
 pwsh -NoProfile -File tests/agents/Test-AgentPackages.ps1         # sections A-N
 pwsh -NoProfile -File tests/build/Test-SkillLint.ps1
 python build/craft-reference/generate.py --check --release ; python tests/skills/run_all.py
@@ -447,7 +447,7 @@ git status --porcelain                                            # only intende
   - A failed build leaves no SHA256SUMS. It never installs or publishes.
 - **The tests.** `tests/agents/Test-AgentPackages.ps1 -SourceOnly` runs sections A-I, L, M and N without the CLI. See [`tests/README.md`](../tests/README.md).
 - **Package shape** (made by `sophon dev build`): a zip with `manifest.json` first, then the other files in ordinal order, at the root, each entry stamped 1980-01-01 00:00:00. Repeat builds are byte-identical.
-- **Before the upload,** the release also needs: the instruction-test sweep on a throwaway Gateway (the ship rule, deferred to this sweep by owner decision 9 of the design); the smoke scenarios by hand, with MX1 to MX3 and the card count for one reviewed task; an install preview of each of the 22 packages and of the skill with the injection scan on (a clean verdict, no possible-secret finding, no `expects tool:` line, the pins shown); and the Sophon-default check (`Compare-SophonDigest.ps1`): every value of fragment `21-sophon-default` found in the Dashboard token files, or each miss explained, with the owner's sign-off recorded.
+- **Before the upload,** the release also needs: the instruction-test sweep on a throwaway Gateway (the ship rule, deferred to this sweep by owner decision 9 of the design); the smoke scenarios by hand, with MX1 to MX3 and the card count for one reviewed task; an install preview of each package the release uploads and of the skill with the injection scan on (a clean verdict, no possible-secret finding, no `expects tool:` line, the pins shown); and the Sophon-default check (`Compare-SophonDigest.ps1`): every value of fragment `21-sophon-default` found in the Dashboard token files, or each miss explained, with the owner's sign-off recorded.
 
 **Versioning.**
 - Major 3 in lockstep across the family (`FamilyMajor`). All 21 development manifests are 3.0.0, Artifact Creator included, because `MAN-VERSION` checks the family major for every roster agent. Minor and patch move per agent.
@@ -479,7 +479,7 @@ Prerequisite outside the repo: the `noreply@buildersoft.io` mailbox for the comm
 
 ## 14. Families
 
-The repository holds two agent families. A family is one family file: its roster, versions,
+The repository holds three agent families. A family is one family file: its roster, versions,
 values, hosts and credits. Its `souls/` and `fragments/soul/` folders sit beside the family file,
 so families never share templates or fragments.
 
@@ -487,6 +487,7 @@ so families never share templates or fragments.
 |---|---|---|---|---|
 | development | `build/agent-src/family.psd1` | the twenty-one in section 2 | 3 | `development`, `development` (Artifact Creator: `productivity`, `productivity`) |
 | video | `build/agent-src/families/video/family.psd1` | `video-producer` | 1 | `video`, `ai` |
+| science | `build/agent-src/families/science/family.psd1` | `science-lead`, `literature-researcher`, `scientific-analyst`, `scientific-reviewer` | 1 | `science`, `ai` |
 
 **The registry.** `build/agent-src/families.psd1` lists every family as `@{ Id; Path }`. All
 agents still live in `agents/<id>/`; an id belongs to exactly one family, and `agents/` must hold
@@ -557,6 +558,20 @@ the design is [`docs/plans/2026-11-15-ffmpeg-video-design.md`](plans/2026-11-15-
 **Publishing order.** The marketplace refuses an agent whose required skill is not approved, so
 publish `ffmpeg-video` and get it approved before uploading `video-producer` (see
 [PUBLISHING.md](PUBLISHING.md#7-skills-that-agents-require)).
+
+**The science family.** Four MIT agents at 1.0.0 for computational biomedical questions over
+public literature and public or synthetic data: Science Lead frames the question, asks one plan
+approval (specialists or solo) and assembles a verified evidence bundle; Literature Researcher
+searches and quotes; Scientific Analyst runs bounded descriptive statistics; Scientific Reviewer
+runs `scievidence.verify_bundle` and `scistat.replay` and leaves method suitability to a person.
+Their SOULs are composed from `families/science/souls/` and five fragments (`01-science-ground-rules`
+to `05-science-reporting`); the family has no `Method` key. They use the `science-evidence`,
+`science-literature` and `science-statistics` skills through `SkillPolicy`. Install order: the three
+skills, approved, before any agent; only `science-lead` delegates (depth 1), and its delegation allow
+list must name `literature-researcher`, `scientific-analyst` and `scientific-reviewer`. Anchors are
+in `tests/agents/fixtures/anchors/science.psd1` and the written scenarios are ACC-33 to ACC-36. The
+agent text is checked statically only, so the family is **not published until the live evaluation
+passes**. Design: [`docs/plans/2026-11-26-sophon-science-design.md`](plans/2026-11-26-sophon-science-design.md).
 
 **Regression gate.** video-producer must stay byte-identical through every development-family
 change: its package hash in `dist/agents/SHA256SUMS` equals the 2.1.0 baseline
